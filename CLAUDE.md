@@ -62,6 +62,14 @@ export default Song({ bpm: 140, tracks: [kick, bass] })
 9. Audio scheduling always uses `audioContext.currentTime` — never `setTimeout` or `Date.now()`
 10. **All code is functional** — factory functions, `const`, arrow functions, zero classes
 
+## Git Workflow
+
+- **`main`** — production. Protected: PRs only, enforced on admins.
+- **`dev`** — development. Protected: PRs only, enforced on admins.
+- **Feature branches** — all work happens here. Branch off `dev`, PR into `dev`.
+- `dev` → `main` via PR for releases.
+- **No direct commits** to `main` or `dev` — ever.
+
 ## Current Phase
 
 **Phase 1 — Scaffold** (in progress)
