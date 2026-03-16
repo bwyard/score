@@ -1,11 +1,12 @@
 ## Session & Todo System
+
 Shared session state and todos live in `../claude-resources/` (one level up).
 
-- Session file:    `../claude-resources/sessions/score/current.md`
+- Session file: `../claude-resources/sessions/score/current.md`
 - Session history: `../claude-resources/sessions/score/s000-s009/` etc.
-- Todo CLI:        `node ../claude-resources/todos/todo.js list --project score`
-- Dashboard:       `node ../claude-resources/todos/todo.js dashboard`
-- Nav hub:         `../claude-resources/CLAUDE.md`
+- Todo CLI: `node ../claude-resources/todos/todo.js list --project score`
+- Dashboard: `node ../claude-resources/todos/todo.js dashboard`
+- Nav hub: `../claude-resources/CLAUDE.md`
 
 Read `current.md` at the start of every session. Update it and write a closed session log at the end.
 
@@ -41,8 +42,9 @@ Full architecture spec: `SCORE_HANDOFF.md`
 - **No exceptions** — `ScoreError` is a factory function, not a class
 
 The song language should feel like writing Svelte — declarative, component-based, props in, music out:
+
 ```js
-const kick = Kick({ sample: './samples/kick.wav', pattern: [1,0,0,0], volume: 0.9 })
+const kick = Kick({ sample: './samples/kick.wav', pattern: [1, 0, 0, 0], volume: 0.9 })
 const bass = Synth({ wave: 'sawtooth', filter: { type: 'lowpass', frequency: 800 } })
 export default Song({ bpm: 140, tracks: [kick, bass] })
 ```
