@@ -2,6 +2,8 @@
 // Used across all @score/* package tests — no real AudioContext required
 
 import type {
+  BackendBuffer,
+  BackendBufferSourceNode,
   BackendContext,
   BackendGainNode,
   BackendNode,
@@ -32,10 +34,16 @@ export type MockBackendNoiseNode = MockBackendNode & BackendNoiseNode & {
   readonly stopCalls: Array<{ readonly time: number | undefined }>
 }
 
+export type MockBackendBufferSourceNode = MockBackendNode & BackendBufferSourceNode & {
+  readonly startCalls: Array<{ readonly time: number | undefined; readonly offset: number | undefined; readonly duration: number | undefined }>
+  readonly stopCalls: Array<{ readonly time: number | undefined }>
+}
+
 export type MockBackendContext = BackendContext & {
   readonly createdOscillators: Array<MockBackendOscillatorNode>
   readonly createdGains: Array<MockBackendGainNode>
   readonly createdNoises: Array<MockBackendNoiseNode>
+  readonly createdBufferSources: Array<MockBackendBufferSourceNode>
 }
 
 // --- Factory functions ---
@@ -93,10 +101,43 @@ export const createMockNoiseNode = (): MockBackendNoiseNode => {
   }
 }
 
+export const createMockBuffer = (options?: {
+  duration?: number
+  length?: number
+  sampleRate?: number
+  numberOfChannels?: number
+}): BackendBuffer => ({
+  duration: options?.duration ?? 1.0,
+  length: options?.length ?? 44100,
+  sampleRate: options?.sampleRate ?? 44100,
+  numberOfChannels: options?.numberOfChannels ?? 1,
+})
+
+export const createMockBufferSourceNode = (): MockBackendBufferSourceNode => {
+  const base = createMockBackendNode()
+  const startCalls: MockBackendBufferSourceNode['startCalls'] = []
+  const stopCalls: Array<{ readonly time: number | undefined }> = []
+  let loopState = false
+
+  return {
+    ...base,
+    startCalls,
+    stopCalls,
+    get loop() { return loopState },
+    setLoop: (loop: boolean) => { loopState = loop },
+    setPlaybackRate: (_rate: number, _time?: number) => {},
+    start: (time?: number, offset?: number, duration?: number) => {
+      startCalls.push({ time, offset, duration })
+    },
+    stop: (time?: number) => { stopCalls.push({ time }) },
+  }
+}
+
 export const createMockBackendContext = (): MockBackendContext => {
   const createdOscillators: Array<MockBackendOscillatorNode> = []
   const createdGains: Array<MockBackendGainNode> = []
   const createdNoises: Array<MockBackendNoiseNode> = []
+  const createdBufferSources: Array<MockBackendBufferSourceNode> = []
 
   return {
     currentTime: 0,
@@ -106,8 +147,9 @@ export const createMockBackendContext = (): MockBackendContext => {
     createdOscillators,
     createdGains,
     createdNoises,
+    createdBufferSources,
 
-    createOscillator: (props) => {
+    createOscillator: (_props) => {
       const node = createMockOscillatorNode()
       createdOscillators.push(node)
       return node
@@ -119,9 +161,17 @@ export const createMockBackendContext = (): MockBackendContext => {
       return node
     },
 
-    createNoise: (props) => {
+    createNoise: (_props) => {
       const node = createMockNoiseNode()
       createdNoises.push(node)
+      return node
+    },
+
+    decodeAudio: (_data: ArrayBuffer) => Promise.resolve(createMockBuffer()),
+
+    createBufferSource: (_buffer, _props) => {
+      const node = createMockBufferSourceNode()
+      createdBufferSources.push(node)
       return node
     },
 

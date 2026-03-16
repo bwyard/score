@@ -16,12 +16,21 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,js,json,md}\""
+    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "bash -c 'pnpm typecheck'"
+    ]
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
     "prettier": "^3.0.0",
     "turbo": "^2.0.0",
     "typescript": "^5.5.0",

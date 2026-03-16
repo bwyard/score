@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterAll } from 'vitest'
+import { useHarness } from './utils/harness.js'
 import { createAudioContext } from '../src/context.js'
-import { createMockBackendProvider } from './utils/audioTestUtils.js'
+
+const h = useHarness()
+afterAll(() => h.cleanup())
 
 describe('createAudioContext', () => {
-  const makeContext = (options?: Parameters<typeof createAudioContext>[0]) =>
-    createAudioContext({ offline: { length: 44100 }, ...options })
-
   it('returns an object with currentTime, sampleRate, state, and destination', () => {
-    const ctx = makeContext()
+    const ctx = h.context()
     expect(ctx).toHaveProperty('currentTime')
     expect(ctx).toHaveProperty('sampleRate')
     expect(ctx).toHaveProperty('state')
@@ -15,50 +15,45 @@ describe('createAudioContext', () => {
   })
 
   it('respects custom sampleRate option', () => {
-    const ctx = makeContext({ sampleRate: 48000 })
+    const ctx = h.context({ sampleRate: 48000 })
     expect(ctx.sampleRate).toBe(48000)
   })
 
   it('has a valid state string', () => {
-    const ctx = makeContext()
-    expect(typeof ctx.state).toBe('string')
+    const ctx = h.context()
     expect(['suspended', 'running', 'closed']).toContain(ctx.state)
   })
 
   it('currentTime is a number >= 0', () => {
-    const ctx = makeContext()
-    expect(typeof ctx.currentTime).toBe('number')
+    const ctx = h.context()
     expect(ctx.currentTime).toBeGreaterThanOrEqual(0)
   })
 
   it('sampleRate is a positive number', () => {
-    const ctx = makeContext()
-    expect(typeof ctx.sampleRate).toBe('number')
+    const ctx = h.context()
     expect(ctx.sampleRate).toBeGreaterThan(0)
   })
 
   it('destination exists', () => {
-    const ctx = makeContext()
+    const ctx = h.context()
     expect(ctx.destination).toBeDefined()
   })
 
   it('createGain() returns a node with gain property', () => {
-    const ctx = makeContext()
+    const ctx = h.context()
     const gain = ctx.createGain()
-    expect(gain).toBeDefined()
     expect(gain).toHaveProperty('gain')
   })
 
   it('createOscillator() returns a node with start/stop', () => {
-    const ctx = makeContext()
+    const ctx = h.context()
     const osc = ctx.createOscillator()
-    expect(osc).toBeDefined()
     expect(osc).toHaveProperty('start')
     expect(osc).toHaveProperty('stop')
   })
 
-  it('defaults to offline with length 44100 when no options', () => {
-    const ctx = createAudioContext({ offline: { length: 44100 } })
+  it('defaults to sampleRate 44100', () => {
+    const ctx = h.context()
     expect(ctx.sampleRate).toBe(44100)
   })
 
@@ -67,16 +62,18 @@ describe('createAudioContext', () => {
   })
 
   it('uses custom backend when provided', () => {
-    const mockBackend = createMockBackendProvider()
+    const mockBackend = h.mockProvider()
     const ctx = createAudioContext({ backend: mockBackend })
     expect(mockBackend.contexts.length).toBe(1)
     expect(ctx.sampleRate).toBe(44100)
   })
 
-  it('defaults to web-audio backend when none specified', () => {
-    const ctx = makeContext()
+  it('backend context has all factory methods', () => {
+    const ctx = h.context()
     expect(ctx.createOscillator).toBeDefined()
     expect(ctx.createGain).toBeDefined()
     expect(ctx.createNoise).toBeDefined()
+    expect(ctx.decodeAudio).toBeDefined()
+    expect(ctx.createBufferSource).toBeDefined()
   })
 })
