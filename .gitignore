@@ -16,3 +16,7 @@ samples/**/*
 sounds/**/*
 !sounds/**/.gitkeep
 !sounds/README.md
+
+# Claude Code local state
+.claude/
+mcp-servers/score-codebase/node_modules/

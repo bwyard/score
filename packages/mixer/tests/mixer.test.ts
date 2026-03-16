@@ -216,4 +216,37 @@ describe('createMixer', () => {
     expect(ch0.solo).toBe(false)
     expect(ch1.solo).toBe(false)
   })
+
+  it('creates initial groups from props', () => {
+    const ctx = h.mockContext()
+    const mixer = createMixer(ctx, {
+      groups: [{ name: 'Drums' }],
+    })
+    const grp = mixer.getGroup(0)
+    expect(grp).toBeDefined()
+    expect(grp!.name).toBe('Drums')
+  })
+
+  it('getGroup returns undefined for out-of-range index', () => {
+    const ctx = h.mockContext()
+    const mixer = createMixer(ctx)
+    expect(mixer.getGroup(0)).toBeUndefined()
+  })
+
+  it('addGroup creates and returns a new group', () => {
+    const ctx = h.mockContext()
+    const mixer = createMixer(ctx)
+    const grp = mixer.addGroup({ name: 'Synths' })
+    expect(grp).toBeDefined()
+    expect(grp.name).toBe('Synths')
+    expect(mixer.getGroup(0)).toBe(grp)
+  })
+
+  it('dispose cleans up groups without throwing', () => {
+    const ctx = h.mockContext()
+    const mixer = createMixer(ctx, {
+      groups: [{ name: 'Drums' }],
+    })
+    expect(() => { mixer.dispose() }).not.toThrow()
+  })
 })
