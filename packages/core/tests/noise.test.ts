@@ -1,11 +1,21 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterAll } from 'vitest'
 import { createAudioContext } from '../src/context.js'
 import { createNoise } from '../src/noise.js'
+import type { BackendContext } from '../src/backend/types.js'
 import { createMockBackendContext } from './utils/audioTestUtils.js'
 
 describe('createNoise', () => {
-  const makeContext = () =>
-    createAudioContext({ offline: { length: 44100 } })
+  const contexts: BackendContext[] = []
+
+  afterAll(async () => {
+    await Promise.all(contexts.map((ctx) => ctx.close().catch(() => {})))
+  })
+
+  const makeContext = () => {
+    const ctx = createAudioContext({ offline: { length: 44100 } })
+    contexts.push(ctx)
+    return ctx
+  }
 
   it('returns an AudioComponent (has connect, disconnect, dispose)', () => {
     const ctx = makeContext()

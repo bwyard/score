@@ -11,3 +11,8 @@ coverage
 samples/**/*
 !samples/**/.gitkeep
 !samples/README.md
+
+# Sounds are user-provided — never committed
+sounds/**/*
+!sounds/**/.gitkeep
+!sounds/README.md

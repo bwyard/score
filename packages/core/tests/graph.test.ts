@@ -1,13 +1,19 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterAll } from 'vitest'
 import { createAudioContext } from '../src/context.js'
 import { createAudioGraph } from '../src/graph.js'
 import type { BackendContext } from '../src/backend/types.js'
 
 describe('createAudioGraph', () => {
+  const contexts: BackendContext[] = []
   let context: BackendContext
+
+  afterAll(async () => {
+    await Promise.all(contexts.map((ctx) => ctx.close().catch(() => {})))
+  })
 
   beforeEach(() => {
     context = createAudioContext({ offline: { length: 44100 } })
+    contexts.push(context)
   })
 
   it('returns an AudioGraph object with the expected methods', () => {

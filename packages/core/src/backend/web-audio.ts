@@ -221,7 +221,12 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
 
     suspend: () => (ctx as unknown as { suspend: () => Promise<void> }).suspend(),
     resume: () => (ctx as unknown as { resume: () => Promise<void> }).resume(),
-    close: () => (ctx as unknown as { close: () => Promise<void> }).close(),
+    close: () => {
+      const maybeCloseable = ctx as unknown as { close?: () => Promise<void> }
+      return typeof maybeCloseable.close === 'function'
+        ? maybeCloseable.close()
+        : Promise.resolve()
+    },
   }
 }
 // --- Web Audio BackendProvider ---

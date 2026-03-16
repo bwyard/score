@@ -1,8 +1,19 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterAll } from 'vitest'
 import { webAudioBackend } from '../src/backend/web-audio.js'
-import type { BackendProvider } from '../src/backend/types.js'
+import type { BackendContext, BackendProvider } from '../src/backend/types.js'
 
 describe('webAudioBackend', () => {
+  const contexts: BackendContext[] = []
+
+  const track = <T extends BackendContext>(ctx: T): T => {
+    contexts.push(ctx)
+    return ctx
+  }
+
+  afterAll(async () => {
+    await Promise.all(contexts.map((ctx) => ctx.close().catch(() => {})))
+  })
+
   it('is a BackendProvider with name "web-audio"', () => {
     const backend: BackendProvider = webAudioBackend
     expect(backend.name).toBe('web-audio')
@@ -10,7 +21,7 @@ describe('webAudioBackend', () => {
   })
 
   it('creates an offline context', () => {
-    const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
+    const ctx = track(webAudioBackend.createContext({ offline: { length: 44100 } }))
     expect(ctx.sampleRate).toBe(44100)
     expect(ctx.destination).toBeDefined()
     expect(typeof ctx.createOscillator).toBe('function')
@@ -19,10 +30,10 @@ describe('webAudioBackend', () => {
   })
 
   it('respects custom sampleRate', () => {
-    const ctx = webAudioBackend.createContext({
+    const ctx = track(webAudioBackend.createContext({
       sampleRate: 48000,
       offline: { length: 48000 },
-    })
+    }))
     expect(ctx.sampleRate).toBe(48000)
   })
 
@@ -32,7 +43,7 @@ describe('webAudioBackend', () => {
 
   describe('createOscillator', () => {
     it('returns a node with start, stop, setFrequency, setDetune, connect, disconnect', () => {
-      const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
+      const ctx = track(webAudioBackend.createContext({ offline: { length: 44100 } }))
       const osc = ctx.createOscillator()
       expect(typeof osc.start).toBe('function')
       expect(typeof osc.stop).toBe('function')
@@ -43,14 +54,14 @@ describe('webAudioBackend', () => {
     })
 
     it('start and stop do not throw', () => {
-      const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
+      const ctx = track(webAudioBackend.createContext({ offline: { length: 44100 } }))
       const osc = ctx.createOscillator()
       expect(() => { osc.start(); }).not.toThrow()
       expect(() => { osc.stop(); }).not.toThrow()
     })
 
     it('connects to destination without throwing', () => {
-      const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
+      const ctx = track(webAudioBackend.createContext({ offline: { length: 44100 } }))
       const osc = ctx.createOscillator()
       expect(() => { osc.connect(ctx.destination); }).not.toThrow()
     })
@@ -58,7 +69,7 @@ describe('webAudioBackend', () => {
 
   describe('createGain', () => {
     it('returns a node with gain, setGain, connect, disconnect', () => {
-      const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
+      const ctx = track(webAudioBackend.createContext({ offline: { length: 44100 } }))
       const gain = ctx.createGain()
       expect(typeof gain.gain).toBe('number')
       expect(typeof gain.setGain).toBe('function')
@@ -67,13 +78,13 @@ describe('webAudioBackend', () => {
     })
 
     it('defaults to gain 1.0', () => {
-      const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
+      const ctx = track(webAudioBackend.createContext({ offline: { length: 44100 } }))
       const gain = ctx.createGain()
       expect(gain.gain).toBeCloseTo(1.0)
     })
 
     it('respects initial gain prop', () => {
-      const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
+      const ctx = track(webAudioBackend.createContext({ offline: { length: 44100 } }))
       const gain = ctx.createGain({ gain: 0.5 })
       expect(gain.gain).toBeCloseTo(0.5)
     })
@@ -81,7 +92,7 @@ describe('webAudioBackend', () => {
 
   describe('createNoise', () => {
     it('returns a node with start, stop, connect, disconnect', () => {
-      const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
+      const ctx = track(webAudioBackend.createContext({ offline: { length: 44100 } }))
       const noise = ctx.createNoise()
       expect(typeof noise.start).toBe('function')
       expect(typeof noise.stop).toBe('function')
@@ -90,14 +101,14 @@ describe('webAudioBackend', () => {
     })
 
     it('start and stop do not throw', () => {
-      const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
+      const ctx = track(webAudioBackend.createContext({ offline: { length: 44100 } }))
       const noise = ctx.createNoise()
       expect(() => { noise.start(); }).not.toThrow()
       expect(() => { noise.stop(); }).not.toThrow()
     })
 
     it('accepts all noise types', () => {
-      const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
+      const ctx = track(webAudioBackend.createContext({ offline: { length: 44100 } }))
       expect(() => ctx.createNoise({ type: 'white' })).not.toThrow()
       expect(() => ctx.createNoise({ type: 'pink' })).not.toThrow()
       expect(() => ctx.createNoise({ type: 'brown' })).not.toThrow()

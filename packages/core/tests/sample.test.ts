@@ -1,12 +1,25 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterAll } from 'vitest'
 import { createAudioContext } from '../src/context.js'
 import { decodeSample, createSamplePlayer } from '../src/sample.js'
+import type { BackendContext } from '../src/backend/types.js'
 import { createMockBackendContext, createMockBuffer } from './utils/audioTestUtils.js'
 import { createTestWav } from './utils/createTestWav.js'
 
+const contexts: BackendContext[] = []
+
+afterAll(async () => {
+  await Promise.all(contexts.map((ctx) => ctx.close().catch(() => {})))
+})
+
+const trackCtx = () => {
+  const ctx = createAudioContext({ offline: { length: 44100 } })
+  contexts.push(ctx)
+  return ctx
+}
+
 describe('decodeSample', () => {
   it('decodes valid audio data via backend', async () => {
-    const ctx = createAudioContext({ offline: { length: 44100 } })
+    const ctx = trackCtx()
     const wav = createTestWav()
     const arrayBuffer = wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength)
     const buffer = await decodeSample(ctx, arrayBuffer)
@@ -18,7 +31,7 @@ describe('decodeSample', () => {
   })
 
   it('throws ScoreError for empty ArrayBuffer', async () => {
-    const ctx = createAudioContext({ offline: { length: 44100 } })
+    const ctx = trackCtx()
     await expect(decodeSample(ctx, new ArrayBuffer(0))).rejects.toThrow('Cannot decode empty audio data')
   })
 
@@ -31,7 +44,7 @@ describe('decodeSample', () => {
   })
 
   it('preserves sample rate from source file', async () => {
-    const ctx = createAudioContext({ offline: { length: 44100 } })
+    const ctx = trackCtx()
     const wav = createTestWav({ sampleRate: 44100 })
     const arrayBuffer = wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength)
     const buffer = await decodeSample(ctx, arrayBuffer)
@@ -140,7 +153,7 @@ describe('createSamplePlayer', () => {
   })
 
   it('integration: decode and play with real backend', async () => {
-    const ctx = createAudioContext({ offline: { length: 44100 } })
+    const ctx = trackCtx()
     const wav = createTestWav()
     const arrayBuffer = wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength)
     const buffer = await decodeSample(ctx, arrayBuffer)

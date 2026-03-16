@@ -1,10 +1,20 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterAll } from 'vitest'
 import { createAudioContext } from '../src/context.js'
+import type { BackendContext } from '../src/backend/types.js'
 import { createMockBackendProvider } from './utils/audioTestUtils.js'
 
 describe('createAudioContext', () => {
-  const makeContext = (options?: Parameters<typeof createAudioContext>[0]) =>
-    createAudioContext({ offline: { length: 44100 }, ...options })
+  const contexts: BackendContext[] = []
+
+  afterAll(async () => {
+    await Promise.all(contexts.map((ctx) => ctx.close().catch(() => {})))
+  })
+
+  const makeContext = (options?: Parameters<typeof createAudioContext>[0]) => {
+    const ctx = createAudioContext({ offline: { length: 44100 }, ...options })
+    contexts.push(ctx)
+    return ctx
+  }
 
   it('returns an object with currentTime, sampleRate, state, and destination', () => {
     const ctx = makeContext()
@@ -58,7 +68,7 @@ describe('createAudioContext', () => {
   })
 
   it('defaults to offline with length 44100 when no options', () => {
-    const ctx = createAudioContext({ offline: { length: 44100 } })
+    const ctx = makeContext()
     expect(ctx.sampleRate).toBe(44100)
   })
 
