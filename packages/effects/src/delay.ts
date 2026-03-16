@@ -14,8 +14,8 @@ export const createDelay = (
   props?: DelayProps,
 ) => {
   const delayTime = props?.time ?? 0.25
-  const feedbackAmount = props?.feedback ?? 0.3
-  const mixAmount = props?.mix ?? 0.5
+  const feedbackAmount = Math.min(props?.feedback ?? 0.3, 0.95)
+  const mixAmount = Math.max(0, Math.min(props?.mix ?? 0.5, 1.0))
 
   // Create nodes
   const inputGain = context.createGain({ gain: 1.0 })
@@ -44,10 +44,13 @@ export const createDelay = (
     readonly setMix: (value: number, time?: number) => void
   } = {
     setTime: (value: number, time?: number) => { delayNode.setDelayTime(value, time) },
-    setFeedback: (value: number, time?: number) => { feedbackGain.setGain(value, time) },
+    setFeedback: (value: number, time?: number) => {
+      feedbackGain.setGain(Math.min(value, 0.95), time)
+    },
     setMix: (value: number, time?: number) => {
-      dryGain.setGain(1.0 - value, time)
-      wetGain.setGain(value, time)
+      const clamped = Math.max(0, Math.min(value, 1.0))
+      dryGain.setGain(1.0 - clamped, time)
+      wetGain.setGain(clamped, time)
     },
 
     connect: (destination: ScoreAudioNode) => {
