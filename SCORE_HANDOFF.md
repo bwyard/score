@@ -106,8 +106,10 @@ Phase 7b   ⬜  Mastering chain — Multiband Compressor, Saturation/Tape, Auto-
 Phase 8    ✅  Sequencer + Transport + TempoMap + Swing/Groove
 Phase 8b   ⬜  Core primitives — ADSR Envelope, LFO modulation source
 Phase 9    ⬜  Song format + Automation system + Pattern reuse + Arpeggiator
-Phase 9b   ⬜  @score/math — mathematical music toolkit
-Phase 9c   ⬜  @score/pattern — functional pattern model (TidalCycles-inspired)
+Phase 9b   ⬜  @score/math — mathematical music toolkit [ships in v1.0 — advanced feature]
+Phase 9c   ⬜  @score/pattern — functional Pattern<T> model, Strudel migration path [ships in v1.0 — advanced feature]
+Phase 9d   ⬜  @score/musical — plain language DSL (describe() function)
+Phase 9e   ⬜  Song file security — AST validator + module resolver + Zod export validation
 Phase 10   ⬜  CLI — all commands + stem export + freeze/bounce
 Phase 10b  ⬜  score-audio MCP — effect catalog, signal flow, backend nodes, component catalog
 Phase 10b2 ⬜  score-game-tools MCP — song inspector, mixer state, transport state, audio graph
@@ -784,7 +786,25 @@ const lead = Synth({
 
 ## 9c. Functional Pattern System (@score/pattern — Phase 9c)
 
-TidalCycles-inspired pattern model. Patterns are functions from time to events:
+### Design goal — TidalCycles power, readable as music
+
+Score's pattern system is inspired by TidalCycles but prioritises
+human readability over terseness. A Score pattern should sound like
+it reads. A musician with no coding background should be able to
+follow what the code is doing by reading it aloud.
+
+TidalCycles is the academic inspiration — Score is the musician's
+implementation.
+
+```ts
+// TidalCycles style (terse, powerful, cryptic to newcomers)
+d1 $ every 4 (fast 2) $ sound "bd sd hh cp"
+
+// Score style (same result — reads like a production note)
+const kick = Kick({ pattern: every(4, fast(2), beat(1,0,1,0)) })
+```
+
+The core type is functions from time arcs to events:
 
 ```ts
 type Arc = [Time, Time]
@@ -794,12 +814,12 @@ type Pattern<T> = (arc: Arc) => Event<T>[]
 This enables composable transformations that nest freely:
 
 ```ts
-// All of these are functions that take patterns and return patterns
-fast(2, pat)              // speed up any pattern
-every(4, fn, pat)         // apply function every 4 cycles
-stack(...pats)            // layer patterns
-fmap(fn, pat)             // transform pattern values
-degrade(0.8, pat)         // randomly drop 20% of events
+fast(2, pat)              // double time — reads: "play this twice as fast"
+slow(2, pat)              // half time — reads: "play this half as fast"
+every(4, fast(2), pat)    // reads: "every 4 bars, play this twice as fast"
+stack(kick, snare, hihat) // reads: "layer kick, snare, and hihat together"
+degrade(0.8, pat)         // reads: "randomly drop 20% of hits"
+rev(pat)                  // reads: "reverse this pattern"
 ```
 
 ### Backward compatibility — arrays always work
@@ -808,9 +828,9 @@ The existing array format `[1,0,0,0]` is supported permanently.
 The functional pattern type is additive, not a replacement.
 
 ```ts
-// Both of these always work
-const kick = Kick({ pattern: [1,0,0,0,1,0,0,0] })                    // array
-const kick = Kick({ pattern: every(4, fast(2), Seq(1,0,0,0)) })      // functional
+// Both of these always work — arrays never removed
+const kick = Kick({ pattern: [1,0,0,0,1,0,0,0] })
+const kick = Kick({ pattern: every(4, fast(2), beat(1,0,0,0)) })
 ```
 
 ### PatternInput type union (built into Phase 8)
@@ -892,6 +912,210 @@ score> viz(kick)
 - @score/components — type widening only (non-breaking)
 - @score/sequencer — PatternInput type union (one change in Phase 8)
 - Existing song files and tests — no changes ever
+
+---
+
+## 9d. Plain Language Layer (@score/musical — Phase 9d)
+
+### Design goal — any musician can write Score on day one
+
+Score supports two syntaxes that produce identical audio output.
+The choice is entirely the artist's. Both are permanent.
+
+```js
+// Developer syntax — explicit component model
+const kick = Kick({
+  pattern:   [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+  sidechain: true,
+  volume:    0.9,
+})
+
+// Musician syntax — plain language
+const kick = describe('deep kick hits every beat pumps hard loud')
+```
+
+Same audio. Different surface.
+
+### The `describe()` function
+
+`describe()` tokenizes the string and matches phrases to component
+props via a vocabulary system. It builds the component from matched
+vocabulary — no AI, no generation, just a lookup table.
+
+```
+Phrase                        Maps to
+──────────────────────────    ────────────────────────────────────
+"deep kick"                → Kick({ synth: { frequency: 58, pitchDrop: 0.06 } })
+"punchy kick"              → Kick({ synth: { frequency: 80, pitchDrop: 0.03 } })
+"hits every beat"          → pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0]
+"hits on 2 and 4"          → pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]
+"straight eighths"         → pattern: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0]
+"pumps hard"               → sidechain: true, compression: { ratio: 6 }
+"pumps gently"             → sidechain: true, compression: { ratio: 2 }
+"sits far back in reverb"  → reverb: 0.75
+"sits in reverb"           → reverb: 0.45
+"sits in reverb slightly"  → reverb: 0.25
+"loud"                     → volume: 0.85
+"quiet"                    → volume: 0.45
+"gritty"                   → distortion: 0.2
+"warm fm bass"             → FM({ modRatio: 1, modIndex: 3 })
+"soft string pad"          → PhysicalString({ coef: 0.3, decay: 4 })
+"filter wanders slowly"    → filter: { frequency: OUProcess({...}) }
+```
+
+### Arrangement in plain language
+
+```js
+// Musician syntax — reads like a track breakdown note
+const arrangement = song`
+  intro 8 bars
+    just hihat
+
+  drop 32 bars
+    full kit
+    bass and pad
+    kick pumps hard
+
+  breakdown 16 bars
+    strip to sax and pad
+    let it breathe
+`
+```
+
+### What plain language does NOT do
+
+It does not generate musical decisions. It does not choose patterns,
+notes, arrangements, or effects. It only translates descriptions of
+musical decisions the artist has already made into component props.
+All creative decisions are always the artist's.
+
+### The learning path this creates
+
+```
+Week 1  — artist writes: describe('deep kick hits every beat pumps hard')
+          Score Studio shows the code equivalent in the side panel
+          Artist sees: pattern: [1,0,0,0,1,0,0,0]
+
+Week 4  — artist starts writing pattern arrays directly
+
+Week 8  — artist discovers euclidean(3, 8) and @score/pattern
+          starts exploring functional transformations
+          learning through music
+```
+
+### Package structure
+
+```
+@score/musical
+└── src/
+    ├── vocabulary/
+    │   ├── sounds.ts        ← instrument character descriptors
+    │   ├── patterns.ts      ← rhythm plain language
+    │   ├── feel.ts          ← sidechain, humanize, distortion
+    │   ├── space.ts         ← reverb/delay descriptions
+    │   ├── volume.ts        ← loud/quiet/whisper
+    │   └── arrangement.ts   ← intro/drop/breakdown words
+    ├── parser.ts            ← tokenizer + component builder
+    ├── describe.ts          ← describe() exported function
+    └── index.ts
+```
+
+---
+
+## 9e. Song File Security (Phase 9e)
+
+### Why — song files are executable JavaScript
+
+A malicious song file from an untrusted source could import `fs`,
+spawn processes, or make network requests. The solution is
+language-level restriction before execution, not sandboxing.
+
+### Two-layer enforcement
+
+**Layer 1 — AST validation before execution (`SongValidator`):**
+Parses the file to an AST and rejects:
+- Blocked module imports (`fs`, `child_process`, `net`, `http`, `https`)
+- `process.*` access
+- `eval()` and `Function()` constructor calls
+- Dynamic `import()` calls
+
+Clear ScoreError with line number and exact fix shown to artist.
+
+```bash
+$ score play ~/Downloads/sketchy-track.js
+
+✖ Score: Song validation failed
+
+  Line 3: Blocked import "fs" — not allowed in Score songs
+  Fix: Remove this import — Score songs only use @score/* packages
+
+  Line 7: "process.exit" is not allowed in Score songs
+  Fix: Score songs do not have access to Node.js process
+
+  2 errors found. Fix these before playing.
+```
+
+**Layer 2 — Module resolver at runtime (`ScoreModuleResolver`):**
+Intercepts all imports and checks the allowlist. Second line of
+defence after AST validation passes.
+
+**Layer 3 — Zod export validation (`SongExportValidator`):**
+After execution, the exported Song object is Zod-validated before
+the engine receives it. Catches structural problems regardless of
+how they got there.
+
+### Allowed in song files
+
+```
+@score/core, @score/math, @score/pattern, @score/musical
+@score/dsl, @score/components, @score/effects
+Local relative imports (./sounds/my-library.js etc)
+Math, Array, Object, Map, Set, String, Number, JSON, Date
+console.log (debugging only)
+```
+
+### Blocked in song files
+
+```
+fs, fs/promises, child_process, net, http, https
+fetch, WebSocket
+process (no process control)
+eval, Function() (no dynamic execution)
+setTimeout, setInterval (use Score transport)
+require() (use ESM imports)
+Any npm package not in @score/*)
+```
+
+### Mathematical operations are completely unaffected
+
+All @score/math exports (Lorenz, OUProcess, Euclidean, entropy etc)
+are fully available. Restrictions target dangerous system operations
+only. Live input, physical modeling, crowd recording — all work.
+
+### The --trust flag
+
+```bash
+score play --trust my-plugin-test.js
+# Skips validation — always shows warning
+# Developer use only — never for shared files
+```
+
+### New runtime folder in @score/cli
+
+```
+@score/cli/src/runtime/
+├── ScoreModuleResolver.ts   ← import allowlist enforcement
+├── SongValidator.ts         ← AST analysis before execution
+├── ScoreGlobals.ts          ← restricted global environment
+└── SongExportValidator.ts   ← Zod schema validation of export
+```
+
+### New dependencies
+
+```
+acorn        — JavaScript AST parser
+acorn-walk   — AST traversal
+```
 
 ---
 
@@ -1038,6 +1262,15 @@ Major festivals       → Multiple shows documented, established tool
 17. Mixer requires sub bus output and hard brick-wall limiter
 18. XDJ profiles support all three mixer modes — score-mixer, hardware-mixer, hybrid
 19. All code is functional — factory functions, `const`, arrow functions, zero classes
+20. Song files are AST-validated before execution — SongValidator runs first, rejects blocked imports
+21. Only @score/* and local relative imports are valid in song files
+22. Blocked in song files: fs, child_process, net, http, https, fetch, process, eval, setTimeout
+23. Song exports are Zod-validated before the engine receives them
+24. --trust flag skips validation — developer-only, never document as safe for shared files
+25. @score/musical plain language compiles to component model — identical audio output, no AI
+26. PatternInput in sequencer accepts both number[] and Pattern<T> — arrays never removed
+27. Pattern<T> type is (arc: Arc) => Event<T>[] — functions from time, not data arrays
+28. @score/pattern and @score/math ship in v1.0 — advanced features, not required for basic songs
 
 ---
 
@@ -1121,6 +1354,12 @@ For Score users building songs with AI assistance. Exposes the public API surfac
 | `meyda` | Real-time audio feature extraction |
 | `midi-parser-js` | MIDI file parsing |
 
+### Song File Security (Phase 9e)
+| Package | Purpose |
+|---------|---------|
+| `acorn` | JavaScript AST parser for SongValidator |
+| `acorn-walk` | AST traversal for import/eval detection |
+
 ### Never Use — Ever
 | Thing | Reason |
 |-------|--------|
@@ -1150,6 +1389,7 @@ Format: `YYYY-MM-DD sNNN — What was completed or significantly advanced`
 2026-03-16 s003 — Architecture compliance (ramp rule, id/type, ScoreError fields), tech debt cleanup, handoff v3
 2026-03-16 s004 — Handoff v4 unification, pre-Phase 7 audit, @score-music scope decision
 2026-03-16 s005 — Phase 6 completion (8 effects + chain + 2 backend nodes), Phase 7 Mixer, Phase 8 Sequencer — 553 tests
+2026-03-16 s006 — score-codebase MCP loaded; incorporated language+security decisions: Phase 9d (describe()), 9e (AST security), rules 20-28, @score/pattern design philosophy
 ```
 
 ---
