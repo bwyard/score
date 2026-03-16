@@ -14,10 +14,16 @@ export default tseslint.config(
         'error',
         { varsIgnorePattern: '^_', argsIgnorePattern: '^_' },
       ],
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+    },
+  },
+  {
+    files: ['**/tests/**/*.ts'],
+    rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
     },
   },
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '**/*.js', '**/*.mjs', '**/vitest.config.ts'],
+    ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '**/*.js', '**/*.mjs'],
   },
 )
