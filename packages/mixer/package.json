@@ -1,5 +1,5 @@
 {
-  "name": "@wip/mixer",
+  "name": "@score/mixer",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -19,7 +19,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@wip/core": "workspace:*"
+    "@score/core": "workspace:*"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.0.0",

@@ -1,4 +1,4 @@
-// @wip/core — Phase 1 stub
+// @score/core — Phase 1 stub
 // AudioEngine, AudioGraphManager, WIPError, context factory
 // Implementation begins Phase 2
 

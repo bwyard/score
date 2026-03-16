@@ -1,2 +1,2 @@
-// @wip/mixer — Phase 1 stub
+// @score/mixer — Phase 1 stub
 export const _stub = true // Phase 1: stub only

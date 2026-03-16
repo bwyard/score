@@ -11,11 +11,11 @@ Read `current.md` at the start of every session. Update it and write a closed se
 
 ---
 
-# WIP — Work In Progress (temporary name)
+# Score — EDM Audio Framework
 
-> **Naming note:** "WIP" is a placeholder. Project name TBD — see open decision in
-> `../claude-resources/sessions/wip/current.md`. All packages are `@wip/*` until renamed.
-> Do not rename anything without explicit instruction.
+> **Name locked:** Score. npm scope `@score/*`. Repo will be `bwyard/score`.
+> Folder will be renamed from `wip/` to `score/` locally.
+> GUI name (e.g. Score Studio) to be decided at Phase 13.
 
 This file is the authoritative project briefing. Read it fully before touching any file.
 Full architecture spec: `WIP_HANDOFF.md`

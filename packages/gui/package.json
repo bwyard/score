@@ -1,5 +1,5 @@
 {
-  "name": "@wip/gui",
+  "name": "@score/gui",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@wip/core": "workspace:*"
+    "@score/core": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
