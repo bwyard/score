@@ -9,6 +9,9 @@ import type {
   AudioNode as WebAudioNode,
   BaseAudioContext,
   AudioBufferSourceNode as WebBufferSourceNode,
+  BiquadFilterNode as WebBiquadFilterNode,
+  DelayNode as WebDelayNode,
+  DynamicsCompressorNode as WebDynamicsCompressorNode,
   GainNode as WebGainNode,
   OscillatorNode as WebOscillatorNode,
 } from 'node-web-audio-api'
@@ -24,6 +27,11 @@ import type {
 // --- Raw node access ---
 // Symbol-keyed property to retrieve the underlying Web Audio node
 // when connecting two BackendNodes together
+
+// Web Audio API BiquadFilterType — not always exported by node-web-audio-api types
+type BiquadFilterType = 'lowpass' | 'highpass' | 'bandpass' | 'notch' | 'allpass' | 'peaking' | 'lowshelf' | 'highshelf'
+
+const MIN_RAMP = 0.01 // 10ms minimum ramp time for all parameter changes
 
 const RAW = Symbol('web-audio-raw')
 const BUFFER = Symbol('web-audio-buffer')
@@ -114,10 +122,14 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
         start: (time?: number) => { osc.start(time ?? ctx.currentTime) },
         stop: (time?: number) => { osc.stop(time ?? ctx.currentTime) },
         setFrequency: (value: number, time?: number) => {
-          osc.frequency.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          osc.frequency.setValueAtTime(osc.frequency.value, t)
+          osc.frequency.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
         setDetune: (value: number, time?: number) => {
-          osc.detune.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          osc.detune.setValueAtTime(osc.detune.value, t)
+          osc.detune.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
       }
     },
@@ -131,7 +143,9 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
         ...base,
         get gain() { return gainNode.gain.value },
         setGain: (value: number, time?: number) => {
-          gainNode.gain.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          gainNode.gain.setValueAtTime(gainNode.gain.value, t)
+          gainNode.gain.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
       }
     },
@@ -185,6 +199,7 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
         throw ScoreError('Failed to decode audio data', {
           fix: 'Ensure the file is a valid audio format (WAV, MP3, OGG, FLAC)',
           received: err instanceof Error ? err.message : String(err),
+          docs: 'https://score.dev/docs/core#sample',
         })
       }
     },
@@ -208,13 +223,98 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
           source.loop = loop
         },
         setPlaybackRate: (rate: number, time?: number) => {
-          source.playbackRate.setValueAtTime(rate, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          source.playbackRate.setValueAtTime(source.playbackRate.value, t)
+          source.playbackRate.linearRampToValueAtTime(rate, t + MIN_RAMP)
         },
         start: (time?: number, offset?: number, duration?: number) => {
           source.start(time, offset, duration)
         },
         stop: (time?: number) => {
           source.stop(time)
+        },
+      }
+    },
+
+    createFilter: (props) => {
+      const filter = (ctx as unknown as { createBiquadFilter: () => WebBiquadFilterNode }).createBiquadFilter()
+      filter.type = (props?.type ?? 'lowpass') as BiquadFilterType
+      filter.frequency.value = props?.frequency ?? 1000
+      filter.Q.value = props?.Q ?? 1
+      filter.gain.value = props?.gain ?? 0
+      const base = wrapNode(filter as unknown as WebAudioNode)
+
+      return {
+        ...base,
+        setFrequency: (value: number, time?: number) => {
+          const t = time ?? ctx.currentTime
+          filter.frequency.setValueAtTime(filter.frequency.value, t)
+          filter.frequency.linearRampToValueAtTime(value, t + MIN_RAMP)
+        },
+        setQ: (value: number, time?: number) => {
+          const t = time ?? ctx.currentTime
+          filter.Q.setValueAtTime(filter.Q.value, t)
+          filter.Q.linearRampToValueAtTime(value, t + MIN_RAMP)
+        },
+        setFilterGain: (value: number, time?: number) => {
+          const t = time ?? ctx.currentTime
+          filter.gain.setValueAtTime(filter.gain.value, t)
+          filter.gain.linearRampToValueAtTime(value, t + MIN_RAMP)
+        },
+      }
+    },
+
+    createDelay: (props) => {
+      const maxDelay = props?.maxDelayTime ?? 5.0
+      const delay = (ctx as unknown as { createDelay: (max: number) => WebDelayNode }).createDelay(maxDelay)
+      delay.delayTime.value = props?.delayTime ?? 0
+      const base = wrapNode(delay as unknown as WebAudioNode)
+
+      return {
+        ...base,
+        setDelayTime: (value: number, time?: number) => {
+          const t = time ?? ctx.currentTime
+          delay.delayTime.setValueAtTime(delay.delayTime.value, t)
+          delay.delayTime.linearRampToValueAtTime(value, t + MIN_RAMP)
+        },
+      }
+    },
+
+    createCompressor: (props) => {
+      const comp = (ctx as unknown as { createDynamicsCompressor: () => WebDynamicsCompressorNode }).createDynamicsCompressor()
+      comp.threshold.value = props?.threshold ?? -24
+      comp.ratio.value = props?.ratio ?? 12
+      comp.knee.value = props?.knee ?? 30
+      comp.attack.value = props?.attack ?? 0.003
+      comp.release.value = props?.release ?? 0.25
+      const base = wrapNode(comp as unknown as WebAudioNode)
+
+      return {
+        ...base,
+        setThreshold: (value: number, time?: number) => {
+          const t = time ?? ctx.currentTime
+          comp.threshold.setValueAtTime(comp.threshold.value, t)
+          comp.threshold.linearRampToValueAtTime(value, t + MIN_RAMP)
+        },
+        setRatio: (value: number, time?: number) => {
+          const t = time ?? ctx.currentTime
+          comp.ratio.setValueAtTime(comp.ratio.value, t)
+          comp.ratio.linearRampToValueAtTime(value, t + MIN_RAMP)
+        },
+        setKnee: (value: number, time?: number) => {
+          const t = time ?? ctx.currentTime
+          comp.knee.setValueAtTime(comp.knee.value, t)
+          comp.knee.linearRampToValueAtTime(value, t + MIN_RAMP)
+        },
+        setAttack: (value: number, time?: number) => {
+          const t = time ?? ctx.currentTime
+          comp.attack.setValueAtTime(comp.attack.value, t)
+          comp.attack.linearRampToValueAtTime(value, t + MIN_RAMP)
+        },
+        setRelease: (value: number, time?: number) => {
+          const t = time ?? ctx.currentTime
+          comp.release.setValueAtTime(comp.release.value, t)
+          comp.release.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
       }
     },
@@ -249,6 +349,7 @@ export const webAudioBackend: BackendProvider = {
       throw ScoreError('Failed to create AudioContext', {
         fix: 'Ensure node-web-audio-api is installed: pnpm add node-web-audio-api',
         received: err instanceof Error ? err.message : String(err),
+        docs: 'https://score.dev/docs/core#audio-context',
       })
     }
   },

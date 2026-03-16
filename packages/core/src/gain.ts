@@ -1,5 +1,6 @@
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from './types.js'
 import type { BackendGainNode } from './backend/types.js'
+import { uid } from './uid.js'
 
 export const createGain = (
   context: ScoreAudioContext,
@@ -13,6 +14,8 @@ export const createGain = (
     readonly setGain: (value: number, time?: number) => void
     readonly gain: number
   } = {
+    id: uid('gain'),
+    type: 'gain' as const,
     get gain() {
       return gainNode.gain
     },

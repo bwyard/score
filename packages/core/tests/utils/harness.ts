@@ -28,7 +28,7 @@ export type TestHarness = {
   readonly mockNode: typeof createMockBackendNode
   // Mock provider factory
   readonly mockProvider: typeof createMockBackendProvider
-  // Assert error is ScoreError with fix field
+  // Assert error is ScoreError with received, fix, and docs fields
   readonly expectScoreError: (err: unknown) => void
   // Cleanup all tracked contexts — call in afterAll
   readonly cleanup: () => Promise<void>
@@ -60,8 +60,14 @@ export const useHarness = (): TestHarness => {
         throw new Error(`Expected ScoreError, got ${err.name}: ${err.message}`)
       }
       const ctx = (err as ScoreErrorInstance).context
+      if (ctx.received === undefined) {
+        throw new Error(`ScoreError missing received field: ${err.message}`)
+      }
       if (!ctx.fix || typeof ctx.fix !== 'string') {
         throw new Error(`ScoreError missing fix field: ${err.message}`)
+      }
+      if (!ctx.docs || typeof ctx.docs !== 'string') {
+        throw new Error(`ScoreError missing docs field: ${err.message}`)
       }
     },
 

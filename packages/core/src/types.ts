@@ -9,6 +9,8 @@ export type ScoreAudioNode = BackendNode
 
 // AudioComponent — every component in @score/components, @score/effects, @score/mixer must conform
 export type AudioComponent = {
+  readonly id: string
+  readonly type: string
   readonly connect: (destination: BackendNode) => AudioComponent
   readonly disconnect: () => AudioComponent
   readonly dispose: () => void

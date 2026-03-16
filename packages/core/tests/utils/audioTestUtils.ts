@@ -4,7 +4,10 @@
 import type {
   BackendBuffer,
   BackendBufferSourceNode,
+  BackendCompressorNode,
   BackendContext,
+  BackendDelayNode,
+  BackendFilterNode,
   BackendGainNode,
   BackendNode,
   BackendNoiseNode,
@@ -39,11 +42,20 @@ export type MockBackendBufferSourceNode = MockBackendNode & BackendBufferSourceN
   readonly stopCalls: Array<{ readonly time: number | undefined }>
 }
 
+export type MockBackendFilterNode = MockBackendNode & BackendFilterNode
+
+export type MockBackendDelayNode = MockBackendNode & BackendDelayNode
+
+export type MockBackendCompressorNode = MockBackendNode & BackendCompressorNode
+
 export type MockBackendContext = BackendContext & {
   readonly createdOscillators: Array<MockBackendOscillatorNode>
   readonly createdGains: Array<MockBackendGainNode>
   readonly createdNoises: Array<MockBackendNoiseNode>
   readonly createdBufferSources: Array<MockBackendBufferSourceNode>
+  readonly createdFilters: Array<MockBackendFilterNode>
+  readonly createdDelays: Array<MockBackendDelayNode>
+  readonly createdCompressors: Array<MockBackendCompressorNode>
 }
 
 // --- Factory functions ---
@@ -133,11 +145,47 @@ export const createMockBufferSourceNode = (): MockBackendBufferSourceNode => {
   }
 }
 
+export const createMockFilterNode = (): MockBackendFilterNode => {
+  const base = createMockBackendNode()
+
+  return {
+    ...base,
+    setFrequency: (_value: number, _time?: number) => {},
+    setQ: (_value: number, _time?: number) => {},
+    setFilterGain: (_value: number, _time?: number) => {},
+  }
+}
+
+export const createMockDelayNode = (): MockBackendDelayNode => {
+  const base = createMockBackendNode()
+
+  return {
+    ...base,
+    setDelayTime: (_value: number, _time?: number) => {},
+  }
+}
+
+export const createMockCompressorNode = (): MockBackendCompressorNode => {
+  const base = createMockBackendNode()
+
+  return {
+    ...base,
+    setThreshold: (_value: number, _time?: number) => {},
+    setRatio: (_value: number, _time?: number) => {},
+    setKnee: (_value: number, _time?: number) => {},
+    setAttack: (_value: number, _time?: number) => {},
+    setRelease: (_value: number, _time?: number) => {},
+  }
+}
+
 export const createMockBackendContext = (): MockBackendContext => {
   const createdOscillators: Array<MockBackendOscillatorNode> = []
   const createdGains: Array<MockBackendGainNode> = []
   const createdNoises: Array<MockBackendNoiseNode> = []
   const createdBufferSources: Array<MockBackendBufferSourceNode> = []
+  const createdFilters: Array<MockBackendFilterNode> = []
+  const createdDelays: Array<MockBackendDelayNode> = []
+  const createdCompressors: Array<MockBackendCompressorNode> = []
 
   return {
     currentTime: 0,
@@ -148,6 +196,9 @@ export const createMockBackendContext = (): MockBackendContext => {
     createdGains,
     createdNoises,
     createdBufferSources,
+    createdFilters,
+    createdDelays,
+    createdCompressors,
 
     createOscillator: (_props) => {
       const node = createMockOscillatorNode()
@@ -172,6 +223,24 @@ export const createMockBackendContext = (): MockBackendContext => {
     createBufferSource: (_buffer, _props) => {
       const node = createMockBufferSourceNode()
       createdBufferSources.push(node)
+      return node
+    },
+
+    createFilter: (_props) => {
+      const node = createMockFilterNode()
+      createdFilters.push(node)
+      return node
+    },
+
+    createDelay: (_props) => {
+      const node = createMockDelayNode()
+      createdDelays.push(node)
+      return node
+    },
+
+    createCompressor: (_props) => {
+      const node = createMockCompressorNode()
+      createdCompressors.push(node)
       return node
     },
 
