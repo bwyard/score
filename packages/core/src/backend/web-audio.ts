@@ -14,6 +14,7 @@ import type {
 } from 'node-web-audio-api'
 import { ScoreError } from '../errors/ScoreError.js'
 import type {
+  BackendBuffer,
   BackendContext,
   BackendNode,
   BackendProvider,
@@ -25,11 +26,16 @@ import type {
 // when connecting two BackendNodes together
 
 const RAW = Symbol('web-audio-raw')
+const BUFFER = Symbol('web-audio-buffer')
 
 type WithRaw = { readonly [RAW]: WebAudioNode }
+type WithBuffer = { readonly [BUFFER]: AudioBuffer }
 
 const getRaw = (node: BackendNode): WebAudioNode =>
   (node as unknown as WithRaw)[RAW]
+
+const getRawBuffer = (buf: BackendBuffer): AudioBuffer =>
+  (buf as unknown as WithBuffer)[BUFFER]
 
 // --- Noise buffer generation (pure functions) ---
 
@@ -143,6 +149,11 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
       return {
         ...outputBase,
         start: (time?: number) => {
+          // Clean up previous source to prevent memory leak
+          if (source) {
+            try { source.stop() } catch { /* already stopped */ }
+            try { source.disconnect() } catch { /* already disconnected */ }
+          }
           source = ctx.createBufferSource() as unknown as WebBufferSourceNode
           source.buffer = buffer as unknown as AudioBuffer
           source.loop = true
@@ -155,6 +166,55 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
             source.disconnect()
             source = null
           }
+        },
+      }
+    },
+
+    decodeAudio: async (data: ArrayBuffer): Promise<BackendBuffer> => {
+      try {
+        const audioBuffer = await (ctx as unknown as { decodeAudioData: (d: ArrayBuffer) => Promise<AudioBuffer> })
+          .decodeAudioData(data)
+        return {
+          [BUFFER]: audioBuffer,
+          duration: audioBuffer.duration,
+          length: audioBuffer.length,
+          sampleRate: audioBuffer.sampleRate,
+          numberOfChannels: audioBuffer.numberOfChannels,
+        } as unknown as BackendBuffer
+      } catch (err) {
+        throw ScoreError('Failed to decode audio data', {
+          fix: 'Ensure the file is a valid audio format (WAV, MP3, OGG, FLAC)',
+          received: err instanceof Error ? err.message : String(err),
+        })
+      }
+    },
+
+    createBufferSource: (buffer: BackendBuffer, props) => {
+      const rawBuffer = getRawBuffer(buffer)
+      const source = ctx.createBufferSource() as unknown as WebBufferSourceNode
+      source.buffer = rawBuffer as unknown as AudioBuffer
+      source.loop = props?.loop ?? false
+      if (props?.playbackRate !== undefined) {
+        source.playbackRate.value = props.playbackRate
+      }
+      const base = wrapNode(source as unknown as WebAudioNode)
+      let loopState = props?.loop ?? false
+
+      return {
+        ...base,
+        get loop() { return loopState },
+        setLoop: (loop: boolean) => {
+          loopState = loop
+          source.loop = loop
+        },
+        setPlaybackRate: (rate: number, time?: number) => {
+          source.playbackRate.setValueAtTime(rate, time ?? ctx.currentTime)
+        },
+        start: (time?: number, offset?: number, duration?: number) => {
+          source.start(time, offset, duration)
+        },
+        stop: (time?: number) => {
+          source.stop(time)
         },
       }
     },

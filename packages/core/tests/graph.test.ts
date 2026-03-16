@@ -56,7 +56,7 @@ describe('createAudioGraph', () => {
       const gain1 = context.createGain()
       const gain2 = context.createGain()
       graph.addNode('gain', gain1)
-      expect(() => graph.addNode('gain', gain2)).toThrow()
+      expect(() => { graph.addNode('gain', gain2); }).toThrow()
       try {
         graph.addNode('gain', gain2)
       } catch (err) {
@@ -79,7 +79,7 @@ describe('createAudioGraph', () => {
 
     it('throws ScoreError when removing an unknown id', () => {
       const graph = createAudioGraph(context)
-      expect(() => graph.removeNode('nonexistent')).toThrow()
+      expect(() => { graph.removeNode('nonexistent'); }).toThrow()
       try {
         graph.removeNode('nonexistent')
       } catch (err) {
@@ -91,7 +91,7 @@ describe('createAudioGraph', () => {
 
     it('throws ScoreError when trying to remove "destination"', () => {
       const graph = createAudioGraph(context)
-      expect(() => graph.removeNode('destination')).toThrow()
+      expect(() => { graph.removeNode('destination'); }).toThrow()
       try {
         graph.removeNode('destination')
       } catch (err) {
@@ -126,7 +126,7 @@ describe('createAudioGraph', () => {
 
     it('throws ScoreError when sourceId is unknown', () => {
       const graph = createAudioGraph(context)
-      expect(() => graph.connect('unknown', 'destination')).toThrow()
+      expect(() => { graph.connect('unknown', 'destination'); }).toThrow()
       try {
         graph.connect('unknown', 'destination')
       } catch (err) {
@@ -140,7 +140,7 @@ describe('createAudioGraph', () => {
       const graph = createAudioGraph(context)
       const gain = context.createGain()
       graph.addNode('gain1', gain)
-      expect(() => graph.connect('gain1', 'unknown')).toThrow()
+      expect(() => { graph.connect('gain1', 'unknown'); }).toThrow()
       try {
         graph.connect('gain1', 'unknown')
       } catch (err) {
@@ -178,7 +178,7 @@ describe('createAudioGraph', () => {
 
     it('throws ScoreError when sourceId is unknown', () => {
       const graph = createAudioGraph(context)
-      expect(() => graph.disconnect('unknown')).toThrow()
+      expect(() => { graph.disconnect('unknown'); }).toThrow()
       try {
         graph.disconnect('unknown')
       } catch (err) {
@@ -239,7 +239,7 @@ describe('createAudioGraph', () => {
       const graph = createAudioGraph(context)
       graph.dispose()
       const gain = context.createGain()
-      expect(() => graph.addNode('gain1', gain)).toThrow()
+      expect(() => { graph.addNode('gain1', gain); }).toThrow()
       try {
         graph.addNode('gain1', gain)
       } catch (err) {
@@ -251,7 +251,7 @@ describe('createAudioGraph', () => {
     it('connect throws ScoreError after dispose', () => {
       const graph = createAudioGraph(context)
       graph.dispose()
-      expect(() => graph.connect('destination', 'destination')).toThrow()
+      expect(() => { graph.connect('destination', 'destination'); }).toThrow()
       try {
         graph.connect('destination', 'destination')
       } catch (err) {

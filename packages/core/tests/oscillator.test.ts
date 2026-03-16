@@ -46,26 +46,26 @@ describe('createOscillator', () => {
   it('start() does not throw', () => {
     const ctx = makeContext()
     const osc = createOscillator(ctx, {})
-    expect(() => osc.start()).not.toThrow()
+    expect(() => { osc.start(); }).not.toThrow()
   })
 
   it('stop() after start does not throw', () => {
     const ctx = makeContext()
     const osc = createOscillator(ctx, {})
     osc.start()
-    expect(() => osc.stop()).not.toThrow()
+    expect(() => { osc.stop(); }).not.toThrow()
   })
 
   it('setFrequency does not throw', () => {
     const ctx = makeContext()
     const osc = createOscillator(ctx, {})
-    expect(() => osc.setFrequency(660)).not.toThrow()
+    expect(() => { osc.setFrequency(660); }).not.toThrow()
   })
 
   it('setDetune does not throw', () => {
     const ctx = makeContext()
     const osc = createOscillator(ctx, {})
-    expect(() => osc.setDetune(50)).not.toThrow()
+    expect(() => { osc.setDetune(50); }).not.toThrow()
   })
 
   it('connect and disconnect work without throwing', () => {
@@ -87,7 +87,7 @@ describe('createOscillator', () => {
     const osc = createOscillator(ctx, {})
     osc.start()
     osc.connect(ctx.destination)
-    expect(() => osc.dispose()).not.toThrow()
+    expect(() => { osc.dispose(); }).not.toThrow()
   })
 
   it('disconnect when not connected does not throw', () => {
@@ -99,7 +99,7 @@ describe('createOscillator', () => {
   it('dispose when never started does not throw', () => {
     const ctx = makeContext()
     const osc = createOscillator(ctx, {})
-    expect(() => osc.dispose()).not.toThrow()
+    expect(() => { osc.dispose(); }).not.toThrow()
   })
 
   it('delegates to backend createOscillator with props', () => {

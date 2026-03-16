@@ -30,6 +30,23 @@ export type BackendNoiseNode = BackendNode & {
   readonly stop: (time?: number) => void
 }
 
+// Decoded audio buffer — holds sample data
+export type BackendBuffer = {
+  readonly duration: number
+  readonly length: number
+  readonly sampleRate: number
+  readonly numberOfChannels: number
+}
+
+// Buffer source — plays a BackendBuffer (one-shot or looped)
+export type BackendBufferSourceNode = BackendNode & {
+  readonly start: (time?: number, offset?: number, duration?: number) => void
+  readonly stop: (time?: number) => void
+  readonly loop: boolean
+  readonly setLoop: (loop: boolean) => void
+  readonly setPlaybackRate: (rate: number, time?: number) => void
+}
+
 // --- Backend context ---
 
 export type BackendContext = {
@@ -44,6 +61,11 @@ export type BackendContext = {
   }) => BackendOscillatorNode
   readonly createGain: (props?: { gain?: number }) => BackendGainNode
   readonly createNoise: (props?: { type?: NoiseType }) => BackendNoiseNode
+  readonly decodeAudio: (data: ArrayBuffer) => Promise<BackendBuffer>
+  readonly createBufferSource: (buffer: BackendBuffer, props?: {
+    loop?: boolean
+    playbackRate?: number
+  }) => BackendBufferSourceNode
   readonly suspend: () => Promise<void>
   readonly resume: () => Promise<void>
   readonly close: () => Promise<void>

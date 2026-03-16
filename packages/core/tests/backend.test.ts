@@ -45,14 +45,14 @@ describe('webAudioBackend', () => {
     it('start and stop do not throw', () => {
       const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
       const osc = ctx.createOscillator()
-      expect(() => osc.start()).not.toThrow()
-      expect(() => osc.stop()).not.toThrow()
+      expect(() => { osc.start(); }).not.toThrow()
+      expect(() => { osc.stop(); }).not.toThrow()
     })
 
     it('connects to destination without throwing', () => {
       const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
       const osc = ctx.createOscillator()
-      expect(() => osc.connect(ctx.destination)).not.toThrow()
+      expect(() => { osc.connect(ctx.destination); }).not.toThrow()
     })
   })
 
@@ -92,8 +92,8 @@ describe('webAudioBackend', () => {
     it('start and stop do not throw', () => {
       const ctx = webAudioBackend.createContext({ offline: { length: 44100 } })
       const noise = ctx.createNoise()
-      expect(() => noise.start()).not.toThrow()
-      expect(() => noise.stop()).not.toThrow()
+      expect(() => { noise.start(); }).not.toThrow()
+      expect(() => { noise.stop(); }).not.toThrow()
     })
 
     it('accepts all noise types', () => {

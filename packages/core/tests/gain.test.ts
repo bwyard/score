@@ -33,7 +33,7 @@ describe('createGain', () => {
   it('setGain updates the gain value', () => {
     const ctx = makeContext()
     const g = createGain(ctx)
-    expect(() => g.setGain(0.75)).not.toThrow()
+    expect(() => { g.setGain(0.75); }).not.toThrow()
   })
 
   it('connect and disconnect work without throwing', () => {
@@ -54,7 +54,7 @@ describe('createGain', () => {
     const ctx = makeContext()
     const g = createGain(ctx)
     g.connect(ctx.destination)
-    expect(() => g.dispose()).not.toThrow()
+    expect(() => { g.dispose(); }).not.toThrow()
   })
 
   it('gain property is readable', () => {
@@ -72,7 +72,7 @@ describe('createGain', () => {
   it('dispose when not connected does not throw', () => {
     const ctx = makeContext()
     const g = createGain(ctx)
-    expect(() => g.dispose()).not.toThrow()
+    expect(() => { g.dispose(); }).not.toThrow()
   })
 
   it('delegates to backend createGain', () => {

@@ -43,14 +43,14 @@ describe('createNoise', () => {
   it('start() does not throw', () => {
     const ctx = makeContext()
     const noise = createNoise(ctx)
-    expect(() => noise.start()).not.toThrow()
+    expect(() => { noise.start(); }).not.toThrow()
   })
 
   it('stop() after start does not throw', () => {
     const ctx = makeContext()
     const noise = createNoise(ctx)
     noise.start()
-    expect(() => noise.stop()).not.toThrow()
+    expect(() => { noise.stop(); }).not.toThrow()
   })
 
   it('connect and disconnect work without throwing', () => {
@@ -72,7 +72,7 @@ describe('createNoise', () => {
     const noise = createNoise(ctx)
     noise.start()
     noise.connect(ctx.destination)
-    expect(() => noise.dispose()).not.toThrow()
+    expect(() => { noise.dispose(); }).not.toThrow()
   })
 
   it('delegates to backend createNoise', () => {
