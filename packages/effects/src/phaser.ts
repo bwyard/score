@@ -4,7 +4,7 @@
 // Phase 8b (LFO core primitive) will upgrade to true modulated phaser.
 
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
-import { uid } from '@score/core'
+import { uid, ScoreError } from '@score/core'
 
 export type PhaserProps = {
   readonly rate?: number
@@ -34,13 +34,22 @@ export const createPhaser = (
   }
 
   // Chain allpass filters in series — stageCount >= 2, so filters always has elements
-  const firstFilter = filters[0]!
-  const lastFilter = filters[filters.length - 1]!
+  const firstFilter = filters[0]
+  const lastFilter = filters[filters.length - 1]
+  if (!firstFilter || !lastFilter) {
+    throw ScoreError('Phaser requires at least 2 stages', {
+      received: String(filters.length),
+      fix: 'Set stages to a value between 2 and 12',
+      docs: 'https://score.dev/docs/effects#phaser',
+    })
+  }
   inputGain.connect(firstFilter)
   for (let i = 0; i < filters.length - 1; i++) {
-    const current = filters[i]!
-    const next = filters[i + 1]!
-    current.connect(next)
+    const current = filters[i]
+    const next = filters[i + 1]
+    if (current && next) {
+      current.connect(next)
+    }
   }
 
   // Wet path from last filter

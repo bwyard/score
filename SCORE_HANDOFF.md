@@ -109,7 +109,8 @@ Phase 9    ⬜  Song format + Automation system + Pattern reuse + Arpeggiator
 Phase 9b   ⬜  @score/math — mathematical music toolkit
 Phase 9c   ⬜  @score/pattern — functional pattern model (TidalCycles-inspired)
 Phase 10   ⬜  CLI — all commands + stem export + freeze/bounce
-Phase 10b  ⬜  Application MCP
+Phase 10b  ⬜  score-audio MCP — effect catalog, signal flow, backend nodes, component catalog
+Phase 10b2 ⬜  score-game-tools MCP — song inspector, mixer state, transport state, audio graph
 Phase 10c  ⬜  Decode — audio analysis + format import (Rekordbox, Serato, FL Studio, MIDI)
 Phase 11   ⬜  Hot reload + live coding (3 levels)
 Phase 12   ⬜  MIDI bridge + XDJ profiles + hardware mixer modes
@@ -128,7 +129,7 @@ Phase 13e  ⬜  Plugin architecture
 Phase 13f  ⬜  Monaco IDE integration — live eval, pattern gutter, REPL panel
 Phase 14   ⬜  First real tracks + warehouse show
 Phase 14b  ⬜  Post-warehouse fixes
-Phase 15b  ⬜  Framework MCP
+Phase 15b  ⬜  Framework MCP (public — for Score users building songs with AI assistance)
 Phase 15   ⬜  Beta audit
 Phase 16   ⬜  Release infrastructure
 Phase 17   ⬜  v1.0
@@ -975,6 +976,46 @@ Major festivals       → Multiple shows documented, established tool
 17. Mixer requires sub bus output and hard brick-wall limiter
 18. XDJ profiles support all three mixer modes — score-mixer, hardware-mixer, hybrid
 19. All code is functional — factory functions, `const`, arrow functions, zero classes
+
+---
+
+## 12b. MCP Server Architecture
+
+Score has **3 MCP servers** at different lifecycle stages:
+
+### score-codebase (Phase 1b — build now)
+Code intelligence for Claude sessions working on Score. Lives in `mcp-servers/score-codebase/`.
+
+| Tool | Purpose |
+|------|---------|
+| `architecture_rules` | CLAUDE.md + SCORE_HANDOFF.md rules, code style, non-negotiables |
+| `package_graph` | 10-package dependency graph with export counts |
+| `api_surface` | List exports/types for any package (e.g., `@score/effects` → 14 effects + props) |
+| `project_status` | Phase roadmap, blockers, test counts per package |
+| `adr_lookup` | Architecture Decision Records (searchable) |
+
+### score-audio (Phase 10b — build with demo)
+Audio domain intelligence for AI-assisted composition and debugging.
+
+| Tool | Purpose |
+|------|---------|
+| `effect_catalog` | All effects with props, node types, signal routing diagrams |
+| `signal_flow` | Trace audio routing for a given component or mixer channel |
+| `backend_nodes` | All BackendNode types with methods and Web Audio mappings |
+| `component_catalog` | All AudioComponents (instruments, effects, mixer) with interfaces |
+
+### score-game-tools (Phase 10b2 — build post-demo)
+Live runtime tools for inspecting running audio state.
+
+| Tool | Purpose |
+|------|---------|
+| `song_inspector` | Parse a song file, show tracks/patterns/effects/routing |
+| `mixer_state` | Current mixer state (channel levels, solo/mute, sends) |
+| `transport_state` | Current position, BPM, playing/stopped |
+| `audio_graph` | Dump the live audio node graph |
+
+### Framework MCP (Phase 15b — public release)
+For Score users building songs with AI assistance. Exposes the public API surface, not internals.
 
 ---
 

@@ -4,7 +4,7 @@
 
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
-import { createEQ } from '@score/effects'
+import { createEQ, createEffectsChain } from '@score/effects'
 import type { EQProps } from '@score/effects'
 
 export type ChannelProps = {
@@ -34,33 +34,20 @@ export const createChannel = (
   // Create nodes in signal flow order
   const inputGain = context.createGain({ gain: 1.0 })
 
-  // Effects chain (optional) — wire effects in series manually
+  // Effects chain (optional) — uses createEffectsChain utility
   const effects = props?.effects ? [...props.effects] : []
-  if (effects.length > 0) {
-    // Connect input to first effect
-    const first = effects[0]
-    if (first) {
-      inputGain.connect(first as unknown as BackendNode)
-    }
-    // Chain effects together
-    for (let i = 0; i < effects.length - 1; i++) {
-      const current = effects[i]
-      const next = effects[i + 1]
-      if (current && next) {
-        current.connect(next as unknown as BackendNode)
-      }
-    }
+  const chain = effects.length > 0 ? createEffectsChain(context, effects) : null
+
+  if (chain) {
+    inputGain.connect(chain.input)
   }
 
   // EQ
   const eq = createEQ(context, props?.eq)
 
-  // Connect last effect (or input) to EQ
-  if (effects.length > 0) {
-    const last = effects[effects.length - 1]
-    if (last) {
-      last.connect(eq as unknown as BackendNode)
-    }
+  // Connect chain output (or input directly) to EQ
+  if (chain) {
+    chain.connect(eq as unknown as BackendNode)
   } else {
     inputGain.connect(eq as unknown as BackendNode)
   }
@@ -171,8 +158,8 @@ export const createChannel = (
           try { send.gainNode.disconnect() } catch { /* already disconnected */ }
         }
       }
-      for (const effect of effects) {
-        try { effect.dispose() } catch { /* already disposed */ }
+      if (chain) {
+        try { chain.dispose() } catch { /* already disposed */ }
       }
       try { eq.dispose() } catch { /* already disposed */ }
       try { inputGain.disconnect() } catch { /* already disconnected */ }
