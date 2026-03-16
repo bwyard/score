@@ -1,16 +1,11 @@
-import { describe, it, expect, afterEach } from 'vitest'
-import { OfflineAudioContext } from 'node-web-audio-api'
+import { describe, it, expect } from 'vitest'
+import { createAudioContext } from '../src/context.js'
 import { createNoise } from '../src/noise.js'
-import type { ScoreAudioContext } from '../src/types.js'
+import { createMockBackendContext } from './utils/audioTestUtils.js'
 
 describe('createNoise', () => {
-  const contexts: OfflineAudioContext[] = []
-
-  const makeContext = (): ScoreAudioContext => {
-    const ctx = new OfflineAudioContext(1, 44100, 44100)
-    contexts.push(ctx)
-    return ctx
-  }
+  const makeContext = () =>
+    createAudioContext({ offline: { length: 44100 } })
 
   it('returns an AudioComponent (has connect, disconnect, dispose)', () => {
     const ctx = makeContext()
@@ -23,7 +18,7 @@ describe('createNoise', () => {
     expect(typeof noise.dispose).toBe('function')
   })
 
-  it('default type is white', () => {
+  it('default type is white (has start and stop)', () => {
     const ctx = makeContext()
     const noise = createNoise(ctx)
     expect(noise).toHaveProperty('start')
@@ -78,5 +73,11 @@ describe('createNoise', () => {
     noise.start()
     noise.connect(ctx.destination)
     expect(() => noise.dispose()).not.toThrow()
+  })
+
+  it('delegates to backend createNoise', () => {
+    const mockCtx = createMockBackendContext()
+    createNoise(mockCtx, { type: 'pink' })
+    expect(mockCtx.createdNoises.length).toBe(1)
   })
 })

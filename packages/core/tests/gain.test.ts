@@ -1,16 +1,11 @@
-import { describe, it, expect, afterEach } from 'vitest'
-import { OfflineAudioContext } from 'node-web-audio-api'
+import { describe, it, expect } from 'vitest'
+import { createAudioContext } from '../src/context.js'
 import { createGain } from '../src/gain.js'
-import type { ScoreAudioContext } from '../src/types.js'
+import { createMockBackendContext } from './utils/audioTestUtils.js'
 
 describe('createGain', () => {
-  const contexts: OfflineAudioContext[] = []
-
-  const makeContext = (): ScoreAudioContext => {
-    const ctx = new OfflineAudioContext(1, 44100, 44100)
-    contexts.push(ctx)
-    return ctx
-  }
+  const makeContext = () =>
+    createAudioContext({ offline: { length: 44100 } })
 
   it('returns an AudioComponent (has connect, disconnect, dispose)', () => {
     const ctx = makeContext()
@@ -26,13 +21,13 @@ describe('createGain', () => {
   it('default gain is 1.0', () => {
     const ctx = makeContext()
     const g = createGain(ctx)
-    expect(g.node.gain.value).toBeCloseTo(1.0)
+    expect(g.gain).toBeCloseTo(1.0)
   })
 
   it('respects custom gain prop', () => {
     const ctx = makeContext()
     const g = createGain(ctx, { gain: 0.5 })
-    expect(g.node.gain.value).toBeCloseTo(0.5)
+    expect(g.gain).toBeCloseTo(0.5)
   })
 
   it('setGain updates the gain value', () => {
@@ -62,11 +57,10 @@ describe('createGain', () => {
     expect(() => g.dispose()).not.toThrow()
   })
 
-  it('node property exposes the underlying GainNode', () => {
+  it('gain property is readable', () => {
     const ctx = makeContext()
     const g = createGain(ctx)
-    expect(g.node).toBeDefined()
-    expect(g.node).toHaveProperty('gain')
+    expect(typeof g.gain).toBe('number')
   })
 
   it('disconnect when not connected does not throw', () => {
@@ -79,5 +73,11 @@ describe('createGain', () => {
     const ctx = makeContext()
     const g = createGain(ctx)
     expect(() => g.dispose()).not.toThrow()
+  })
+
+  it('delegates to backend createGain', () => {
+    const mockCtx = createMockBackendContext()
+    createGain(mockCtx, { gain: 0.7 })
+    expect(mockCtx.createdGains.length).toBe(1)
   })
 })

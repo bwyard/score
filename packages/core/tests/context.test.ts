@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { createAudioContext } from '../src/context.js'
+import { createMockBackendProvider } from './utils/audioTestUtils.js'
 
 describe('createAudioContext', () => {
   const makeContext = (options?: Parameters<typeof createAudioContext>[0]) =>
@@ -41,18 +42,19 @@ describe('createAudioContext', () => {
     expect(ctx.destination).toBeDefined()
   })
 
-  it('createGain() returns a node', () => {
+  it('createGain() returns a node with gain property', () => {
     const ctx = makeContext()
     const gain = ctx.createGain()
     expect(gain).toBeDefined()
     expect(gain).toHaveProperty('gain')
   })
 
-  it('createOscillator() returns a node', () => {
+  it('createOscillator() returns a node with start/stop', () => {
     const ctx = makeContext()
     const osc = ctx.createOscillator()
     expect(osc).toBeDefined()
-    expect(osc).toHaveProperty('frequency')
+    expect(osc).toHaveProperty('start')
+    expect(osc).toHaveProperty('stop')
   })
 
   it('defaults to offline with length 44100 when no options', () => {
@@ -60,28 +62,21 @@ describe('createAudioContext', () => {
     expect(ctx.sampleRate).toBe(44100)
   })
 
-  it('offline respects numberOfChannels', () => {
-    const ctx = createAudioContext({
-      offline: { length: 44100, numberOfChannels: 2 },
-    })
-    expect(ctx.destination.channelCount).toBeGreaterThanOrEqual(1)
+  it('throws ScoreError when construction fails', () => {
+    expect(() => createAudioContext({ offline: { length: -1 } })).toThrow()
   })
 
-  it('throws ScoreError when construction fails', () => {
-    vi.doMock('node-web-audio-api', () => ({
-      AudioContext: class {
-        constructor() {
-          throw new Error('mock failure')
-        }
-      },
-      OfflineAudioContext: class {
-        constructor() {
-          throw new Error('mock failure')
-        }
-      },
-    }))
-    // Use a direct approach — pass invalid params to trigger the catch
-    expect(() => createAudioContext({ offline: { length: -1 } })).toThrow()
-    vi.restoreAllMocks()
+  it('uses custom backend when provided', () => {
+    const mockBackend = createMockBackendProvider()
+    const ctx = createAudioContext({ backend: mockBackend })
+    expect(mockBackend.contexts.length).toBe(1)
+    expect(ctx.sampleRate).toBe(44100)
+  })
+
+  it('defaults to web-audio backend when none specified', () => {
+    const ctx = makeContext()
+    expect(ctx.createOscillator).toBeDefined()
+    expect(ctx.createGain).toBeDefined()
+    expect(ctx.createNoise).toBeDefined()
   })
 })

@@ -1,6 +1,7 @@
 // @score/core
-// ScoreError, AudioContext, AudioGraph, Oscillator, Gain, Noise
+// Backend, ScoreError, AudioContext, AudioGraph, Oscillator, Gain, Noise
 
+export * from './backend/index.js'
 export * from './types.js'
 export * from './errors/ScoreError.js'
 export * from './context.js'
