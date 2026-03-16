@@ -23,5 +23,5 @@ This folder holds your audio files. It is gitignored — you bring your own samp
 
 ## Math synthesis
 
-WIP can generate sounds entirely from Web Audio API math — no samples needed.
+Score can generate sounds entirely from Web Audio API math — no samples needed.
 Set `synth: true` on any component to use synthesis instead of a sample file.

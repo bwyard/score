@@ -59,7 +59,7 @@ House · Deep House · Techno · Industrial · Hardcore · Grime
 
 | Package | Purpose |
 |---|---|
-| `@score/core` | AudioContext, AudioGraphManager, WIPError |
+| `@score/core` | AudioContext, AudioGraphManager, ScoreError |
 | `@score/components` | Kick, Snare, HiHat, Synth, Sample |
 | `@score/effects` | Reverb, Delay, Filter, Compressor, Sidechain, EQ |
 | `@score/dsl` | Song, Sequence, Pattern, Arrangement helpers |
@@ -77,7 +77,7 @@ House · Deep House · Techno · Industrial · Hardcore · Grime
 
 ## Status
 
-Building in phases. See `WIP_HANDOFF.md` for the full architecture and 17-phase build plan.
+Building in phases. See `SCORE_HANDOFF.md` for the full architecture and 17-phase build plan.
 
 Phase 12 is the milestone that matters: `score play songs/first-track.js` runs and makes music.
 

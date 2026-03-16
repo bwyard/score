@@ -1,7 +1,7 @@
 // example-techno.js — starter song file
 // Run with: node play songs/example-techno.js  (Phase 10+)
 //
-// This file shows the WIP song format.
+// This file shows the Score song format.
 // Everything here is a placeholder — components are built Phase 3–9.
 
 // ── INSTRUMENTS ──────────────────────────────────────────────────────────────

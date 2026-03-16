@@ -60,7 +60,7 @@ Score is two things simultaneously:
 
 | Package | Purpose |
 |---|---|
-| `@score/core` | AudioContext factory, AudioGraphManager, WIPError |
+| `@score/core` | AudioContext factory, AudioGraphManager, ScoreError |
 | `@score/components` | Kick, Snare, HiHat, Synth, Sample components |
 | `@score/effects` | Reverb, Delay, Filter, Compressor, Sidechain, EQ |
 | `@score/dsl` | Song, Sequence, Pattern, Arrangement helpers |
@@ -73,18 +73,34 @@ Score is two things simultaneously:
 
 ---
 
+## Code Style — Modern Functional
+
+Everything is functional — framework and song files share the same paradigm.
+
+- **Factory functions, not classes** — `createMixer(props)` returns a plain object, not `new Mixer()`
+- **Props and state** — components receive props (config) and manage state, like Svelte components
+- **Composition over inheritance** — combine small functions, don't extend base classes
+- **Immutable by default** — config objects are never mutated; produce new state instead
+- **Pure functions where possible** — predictable inputs/outputs, no hidden side effects
+- **`const` + arrow functions** — no `let`, no `function` declarations, no classes
+- **No exceptions** — `ScoreError` is a factory function, not a class
+
+The song language is declarative and component-based — props in, music out. Think Svelte for audio.
+
+---
+
 ## Non-Negotiable Architecture Rules
 
 1. **Song files are never compiled** — run directly as ES modules via Node 20
 2. **Web Audio API is never exposed** to song authors — fully abstracted
-3. **WIPError is the only error class** — never throw raw `Error` anywhere
+3. **ScoreError is the only error factory** — never throw raw `Error` anywhere
 4. **Tests and error handling ship with the component** — never backfilled later
 5. **No AI generates music, patterns, or voices** — ever, under any circumstances
 6. **No audio files bundled** — `samples/` is gitignored except `.gitkeep` and `README.md`
 7. **GUI is built last** — Phase 13
-8. **Every component implements the `AudioComponent` interface**
+8. **Every component implements the `AudioComponent` interface** (as a plain object shape, not a class)
 9. **Audio scheduling always uses `audioContext.currentTime`** — never `setTimeout` or `Date.now()`
-10. **Song files use ESM, `const`, arrow functions, no classes**
+10. **All code is functional** — factory functions, `const`, arrow functions, zero classes
 
 ---
 
@@ -144,7 +160,7 @@ House · Deep House · Techno · Industrial · Hardcore · Grime
 |---|---|---|
 | 1 | Scaffold | Monorepo stub, all packages, Vitest, ESLint, GH Actions CI |
 | 1b | Codebase Intelligence MCP | Claude Code reads Score architecture via MCP |
-| 2 | Core Engine | AudioContext, AudioGraphManager, WIPError |
+| 2 | Core Engine | AudioContext, AudioGraphManager, ScoreError |
 | 3 | Synthesis | Math-generated sounds, oscillators |
 | 4 | Sampler | WAV/MP3 sample loading and playback |
 | 5 | DSL Components | Kick, Snare, HiHat, Synth, Sample |
@@ -169,25 +185,17 @@ House · Deep House · Techno · Industrial · Hardcore · Grime
 
 ```ts
 // The ONLY error class in the entire framework
-export class WIPError extends Error {
-  constructor(
-    message: string,
-    public readonly context: {
-      received?: unknown
-      fix?: string
-      docs?: string
-      code?: string
-    } = {}
-  ) {
-    super(message)
-    this.name = 'WIPError'
-  }
+const ScoreError = (message, context = {}) => {
+  const error = new Error(message)
+  error.name = 'ScoreError'
+  error.context = context
+  return error
 }
 ```
 
 Usage:
 ```ts
-throw new WIPError('AudioContext not initialized', {
+throw ScoreError('AudioContext not initialized', {
   fix: 'Call createAudioContext() before loading components',
   docs: 'https://score.dev/docs/core#audio-context',
 })
@@ -232,7 +240,7 @@ score/
 ├── sounds/             ← gitignored (rendered audio output)
 ├── CLAUDE.md
 ├── AGENTS.md
-├── WIP_HANDOFF.md      ← this file
+├── SCORE_HANDOFF.md    ← this file
 ├── README.md
 ├── package.json
 ├── pnpm-workspace.yaml
@@ -247,7 +255,7 @@ score/
 ## Start-of-Session Checklist
 
 1. Read `../claude-resources/sessions/score/current.md` — check session state
-2. Read this file (`WIP_HANDOFF.md`) — confirm current phase
+2. Read this file (`SCORE_HANDOFF.md`) — confirm current phase
 3. Read `AGENTS.md` — check what's in progress
 4. Run `pnpm test` — confirm all tests passing
 5. Confirm the session goal with the user

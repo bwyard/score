@@ -2,7 +2,7 @@
   "name": "score",
   "private": true,
   "version": "0.0.1",
-  "description": "WIP — Work In Progress audio framework (temporary name)",
+  "description": "Score — A component-based audio framework for creating EDM music in JavaScript",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=10.0.0"
