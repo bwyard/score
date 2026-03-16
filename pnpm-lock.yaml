@@ -172,6 +172,9 @@ importers:
       '@score/core':
         specifier: workspace:*
         version: link:../core
+      '@score/effects':
+        specifier: workspace:*
+        version: link:../effects
     devDependencies:
       '@vitest/coverage-v8':
         specifier: ^2.0.0
