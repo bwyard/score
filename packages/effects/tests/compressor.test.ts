@@ -93,4 +93,22 @@ describe('createCompressor', () => {
     const c = createCompressor(ctx)
     expect(() => { c.dispose() }).not.toThrow()
   })
+
+  it('disconnect swallows error when already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const c = createCompressor(ctx)
+    expect(() => { c.disconnect() }).not.toThrow()
+  })
+
+  it('dispose swallows errors when nodes already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const c = createCompressor(ctx)
+    expect(() => { c.dispose() }).not.toThrow()
+  })
+
+  it('setRatio accepts optional time parameter', () => {
+    const ctx = h.mockContext()
+    const c = createCompressor(ctx)
+    expect(() => { c.setRatio(8, 1.0) }).not.toThrow()
+  })
 })

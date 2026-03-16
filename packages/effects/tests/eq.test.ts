@@ -87,4 +87,28 @@ describe('createEQ', () => {
     const eq = createEQ(ctx)
     expect(() => { eq.dispose() }).not.toThrow()
   })
+
+  it('disconnect swallows error when already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const eq = createEQ(ctx)
+    expect(() => { eq.disconnect() }).not.toThrow()
+  })
+
+  it('dispose swallows errors when nodes already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const eq = createEQ(ctx)
+    expect(() => { eq.dispose() }).not.toThrow()
+  })
+
+  it('setMid accepts optional time parameter', () => {
+    const ctx = h.mockContext()
+    const eq = createEQ(ctx)
+    expect(() => { eq.setMid(-1, 1.0) }).not.toThrow()
+  })
+
+  it('setHigh accepts optional time parameter', () => {
+    const ctx = h.mockContext()
+    const eq = createEQ(ctx)
+    expect(() => { eq.setHigh(2, 1.0) }).not.toThrow()
+  })
 })

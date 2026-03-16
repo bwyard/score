@@ -79,4 +79,18 @@ describe('createSidechain', () => {
     const sc = createSidechain(ctx, { source })
     expect(() => { sc.dispose() }).not.toThrow()
   })
+
+  it('disconnect swallows error when already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const source = h.mockThrowingNode()
+    const sc = createSidechain(ctx, { source })
+    expect(() => { sc.disconnect() }).not.toThrow()
+  })
+
+  it('dispose swallows errors when nodes already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const source = h.mockThrowingNode()
+    const sc = createSidechain(ctx, { source })
+    expect(() => { sc.dispose() }).not.toThrow()
+  })
 })

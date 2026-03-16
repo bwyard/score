@@ -101,4 +101,28 @@ describe('createFilter', () => {
       expect(() => { createFilter(ctx, { type }) }).not.toThrow()
     }
   })
+
+  it('disconnect swallows error when already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const f = createFilter(ctx)
+    expect(() => { f.disconnect() }).not.toThrow()
+  })
+
+  it('dispose swallows errors when nodes already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const f = createFilter(ctx)
+    expect(() => { f.dispose() }).not.toThrow()
+  })
+
+  it('setQ accepts optional time parameter', () => {
+    const ctx = h.mockContext()
+    const f = createFilter(ctx)
+    expect(() => { f.setQ(2, 1.0) }).not.toThrow()
+  })
+
+  it('setGain accepts optional time parameter', () => {
+    const ctx = h.mockContext()
+    const f = createFilter(ctx)
+    expect(() => { f.setGain(3, 1.0) }).not.toThrow()
+  })
 })

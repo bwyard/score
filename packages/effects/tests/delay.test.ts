@@ -89,4 +89,28 @@ describe('createDelay', () => {
     const d = createDelay(ctx)
     expect(() => { d.dispose() }).not.toThrow()
   })
+
+  it('disconnect swallows error when already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const d = createDelay(ctx)
+    expect(() => { d.disconnect() }).not.toThrow()
+  })
+
+  it('dispose swallows errors when nodes already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const d = createDelay(ctx)
+    expect(() => { d.dispose() }).not.toThrow()
+  })
+
+  it('setFeedback accepts optional time parameter', () => {
+    const ctx = h.mockContext()
+    const d = createDelay(ctx)
+    expect(() => { d.setFeedback(0.5, 1.0) }).not.toThrow()
+  })
+
+  it('setMix accepts optional time parameter', () => {
+    const ctx = h.mockContext()
+    const d = createDelay(ctx)
+    expect(() => { d.setMix(0.4, 1.0) }).not.toThrow()
+  })
 })

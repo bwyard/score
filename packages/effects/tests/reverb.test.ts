@@ -77,4 +77,16 @@ describe('createReverb', () => {
     const r = createReverb(ctx)
     expect(() => { r.dispose() }).not.toThrow()
   })
+
+  it('disconnect swallows error when already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const r = createReverb(ctx)
+    expect(() => { r.disconnect() }).not.toThrow()
+  })
+
+  it('dispose swallows errors when nodes already disconnected', () => {
+    const ctx = h.mockThrowingContext()
+    const r = createReverb(ctx)
+    expect(() => { r.dispose() }).not.toThrow()
+  })
 })

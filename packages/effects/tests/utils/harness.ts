@@ -17,7 +17,7 @@ type MockNode = BackendNode & {
   readonly disconnectCalls: Array<{ readonly destination: BackendNode | undefined }>
 }
 
-const createMockNode = (): MockNode => {
+const createMockNode = (shouldThrowOnDisconnect = false): MockNode => {
   const connectCalls: Array<{ readonly destination: BackendNode }> = []
   const disconnectCalls: Array<{ readonly destination: BackendNode | undefined }> = []
 
@@ -25,12 +25,15 @@ const createMockNode = (): MockNode => {
     connectCalls,
     disconnectCalls,
     connect: (dest: BackendNode) => { connectCalls.push({ destination: dest }) },
-    disconnect: (dest?: BackendNode) => { disconnectCalls.push({ destination: dest }) },
+    disconnect: (dest?: BackendNode) => {
+      if (shouldThrowOnDisconnect) { throw new Error('Already disconnected') }
+      disconnectCalls.push({ destination: dest })
+    },
   }
 }
 
-const createMockGainNode = (initialGain = 1.0): MockNode & BackendGainNode => {
-  const base = createMockNode()
+const createMockGainNode = (initialGain = 1.0, shouldThrowOnDisconnect = false): MockNode & BackendGainNode => {
+  const base = createMockNode(shouldThrowOnDisconnect)
   let currentGain = initialGain
 
   return {
@@ -40,8 +43,8 @@ const createMockGainNode = (initialGain = 1.0): MockNode & BackendGainNode => {
   }
 }
 
-const createMockFilterNode = (): MockNode & BackendFilterNode => {
-  const base = createMockNode()
+const createMockFilterNode = (shouldThrowOnDisconnect = false): MockNode & BackendFilterNode => {
+  const base = createMockNode(shouldThrowOnDisconnect)
 
   return {
     ...base,
@@ -51,8 +54,8 @@ const createMockFilterNode = (): MockNode & BackendFilterNode => {
   }
 }
 
-const createMockDelayNode = (): MockNode & BackendDelayNode => {
-  const base = createMockNode()
+const createMockDelayNode = (shouldThrowOnDisconnect = false): MockNode & BackendDelayNode => {
+  const base = createMockNode(shouldThrowOnDisconnect)
 
   return {
     ...base,
@@ -60,8 +63,8 @@ const createMockDelayNode = (): MockNode & BackendDelayNode => {
   }
 }
 
-const createMockCompressorNode = (): MockNode & BackendCompressorNode => {
-  const base = createMockNode()
+const createMockCompressorNode = (shouldThrowOnDisconnect = false): MockNode & BackendCompressorNode => {
+  const base = createMockNode(shouldThrowOnDisconnect)
 
   return {
     ...base,
@@ -82,7 +85,7 @@ export type EffectsMockContext = BackendContext & {
   readonly createdCompressors: Array<MockNode & BackendCompressorNode>
 }
 
-const createMockContext = (): EffectsMockContext => {
+const createMockContext = (shouldThrowOnDisconnect = false): EffectsMockContext => {
   const createdGains: Array<MockNode & BackendGainNode> = []
   const createdFilters: Array<MockNode & BackendFilterNode> = []
   const createdDelays: Array<MockNode & BackendDelayNode> = []
@@ -110,7 +113,7 @@ const createMockContext = (): EffectsMockContext => {
     },
 
     createGain: (props) => {
-      const node = createMockGainNode(props?.gain ?? 1.0)
+      const node = createMockGainNode(props?.gain ?? 1.0, shouldThrowOnDisconnect)
       createdGains.push(node)
       return node
     },
@@ -145,19 +148,19 @@ const createMockContext = (): EffectsMockContext => {
     },
 
     createFilter: (_props) => {
-      const node = createMockFilterNode()
+      const node = createMockFilterNode(shouldThrowOnDisconnect)
       createdFilters.push(node)
       return node
     },
 
     createDelay: (_props) => {
-      const node = createMockDelayNode()
+      const node = createMockDelayNode(shouldThrowOnDisconnect)
       createdDelays.push(node)
       return node
     },
 
     createCompressor: (_props) => {
-      const node = createMockCompressorNode()
+      const node = createMockCompressorNode(shouldThrowOnDisconnect)
       createdCompressors.push(node)
       return node
     },
@@ -172,12 +175,16 @@ const createMockContext = (): EffectsMockContext => {
 
 export type TestHarness = {
   readonly mockContext: () => EffectsMockContext
+  readonly mockThrowingContext: () => EffectsMockContext
   readonly mockNode: () => MockNode
+  readonly mockThrowingNode: () => MockNode
   readonly cleanup: () => Promise<void>
 }
 
 export const useHarness = (): TestHarness => ({
   mockContext: () => createMockContext(),
+  mockThrowingContext: () => createMockContext(true),
   mockNode: () => createMockNode(),
+  mockThrowingNode: () => createMockNode(true),
   cleanup: () => Promise.resolve(),
 })
