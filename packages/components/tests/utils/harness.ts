@@ -151,6 +151,21 @@ export const createMockContext = (): MockBackendContext => {
       return node
     },
 
+    createFilter: (_props) => {
+      const base = createMockNode()
+      return { ...base, setFrequency: () => {}, setQ: () => {}, setFilterGain: () => {} }
+    },
+
+    createDelay: (_props) => {
+      const base = createMockNode()
+      return { ...base, setDelayTime: () => {} }
+    },
+
+    createCompressor: (_props) => {
+      const base = createMockNode()
+      return { ...base, setThreshold: () => {}, setRatio: () => {}, setKnee: () => {}, setAttack: () => {}, setRelease: () => {} }
+    },
+
     suspend: () => Promise.resolve(),
     resume: () => Promise.resolve(),
     close: () => Promise.resolve(),

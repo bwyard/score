@@ -9,6 +9,9 @@ import type {
   AudioNode as WebAudioNode,
   BaseAudioContext,
   AudioBufferSourceNode as WebBufferSourceNode,
+  BiquadFilterNode as WebBiquadFilterNode,
+  DelayNode as WebDelayNode,
+  DynamicsCompressorNode as WebDynamicsCompressorNode,
   GainNode as WebGainNode,
   OscillatorNode as WebOscillatorNode,
 } from 'node-web-audio-api'
@@ -24,6 +27,9 @@ import type {
 // --- Raw node access ---
 // Symbol-keyed property to retrieve the underlying Web Audio node
 // when connecting two BackendNodes together
+
+// Web Audio API BiquadFilterType — not always exported by node-web-audio-api types
+type BiquadFilterType = 'lowpass' | 'highpass' | 'bandpass' | 'notch' | 'allpass' | 'peaking' | 'lowshelf' | 'highshelf'
 
 const RAW = Symbol('web-audio-raw')
 const BUFFER = Symbol('web-audio-buffer')
@@ -215,6 +221,71 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
         },
         stop: (time?: number) => {
           source.stop(time)
+        },
+      }
+    },
+
+    createFilter: (props) => {
+      const filter = (ctx as unknown as { createBiquadFilter: () => WebBiquadFilterNode }).createBiquadFilter()
+      filter.type = (props?.type ?? 'lowpass') as BiquadFilterType
+      filter.frequency.value = props?.frequency ?? 1000
+      filter.Q.value = props?.Q ?? 1
+      filter.gain.value = props?.gain ?? 0
+      const base = wrapNode(filter as unknown as WebAudioNode)
+
+      return {
+        ...base,
+        setFrequency: (value: number, time?: number) => {
+          filter.frequency.setValueAtTime(value, time ?? ctx.currentTime)
+        },
+        setQ: (value: number, time?: number) => {
+          filter.Q.setValueAtTime(value, time ?? ctx.currentTime)
+        },
+        setFilterGain: (value: number, time?: number) => {
+          filter.gain.setValueAtTime(value, time ?? ctx.currentTime)
+        },
+      }
+    },
+
+    createDelay: (props) => {
+      const maxDelay = props?.maxDelayTime ?? 5.0
+      const delay = (ctx as unknown as { createDelay: (max: number) => WebDelayNode }).createDelay(maxDelay)
+      delay.delayTime.value = props?.delayTime ?? 0
+      const base = wrapNode(delay as unknown as WebAudioNode)
+
+      return {
+        ...base,
+        setDelayTime: (value: number, time?: number) => {
+          delay.delayTime.setValueAtTime(value, time ?? ctx.currentTime)
+        },
+      }
+    },
+
+    createCompressor: (props) => {
+      const comp = (ctx as unknown as { createDynamicsCompressor: () => WebDynamicsCompressorNode }).createDynamicsCompressor()
+      comp.threshold.value = props?.threshold ?? -24
+      comp.ratio.value = props?.ratio ?? 12
+      comp.knee.value = props?.knee ?? 30
+      comp.attack.value = props?.attack ?? 0.003
+      comp.release.value = props?.release ?? 0.25
+      const base = wrapNode(comp as unknown as WebAudioNode)
+
+      return {
+        ...base,
+        setThreshold: (value: number, time?: number) => {
+          comp.threshold.setValueAtTime(value, time ?? ctx.currentTime)
+        },
+        setRatio: (value: number, time?: number) => {
+          comp.ratio.setValueAtTime(value, time ?? ctx.currentTime)
+        },
+        setKnee: (value: number, time?: number) => {
+          comp.knee.setValueAtTime(value, time ?? ctx.currentTime)
+        },
+        setAttack: (value: number, time?: number) => {
+          comp.attack.setValueAtTime(value, time ?? ctx.currentTime)
+        },
+        setRelease: (value: number, time?: number) => {
+          comp.release.setValueAtTime(value, time ?? ctx.currentTime)
         },
       }
     },

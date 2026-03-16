@@ -47,6 +47,26 @@ export type BackendBufferSourceNode = BackendNode & {
   readonly setPlaybackRate: (rate: number, time?: number) => void
 }
 
+export type FilterType = 'lowpass' | 'highpass' | 'bandpass' | 'notch' | 'allpass' | 'peaking' | 'lowshelf' | 'highshelf'
+
+export type BackendFilterNode = BackendNode & {
+  readonly setFrequency: (value: number, time?: number) => void
+  readonly setQ: (value: number, time?: number) => void
+  readonly setFilterGain: (value: number, time?: number) => void
+}
+
+export type BackendDelayNode = BackendNode & {
+  readonly setDelayTime: (value: number, time?: number) => void
+}
+
+export type BackendCompressorNode = BackendNode & {
+  readonly setThreshold: (value: number, time?: number) => void
+  readonly setRatio: (value: number, time?: number) => void
+  readonly setKnee: (value: number, time?: number) => void
+  readonly setAttack: (value: number, time?: number) => void
+  readonly setRelease: (value: number, time?: number) => void
+}
+
 // --- Backend context ---
 
 export type BackendContext = {
@@ -66,6 +86,23 @@ export type BackendContext = {
     loop?: boolean
     playbackRate?: number
   }) => BackendBufferSourceNode
+  readonly createFilter: (props?: {
+    type?: FilterType
+    frequency?: number
+    Q?: number
+    gain?: number
+  }) => BackendFilterNode
+  readonly createDelay: (props?: {
+    delayTime?: number
+    maxDelayTime?: number
+  }) => BackendDelayNode
+  readonly createCompressor: (props?: {
+    threshold?: number
+    ratio?: number
+    knee?: number
+    attack?: number
+    release?: number
+  }) => BackendCompressorNode
   readonly suspend: () => Promise<void>
   readonly resume: () => Promise<void>
   readonly close: () => Promise<void>
