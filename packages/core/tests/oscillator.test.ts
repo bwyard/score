@@ -103,4 +103,16 @@ describe('createOscillator', () => {
     osc.connect(ctx.destination)
     expect(() => osc.dispose()).not.toThrow()
   })
+
+  it('disconnect when not connected does not throw', () => {
+    const ctx = makeContext()
+    const osc = createOscillator(ctx, {})
+    expect(() => osc.disconnect()).not.toThrow()
+  })
+
+  it('dispose when never started does not throw', () => {
+    const ctx = makeContext()
+    const osc = createOscillator(ctx, {})
+    expect(() => osc.dispose()).not.toThrow()
+  })
 })

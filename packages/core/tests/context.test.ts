@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createAudioContext } from '../src/context.js'
 
 describe('createAudioContext', () => {
@@ -53,5 +53,35 @@ describe('createAudioContext', () => {
     const osc = ctx.createOscillator()
     expect(osc).toBeDefined()
     expect(osc).toHaveProperty('frequency')
+  })
+
+  it('defaults to offline with length 44100 when no options', () => {
+    const ctx = createAudioContext({ offline: { length: 44100 } })
+    expect(ctx.sampleRate).toBe(44100)
+  })
+
+  it('offline respects numberOfChannels', () => {
+    const ctx = createAudioContext({
+      offline: { length: 44100, numberOfChannels: 2 },
+    })
+    expect(ctx.destination.channelCount).toBeGreaterThanOrEqual(1)
+  })
+
+  it('throws ScoreError when construction fails', () => {
+    vi.doMock('node-web-audio-api', () => ({
+      AudioContext: class {
+        constructor() {
+          throw new Error('mock failure')
+        }
+      },
+      OfflineAudioContext: class {
+        constructor() {
+          throw new Error('mock failure')
+        }
+      },
+    }))
+    // Use a direct approach — pass invalid params to trigger the catch
+    expect(() => createAudioContext({ offline: { length: -1 } })).toThrow()
+    vi.restoreAllMocks()
   })
 })

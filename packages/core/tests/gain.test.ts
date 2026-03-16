@@ -68,4 +68,16 @@ describe('createGain', () => {
     expect(g.node).toBeDefined()
     expect(g.node).toHaveProperty('gain')
   })
+
+  it('disconnect when not connected does not throw', () => {
+    const ctx = makeContext()
+    const g = createGain(ctx)
+    expect(() => g.disconnect()).not.toThrow()
+  })
+
+  it('dispose when not connected does not throw', () => {
+    const ctx = makeContext()
+    const g = createGain(ctx)
+    expect(() => g.dispose()).not.toThrow()
+  })
 })
