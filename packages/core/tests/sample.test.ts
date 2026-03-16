@@ -8,7 +8,7 @@ afterAll(() => h.cleanup())
 
 const testWavData = (): ArrayBuffer => {
   const wav = createTestWav()
-  return wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength)
+  return new Uint8Array(wav).buffer
 }
 
 describe('decodeSample', () => {
@@ -115,7 +115,7 @@ describe('createSamplePlayer', () => {
   it('respects custom gain prop', () => {
     const mock = h.mockContext()
     createSamplePlayer(mock, h.mockBuffer(), { gain: 0.7 })
-    expect(mock.createdGains[0].gain).toBeCloseTo(0.7)
+    expect(mock.createdGains[0]?.gain).toBeCloseTo(0.7)
   })
 
   it('integration: decode and play with real backend', async () => {

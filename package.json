@@ -20,7 +20,10 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.ts": "eslint --fix"
+    "*.ts": [
+      "eslint --fix",
+      "bash -c 'pnpm typecheck'"
+    ]
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.0.0",
