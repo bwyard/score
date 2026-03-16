@@ -17,59 +17,59 @@ Score is two things simultaneously:
 
 ## Identity
 
-| Item | Value |
-|---|---|
-| Project name | Score |
-| npm scope | `@score/*` |
-| GitHub repo | `bwyard/score` |
-| GUI name | TBD at Phase 13 (e.g. Score Studio) |
-| CLI command | `score` |
+| Item         | Value                               |
+| ------------ | ----------------------------------- |
+| Project name | Score                               |
+| npm scope    | `@score/*`                          |
+| GitHub repo  | `bwyard/score`                      |
+| GUI name     | TBD at Phase 13 (e.g. Score Studio) |
+| CLI command  | `score`                             |
 
 ---
 
 ## Tech Stack
 
-| Concern | Choice | Notes |
-|---|---|---|
-| Package manager | pnpm | Workspaces |
-| Monorepo | Turborepo | Task orchestration |
-| Runtime | Node.js 20 LTS minimum | Song files run as plain ESM, never compiled |
-| Audio (browser) | Web Audio API | Never exposed to song authors |
-| Audio (Node) | node-web-audio-api | Polyfill for server-side rendering / CLI |
-| Audio layer | Tone.js | Layer 1 abstraction over Web Audio API |
-| Language | TypeScript strict | All framework code |
-| Song files | Plain ESM JS | Never compiled, run directly by Node 20+ |
-| Testing | Vitest | Coverage thresholds enforced in CI |
-| GUI | React 18 + Vite | Phase 13 only |
-| CLI runtime | tsx (dev) / Node built-ins | |
-| Live coding | chokidar file watcher | `score live` command |
-| CI | GitHub Actions | typecheck → lint → test → coverage |
+| Concern         | Choice                     | Notes                                       |
+| --------------- | -------------------------- | ------------------------------------------- |
+| Package manager | pnpm                       | Workspaces                                  |
+| Monorepo        | Turborepo                  | Task orchestration                          |
+| Runtime         | Node.js 20 LTS minimum     | Song files run as plain ESM, never compiled |
+| Audio (browser) | Web Audio API              | Never exposed to song authors               |
+| Audio (Node)    | node-web-audio-api         | Polyfill for server-side rendering / CLI    |
+| Audio layer     | Tone.js                    | Layer 1 abstraction over Web Audio API      |
+| Language        | TypeScript strict          | All framework code                          |
+| Song files      | Plain ESM JS               | Never compiled, run directly by Node 20+    |
+| Testing         | Vitest                     | Coverage thresholds enforced in CI          |
+| GUI             | React 18 + Vite            | Phase 13 only                               |
+| CLI runtime     | tsx (dev) / Node built-ins |                                             |
+| Live coding     | chokidar file watcher      | `score live` command                        |
+| CI              | GitHub Actions             | typecheck → lint → test → coverage          |
 
 ### Coverage Thresholds (enforced in CI)
 
-| Metric | Threshold |
-|---|---|
-| Statements | 90% |
-| Branches | 85% |
-| Functions | 90% |
-| Lines | 90% |
+| Metric     | Threshold |
+| ---------- | --------- |
+| Statements | 90%       |
+| Branches   | 85%       |
+| Functions  | 90%       |
+| Lines      | 90%       |
 
 ---
 
 ## Packages
 
-| Package | Purpose |
-|---|---|
-| `@score/core` | AudioContext factory, AudioGraphManager, ScoreError |
-| `@score/components` | Kick, Snare, HiHat, Synth, Sample components |
-| `@score/effects` | Reverb, Delay, Filter, Compressor, Sidechain, EQ |
-| `@score/dsl` | Song, Sequence, Pattern, Arrangement helpers |
-| `@score/sequencer` | Transport, Clock, StepSequencer |
-| `@score/mixer` | Mixer, Channel, master bus |
-| `@score/cli` | play, live, repl, render commands |
-| `@score/midi` | WebMIDI, Pioneer XDJ profiles |
-| `@score/mcp` | MCP servers for Claude Code integration |
-| `@score/gui` | React DAW interface (Phase 13) |
+| Package             | Purpose                                             |
+| ------------------- | --------------------------------------------------- |
+| `@score/core`       | AudioContext factory, AudioGraphManager, ScoreError |
+| `@score/components` | Kick, Snare, HiHat, Synth, Sample components        |
+| `@score/effects`    | Reverb, Delay, Filter, Compressor, Sidechain, EQ    |
+| `@score/dsl`        | Song, Sequence, Pattern, Arrangement helpers        |
+| `@score/sequencer`  | Transport, Clock, StepSequencer                     |
+| `@score/mixer`      | Mixer, Channel, master bus                          |
+| `@score/cli`        | play, live, repl, render commands                   |
+| `@score/midi`       | WebMIDI, Pioneer XDJ profiles                       |
+| `@score/mcp`        | MCP servers for Claude Code integration             |
+| `@score/gui`        | React DAW interface (Phase 13)                      |
 
 ---
 
@@ -110,27 +110,23 @@ Song files are plain ESM JavaScript. They export a default `Song(...)` call. Exa
 
 ```js
 const kick = Kick({
-  sample:  './samples/kicks/deep-kick.wav',
-  pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
-  volume:  0.9,
+  sample: './samples/kicks/deep-kick.wav',
+  pattern: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+  volume: 0.9,
 })
 
 const bass = Synth({
-  wave:     'sawtooth',
-  filter:   { type: 'lowpass', frequency: 800 },
+  wave: 'sawtooth',
+  filter: { type: 'lowpass', frequency: 800 },
   sequence: Sequence('A1 A1 . C2 . G1 . .'),
 })
 
 export default Song({
-  bpm:    140,
-  key:    'Am',
-  genre:  'techno',
+  bpm: 140,
+  key: 'Am',
+  genre: 'techno',
   tracks: [kick, bass],
-  arrangement: [
-    Intro(4,  [kick]),
-    Drop(16,  [kick, bass]),
-    Outro(4,  [kick]),
-  ],
+  arrangement: [Intro(4, [kick]), Drop(16, [kick, bass]), Outro(4, [kick])],
 })
 ```
 
@@ -138,10 +134,10 @@ export default Song({
 
 ## CLI Modes
 
-| Command | Mode |
-|---|---|
-| `score play songs/track.js` | Play a finished song |
-| `score live songs/track.js` | Live coding — hot reload on save |
+| Command                     | Mode                                         |
+| --------------------------- | -------------------------------------------- |
+| `score play songs/track.js` | Play a finished song                         |
+| `score live songs/track.js` | Live coding — hot reload on save             |
 | `score repl songs/track.js` | REPL — type commands, hear changes instantly |
 
 ---
@@ -156,28 +152,28 @@ House · Deep House · Techno · Industrial · Hardcore · Grime
 
 **Phase 12 is the milestone that matters:** `score play songs/first-track.js` runs and makes music.
 
-| Phase | Name | Key deliverable |
-|---|---|---|
-| 1 | Scaffold | Monorepo stub, all packages, Vitest, ESLint, GH Actions CI |
-| 1b | Codebase Intelligence MCP | Claude Code reads Score architecture via MCP |
-| 2 | Core Engine | AudioContext, AudioGraphManager, ScoreError |
-| 3 | Synthesis | Math-generated sounds, oscillators |
-| 4 | Sampler | WAV/MP3 sample loading and playback |
-| 5 | DSL Components | Kick, Snare, HiHat, Synth, Sample |
-| 6 | Effects | Reverb, Delay, Filter, Compressor, Sidechain, EQ |
-| 7 | Mixer | Mixer, Channel, master bus |
-| 8 | Sequencer + Transport | Clock, StepSequencer, Transport |
-| 9 | Song Format | Song, Sequence, Pattern, Arrangement helpers |
-| 10 | CLI | play, live, repl, render commands |
-| 10b | Application MCP | Studio tools for composer workflow |
-| 11 | Hot Reload + Live Coding | chokidar watcher, REPL |
-| 12 | MIDI Bridge | First real music plays here |
-| 13 | GUI | React DAW (Score Studio) |
-| 14 | First Real Tracks | Production music written in Score |
-| 15 | Beta Audit | Performance, API stability, docs |
-| 15b | Framework MCP | External developers use Score via Claude |
-| 16 | Release | npm publish, public announcement |
-| 17 | v1.0 | Stable API, full test coverage, community |
+| Phase | Name                      | Key deliverable                                            |
+| ----- | ------------------------- | ---------------------------------------------------------- |
+| 1     | Scaffold                  | Monorepo stub, all packages, Vitest, ESLint, GH Actions CI |
+| 1b    | Codebase Intelligence MCP | Claude Code reads Score architecture via MCP               |
+| 2     | Core Engine               | AudioContext, AudioGraphManager, ScoreError                |
+| 3     | Synthesis                 | Math-generated sounds, oscillators                         |
+| 4     | Sampler                   | WAV/MP3 sample loading and playback                        |
+| 5     | DSL Components            | Kick, Snare, HiHat, Synth, Sample                          |
+| 6     | Effects                   | Reverb, Delay, Filter, Compressor, Sidechain, EQ           |
+| 7     | Mixer                     | Mixer, Channel, master bus                                 |
+| 8     | Sequencer + Transport     | Clock, StepSequencer, Transport                            |
+| 9     | Song Format               | Song, Sequence, Pattern, Arrangement helpers               |
+| 10    | CLI                       | play, live, repl, render commands                          |
+| 10b   | Application MCP           | Studio tools for composer workflow                         |
+| 11    | Hot Reload + Live Coding  | chokidar watcher, REPL                                     |
+| 12    | MIDI Bridge               | First real music plays here                                |
+| 13    | GUI                       | React DAW (Score Studio)                                   |
+| 14    | First Real Tracks         | Production music written in Score                          |
+| 15    | Beta Audit                | Performance, API stability, docs                           |
+| 15b   | Framework MCP             | External developers use Score via Claude                   |
+| 16    | Release                   | npm publish, public announcement                           |
+| 17    | v1.0                      | Stable API, full test coverage, community                  |
 
 ---
 
@@ -194,6 +190,7 @@ const ScoreError = (message, context = {}) => {
 ```
 
 Usage:
+
 ```ts
 throw ScoreError('AudioContext not initialized', {
   fix: 'Call createAudioContext() before loading components',
