@@ -1,9 +1,9 @@
 ## Session & Todo System
 Shared session state and todos live in `../claude-resources/` (one level up).
 
-- Session file:    `../claude-resources/sessions/wip/current.md`
-- Session history: `../claude-resources/sessions/wip/s000-s009/` etc.
-- Todo CLI:        `node ../claude-resources/todos/todo.js list --project wip`
+- Session file:    `../claude-resources/sessions/score/current.md`
+- Session history: `../claude-resources/sessions/score/s000-s009/` etc.
+- Todo CLI:        `node ../claude-resources/todos/todo.js list --project score`
 - Dashboard:       `node ../claude-resources/todos/todo.js dashboard`
 - Nav hub:         `../claude-resources/CLAUDE.md`
 
@@ -49,7 +49,7 @@ See `WIP_HANDOFF.md` for the full 17-phase build plan.
 
 ## Start-of-Session Checklist
 
-1. Read session file: `../claude-resources/sessions/wip/current.md`
+1. Read session file: `../claude-resources/sessions/score/current.md`
 2. Read `AGENTS.md` — check what's in progress
 3. Run `pnpm test` — confirm all tests passing
 4. Check current phase in `WIP_HANDOFF.md`
