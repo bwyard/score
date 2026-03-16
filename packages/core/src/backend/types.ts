@@ -67,6 +67,17 @@ export type BackendCompressorNode = BackendNode & {
   readonly setRelease: (value: number, time?: number) => void
 }
 
+export type OversampleType = 'none' | '2x' | '4x'
+
+export type BackendWaveShaperNode = BackendNode & {
+  readonly setCurve: (curve: Float32Array) => void
+  readonly setOversample: (value: OversampleType) => void
+}
+
+export type BackendStereoPannerNode = BackendNode & {
+  readonly setPan: (value: number, time?: number) => void
+}
+
 // --- Backend context ---
 
 export type BackendContext = {
@@ -103,6 +114,13 @@ export type BackendContext = {
     attack?: number
     release?: number
   }) => BackendCompressorNode
+  readonly createWaveShaper: (props?: {
+    curve?: Float32Array
+    oversample?: OversampleType
+  }) => BackendWaveShaperNode
+  readonly createStereoPanner: (props?: {
+    pan?: number
+  }) => BackendStereoPannerNode
   readonly suspend: () => Promise<void>
   readonly resume: () => Promise<void>
   readonly close: () => Promise<void>

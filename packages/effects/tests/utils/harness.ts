@@ -8,6 +8,8 @@ import type {
   BackendFilterNode,
   BackendGainNode,
   BackendNode,
+  BackendWaveShaperNode,
+  BackendStereoPannerNode,
 } from '@score/core'
 
 // --- Mock node factories ---
@@ -63,6 +65,25 @@ const createMockDelayNode = (shouldThrowOnDisconnect = false): MockNode & Backen
   }
 }
 
+const createMockWaveShaperNode = (shouldThrowOnDisconnect = false): MockNode & BackendWaveShaperNode => {
+  const base = createMockNode(shouldThrowOnDisconnect)
+
+  return {
+    ...base,
+    setCurve: (_curve: Float32Array) => {},
+    setOversample: (_value: 'none' | '2x' | '4x') => {},
+  }
+}
+
+const createMockStereoPannerNode = (shouldThrowOnDisconnect = false): MockNode & BackendStereoPannerNode => {
+  const base = createMockNode(shouldThrowOnDisconnect)
+
+  return {
+    ...base,
+    setPan: (_value: number, _time?: number) => {},
+  }
+}
+
 const createMockCompressorNode = (shouldThrowOnDisconnect = false): MockNode & BackendCompressorNode => {
   const base = createMockNode(shouldThrowOnDisconnect)
 
@@ -83,6 +104,8 @@ export type EffectsMockContext = BackendContext & {
   readonly createdFilters: Array<MockNode & BackendFilterNode>
   readonly createdDelays: Array<MockNode & BackendDelayNode>
   readonly createdCompressors: Array<MockNode & BackendCompressorNode>
+  readonly createdWaveShapers: Array<MockNode & BackendWaveShaperNode>
+  readonly createdStereoPanners: Array<MockNode & BackendStereoPannerNode>
 }
 
 const createMockContext = (shouldThrowOnDisconnect = false): EffectsMockContext => {
@@ -90,6 +113,8 @@ const createMockContext = (shouldThrowOnDisconnect = false): EffectsMockContext 
   const createdFilters: Array<MockNode & BackendFilterNode> = []
   const createdDelays: Array<MockNode & BackendDelayNode> = []
   const createdCompressors: Array<MockNode & BackendCompressorNode> = []
+  const createdWaveShapers: Array<MockNode & BackendWaveShaperNode> = []
+  const createdStereoPanners: Array<MockNode & BackendStereoPannerNode> = []
 
   return {
     currentTime: 0,
@@ -100,6 +125,8 @@ const createMockContext = (shouldThrowOnDisconnect = false): EffectsMockContext 
     createdFilters,
     createdDelays,
     createdCompressors,
+    createdWaveShapers,
+    createdStereoPanners,
 
     createOscillator: (_props) => {
       const base = createMockNode()
@@ -162,6 +189,18 @@ const createMockContext = (shouldThrowOnDisconnect = false): EffectsMockContext 
     createCompressor: (_props) => {
       const node = createMockCompressorNode(shouldThrowOnDisconnect)
       createdCompressors.push(node)
+      return node
+    },
+
+    createWaveShaper: (_props) => {
+      const node = createMockWaveShaperNode(shouldThrowOnDisconnect)
+      createdWaveShapers.push(node)
+      return node
+    },
+
+    createStereoPanner: (_props) => {
+      const node = createMockStereoPannerNode(shouldThrowOnDisconnect)
+      createdStereoPanners.push(node)
       return node
     },
 

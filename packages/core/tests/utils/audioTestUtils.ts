@@ -13,6 +13,8 @@ import type {
   BackendNoiseNode,
   BackendOscillatorNode,
   BackendProvider,
+  BackendWaveShaperNode,
+  BackendStereoPannerNode,
 } from '../../src/backend/types.js'
 
 // --- Track calls for assertions ---
@@ -48,6 +50,10 @@ export type MockBackendDelayNode = MockBackendNode & BackendDelayNode
 
 export type MockBackendCompressorNode = MockBackendNode & BackendCompressorNode
 
+export type MockBackendWaveShaperNode = MockBackendNode & BackendWaveShaperNode
+
+export type MockBackendStereoPannerNode = MockBackendNode & BackendStereoPannerNode
+
 export type MockBackendContext = BackendContext & {
   readonly createdOscillators: Array<MockBackendOscillatorNode>
   readonly createdGains: Array<MockBackendGainNode>
@@ -56,6 +62,8 @@ export type MockBackendContext = BackendContext & {
   readonly createdFilters: Array<MockBackendFilterNode>
   readonly createdDelays: Array<MockBackendDelayNode>
   readonly createdCompressors: Array<MockBackendCompressorNode>
+  readonly createdWaveShapers: Array<MockBackendWaveShaperNode>
+  readonly createdStereoPanners: Array<MockBackendStereoPannerNode>
 }
 
 // --- Factory functions ---
@@ -178,6 +186,25 @@ export const createMockCompressorNode = (): MockBackendCompressorNode => {
   }
 }
 
+export const createMockWaveShaperNode = (): MockBackendWaveShaperNode => {
+  const base = createMockBackendNode()
+
+  return {
+    ...base,
+    setCurve: (_curve: Float32Array) => {},
+    setOversample: (_value: 'none' | '2x' | '4x') => {},
+  }
+}
+
+export const createMockStereoPannerNode = (): MockBackendStereoPannerNode => {
+  const base = createMockBackendNode()
+
+  return {
+    ...base,
+    setPan: (_value: number, _time?: number) => {},
+  }
+}
+
 export const createMockBackendContext = (): MockBackendContext => {
   const createdOscillators: Array<MockBackendOscillatorNode> = []
   const createdGains: Array<MockBackendGainNode> = []
@@ -186,6 +213,8 @@ export const createMockBackendContext = (): MockBackendContext => {
   const createdFilters: Array<MockBackendFilterNode> = []
   const createdDelays: Array<MockBackendDelayNode> = []
   const createdCompressors: Array<MockBackendCompressorNode> = []
+  const createdWaveShapers: Array<MockBackendWaveShaperNode> = []
+  const createdStereoPanners: Array<MockBackendStereoPannerNode> = []
 
   return {
     currentTime: 0,
@@ -199,6 +228,8 @@ export const createMockBackendContext = (): MockBackendContext => {
     createdFilters,
     createdDelays,
     createdCompressors,
+    createdWaveShapers,
+    createdStereoPanners,
 
     createOscillator: (_props) => {
       const node = createMockOscillatorNode()
@@ -241,6 +272,18 @@ export const createMockBackendContext = (): MockBackendContext => {
     createCompressor: (_props) => {
       const node = createMockCompressorNode()
       createdCompressors.push(node)
+      return node
+    },
+
+    createWaveShaper: (_props) => {
+      const node = createMockWaveShaperNode()
+      createdWaveShapers.push(node)
+      return node
+    },
+
+    createStereoPanner: (_props) => {
+      const node = createMockStereoPannerNode()
+      createdStereoPanners.push(node)
       return node
     },
 

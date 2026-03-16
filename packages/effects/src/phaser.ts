@@ -1,0 +1,88 @@
+// Phaser effect — chain of allpass filters for phase-shifting
+// Uses chain of allpass FilterNodes with feedback
+// NOTE: Initial implementation uses fixed filter frequencies.
+// Phase 8b (LFO core primitive) will upgrade to true modulated phaser.
+
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import { uid } from '@score/core'
+
+export type PhaserProps = {
+  readonly rate?: number
+  readonly depth?: number
+  readonly stages?: number
+  readonly feedback?: number
+}
+
+export const createPhaser = (
+  context: ScoreAudioContext,
+  props?: PhaserProps,
+) => {
+  const stageCount = Math.max(2, Math.min(props?.stages ?? 4, 12))
+  const feedbackAmount = Math.min(props?.feedback ?? 0.3, 0.95)
+
+  const inputGain = context.createGain({ gain: 1.0 })
+  const outputGain = context.createGain({ gain: 1.0 })
+  const wetGain = context.createGain({ gain: 0.5 })
+  const feedbackGain = context.createGain({ gain: feedbackAmount })
+
+  // Create allpass filter chain with logarithmically spaced frequencies
+  const filters: Array<ReturnType<ScoreAudioContext['createFilter']>> = []
+  for (let i = 0; i < stageCount; i++) {
+    const freq = 200 * Math.pow(2, (i / stageCount) * 4)
+    const filter = context.createFilter({ type: 'allpass', frequency: freq, Q: 0.7 })
+    filters.push(filter)
+  }
+
+  // Chain allpass filters in series — stageCount >= 2, so filters always has elements
+  const firstFilter = filters[0]!
+  const lastFilter = filters[filters.length - 1]!
+  inputGain.connect(firstFilter)
+  for (let i = 0; i < filters.length - 1; i++) {
+    const current = filters[i]!
+    const next = filters[i + 1]!
+    current.connect(next)
+  }
+
+  // Wet path from last filter
+  lastFilter.connect(wetGain)
+  wetGain.connect(outputGain)
+
+  // Dry path
+  inputGain.connect(outputGain)
+
+  // Feedback from last filter back to first
+  lastFilter.connect(feedbackGain)
+  feedbackGain.connect(firstFilter)
+
+  const component: AudioComponent & {
+    readonly setFeedback: (value: number, time?: number) => void
+  } = {
+    id: uid('phaser'),
+    type: 'phaser' as const,
+    setFeedback: (value: number, time?: number) => {
+      feedbackGain.setGain(Math.min(value, 0.95), time)
+    },
+
+    connect: (destination: ScoreAudioNode) => {
+      outputGain.connect(destination)
+      return component
+    },
+
+    disconnect: () => {
+      try { outputGain.disconnect() } catch { /* already disconnected */ }
+      return component
+    },
+
+    dispose: () => {
+      try { inputGain.disconnect() } catch { /* already disconnected */ }
+      try { wetGain.disconnect() } catch { /* already disconnected */ }
+      try { feedbackGain.disconnect() } catch { /* already disconnected */ }
+      for (const f of filters) {
+        try { f.disconnect() } catch { /* already disconnected */ }
+      }
+      try { outputGain.disconnect() } catch { /* already disconnected */ }
+    },
+  }
+
+  return component
+}

@@ -166,6 +166,16 @@ export const createMockContext = (): MockBackendContext => {
       return { ...base, setThreshold: () => {}, setRatio: () => {}, setKnee: () => {}, setAttack: () => {}, setRelease: () => {} }
     },
 
+    createWaveShaper: (_props) => {
+      const base = createMockNode()
+      return { ...base, setCurve: () => {}, setOversample: () => {} }
+    },
+
+    createStereoPanner: (_props) => {
+      const base = createMockNode()
+      return { ...base, setPan: () => {} }
+    },
+
     suspend: () => Promise.resolve(),
     resume: () => Promise.resolve(),
     close: () => Promise.resolve(),
