@@ -113,6 +113,7 @@ Phase 10b  ⬜  score-audio MCP — effect catalog, signal flow, backend nodes, 
 Phase 10b2 ⬜  score-game-tools MCP — song inspector, mixer state, transport state, audio graph
 Phase 10c  ⬜  Decode — audio analysis + format import (Rekordbox, Serato, FL Studio, MIDI)
 Phase 11   ⬜  Hot reload + live coding (3 levels)
+Phase 11b  ⬜  Live coding visualization — punchcard, piano roll, scope, pattern graph, waveform
 Phase 12   ⬜  MIDI bridge + XDJ profiles + hardware mixer modes
 Phase 12b  ⬜  Jam session — @score/session
 Phase 12c  ⬜  SuperCollider backend — fully embedded
@@ -823,6 +824,67 @@ const resolvePattern = <T>(input: PatternInput<T>, cycle: number = 0): T[] =>
   Array.isArray(input)
     ? input
     : input([cycle, cycle + 1]).map(e => e.value)
+```
+
+### Score pattern language — code is music, read it as music
+
+Score patterns are designed to look like what they sound like:
+
+```ts
+// Score's native pattern syntax — readable, composable, functional
+const kick   = Kick({ pattern: beat(1, 0, 0, 0) })           // four-on-the-floor
+const snare  = Snare({ pattern: beat(0, 0, 1, 0) })          // backbeat
+const hihat  = HiHat({ pattern: every(16, beat(1, 1, 1, 1)) }) // 16ths
+const bass   = Synth({ pattern: euclidean(3, 8) })            // euclidean rhythm
+
+// Transforms read like music directions
+const buildup = fast(2, kick.pattern)                // double time
+const breakdown = degrade(0.3, hihat.pattern)        // thin out to 30%
+const drop = stack(kick, snare, hihat, bass)         // layer everything
+```
+
+### Strudel/TidalCycles migration path
+
+Score includes a `mini()` adapter for Strudel users migrating existing patterns:
+
+```ts
+// Strudel users can bring their patterns directly
+const pat = mini("bd sd [hh hh] cp")       // Strudel mini-notation → Score Pattern
+const pat = mini("bd(3,8)")                 // euclidean via mini-notation
+
+// But Score's native syntax is preferred — more readable, fully typed
+const pat = euclidean(3, 8)                 // Score native equivalent
+```
+
+Mini-notation is a **migration bridge**, not the primary interface.
+Score patterns are always arrays, functions, or composable transforms.
+
+### Live coding visualization (Phase 11b)
+
+Score provides real-time visual feedback for live coding sessions:
+
+- **Punchcard view** — grid showing active steps per track (like Strudel)
+- **Piano roll** — time-scrolling note display for melodic patterns
+- **Oscilloscope / spectrum** — real-time audio waveform + FFT via AnalyserNode
+- **Pattern graph** — visual DAG of pattern transformations (fast, every, stack, etc.)
+- **Waveform display** — rendered waveform of samples/audio buffers
+
+All visualizations are driven by the pattern system and transport position.
+GUI renders them (Phase 13), but data is available headlessly for terminal/REPL output.
+
+### REPL with live output (Phase 13f)
+
+```
+score> const kick = Kick({ pattern: mini("bd*4") })
+♪ Playing: bd bd bd bd  [120 BPM]
+
+score> kick.pattern = mini("bd ~ bd bd")
+♪ Updated: bd _ bd bd  [120 BPM]
+
+score> viz(kick)
+┌─┬─┬─┬─┬─┬─┬─┬─┐
+│●│ │●│●│●│ │●│●│  ← punchcard
+└─┴─┴─┴─┴─┴─┴─┴─┘
 ```
 
 ### Impact on existing code — minimal
