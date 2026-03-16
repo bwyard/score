@@ -1,16 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { AudioContext } from 'node-web-audio-api'
+import { OfflineAudioContext } from 'node-web-audio-api'
 import { createAudioGraph } from '../src/graph.js'
 
 describe('createAudioGraph', () => {
-  let context: AudioContext
+  let context: OfflineAudioContext
 
   beforeEach(() => {
-    context = new AudioContext()
-  })
-
-  afterEach(async () => {
-    await context.close()
+    context = new OfflineAudioContext(1, 44100, 44100)
   })
 
   it('returns an AudioGraph object with the expected methods', () => {

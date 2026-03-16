@@ -1,21 +1,16 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { AudioContext } from 'node-web-audio-api'
+import { OfflineAudioContext } from 'node-web-audio-api'
 import { createNoise } from '../src/noise.js'
 import type { ScoreAudioContext } from '../src/types.js'
 
 describe('createNoise', () => {
-  const contexts: AudioContext[] = []
+  const contexts: OfflineAudioContext[] = []
 
   const makeContext = (): ScoreAudioContext => {
-    const ctx = new AudioContext()
+    const ctx = new OfflineAudioContext(1, 44100, 44100)
     contexts.push(ctx)
     return ctx
   }
-
-  afterEach(async () => {
-    await Promise.all(contexts.map((c) => c.close()))
-    contexts.length = 0
-  })
 
   it('returns an AudioComponent (has connect, disconnect, dispose)', () => {
     const ctx = makeContext()

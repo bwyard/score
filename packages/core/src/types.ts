@@ -2,13 +2,12 @@
 // Re-exports Web Audio types from node-web-audio-api so consumers don't need to import it directly
 
 import type {
-  AudioContext as NodeAudioContext,
+  BaseAudioContext as NodeBaseAudioContext,
   AudioNode as NodeAudioNode,
 } from 'node-web-audio-api'
 
-// ScoreAudioContext — wraps AudioContext with only the methods Score needs
-// Uses the real AudioContext type from node-web-audio-api
-export type ScoreAudioContext = NodeAudioContext
+// ScoreAudioContext — accepts both AudioContext and OfflineAudioContext
+export type ScoreAudioContext = NodeBaseAudioContext
 
 // Re-export AudioNode for use in component interfaces
 export type ScoreAudioNode = NodeAudioNode
