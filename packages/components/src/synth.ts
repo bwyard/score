@@ -1,5 +1,6 @@
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
 import type { OscillatorType } from '@score/core'
+import { uid } from '@score/core'
 
 export type SynthProps = {
   readonly wave?: OscillatorType
@@ -32,6 +33,8 @@ export const Synth = (
   oscNode.connect(gainNode)
 
   const component: SynthComponent = {
+    id: uid('synth'),
+    type: 'synth' as const,
     start: (time?: number) => { oscNode.start(time) },
     stop: (time?: number) => { oscNode.stop(time) },
     setFrequency: (value: number, time?: number) => { oscNode.setFrequency(value, time) },

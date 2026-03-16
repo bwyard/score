@@ -2,6 +2,7 @@
 // Uses a compressor internally, source is the key signal (e.g., kick drum)
 
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode, BackendCompressorNode } from '@score/core'
+import { uid } from '@score/core'
 
 export type SidechainProps = {
   readonly source: BackendNode
@@ -28,6 +29,8 @@ export const createSidechain = (
   props.source.connect(compNode)
 
   const component: AudioComponent = {
+    id: uid('sidechain'),
+    type: 'sidechain' as const,
     connect: (destination: ScoreAudioNode) => {
       compNode.connect(destination)
       return component

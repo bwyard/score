@@ -31,6 +31,8 @@ import type {
 // Web Audio API BiquadFilterType — not always exported by node-web-audio-api types
 type BiquadFilterType = 'lowpass' | 'highpass' | 'bandpass' | 'notch' | 'allpass' | 'peaking' | 'lowshelf' | 'highshelf'
 
+const MIN_RAMP = 0.01 // 10ms minimum ramp time for all parameter changes
+
 const RAW = Symbol('web-audio-raw')
 const BUFFER = Symbol('web-audio-buffer')
 
@@ -120,10 +122,14 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
         start: (time?: number) => { osc.start(time ?? ctx.currentTime) },
         stop: (time?: number) => { osc.stop(time ?? ctx.currentTime) },
         setFrequency: (value: number, time?: number) => {
-          osc.frequency.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          osc.frequency.setValueAtTime(osc.frequency.value, t)
+          osc.frequency.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
         setDetune: (value: number, time?: number) => {
-          osc.detune.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          osc.detune.setValueAtTime(osc.detune.value, t)
+          osc.detune.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
       }
     },
@@ -137,7 +143,9 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
         ...base,
         get gain() { return gainNode.gain.value },
         setGain: (value: number, time?: number) => {
-          gainNode.gain.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          gainNode.gain.setValueAtTime(gainNode.gain.value, t)
+          gainNode.gain.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
       }
     },
@@ -191,6 +199,7 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
         throw ScoreError('Failed to decode audio data', {
           fix: 'Ensure the file is a valid audio format (WAV, MP3, OGG, FLAC)',
           received: err instanceof Error ? err.message : String(err),
+          docs: 'https://score.dev/docs/core#sample',
         })
       }
     },
@@ -214,7 +223,9 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
           source.loop = loop
         },
         setPlaybackRate: (rate: number, time?: number) => {
-          source.playbackRate.setValueAtTime(rate, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          source.playbackRate.setValueAtTime(source.playbackRate.value, t)
+          source.playbackRate.linearRampToValueAtTime(rate, t + MIN_RAMP)
         },
         start: (time?: number, offset?: number, duration?: number) => {
           source.start(time, offset, duration)
@@ -236,13 +247,19 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
       return {
         ...base,
         setFrequency: (value: number, time?: number) => {
-          filter.frequency.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          filter.frequency.setValueAtTime(filter.frequency.value, t)
+          filter.frequency.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
         setQ: (value: number, time?: number) => {
-          filter.Q.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          filter.Q.setValueAtTime(filter.Q.value, t)
+          filter.Q.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
         setFilterGain: (value: number, time?: number) => {
-          filter.gain.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          filter.gain.setValueAtTime(filter.gain.value, t)
+          filter.gain.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
       }
     },
@@ -256,7 +273,9 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
       return {
         ...base,
         setDelayTime: (value: number, time?: number) => {
-          delay.delayTime.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          delay.delayTime.setValueAtTime(delay.delayTime.value, t)
+          delay.delayTime.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
       }
     },
@@ -273,19 +292,29 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
       return {
         ...base,
         setThreshold: (value: number, time?: number) => {
-          comp.threshold.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          comp.threshold.setValueAtTime(comp.threshold.value, t)
+          comp.threshold.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
         setRatio: (value: number, time?: number) => {
-          comp.ratio.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          comp.ratio.setValueAtTime(comp.ratio.value, t)
+          comp.ratio.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
         setKnee: (value: number, time?: number) => {
-          comp.knee.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          comp.knee.setValueAtTime(comp.knee.value, t)
+          comp.knee.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
         setAttack: (value: number, time?: number) => {
-          comp.attack.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          comp.attack.setValueAtTime(comp.attack.value, t)
+          comp.attack.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
         setRelease: (value: number, time?: number) => {
-          comp.release.setValueAtTime(value, time ?? ctx.currentTime)
+          const t = time ?? ctx.currentTime
+          comp.release.setValueAtTime(comp.release.value, t)
+          comp.release.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
       }
     },
@@ -320,6 +349,7 @@ export const webAudioBackend: BackendProvider = {
       throw ScoreError('Failed to create AudioContext', {
         fix: 'Ensure node-web-audio-api is installed: pnpm add node-web-audio-api',
         received: err instanceof Error ? err.message : String(err),
+        docs: 'https://score.dev/docs/core#audio-context',
       })
     }
   },

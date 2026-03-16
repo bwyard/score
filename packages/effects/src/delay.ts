@@ -2,6 +2,7 @@
 // Uses backend delay node + gain nodes for feedback routing
 
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import { uid } from '@score/core'
 
 export type DelayProps = {
   readonly time?: number
@@ -43,6 +44,8 @@ export const createDelay = (
     readonly setFeedback: (value: number, time?: number) => void
     readonly setMix: (value: number, time?: number) => void
   } = {
+    id: uid('delay'),
+    type: 'delay' as const,
     setTime: (value: number, time?: number) => { delayNode.setDelayTime(value, time) },
     setFeedback: (value: number, time?: number) => {
       feedbackGain.setGain(Math.min(value, 0.95), time)

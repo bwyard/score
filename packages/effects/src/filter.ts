@@ -2,6 +2,7 @@
 // Supports lowpass, highpass, bandpass, notch, allpass, peaking, lowshelf, highshelf
 
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendFilterNode, FilterType } from '@score/core'
+import { uid } from '@score/core'
 
 export type FilterProps = {
   readonly type?: FilterType
@@ -26,6 +27,8 @@ export const createFilter = (
     readonly setQ: (value: number, time?: number) => void
     readonly setGain: (value: number, time?: number) => void
   } = {
+    id: uid('filter'),
+    type: 'filter' as const,
     setFrequency: (value: number, time?: number) => { filterNode.setFrequency(value, time) },
     setQ: (value: number, time?: number) => { filterNode.setQ(value, time) },
     setGain: (value: number, time?: number) => { filterNode.setFilterGain(value, time) },

@@ -1,6 +1,7 @@
 import { ScoreError } from './errors/ScoreError.js'
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from './types.js'
 import type { BackendBuffer, BackendBufferSourceNode } from './backend/types.js'
+import { uid } from './uid.js'
 
 // --- Sample decoding ---
 // Accepts raw audio data (ArrayBuffer) and decodes via the backend.
@@ -13,7 +14,9 @@ export const decodeSample = async (
 ): Promise<BackendBuffer> => {
   if (data.byteLength === 0) {
     throw ScoreError('Cannot decode empty audio data', {
+      received: `ArrayBuffer(byteLength=${String(data.byteLength)})`,
       fix: 'Provide a non-empty ArrayBuffer containing valid audio data (WAV, MP3, OGG, FLAC)',
+      docs: 'https://score.dev/docs/core#sample',
     })
   }
   return context.decodeAudio(data)
@@ -43,6 +46,8 @@ export const createSamplePlayer = (
     readonly setGain: (value: number, time?: number) => void
     readonly buffer: BackendBuffer
   } = {
+    id: uid('sample'),
+    type: 'sample' as const,
     buffer,
 
     start: (time?: number, offset?: number, duration?: number) => {

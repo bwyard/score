@@ -1,5 +1,6 @@
 import type { ScoreAudioContext } from '@score/core'
 import type { BackendBuffer } from '@score/core'
+import { uid } from '@score/core'
 import { Sample, type SampleComponent } from './sample.js'
 
 export type HiHatProps = {
@@ -16,9 +17,17 @@ export const HiHat = (
   const defaultGain = props?.open === true ? 0.8 : 0.6
   const gain = props?.gain ?? defaultGain
 
-  return Sample(context, buffer, {
+  const sample = Sample(context, buffer, {
     loop: false,
     playbackRate: 1.0,
     gain,
   })
+  const hihat: SampleComponent = {
+    ...sample,
+    id: uid('hihat'),
+    type: 'hihat',
+    connect: (dest) => { sample.connect(dest); return hihat },
+    disconnect: () => { sample.disconnect(); return hihat },
+  }
+  return hihat
 }

@@ -1,4 +1,5 @@
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from './types.js'
+import { uid } from './uid.js'
 
 export const createOscillator = (
   context: ScoreAudioContext,
@@ -16,6 +17,8 @@ export const createOscillator = (
     readonly setFrequency: (value: number, time?: number) => void
     readonly setDetune: (value: number, time?: number) => void
   } = {
+    id: uid('oscillator'),
+    type: 'oscillator' as const,
     start: (time?: number) => { oscNode.start(time) },
     stop: (time?: number) => { oscNode.stop(time) },
     setFrequency: (value: number, time?: number) => { oscNode.setFrequency(value, time) },

@@ -1,5 +1,6 @@
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
 import type { BackendBuffer, BackendBufferSourceNode } from '@score/core'
+import { uid } from '@score/core'
 
 export type SampleProps = {
   readonly loop?: boolean
@@ -24,6 +25,8 @@ export const Sample = (
   let activeSource: BackendBufferSourceNode | null = null
 
   const component: SampleComponent = {
+    id: uid('sample'),
+    type: 'sample' as const,
     buffer,
 
     start: (time?: number, offset?: number, duration?: number) => {

@@ -12,7 +12,9 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
   const assertNotDisposed = (method: string): void => {
     if (state.disposed) {
       throw ScoreError(`Cannot call ${method} on a disposed AudioGraph`, {
+        received: method,
         fix: 'Create a new AudioGraph with createAudioGraph(context) instead of reusing a disposed one.',
+        docs: 'https://score.dev/docs/core#audio-graph',
       })
     }
   }
@@ -21,7 +23,9 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
     const node = nodes.get(id)
     if (!node) {
       throw ScoreError(`${label} "${id}" not found in AudioGraph`, {
+        received: id,
         fix: `Register the node first with addNode("${id}", node) before using it.`,
+        docs: 'https://score.dev/docs/core#audio-graph',
       })
     }
     return node
@@ -91,7 +95,9 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
       assertNotDisposed('addNode')
       if (nodes.has(id)) {
         throw ScoreError(`Node "${id}" already exists in AudioGraph`, {
+          received: id,
           fix: `Use a unique id or remove the existing node first with removeNode("${id}").`,
+          docs: 'https://score.dev/docs/core#audio-graph',
         })
       }
       nodes.set(id, node)
@@ -101,12 +107,16 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
       assertNotDisposed('removeNode')
       if (id === 'destination') {
         throw ScoreError('Cannot remove the "destination" node', {
+          received: id,
           fix: 'The destination node is required and cannot be removed. Remove other nodes instead.',
+          docs: 'https://score.dev/docs/core#audio-graph',
         })
       }
       if (!nodes.has(id)) {
         throw ScoreError(`Node "${id}" not found in AudioGraph`, {
+          received: id,
           fix: `Check that the node id "${id}" is correct and has been added with addNode().`,
+          docs: 'https://score.dev/docs/core#audio-graph',
         })
       }
       disconnectAllForNode(id)

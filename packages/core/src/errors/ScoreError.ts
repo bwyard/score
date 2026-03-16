@@ -1,7 +1,7 @@
 export interface ScoreErrorContext {
-  received?: unknown
-  fix?: string
-  docs?: string
+  received: unknown
+  fix: string
+  docs: string
   code?: string
 }
 
@@ -11,7 +11,7 @@ export interface ScoreErrorInstance extends Error {
 
 export const ScoreError = (
   message: string,
-  context: ScoreErrorContext = {},
+  context: ScoreErrorContext,
 ): ScoreErrorInstance => {
   const error = new Error(message) as ScoreErrorInstance
   error.name = 'ScoreError'

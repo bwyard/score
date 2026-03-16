@@ -3,6 +3,7 @@
 
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
 import type { BackendGainNode, BackendDelayNode } from '@score/core'
+import { uid } from '@score/core'
 
 export type ReverbProps = {
   readonly decay?: number
@@ -50,6 +51,8 @@ export const createReverb = (
   const component: AudioComponent & {
     readonly setMix: (value: number, time?: number) => void
   } = {
+    id: uid('reverb'),
+    type: 'reverb' as const,
     setMix: (value: number, time?: number) => {
       dryGain.setGain(1.0 - value, time)
       wetGain.setGain(value, time)

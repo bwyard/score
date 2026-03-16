@@ -1,6 +1,7 @@
 // Compressor effect — wraps a backend dynamics compressor node
 
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendCompressorNode } from '@score/core'
+import { uid } from '@score/core'
 
 export type CompressorProps = {
   readonly threshold?: number
@@ -26,6 +27,8 @@ export const createCompressor = (
     readonly setThreshold: (value: number, time?: number) => void
     readonly setRatio: (value: number, time?: number) => void
   } = {
+    id: uid('compressor'),
+    type: 'compressor' as const,
     setThreshold: (value: number, time?: number) => { compNode.setThreshold(value, time) },
     setRatio: (value: number, time?: number) => { compNode.setRatio(value, time) },
 

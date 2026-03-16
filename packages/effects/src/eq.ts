@@ -2,6 +2,7 @@
 // lowshelf (320 Hz), peaking (1000 Hz), highshelf (3200 Hz)
 
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendFilterNode } from '@score/core'
+import { uid } from '@score/core'
 
 export type EQProps = {
   readonly low?: number
@@ -41,6 +42,8 @@ export const createEQ = (
     readonly setMid: (value: number, time?: number) => void
     readonly setHigh: (value: number, time?: number) => void
   } = {
+    id: uid('eq'),
+    type: 'eq' as const,
     setLow: (value: number, time?: number) => { lowFilter.setFilterGain(value, time) },
     setMid: (value: number, time?: number) => { midFilter.setFilterGain(value, time) },
     setHigh: (value: number, time?: number) => { highFilter.setFilterGain(value, time) },
