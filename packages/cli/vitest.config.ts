@@ -5,6 +5,7 @@ export default defineConfig({
     globals: true,
     passWithNoTests: true,
     environment: 'node',
+    passWithNoTests: true,
     coverage: {
       provider: 'v8',
       thresholds: {
