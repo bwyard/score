@@ -19,36 +19,32 @@ The core philosophy: **music is code, code is music.** Every note, pattern, effe
 
 ```js
 const kick = Kick({
-  sample:  './samples/kicks/deep-kick.wav',
-  pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
-  volume:  0.9,
+  sample: './samples/kicks/deep-kick.wav',
+  pattern: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+  volume: 0.9,
 })
 
 const bass = Synth({
-  wave:     'sawtooth',
-  filter:   { type: 'lowpass', frequency: 800 },
+  wave: 'sawtooth',
+  filter: { type: 'lowpass', frequency: 800 },
   sequence: Sequence('A1 A1 . C2 . G1 . .'),
 })
 
 export default Song({
-  bpm:    140,
-  key:    'Am',
-  genre:  'techno',
+  bpm: 140,
+  key: 'Am',
+  genre: 'techno',
   tracks: [kick, bass],
-  arrangement: [
-    Intro(4,  [kick]),
-    Drop(16,  [kick, bass]),
-    Outro(4,  [kick]),
-  ],
+  arrangement: [Intro(4, [kick]), Drop(16, [kick, bass]), Outro(4, [kick])],
 })
 ```
 
 ## Three operational modes
 
-| Command | Mode |
-|---|---|
-| `score play songs/track.js` | Play a finished song |
-| `score live songs/track.js` | Live coding — hot reload on save |
+| Command                     | Mode                                         |
+| --------------------------- | -------------------------------------------- |
+| `score play songs/track.js` | Play a finished song                         |
+| `score live songs/track.js` | Live coding — hot reload on save             |
 | `score repl songs/track.js` | REPL — type commands, hear changes instantly |
 
 ## Target genres
@@ -57,18 +53,18 @@ House · Deep House · Techno · Industrial · Hardcore · Grime
 
 ## Packages
 
-| Package | Purpose |
-|---|---|
-| `@score/core` | AudioContext, AudioGraphManager, ScoreError |
-| `@score/components` | Kick, Snare, HiHat, Synth, Sample |
-| `@score/effects` | Reverb, Delay, Filter, Compressor, Sidechain, EQ |
-| `@score/dsl` | Song, Sequence, Pattern, Arrangement helpers |
-| `@score/sequencer` | Transport, Clock, StepSequencer |
-| `@score/mixer` | Mixer, Channel, master bus |
-| `@score/cli` | play, live, repl, render commands |
-| `@score/midi` | WebMIDI, Pioneer XDJ profiles |
-| `@score/mcp` | MCP servers for Claude Code integration |
-| `@score/gui` | React DAW interface (Phase 13) |
+| Package             | Purpose                                          |
+| ------------------- | ------------------------------------------------ |
+| `@score/core`       | AudioContext, AudioGraphManager, ScoreError      |
+| `@score/components` | Kick, Snare, HiHat, Synth, Sample                |
+| `@score/effects`    | Reverb, Delay, Filter, Compressor, Sidechain, EQ |
+| `@score/dsl`        | Song, Sequence, Pattern, Arrangement helpers     |
+| `@score/sequencer`  | Transport, Clock, StepSequencer                  |
+| `@score/mixer`      | Mixer, Channel, master bus                       |
+| `@score/cli`        | play, live, repl, render commands                |
+| `@score/midi`       | WebMIDI, Pioneer XDJ profiles                    |
+| `@score/mcp`        | MCP servers for Claude Code integration          |
+| `@score/gui`        | React DAW interface (Phase 13)                   |
 
 ## Requirements
 

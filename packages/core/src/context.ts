@@ -1,11 +1,20 @@
-// AudioContext factory — same code runs in browser and Node.js
-// Phase 2: wire up node-web-audio-api polyfill for Node.js
+// AudioContext factory — stub for Phase 2
+// Phase 2 will wire up node-web-audio-api polyfill
 
-export type AudioContextLike = AudioContext
+import { ScoreError } from './errors/ScoreError.js'
+
+export type AudioContextLike = {
+  readonly currentTime: number
+  readonly sampleRate: number
+  readonly state: string
+}
 
 export const getAudioContext = (): AudioContextLike => {
-  if (typeof globalThis.AudioContext !== 'undefined') {
-    return new globalThis.AudioContext()
+  const g = globalThis as Record<string, unknown>
+  if ('AudioContext' in g && typeof g.AudioContext === 'function') {
+    return new (g.AudioContext as new () => AudioContextLike)()
   }
-  throw new Error('AudioContext not available — install node-web-audio-api for Node.js support')
+  throw ScoreError('AudioContext not available', {
+    fix: 'Install node-web-audio-api for Node.js support',
+  })
 }

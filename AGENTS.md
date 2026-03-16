@@ -6,10 +6,11 @@ Update at the start and end of every agent session.
 ## Active agents
 
 | Agent / Terminal | Package | Task | Status |
-|---|---|---|---|
-| — | — | — | — |
+| ---------------- | ------- | ---- | ------ |
+| —                | —       | —    | —      |
 
 ## Rules
+
 - One agent per package at a time
 - Green tests = contract met
 - Update this file when starting and finishing work
