@@ -1,29 +1,19 @@
 import { describe, it, expect, afterAll } from 'vitest'
-import { createAudioContext } from '../src/context.js'
+import { useHarness } from './utils/harness.js'
 import { decodeSample, createSamplePlayer } from '../src/sample.js'
-import type { BackendContext } from '../src/backend/types.js'
-import { createMockBackendContext, createMockBuffer } from './utils/audioTestUtils.js'
 import { createTestWav } from './utils/createTestWav.js'
 
-const contexts: BackendContext[] = []
+const h = useHarness()
+afterAll(() => h.cleanup())
 
-afterAll(async () => {
-  await Promise.all(contexts.map((ctx) => ctx.close().catch(() => {})))
-})
-
-const trackCtx = () => {
-  const ctx = createAudioContext({ offline: { length: 44100 } })
-  contexts.push(ctx)
-  return ctx
+const testWavData = (): ArrayBuffer => {
+  const wav = createTestWav()
+  return wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength)
 }
 
 describe('decodeSample', () => {
   it('decodes valid audio data via backend', async () => {
-    const ctx = trackCtx()
-    const wav = createTestWav()
-    const arrayBuffer = wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength)
-    const buffer = await decodeSample(ctx, arrayBuffer)
-    expect(buffer).toBeDefined()
+    const buffer = await decodeSample(h.context(), testWavData())
     expect(buffer.duration).toBeGreaterThan(0)
     expect(buffer.sampleRate).toBeGreaterThan(0)
     expect(buffer.numberOfChannels).toBeGreaterThanOrEqual(1)
@@ -31,32 +21,25 @@ describe('decodeSample', () => {
   })
 
   it('throws ScoreError for empty ArrayBuffer', async () => {
-    const ctx = trackCtx()
-    await expect(decodeSample(ctx, new ArrayBuffer(0))).rejects.toThrow('Cannot decode empty audio data')
+    await expect(decodeSample(h.context(), new ArrayBuffer(0)))
+      .rejects.toThrow('Cannot decode empty audio data')
   })
 
   it('delegates to backend decodeAudio', async () => {
-    const mockCtx = createMockBackendContext()
-    const wav = createTestWav()
-    const arrayBuffer = wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength)
-    const buffer = await decodeSample(mockCtx, arrayBuffer)
+    const mock = h.mockContext()
+    const buffer = await decodeSample(mock, testWavData())
     expect(buffer.duration).toBe(1.0) // mock default
   })
 
-  it('preserves sample rate from source file', async () => {
-    const ctx = trackCtx()
-    const wav = createTestWav({ sampleRate: 44100 })
-    const arrayBuffer = wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength)
-    const buffer = await decodeSample(ctx, arrayBuffer)
+  it('preserves sample rate from source', async () => {
+    const buffer = await decodeSample(h.context(), testWavData())
     expect(buffer.sampleRate).toBe(44100)
   })
 })
 
 describe('createSamplePlayer', () => {
-  it('returns an AudioComponent with start, stop, setPlaybackRate, setGain', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    const player = createSamplePlayer(mockCtx, buffer)
+  it('has start, stop, setPlaybackRate, setGain, connect, disconnect, dispose', () => {
+    const player = createSamplePlayer(h.mockContext(), h.mockBuffer())
     expect(typeof player.start).toBe('function')
     expect(typeof player.stop).toBe('function')
     expect(typeof player.setPlaybackRate).toBe('function')
@@ -67,100 +50,81 @@ describe('createSamplePlayer', () => {
   })
 
   it('exposes the buffer reference', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer({ duration: 2.5 })
-    const player = createSamplePlayer(mockCtx, buffer)
-    expect(player.buffer).toBe(buffer)
+    const buf = h.mockBuffer({ duration: 2.5 })
+    const player = createSamplePlayer(h.mockContext(), buf)
+    expect(player.buffer).toBe(buf)
     expect(player.buffer.duration).toBe(2.5)
   })
 
   it('start creates a buffer source via backend', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    const player = createSamplePlayer(mockCtx, buffer)
+    const mock = h.mockContext()
+    const player = createSamplePlayer(mock, h.mockBuffer())
     player.start()
-    expect(mockCtx.createdBufferSources.length).toBe(1)
+    expect(mock.createdBufferSources.length).toBe(1)
   })
 
-  it('each start creates a new buffer source (one-shot pattern)', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    const player = createSamplePlayer(mockCtx, buffer)
+  it('each start creates a new source (one-shot pattern)', () => {
+    const mock = h.mockContext()
+    const player = createSamplePlayer(mock, h.mockBuffer())
     player.start()
     player.start()
-    expect(mockCtx.createdBufferSources.length).toBe(2)
+    expect(mock.createdBufferSources.length).toBe(2)
   })
 
   it('stop does not throw when nothing is playing', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    const player = createSamplePlayer(mockCtx, buffer)
-    expect(() => { player.stop(); }).not.toThrow()
+    expect(() => { createSamplePlayer(h.mockContext(), h.mockBuffer()).stop() }).not.toThrow()
   })
 
   it('stop after start does not throw', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    const player = createSamplePlayer(mockCtx, buffer)
+    const player = createSamplePlayer(h.mockContext(), h.mockBuffer())
     player.start()
-    expect(() => { player.stop(); }).not.toThrow()
+    expect(() => { player.stop() }).not.toThrow()
   })
 
   it('connect returns self for chaining', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    const player = createSamplePlayer(mockCtx, buffer)
-    const result = player.connect(mockCtx.destination)
-    expect(result).toBe(player)
+    const mock = h.mockContext()
+    const player = createSamplePlayer(mock, h.mockBuffer())
+    expect(player.connect(mock.destination)).toBe(player)
   })
 
   it('disconnect does not throw', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    const player = createSamplePlayer(mockCtx, buffer)
-    player.connect(mockCtx.destination)
-    expect(() => player.disconnect()).not.toThrow()
+    const mock = h.mockContext()
+    const player = createSamplePlayer(mock, h.mockBuffer())
+    player.connect(mock.destination)
+    expect(() => { player.disconnect() }).not.toThrow()
   })
 
   it('dispose cleans up without throwing', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    const player = createSamplePlayer(mockCtx, buffer)
+    const mock = h.mockContext()
+    const player = createSamplePlayer(mock, h.mockBuffer())
     player.start()
-    player.connect(mockCtx.destination)
-    expect(() => { player.dispose(); }).not.toThrow()
+    player.connect(mock.destination)
+    expect(() => { player.dispose() }).not.toThrow()
   })
 
   it('dispose when never started does not throw', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    const player = createSamplePlayer(mockCtx, buffer)
-    expect(() => { player.dispose(); }).not.toThrow()
+    expect(() => { createSamplePlayer(h.mockContext(), h.mockBuffer()).dispose() }).not.toThrow()
   })
 
   it('creates gain node for volume control', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    createSamplePlayer(mockCtx, buffer, { gain: 0.5 })
-    expect(mockCtx.createdGains.length).toBe(1)
+    const mock = h.mockContext()
+    createSamplePlayer(mock, h.mockBuffer(), { gain: 0.5 })
+    expect(mock.createdGains.length).toBe(1)
   })
 
   it('respects custom gain prop', () => {
-    const mockCtx = createMockBackendContext()
-    const buffer = createMockBuffer()
-    createSamplePlayer(mockCtx, buffer, { gain: 0.7 })
-    expect(mockCtx.createdGains[0].gain).toBeCloseTo(0.7)
+    const mock = h.mockContext()
+    createSamplePlayer(mock, h.mockBuffer(), { gain: 0.7 })
+    expect(mock.createdGains[0].gain).toBeCloseTo(0.7)
   })
 
   it('integration: decode and play with real backend', async () => {
-    const ctx = trackCtx()
-    const wav = createTestWav()
-    const arrayBuffer = wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength)
-    const buffer = await decodeSample(ctx, arrayBuffer)
+    const ctx = h.context()
+    const buffer = await decodeSample(ctx, testWavData())
     const player = createSamplePlayer(ctx, buffer)
     player.connect(ctx.destination)
-    expect(() => { player.start(); }).not.toThrow()
-    expect(() => { player.stop(); }).not.toThrow()
-    expect(() => { player.dispose(); }).not.toThrow()
+    expect(() => { player.start() }).not.toThrow()
+    expect(() => { player.stop() }).not.toThrow()
+    expect(() => { player.dispose() }).not.toThrow()
   })
 })

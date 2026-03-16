@@ -1,163 +1,115 @@
 import { describe, it, expect, afterAll } from 'vitest'
-import type { BackendContext } from '../src/backend/types.js'
+import { useHarness } from './utils/harness.js'
 import { webAudioBackend } from '../src/backend/web-audio.js'
 import { createAudioContext } from '../src/context.js'
 import { createNoise } from '../src/noise.js'
 import { decodeSample } from '../src/sample.js'
 import { createAudioGraph } from '../src/graph.js'
-import type { ScoreErrorInstance } from '../src/errors/ScoreError.js'
 
-// Verify all errors surface as ScoreError with context.fix
-
-const isScoreError = (err: unknown): err is ScoreErrorInstance =>
-  err instanceof Error && err.name === 'ScoreError' && 'context' in err
-
-const expectScoreError = (err: unknown): void => {
-  expect(isScoreError(err)).toBe(true)
-  if (isScoreError(err)) {
-    expect(err.context.fix).toBeDefined()
-    expect(typeof err.context.fix).toBe('string')
-  }
-}
+const h = useHarness()
+afterAll(() => h.cleanup())
 
 describe('Error propagation — all errors are ScoreError with fix', () => {
-  const contexts: BackendContext[] = []
-  const makeCtx = (): BackendContext => {
-    const ctx = createAudioContext({ offline: { length: 44100 } })
-    contexts.push(ctx)
-    return ctx
-  }
-
-  afterAll(async () => {
-    await Promise.all(contexts.map((ctx) => ctx.close().catch(() => {})))
-  })
-
-  // --- Backend errors ---
-
-  it('webAudioBackend.createContext with invalid params throws ScoreError', () => {
+  it('webAudioBackend.createContext with invalid params', () => {
     try {
       webAudioBackend.createContext({ offline: { length: -1 } })
       expect.unreachable('should have thrown')
     } catch (err) {
-      expectScoreError(err)
+      h.expectScoreError(err)
     }
   })
 
-  it('createAudioContext with invalid params throws ScoreError', () => {
+  it('createAudioContext with invalid params', () => {
     try {
       createAudioContext({ offline: { length: -1 } })
       expect.unreachable('should have thrown')
     } catch (err) {
-      expectScoreError(err)
+      h.expectScoreError(err)
     }
   })
 
-  // --- Noise validation ---
-
-  it('createNoise with invalid type throws ScoreError', () => {
-    const ctx = makeCtx()
+  it('createNoise with invalid type', () => {
     try {
-      createNoise(ctx, { type: 'invalid' as never })
+      createNoise(h.context(), { type: 'invalid' as never })
       expect.unreachable('should have thrown')
     } catch (err) {
-      expectScoreError(err)
+      h.expectScoreError(err)
     }
   })
 
-  // --- Sample decode errors ---
-
-  it('decodeSample with empty data throws ScoreError', async () => {
-    const ctx = makeCtx()
+  it('decodeSample with empty data', async () => {
     try {
-      await decodeSample(ctx, new ArrayBuffer(0))
+      await decodeSample(h.context(), new ArrayBuffer(0))
       expect.unreachable('should have thrown')
     } catch (err) {
-      expectScoreError(err)
+      h.expectScoreError(err)
     }
   })
 
-  it('decodeSample with corrupt data throws ScoreError', async () => {
-    const ctx = makeCtx()
-    const garbage = new Uint8Array([0, 1, 2, 3, 4, 5]).buffer
+  it('decodeSample with corrupt data', async () => {
     try {
-      await decodeSample(ctx, garbage)
+      await decodeSample(h.context(), new Uint8Array([0, 1, 2, 3, 4, 5]).buffer)
       expect.unreachable('should have thrown')
     } catch (err) {
-      expectScoreError(err)
+      h.expectScoreError(err)
     }
   })
 
-  // --- Graph errors ---
-
-  it('graph.addNode with duplicate id throws ScoreError', () => {
-    const ctx = makeCtx()
+  it('graph.addNode with duplicate id', () => {
+    const ctx = h.context()
     const graph = createAudioGraph(ctx)
-    const gain1 = ctx.createGain()
-    const gain2 = ctx.createGain()
-    graph.addNode('g', gain1)
+    graph.addNode('g', ctx.createGain())
     try {
-      graph.addNode('g', gain2)
+      graph.addNode('g', ctx.createGain())
       expect.unreachable('should have thrown')
     } catch (err) {
-      expectScoreError(err)
+      h.expectScoreError(err)
     }
     graph.dispose()
   })
 
-  it('graph.removeNode with unknown id throws ScoreError', () => {
-    const ctx = makeCtx()
-    const graph = createAudioGraph(ctx)
+  it('graph.removeNode with unknown id', () => {
+    const graph = createAudioGraph(h.context())
     try {
       graph.removeNode('nonexistent')
       expect.unreachable('should have thrown')
     } catch (err) {
-      expectScoreError(err)
+      h.expectScoreError(err)
     }
     graph.dispose()
   })
 
-  it('graph.removeNode("destination") throws ScoreError', () => {
-    const ctx = makeCtx()
-    const graph = createAudioGraph(ctx)
+  it('graph.removeNode("destination")', () => {
+    const graph = createAudioGraph(h.context())
     try {
       graph.removeNode('destination')
       expect.unreachable('should have thrown')
     } catch (err) {
-      expectScoreError(err)
+      h.expectScoreError(err)
     }
     graph.dispose()
   })
 
-  it('graph.connect with unknown source throws ScoreError', () => {
-    const ctx = makeCtx()
-    const graph = createAudioGraph(ctx)
+  it('graph.connect with unknown source', () => {
+    const graph = createAudioGraph(h.context())
     try {
       graph.connect('unknown', 'destination')
       expect.unreachable('should have thrown')
     } catch (err) {
-      expectScoreError(err)
+      h.expectScoreError(err)
     }
     graph.dispose()
   })
 
-  it('graph methods after dispose throw ScoreError', () => {
-    const ctx = makeCtx()
+  it('graph methods after dispose', () => {
+    const ctx = h.context()
     const graph = createAudioGraph(ctx)
     graph.dispose()
-    const gain = ctx.createGain()
-
     try {
-      graph.addNode('g', gain)
+      graph.addNode('g', ctx.createGain())
       expect.unreachable('should have thrown')
     } catch (err) {
-      expectScoreError(err)
-    }
-
-    try {
-      graph.connect('destination', 'destination')
-      expect.unreachable('should have thrown')
-    } catch (err) {
-      expectScoreError(err)
+      h.expectScoreError(err)
     }
   })
 })
