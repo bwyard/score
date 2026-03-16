@@ -1,2 +1,9 @@
-// @score/sequencer — Phase 1 stub
-export const _stub = true // Phase 1: stub only
+export { createClock } from './clock.js'
+export type { ClockProps } from './clock.js'
+export { createTransport } from './transport.js'
+export type { TransportProps } from './transport.js'
+export { createStepSequencer } from './stepSequencer.js'
+export type { StepSequencerProps } from './stepSequencer.js'
+export { createTempoMap } from './tempoMap.js'
+export type { TempoMapProps, TempoChange } from './tempoMap.js'
+export type { PatternInput, Pattern, TransportState, Position, SwingConfig } from './types.js'

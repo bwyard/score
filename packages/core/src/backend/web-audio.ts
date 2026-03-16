@@ -14,6 +14,8 @@ import type {
   DynamicsCompressorNode as WebDynamicsCompressorNode,
   GainNode as WebGainNode,
   OscillatorNode as WebOscillatorNode,
+  WaveShaperNode as WebWaveShaperNode,
+  StereoPannerNode as WebStereoPannerNode,
 } from 'node-web-audio-api'
 import { ScoreError } from '../errors/ScoreError.js'
 import type {
@@ -315,6 +317,40 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
           const t = time ?? ctx.currentTime
           comp.release.setValueAtTime(comp.release.value, t)
           comp.release.linearRampToValueAtTime(value, t + MIN_RAMP)
+        },
+      }
+    },
+
+    createWaveShaper: (props) => {
+      const shaper = (ctx as unknown as { createWaveShaper: () => WebWaveShaperNode }).createWaveShaper()
+      if (props?.curve) {
+        (shaper as unknown as { curve: unknown }).curve = props.curve
+      }
+      shaper.oversample = (props?.oversample ?? 'none') as WebWaveShaperNode['oversample']
+      const base = wrapNode(shaper as unknown as WebAudioNode)
+
+      return {
+        ...base,
+        setCurve: (curve: Float32Array) => {
+          (shaper as unknown as { curve: unknown }).curve = curve
+        },
+        setOversample: (value: 'none' | '2x' | '4x') => {
+          shaper.oversample = value as WebWaveShaperNode['oversample']
+        },
+      }
+    },
+
+    createStereoPanner: (props) => {
+      const panner = (ctx as unknown as { createStereoPanner: () => WebStereoPannerNode }).createStereoPanner()
+      panner.pan.value = props?.pan ?? 0
+      const base = wrapNode(panner as unknown as WebAudioNode)
+
+      return {
+        ...base,
+        setPan: (value: number, time?: number) => {
+          const t = time ?? ctx.currentTime
+          panner.pan.setValueAtTime(panner.pan.value, t)
+          panner.pan.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
       }
     },

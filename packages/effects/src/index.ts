@@ -17,3 +17,29 @@ export type { EQProps } from './eq.js'
 
 export { createSidechain } from './sidechain.js'
 export type { SidechainProps } from './sidechain.js'
+
+export { createDistortion } from './distortion.js'
+export type { DistortionProps, DistortionMode } from './distortion.js'
+
+export { createLimiter } from './limiter.js'
+export type { LimiterProps } from './limiter.js'
+
+export { createStereoWidener } from './stereo-widener.js'
+export type { StereoWidenerProps } from './stereo-widener.js'
+
+export { createGate } from './gate.js'
+export type { GateProps } from './gate.js'
+
+export { createChorus } from './chorus.js'
+export type { ChorusProps } from './chorus.js'
+
+export { createFlanger } from './flanger.js'
+export type { FlangerProps } from './flanger.js'
+
+export { createPhaser } from './phaser.js'
+export type { PhaserProps } from './phaser.js'
+
+export { createBitCrusher } from './bitcrusher.js'
+export type { BitCrusherProps } from './bitcrusher.js'
+
+export { createEffectsChain } from './chain.js'

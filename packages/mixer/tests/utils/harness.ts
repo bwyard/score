@@ -1,4 +1,4 @@
-// Effects test harness — self-contained mock context for @score/effects tests
+// Mixer test harness — self-contained mock context for @score/mixer tests
 // Usage: const h = useHarness() at top of describe, afterAll(() => h.cleanup())
 
 import type {
@@ -8,8 +8,8 @@ import type {
   BackendFilterNode,
   BackendGainNode,
   BackendNode,
-  BackendWaveShaperNode,
   BackendStereoPannerNode,
+  BackendWaveShaperNode,
 } from '@score/core'
 
 // --- Mock node factories ---
@@ -65,25 +65,6 @@ const createMockDelayNode = (shouldThrowOnDisconnect = false): MockNode & Backen
   }
 }
 
-const createMockWaveShaperNode = (shouldThrowOnDisconnect = false): MockNode & BackendWaveShaperNode => {
-  const base = createMockNode(shouldThrowOnDisconnect)
-
-  return {
-    ...base,
-    setCurve: (_curve: Float32Array) => {},
-    setOversample: (_value: 'none' | '2x' | '4x') => {},
-  }
-}
-
-const createMockStereoPannerNode = (shouldThrowOnDisconnect = false): MockNode & BackendStereoPannerNode => {
-  const base = createMockNode(shouldThrowOnDisconnect)
-
-  return {
-    ...base,
-    setPan: (_value: number, _time?: number) => {},
-  }
-}
-
 const createMockCompressorNode = (shouldThrowOnDisconnect = false): MockNode & BackendCompressorNode => {
   const base = createMockNode(shouldThrowOnDisconnect)
 
@@ -97,9 +78,28 @@ const createMockCompressorNode = (shouldThrowOnDisconnect = false): MockNode & B
   }
 }
 
+const createMockWaveShaperNode = (shouldThrowOnDisconnect = false): MockNode & BackendWaveShaperNode => {
+  const base = createMockNode(shouldThrowOnDisconnect)
+
+  return {
+    ...base,
+    setCurve: (_curve: Float32Array | null) => {},
+    setOversample: (_value: 'none' | '2x' | '4x') => {},
+  }
+}
+
+const createMockStereoPannerNode = (shouldThrowOnDisconnect = false): MockNode & BackendStereoPannerNode => {
+  const base = createMockNode(shouldThrowOnDisconnect)
+
+  return {
+    ...base,
+    setPan: (_value: number, _time?: number) => {},
+  }
+}
+
 // --- Mock context ---
 
-export type EffectsMockContext = BackendContext & {
+export type MixerMockContext = BackendContext & {
   readonly createdGains: Array<MockNode & BackendGainNode>
   readonly createdFilters: Array<MockNode & BackendFilterNode>
   readonly createdDelays: Array<MockNode & BackendDelayNode>
@@ -108,7 +108,7 @@ export type EffectsMockContext = BackendContext & {
   readonly createdStereoPanners: Array<MockNode & BackendStereoPannerNode>
 }
 
-const createMockContext = (shouldThrowOnDisconnect = false): EffectsMockContext => {
+const createMockContext = (shouldThrowOnDisconnect = false): MixerMockContext => {
   const createdGains: Array<MockNode & BackendGainNode> = []
   const createdFilters: Array<MockNode & BackendFilterNode> = []
   const createdDelays: Array<MockNode & BackendDelayNode> = []
@@ -213,8 +213,8 @@ const createMockContext = (shouldThrowOnDisconnect = false): EffectsMockContext 
 // --- Test harness ---
 
 export type TestHarness = {
-  readonly mockContext: () => EffectsMockContext
-  readonly mockThrowingContext: () => EffectsMockContext
+  readonly mockContext: () => MixerMockContext
+  readonly mockThrowingContext: () => MixerMockContext
   readonly mockNode: () => MockNode
   readonly mockThrowingNode: () => MockNode
   readonly cleanup: () => Promise<void>
