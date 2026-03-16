@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+.turbo
+*.log
+.env
+.env.*
+!.env.example
+
+# Samples are user-provided — never committed
+samples/**/*
+!samples/**/.gitkeep
+!samples/README.md
