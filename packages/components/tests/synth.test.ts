@@ -102,4 +102,63 @@ describe('Synth', () => {
     expect(gainNode?.connectCalls.length).toBe(1)
     expect(gainNode?.connectCalls[0]?.destination).toBe(ctx.destination)
   })
+
+  it('setFrequency delegates to oscillator', () => {
+    const ctx = h.mockContext()
+    const synth = Synth(ctx)
+    synth.setFrequency(880, 0.5)
+    // Should not throw — osc setFrequency called
+    expect(ctx.createdOscillators.length).toBe(1)
+  })
+
+  it('setDetune delegates to oscillator', () => {
+    const ctx = h.mockContext()
+    const synth = Synth(ctx)
+    synth.setDetune(10, 1.0)
+    expect(ctx.createdOscillators.length).toBe(1)
+  })
+
+  it('disconnect swallows error when gainNode.disconnect throws', () => {
+    const ctx = h.mockContext()
+    const synth = Synth(ctx)
+    synth.connect(ctx.destination)
+    const gainNode = ctx.createdGains[0]!
+    ;(gainNode as unknown as Record<string, unknown>).disconnect = () => { throw new Error('already disconnected') }
+    expect(() => { synth.disconnect() }).not.toThrow()
+  })
+
+  it('dispose swallows error when oscNode.stop throws', () => {
+    const ctx = h.mockContext()
+    const synth = Synth(ctx)
+    const osc = ctx.createdOscillators[0]!
+    ;(osc as unknown as Record<string, unknown>).stop = () => { throw new Error('already stopped') }
+    expect(() => { synth.dispose() }).not.toThrow()
+  })
+
+  it('dispose swallows error when oscNode.disconnect throws', () => {
+    const ctx = h.mockContext()
+    const synth = Synth(ctx)
+    const osc = ctx.createdOscillators[0]!
+    ;(osc as unknown as Record<string, unknown>).disconnect = () => { throw new Error('already disconnected') }
+    expect(() => { synth.dispose() }).not.toThrow()
+  })
+
+  it('dispose swallows error when gainNode.disconnect throws', () => {
+    const ctx = h.mockContext()
+    const synth = Synth(ctx)
+    const gainNode = ctx.createdGains[0]!
+    ;(gainNode as unknown as Record<string, unknown>).disconnect = () => { throw new Error('already disconnected') }
+    expect(() => { synth.dispose() }).not.toThrow()
+  })
+
+  it('dispose swallows all errors when all teardown methods throw', () => {
+    const ctx = h.mockContext()
+    const synth = Synth(ctx)
+    const osc = ctx.createdOscillators[0]!
+    const gainNode = ctx.createdGains[0]!
+    ;(osc as unknown as Record<string, unknown>).stop = () => { throw new Error('already stopped') }
+    ;(osc as unknown as Record<string, unknown>).disconnect = () => { throw new Error('already disconnected') }
+    ;(gainNode as unknown as Record<string, unknown>).disconnect = () => { throw new Error('already disconnected') }
+    expect(() => { synth.dispose() }).not.toThrow()
+  })
 })

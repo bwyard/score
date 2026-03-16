@@ -103,4 +103,63 @@ describe('Sample', () => {
     const player = Sample(h.mockContext(), buf)
     expect(player.buffer).toBe(buf)
   })
+
+  it('setPlaybackRate delegates to active source when playing', () => {
+    const ctx = h.mockContext()
+    const player = Sample(ctx, h.mockBuffer())
+    player.start()
+    player.setPlaybackRate(2.0, 0.5)
+    // Should not throw — source exists, rate forwarded
+    expect(ctx.createdBufferSources.length).toBe(1)
+  })
+
+  it('setPlaybackRate is a no-op when no source is active', () => {
+    const player = Sample(h.mockContext(), h.mockBuffer())
+    expect(() => { player.setPlaybackRate(2.0) }).not.toThrow()
+  })
+
+  it('stop swallows error when source.stop throws (already stopped)', () => {
+    const ctx = h.mockContext()
+    const player = Sample(ctx, h.mockBuffer())
+    player.start()
+    // Make the source's stop throw to simulate an already-stopped source
+    const source = ctx.createdBufferSources[0]!
+    ;(source as unknown as Record<string, unknown>).stop = () => { throw new Error('already stopped') }
+    expect(() => { player.stop() }).not.toThrow()
+  })
+
+  it('disconnect swallows error when gainNode.disconnect throws', () => {
+    const ctx = h.mockContext()
+    const player = Sample(ctx, h.mockBuffer())
+    player.connect(ctx.destination)
+    // Make the gain node's disconnect throw
+    const gainNode = ctx.createdGains[0]!
+    ;(gainNode as unknown as Record<string, unknown>).disconnect = () => { throw new Error('already disconnected') }
+    expect(() => { player.disconnect() }).not.toThrow()
+  })
+
+  it('disconnect returns self for chaining', () => {
+    const ctx = h.mockContext()
+    const player = Sample(ctx, h.mockBuffer())
+    expect(player.disconnect()).toBe(player)
+  })
+
+  it('dispose swallows error when gainNode.disconnect throws', () => {
+    const ctx = h.mockContext()
+    const player = Sample(ctx, h.mockBuffer())
+    // Make the gain node's disconnect throw
+    const gainNode = ctx.createdGains[0]!
+    ;(gainNode as unknown as Record<string, unknown>).disconnect = () => { throw new Error('already disconnected') }
+    expect(() => { player.dispose() }).not.toThrow()
+  })
+
+  it('dispose swallows errors when activeSource.stop and disconnect throw', () => {
+    const ctx = h.mockContext()
+    const player = Sample(ctx, h.mockBuffer())
+    player.start()
+    const source = ctx.createdBufferSources[0]!
+    ;(source as unknown as Record<string, unknown>).stop = () => { throw new Error('already stopped') }
+    ;(source as unknown as Record<string, unknown>).disconnect = () => { throw new Error('already disconnected') }
+    expect(() => { player.dispose() }).not.toThrow()
+  })
 })
