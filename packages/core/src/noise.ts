@@ -28,8 +28,8 @@ export const createNoise = (
     readonly start: (time?: number) => void
     readonly stop: (time?: number) => void
   } = {
-    start: (time?: number) => noiseNode.start(time),
-    stop: (time?: number) => noiseNode.stop(time),
+    start: (time?: number) => { noiseNode.start(time) },
+    stop: (time?: number) => { noiseNode.stop(time) },
 
     connect: (destination: ScoreAudioNode) => {
       noiseNode.connect(destination)

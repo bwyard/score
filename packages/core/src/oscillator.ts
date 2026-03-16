@@ -16,10 +16,10 @@ export const createOscillator = (
     readonly setFrequency: (value: number, time?: number) => void
     readonly setDetune: (value: number, time?: number) => void
   } = {
-    start: (time?: number) => oscNode.start(time),
-    stop: (time?: number) => oscNode.stop(time),
-    setFrequency: (value: number, time?: number) => oscNode.setFrequency(value, time),
-    setDetune: (value: number, time?: number) => oscNode.setDetune(value, time),
+    start: (time?: number) => { oscNode.start(time) },
+    stop: (time?: number) => { oscNode.stop(time) },
+    setFrequency: (value: number, time?: number) => { oscNode.setFrequency(value, time) },
+    setDetune: (value: number, time?: number) => { oscNode.setDetune(value, time) },
 
     connect: (destination: ScoreAudioNode) => {
       oscNode.connect(destination)

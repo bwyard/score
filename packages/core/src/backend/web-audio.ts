@@ -15,10 +15,7 @@ import type {
 import { ScoreError } from '../errors/ScoreError.js'
 import type {
   BackendContext,
-  BackendGainNode,
   BackendNode,
-  BackendNoiseNode,
-  BackendOscillatorNode,
   BackendProvider,
   NoiseType,
 } from './types.js'
@@ -108,12 +105,14 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
 
       return {
         ...base,
-        start: (time?: number) => osc.start(time ?? ctx.currentTime),
-        stop: (time?: number) => osc.stop(time ?? ctx.currentTime),
-        setFrequency: (value: number, time?: number) =>
-          osc.frequency.setValueAtTime(value, time ?? ctx.currentTime),
-        setDetune: (value: number, time?: number) =>
-          osc.detune.setValueAtTime(value, time ?? ctx.currentTime),
+        start: (time?: number) => { osc.start(time ?? ctx.currentTime) },
+        stop: (time?: number) => { osc.stop(time ?? ctx.currentTime) },
+        setFrequency: (value: number, time?: number) => {
+          osc.frequency.setValueAtTime(value, time ?? ctx.currentTime)
+        },
+        setDetune: (value: number, time?: number) => {
+          osc.detune.setValueAtTime(value, time ?? ctx.currentTime)
+        },
       }
     },
 
@@ -125,8 +124,9 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
       return {
         ...base,
         get gain() { return gainNode.gain.value },
-        setGain: (value: number, time?: number) =>
-          gainNode.gain.setValueAtTime(value, time ?? ctx.currentTime),
+        setGain: (value: number, time?: number) => {
+          gainNode.gain.setValueAtTime(value, time ?? ctx.currentTime)
+        },
       }
     },
 

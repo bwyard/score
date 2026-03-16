@@ -17,7 +17,7 @@ export const createGain = (
       return gainNode.gain
     },
 
-    setGain: (value: number, time?: number) => gainNode.setGain(value, time),
+    setGain: (value: number, time?: number) => { gainNode.setGain(value, time) },
 
     connect: (destination: ScoreAudioNode) => {
       gainNode.connect(destination)
