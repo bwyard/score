@@ -1,4 +1,5 @@
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from './types.js'
+import type { BackendGainNode } from './backend/types.js'
 
 export const createGain = (
   context: ScoreAudioContext,
@@ -6,18 +7,17 @@ export const createGain = (
     gain?: number
   },
 ) => {
-  const gainNode = context.createGain()
-  gainNode.gain.value = props?.gain ?? 1.0
+  const gainNode: BackendGainNode = context.createGain(props)
 
   const component: AudioComponent & {
     readonly setGain: (value: number, time?: number) => void
-    readonly node: GainNode
+    readonly gain: number
   } = {
-    node: gainNode,
-
-    setGain: (value: number, time?: number) => {
-      gainNode.gain.setValueAtTime(value, time ?? context.currentTime)
+    get gain() {
+      return gainNode.gain
     },
+
+    setGain: (value: number, time?: number) => gainNode.setGain(value, time),
 
     connect: (destination: ScoreAudioNode) => {
       gainNode.connect(destination)

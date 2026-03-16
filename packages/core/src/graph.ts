@@ -1,15 +1,13 @@
-import { AudioNode } from 'node-web-audio-api'
 import { ScoreError } from './errors/ScoreError.js'
 import type { AudioGraph, ScoreAudioContext } from './types.js'
+import type { BackendNode } from './backend/types.js'
 
 export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
-  const nodes = new Map<string, AudioNode>()
-  // connections: sourceId -> Set of destIds
+  const nodes = new Map<string, BackendNode>()
   const connections = new Map<string, Set<string>>()
   const state = { disposed: false }
 
-  // Auto-register destination
-  nodes.set('destination', context.destination as unknown as AudioNode)
+  nodes.set('destination', context.destination)
 
   const assertNotDisposed = (method: string): void => {
     if (state.disposed) {
@@ -19,7 +17,7 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
     }
   }
 
-  const getNodeOrThrow = (id: string, label: string): AudioNode => {
+  const getNodeOrThrow = (id: string, label: string): BackendNode => {
     const node = nodes.get(id)
     if (!node) {
       throw ScoreError(`${label} "${id}" not found in AudioGraph`, {
@@ -36,7 +34,7 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
       try {
         sourceNode.disconnect(destNode)
       } catch {
-        // Already disconnected — safe to ignore
+        // Already disconnected
       }
     }
     const sourceConns = connections.get(sourceId)
@@ -49,7 +47,6 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
   }
 
   const disconnectAllForNode = (nodeId: string): void => {
-    // Disconnect outgoing connections
     const outgoing = connections.get(nodeId)
     if (outgoing) {
       const node = nodes.get(nodeId)
@@ -68,7 +65,6 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
       connections.delete(nodeId)
     }
 
-    // Disconnect incoming connections (where nodeId is a destination)
     for (const [sourceId, dests] of connections) {
       if (dests.has(nodeId)) {
         const sourceNode = nodes.get(sourceId)
@@ -91,7 +87,7 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
   const graph: AudioGraph = Object.freeze({
     context,
 
-    addNode: (id: string, node: AudioNode): void => {
+    addNode: (id: string, node: BackendNode): void => {
       assertNotDisposed('addNode')
       if (nodes.has(id)) {
         throw ScoreError(`Node "${id}" already exists in AudioGraph`, {
@@ -131,7 +127,6 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
       assertNotDisposed('disconnect')
       const sourceNode = getNodeOrThrow(sourceId, 'Source node')
       if (destinationId !== undefined) {
-        // Disconnect specific pair
         const destNode = nodes.get(destinationId)
         if (destNode) {
           try {
@@ -142,7 +137,6 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
         }
         disconnectSourceFromDest(sourceId, destinationId)
       } else {
-        // Disconnect all from source
         const outgoing = connections.get(sourceId)
         if (outgoing) {
           for (const destId of outgoing) {
@@ -160,12 +154,9 @@ export const createAudioGraph = (context: ScoreAudioContext): AudioGraph => {
       }
     },
 
-    getNode: (id: string): AudioNode | undefined => {
-      return nodes.get(id)
-    },
+    getNode: (id: string): BackendNode | undefined => nodes.get(id),
 
     dispose: (): void => {
-      // Disconnect all connections
       for (const [sourceId, dests] of connections) {
         const sourceNode = nodes.get(sourceId)
         if (sourceNode) {

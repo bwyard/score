@@ -1,20 +1,15 @@
 // Core type definitions for @score/core
-// Re-exports Web Audio types from node-web-audio-api so consumers don't need to import it directly
+// All audio types flow through the BackendProvider abstraction
 
-import type {
-  BaseAudioContext as NodeBaseAudioContext,
-  AudioNode as NodeAudioNode,
-} from 'node-web-audio-api'
+import type { BackendContext, BackendNode } from './backend/types.js'
 
-// ScoreAudioContext — accepts both AudioContext and OfflineAudioContext
-export type ScoreAudioContext = NodeBaseAudioContext
-
-// Re-export AudioNode for use in component interfaces
-export type ScoreAudioNode = NodeAudioNode
+// Re-export backend types as Score's public API types
+export type ScoreAudioContext = BackendContext
+export type ScoreAudioNode = BackendNode
 
 // AudioComponent — every component in @score/components, @score/effects, @score/mixer must conform
 export type AudioComponent = {
-  readonly connect: (destination: ScoreAudioNode) => AudioComponent
+  readonly connect: (destination: BackendNode) => AudioComponent
   readonly disconnect: () => AudioComponent
   readonly dispose: () => void
 }
@@ -22,17 +17,17 @@ export type AudioComponent = {
 // GraphNode — an entry in the AudioGraphManager's registry
 export type GraphNode = {
   readonly id: string
-  readonly node: ScoreAudioNode
+  readonly node: BackendNode
   readonly connections: ReadonlyArray<string>
 }
 
 // AudioGraph — return type of createAudioGraph
 export type AudioGraph = {
-  readonly context: ScoreAudioContext
-  readonly addNode: (id: string, node: ScoreAudioNode) => void
+  readonly context: BackendContext
+  readonly addNode: (id: string, node: BackendNode) => void
   readonly removeNode: (id: string) => void
   readonly connect: (sourceId: string, destinationId: string) => void
   readonly disconnect: (sourceId: string, destinationId?: string) => void
-  readonly getNode: (id: string) => ScoreAudioNode | undefined
+  readonly getNode: (id: string) => BackendNode | undefined
   readonly dispose: () => void
 }

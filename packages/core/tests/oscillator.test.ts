@@ -1,16 +1,11 @@
-import { describe, it, expect, afterEach } from 'vitest'
-import { OfflineAudioContext } from 'node-web-audio-api'
+import { describe, it, expect } from 'vitest'
+import { createAudioContext } from '../src/context.js'
 import { createOscillator } from '../src/oscillator.js'
-import type { ScoreAudioContext } from '../src/types.js'
+import { createMockBackendContext } from './utils/audioTestUtils.js'
 
 describe('createOscillator', () => {
-  const contexts: OfflineAudioContext[] = []
-
-  const makeContext = (): ScoreAudioContext => {
-    const ctx = new OfflineAudioContext(1, 44100, 44100)
-    contexts.push(ctx)
-    return ctx
-  }
+  const makeContext = () =>
+    createAudioContext({ offline: { length: 44100 } })
 
   it('returns an AudioComponent (has connect, disconnect, dispose)', () => {
     const ctx = makeContext()
@@ -23,26 +18,17 @@ describe('createOscillator', () => {
     expect(typeof osc.dispose).toBe('function')
   })
 
-  it('default type is sine', () => {
+  it('has start and stop methods', () => {
     const ctx = makeContext()
     const osc = createOscillator(ctx, {})
     expect(osc).toHaveProperty('start')
     expect(osc).toHaveProperty('stop')
-    // Verify via start/stop — if type were wrong, the node would still work
-    // but we need to check the underlying node type
   })
 
   it('respects custom type prop', () => {
     const ctx = makeContext()
     const osc = createOscillator(ctx, { type: 'sawtooth' })
     expect(osc).toBeDefined()
-  })
-
-  it('default frequency is 440', () => {
-    const ctx = makeContext()
-    const osc = createOscillator(ctx, {})
-    // setFrequency to a value and verify it doesn't throw
-    expect(osc).toHaveProperty('setFrequency')
   })
 
   it('respects custom frequency prop', () => {
@@ -70,13 +56,13 @@ describe('createOscillator', () => {
     expect(() => osc.stop()).not.toThrow()
   })
 
-  it('setFrequency updates the frequency', () => {
+  it('setFrequency does not throw', () => {
     const ctx = makeContext()
     const osc = createOscillator(ctx, {})
     expect(() => osc.setFrequency(660)).not.toThrow()
   })
 
-  it('setDetune updates the detune', () => {
+  it('setDetune does not throw', () => {
     const ctx = makeContext()
     const osc = createOscillator(ctx, {})
     expect(() => osc.setDetune(50)).not.toThrow()
@@ -114,5 +100,11 @@ describe('createOscillator', () => {
     const ctx = makeContext()
     const osc = createOscillator(ctx, {})
     expect(() => osc.dispose()).not.toThrow()
+  })
+
+  it('delegates to backend createOscillator with props', () => {
+    const mockCtx = createMockBackendContext()
+    createOscillator(mockCtx, { type: 'square', frequency: 220, detune: 5 })
+    expect(mockCtx.createdOscillators.length).toBe(1)
   })
 })
