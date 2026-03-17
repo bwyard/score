@@ -79,33 +79,20 @@ export type ScoreEngine = {
   readonly dispose: () => void
 }
 
+// Per-note synth trigger — fresh oscillator per event, avoids gain scheduling conflicts
+const triggerSynth = (ctx: Context, time: number, props: SynthDSLProps, freq: number): void => {
+  const noteDur = 0.18  // note duration in seconds
+  const osc  = ctx.createOscillator({ type: props.wave ?? 'sawtooth', frequency: freq })
+  const gain = ctx.createGain({ gain: props.gain ?? 0.25 })
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+  osc.start(time)
+  osc.stop(time + noteDur)
+}
+
 export const createScoreEngine = (song: SongDefinition): ScoreEngine => {
   const ctx = webAudioBackend.createContext()
   const transport = createTransport(ctx, { bpm: song.bpm, ticksPerBeat: 4 })
-
-  const step16thSec = (): number => 60 / (transport.bpm * 4)
-
-  // Build a sustained oscillator for synth tracks
-  type SynthVoice = { setFrequency: (f: number, t?: number) => void; setGain: (g: number, t?: number) => void; dispose: () => void }
-
-  const synthVoices: SynthVoice[] = []
-
-  const makeSynthVoice = (props: SynthDSLProps): SynthVoice => {
-    const osc  = ctx.createOscillator({ type: props.wave ?? 'sawtooth', frequency: props.frequency ?? 110 })
-    const gain = ctx.createGain({ gain: 0.0 })
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.start(ctx.currentTime)
-    return {
-      setFrequency: (f, t) => { osc.setFrequency(f, t); },
-      setGain:      (g, t) => { gain.setGain(g, t); },
-      dispose: () => {
-        try { osc.stop() } catch { /* already stopped */ }
-        try { osc.disconnect() } catch { /* already disconnected */ }
-        try { gain.disconnect() } catch { /* already disconnected */ }
-      },
-    }
-  }
 
   // Validate at boundary — song files are plain JS, component may not be a descriptor
   const descriptors = song.tracks
@@ -141,14 +128,8 @@ export const createScoreEngine = (song: SongDefinition): ScoreEngine => {
       case 'synth': {
         const props = comp.props as SynthDSLProps
         const pattern = props.pattern ?? props.sequence ?? DEFAULT_SYNTH_PATTERN
-        const voice = makeSynthVoice(props)
-        synthVoices.push(voice)
         createStepSequencer(transport, { pattern: pattern as number[] }, (val, _step, pos) => {
-          if (val > 0) {
-            voice.setFrequency(val, pos.time)
-            voice.setGain(props.gain ?? 0.25, pos.time)
-            voice.setGain(0.0, pos.time + step16thSec() * 0.75)
-          }
+          if (val > 0) triggerSynth(ctx, pos.time, props, val)
         })
         break
       }
@@ -160,7 +141,6 @@ export const createScoreEngine = (song: SongDefinition): ScoreEngine => {
     stop:    () => { transport.stop(); },
     dispose: () => {
       transport.dispose()
-      for (const v of synthVoices) v.dispose()
       ctx.close().catch(() => {})
     },
   }
