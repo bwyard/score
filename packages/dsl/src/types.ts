@@ -24,8 +24,19 @@ export type SynthDSLProps = {
   readonly wave?: 'sine' | 'square' | 'sawtooth' | 'triangle'
   readonly frequency?: number
   readonly gain?: number
-  readonly pattern?: number[]
+  readonly pattern?: (number | string)[]
   readonly sequence?: string[]  // parsed Sequence output
+  readonly envelope?: {
+    readonly attack?: number   // seconds, default 0.005 — short=punchy, long=pad
+    readonly decay?: number    // seconds, default 0.08
+    readonly sustain?: number  // 0-1, default 0.7
+    readonly release?: number  // seconds, default 0.05
+  }
+  readonly filter?: {
+    readonly type?: 'lowpass' | 'highpass' | 'bandpass'
+    readonly frequency?: number  // Hz cutoff
+    readonly Q?: number          // resonance, default 1
+  }
 }
 
 export type InstrumentDescriptor = {

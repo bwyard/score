@@ -23,6 +23,16 @@ export type BackendOscillatorNode = BackendNode & {
 export type BackendGainNode = BackendNode & {
   readonly gain: number
   readonly setGain: (value: number, time?: number) => void
+  // ADSR envelope — schedules attack→decay→sustain→release without anchor conflicts
+  readonly scheduleEnvelope: (opts: {
+    peak: number
+    attack: number   // seconds
+    decay: number    // seconds
+    sustain: number  // 0-1 fraction of peak
+    release: number  // seconds
+    startTime: number
+    duration: number // total note duration (attack + decay + hold + release)
+  }) => void
 }
 
 export type BackendNoiseNode = BackendNode & {

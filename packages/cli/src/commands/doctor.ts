@@ -1,27 +1,31 @@
 import { execSync } from 'node:child_process'
+import { createRequire } from 'node:module'
 
 export const doctor = (_args: string[]): void => {
-  console.log('Score Doctor — system check')
-  console.log('─'.repeat(44))
+  console.log('Score Doctor — system check\n')
 
-  const nodeVer = process.version
-  const nodeMajor = parseInt(nodeVer.slice(1))
+  // Node version
+  const nodeVersion = process.version
+  const nodeMajor = parseInt(nodeVersion.slice(1), 10)
   const nodeOk = nodeMajor >= 20
-  console.log(`Node.js ${nodeVer}${' '.repeat(Math.max(1, 28 - nodeVer.length))}${nodeOk ? '✅' : '❌ (need 20+)'}`)
+  console.log(`${nodeOk ? '✓' : '✗'} Node.js ${nodeVersion}${nodeOk ? '' : '  (requires v20+)'}`)
 
+  // pnpm
   try {
-    execSync('scsynth -v 2>&1', { stdio: 'ignore' })
-    console.log('SuperCollider                      ✅')
+    const v = execSync('pnpm --version', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim()
+    console.log(`✓ pnpm ${v}`)
   } catch {
-    console.log('SuperCollider                      ⚠️  not found (Web Audio fallback active)')
+    console.log('✗ pnpm — not found')
   }
 
-  console.log('Web Audio (node-web-audio-api)     ✅')
-  console.log('')
-  if (nodeOk) {
-    console.log('Status: READY ✅')
-  } else {
-    console.log('Status: UPGRADE NODE ❌')
-    process.exit(1)
+  // node-web-audio-api
+  const req = createRequire(import.meta.url)
+  try {
+    req.resolve('node-web-audio-api')
+    console.log('✓ node-web-audio-api — available')
+  } catch {
+    console.log('✗ node-web-audio-api — not found  (run: pnpm install)')
   }
+
+  console.log('\nAll checks complete.')
 }
