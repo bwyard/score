@@ -19,9 +19,12 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@score/core": "workspace:*"
+    "@score/core": "workspace:*",
+    "@score/dsl": "workspace:*",
+    "@score/sequencer": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "@vitest/coverage-v8": "^2.0.0",
     "vitest": "^2.0.0"
   }
