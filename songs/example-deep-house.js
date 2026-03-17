@@ -45,15 +45,24 @@ const pad = Synth({
   pattern: ['F3', 0, 0, 0,  'A3', 0, 0, 0,  0, 0, 'F3', 0,  0, 0, 'A3', 0],
 })
 
+const sax = Synth({
+  wave: 'sawtooth',           // raw, harmonically rich — sax fundamental
+  gain: 0.22,
+  envelope: { attack: 0.02, decay: 0.15, sustain: 0.85, release: 0.08 },
+  filter: { type: 'lowpass', frequency: 1400, Q: 2.5 },  // cuts highs, adds body
+  pattern: ['D3', 0, 'F3', 0,  'A3', 0, 0, 0,  'G3', 0, 'E3', 0,  'D3', 0, 0, 0],
+})
+
+
 // ── ARRANGEMENT ───────────────────────────────────────────────────────────────
 export default Song({
   bpm: 124,
   key: 'Dm',
   genre: 'deep-house',
-  tracks: [kick, snare, hihat, bass, pad],
+  tracks: [kick, snare, hihat, bass, pad, sax],
   arrangement: [
     Intro(4,  [kick, bass]),
     Drop(16,  [kick, snare, hihat, bass, pad]),
-    Outro(4,  [kick, bass]),
+    Outro(16,  [kick, bass, sax]),
   ],
 })
