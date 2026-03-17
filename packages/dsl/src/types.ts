@@ -1,0 +1,83 @@
+import type { AudioComponent } from '@score/core'
+
+// ── Instrument descriptors ────────────────────────────────────────────────────
+// Pure data — no AudioContext. The engine hydrates these at play time.
+
+export type KickProps = {
+  readonly pattern?: number[]
+  readonly volume?: number
+  readonly synth?: { frequency?: number; pitchDrop?: number }
+}
+
+export type SnareProps = {
+  readonly pattern?: number[]
+  readonly volume?: number
+}
+
+export type HiHatProps = {
+  readonly pattern?: number[]
+  readonly volume?: number
+  readonly open?: boolean
+}
+
+export type SynthDSLProps = {
+  readonly wave?: 'sine' | 'square' | 'sawtooth' | 'triangle'
+  readonly frequency?: number
+  readonly gain?: number
+  readonly pattern?: number[]
+  readonly sequence?: string[]  // parsed Sequence output
+}
+
+export type InstrumentDescriptor = {
+  readonly _type: 'InstrumentDescriptor'
+  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth'
+  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps
+  // Minimal AudioComponent shape so Track() accepts it
+  readonly id: string
+  readonly type: string
+  readonly connect: AudioComponent['connect']
+  readonly disconnect: AudioComponent['disconnect']
+  readonly dispose: AudioComponent['dispose']
+}
+
+export type SongProps = {
+  readonly bpm: number
+  readonly key?: string
+  readonly genre?: string
+  readonly tracks: TrackComponent[]
+  readonly arrangement?: SectionDefinition[]
+  readonly backend?: 'web-audio' | 'scsynth' | 'jack'
+  readonly xdj?: { mode: 'score-mixer' | 'hardware-mixer' | 'hybrid' }
+}
+
+export type SongDefinition = {
+  readonly _type: 'SongDefinition'
+  readonly bpm: number
+  readonly key?: string
+  readonly genre?: string
+  readonly tracks: TrackComponent[]
+  readonly arrangement: SectionDefinition[]
+  readonly backend?: string
+  readonly xdj?: { mode: 'score-mixer' | 'hardware-mixer' | 'hybrid' }
+}
+
+export type SectionType = 'intro' | 'buildup' | 'drop' | 'breakdown' | 'outro'
+
+export type SectionDefinition = {
+  readonly _type: 'SectionDefinition'
+  readonly sectionType: SectionType
+  readonly bars: number
+  readonly tracks: TrackComponent[]
+}
+
+export type TrackProps = {
+  readonly volume?: number
+  readonly pan?: number
+  readonly mute?: boolean
+  readonly solo?: boolean
+}
+
+export type TrackComponent = TrackProps & {
+  readonly _type: 'TrackComponent'
+  readonly component: AudioComponent
+}

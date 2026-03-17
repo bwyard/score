@@ -1,2 +1,28 @@
-// @score/cli — Phase 1 stub
-export const _stub = true // Phase 1: stub only
+#!/usr/bin/env node
+import { play } from './commands/play.js'
+import { newSong } from './commands/new.js'
+import { doctor } from './commands/doctor.js'
+
+const [,, command, ...args] = process.argv
+
+const commands: Record<string, (args: string[]) => Promise<void> | void> = {
+  play:   args => play(args),
+  new:    args => { newSong(args); },
+  doctor: args => { doctor(args); },
+}
+
+const handler = commands[command ?? '']
+if (!handler) {
+  console.log('Score — EDM audio framework')
+  console.log('')
+  console.log('Usage:')
+  console.log('  score play <song.js>     Play a song file')
+  console.log('  score new song <name>    Create a new song from template')
+  console.log('  score doctor             Check system requirements')
+  process.exit(0)
+}
+
+void Promise.resolve(handler(args)).catch((err: unknown) => {
+  console.error(err instanceof Error ? err.message : String(err))
+  process.exit(1)
+})

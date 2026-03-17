@@ -78,29 +78,29 @@ describe('createTransport', () => {
     transport.dispose()
   })
 
-  it('initial position is { bar: 0, beat: 0, tick: 0 }', () => {
+  it('initial position is { bar: 0, beat: 0, tick: 0, time: 0 }', () => {
     const transport = createTransport(mockContext())
-    expect(transport.position).toEqual({ bar: 0, beat: 0, tick: 0 })
+    expect(transport.position).toEqual({ bar: 0, beat: 0, tick: 0, time: 0 })
   })
 
-  it('stop() resets position to { bar: 0, beat: 0, tick: 0 }', () => {
+  it('stop() resets position to { bar: 0, beat: 0, tick: 0, time: 0 }', () => {
     const transport = createTransport(mockContext())
     transport.play()
     transport.seek(2, 3, 1)
     transport.stop()
-    expect(transport.position).toEqual({ bar: 0, beat: 0, tick: 0 })
+    expect(transport.position).toEqual({ bar: 0, beat: 0, tick: 0, time: 0 })
   })
 
   it('seek() updates position', () => {
     const transport = createTransport(mockContext())
     transport.seek(2, 1, 3)
-    expect(transport.position).toEqual({ bar: 2, beat: 1, tick: 3 })
+    expect(transport.position).toMatchObject({ bar: 2, beat: 1, tick: 3 })
   })
 
   it('seek() with only bar param defaults beat/tick to 0', () => {
     const transport = createTransport(mockContext())
     transport.seek(5)
-    expect(transport.position).toEqual({ bar: 5, beat: 0, tick: 0 })
+    expect(transport.position).toMatchObject({ bar: 5, beat: 0, tick: 0 })
   })
 
   it('default BPM is 120', () => {

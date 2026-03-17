@@ -9,10 +9,13 @@ import { createChannel } from './channel.js'
 import type { ChannelProps } from './channel.js'
 import { createReturn } from './return.js'
 import type { ReturnProps } from './return.js'
+import { createGroup } from './group.js'
+import type { GroupProps } from './group.js'
 
 export type MixerProps = {
   readonly channels?: ReadonlyArray<ChannelProps>
   readonly returns?: ReadonlyArray<ReturnProps>
+  readonly groups?: ReadonlyArray<GroupProps>
   readonly masterVolume?: number  // 0-1, default 0.8
   readonly limiterCeiling?: number // dB, default -0.3
 }
@@ -35,9 +38,10 @@ export const createMixer = (
   subOutputGain.connect(limiter as unknown as BackendNode)
   limiter.connect(context.destination)
 
-  // Channel and return arrays (mutable for add/remove)
+  // Channel, return, and group arrays (mutable for add/remove)
   const channels: Array<ReturnType<typeof createChannel>> = []
   const returns: Array<ReturnType<typeof createReturn>> = []
+  const groups: Array<ReturnType<typeof createGroup>> = []
 
   // Solo state management
   const updateSoloState = () => {
@@ -69,12 +73,23 @@ export const createMixer = (
     }
   }
 
+  // Create initial groups (output to master by default)
+  if (props?.groups) {
+    for (const grpProps of props.groups) {
+      const grp = createGroup(context, grpProps)
+      grp.connect(masterGain)
+      groups.push(grp)
+    }
+  }
+
   const component: AudioComponent & {
     readonly getChannel: (index: number) => ReturnType<typeof createChannel> | undefined
     readonly getReturn: (index: number) => ReturnType<typeof createReturn> | undefined
+    readonly getGroup: (index: number) => ReturnType<typeof createGroup> | undefined
     readonly setMasterVolume: (value: number, time?: number) => void
     readonly addChannel: (channelProps?: ChannelProps) => ReturnType<typeof createChannel>
     readonly removeChannel: (index: number) => void
+    readonly addGroup: (groupProps?: GroupProps) => ReturnType<typeof createGroup>
   } = {
     id: uid('mixer'),
     type: 'mixer' as const,
@@ -89,6 +104,11 @@ export const createMixer = (
       return ret ? ret : undefined
     },
 
+    getGroup: (index: number) => {
+      const grp = groups[index]
+      return grp ? grp : undefined
+    },
+
     setMasterVolume: (value: number, time?: number) => {
       masterGain.setGain(value, time)
     },
@@ -98,6 +118,13 @@ export const createMixer = (
       ch.connect(masterGain)
       channels.push(ch)
       return ch
+    },
+
+    addGroup: (groupProps?: GroupProps) => {
+      const grp = createGroup(context, groupProps)
+      grp.connect(masterGain)
+      groups.push(grp)
+      return grp
     },
 
     removeChannel: (index: number) => {
@@ -134,6 +161,10 @@ export const createMixer = (
       for (const ret of returns) {
         try { ret.disconnect() } catch { /* already disconnected */ }
         try { ret.dispose() } catch { /* already disposed */ }
+      }
+      for (const grp of groups) {
+        try { grp.disconnect() } catch { /* already disconnected */ }
+        try { grp.dispose() } catch { /* already disposed */ }
       }
       try { masterEQ.dispose() } catch { /* already disposed */ }
       try { limiter.dispose() } catch { /* already disposed */ }
