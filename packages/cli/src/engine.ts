@@ -94,9 +94,10 @@ export const createScoreEngine = (song: SongDefinition): ScoreEngine => {
   const ctx = webAudioBackend.createContext()
   const transport = createTransport(ctx, { bpm: song.bpm, ticksPerBeat: 4 })
 
-  // Validate at boundary — song files are plain JS, component may not be a descriptor
+  // Song authors pass InstrumentDescriptors directly as tracks (no Track() wrapper needed).
+  // Validate at the JS boundary — t may be a bare InstrumentDescriptor or a TrackComponent.
   const descriptors = song.tracks
-    .map(t => t.component)
+    .map(t => isInstrumentDescriptor(t) ? t : t.component)
     .filter(isInstrumentDescriptor)
 
   for (const comp of descriptors) {

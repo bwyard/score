@@ -3,6 +3,15 @@ import { writeFileSync, unlinkSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
+// Mock the engine so tests never open a real audio context (avoids JACK dependency on CI)
+vi.mock('../src/engine.js', () => ({
+  createScoreEngine: vi.fn(() => ({
+    start: vi.fn(),
+    stop: vi.fn(),
+    dispose: vi.fn(),
+  })),
+}))
+
 // Helper — write a temp song file and return its path
 const writeTempSong = (content: string): string => {
   const dir = join(tmpdir(), 'score-cli-tests')

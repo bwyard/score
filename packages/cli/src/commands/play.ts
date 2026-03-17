@@ -6,7 +6,7 @@ import type { SongDefinition } from '@score/dsl'
 import { createScoreEngine } from '../engine.js'
 
 export const play = async (args: string[]): Promise<void> => {
-  const filePath = args[0]
+  const filePath = args.find(a => !a.startsWith('-'))
   if (!filePath) {
     throw ScoreError('No song file specified', {
       received: undefined,
