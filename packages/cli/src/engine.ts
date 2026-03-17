@@ -117,24 +117,24 @@ export const createScoreEngine = (song: SongDefinition): ScoreEngine => {
       case 'kick': {
         const props = comp.props as KickProps
         const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
-        createStepSequencer(transport, { pattern }, (hit) => {
-          if (hit) triggerKick(ctx, ctx.currentTime + step16thSec() * 0.5, props)
+        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+          if (hit) triggerKick(ctx, pos.time, props)
         })
         break
       }
       case 'snare': {
         const props = comp.props as SnareProps
         const pattern = props.pattern ?? DEFAULT_SNARE_PATTERN
-        createStepSequencer(transport, { pattern }, (hit) => {
-          if (hit) triggerSnare(ctx, ctx.currentTime + step16thSec() * 0.5, props)
+        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+          if (hit) triggerSnare(ctx, pos.time, props)
         })
         break
       }
       case 'hihat': {
         const props = comp.props as HiHatProps
         const pattern = props.pattern ?? DEFAULT_HIHAT_PATTERN
-        createStepSequencer(transport, { pattern }, (hit) => {
-          if (hit) triggerHiHat(ctx, ctx.currentTime + step16thSec() * 0.5, props)
+        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+          if (hit) triggerHiHat(ctx, pos.time, props)
         })
         break
       }
@@ -143,11 +143,11 @@ export const createScoreEngine = (song: SongDefinition): ScoreEngine => {
         const pattern = props.pattern ?? props.sequence ?? DEFAULT_SYNTH_PATTERN
         const voice = makeSynthVoice(props)
         synthVoices.push(voice)
-        createStepSequencer(transport, { pattern: pattern as number[] }, (val) => {
+        createStepSequencer(transport, { pattern: pattern as number[] }, (val, _step, pos) => {
           if (val > 0) {
-            voice.setFrequency(val, ctx.currentTime)
-            voice.setGain(props.gain ?? 0.25, ctx.currentTime)
-            voice.setGain(0.0, ctx.currentTime + step16thSec() * 0.75)
+            voice.setFrequency(val, pos.time)
+            voice.setGain(props.gain ?? 0.25, pos.time)
+            voice.setGain(0.0, pos.time + step16thSec() * 0.75)
           }
         })
         break

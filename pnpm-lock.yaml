@@ -211,6 +211,18 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@25.5.0)
 
+  songs:
+    dependencies:
+      '@score/components':
+        specifier: workspace:*
+        version: link:../packages/components
+      '@score/dsl':
+        specifier: workspace:*
+        version: link:../packages/dsl
+      '@score/sequencer':
+        specifier: workspace:*
+        version: link:../packages/sequencer
+
 packages:
 
   '@ampproject/remapping@2.3.0':

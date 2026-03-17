@@ -1,0 +1,11 @@
+{
+  "name": "@score/songs",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@score/components": "workspace:*",
+    "@score/dsl": "workspace:*",
+    "@score/sequencer": "workspace:*"
+  }
+}

@@ -32,7 +32,7 @@ export const createTransport = (context: ClockContext, props?: TransportProps): 
 
   // Mutable state
   let currentState: TransportState = 'stopped'
-  let pos: Position = { bar: 0, beat: 0, tick: 0 }
+  let pos: Position = { bar: 0, beat: 0, tick: 0, time: 0 }
 
   const tickCallbacks: Array<(position: Position) => void> = []
   const beatCallbacks: Array<(position: Position) => void> = []
@@ -43,7 +43,7 @@ export const createTransport = (context: ClockContext, props?: TransportProps): 
     ticksPerBeat,
   })
 
-  clock.onTick((_tickTime: number, _tickNumber: number): void => {
+  clock.onTick((tickTime: number, _tickNumber: number): void => {
     const prevBeat = pos.beat
     const prevBar = pos.bar
 
@@ -61,7 +61,7 @@ export const createTransport = (context: ClockContext, props?: TransportProps): 
       nextBar += 1
     }
 
-    pos = { bar: nextBar, beat: nextBeat, tick: nextTick }
+    pos = { bar: nextBar, beat: nextBeat, tick: nextTick, time: tickTime }
 
     const snapshot = { ...pos }
 
@@ -93,7 +93,7 @@ export const createTransport = (context: ClockContext, props?: TransportProps): 
       if (currentState === 'stopped') return
       currentState = 'stopped'
       clock.stop()
-      pos = { bar: 0, beat: 0, tick: 0 }
+      pos = { bar: 0, beat: 0, tick: 0, time: 0 }
     },
 
     pause: (): void => {
@@ -103,7 +103,7 @@ export const createTransport = (context: ClockContext, props?: TransportProps): 
     },
 
     seek: (bar: number, beat?: number, tick?: number): void => {
-      pos = { bar, beat: beat ?? 0, tick: tick ?? 0 }
+      pos = { bar, beat: beat ?? 0, tick: tick ?? 0, time: pos.time }
     },
 
     get position() { return { ...pos } },
