@@ -5,6 +5,11 @@ import { doctor } from './commands/doctor.js'
 
 const [,, command, ...args] = process.argv
 
+if (command === '--version' || command === '-v') {
+  console.log('0.0.1')
+  process.exit(0)
+}
+
 const commands: Record<string, (args: string[]) => Promise<void> | void> = {
   play:   args => play(args),
   new:    args => { newSong(args); },
@@ -16,9 +21,11 @@ if (!handler) {
   console.log('Score — EDM audio framework')
   console.log('')
   console.log('Usage:')
-  console.log('  score play <song.js>     Play a song file')
-  console.log('  score new song <name>    Create a new song from template')
-  console.log('  score doctor             Check system requirements')
+  console.log('  score play <song.js>         Play a song file')
+  console.log('  score play <song.js> --watch Live reload on file save')
+  console.log('  score new song <name>        Create a new song from template')
+  console.log('  score doctor                 Check system requirements')
+  console.log('  score --version              Show version')
   process.exit(0)
 }
 

@@ -1,29 +1,13 @@
 // example-deep-house.js — Score demo song
-// Run with: score play songs/example-deep-house.js
+// Run with:  score play songs/example-deep-house.js
+// Live mode: score play songs/example-deep-house.js --watch
 //
-// KEY DEMO POINTS:
-//   • Song files are pure ESM — no build step, no compilation
-//   • Instruments are factory functions with pattern arrays — reads like music
-//   • The engine hydrates descriptors into actual audio — song author never touches AudioContext
-//   • Arrangement is structural: Intro/Drop/Outro with explicit bar counts
-//   • Ctrl+C stops cleanly — all audio resources disposed
+// D minor, 124 BPM. Warm, introspective — classic deep house tonality.
 
 import { Song, Kick, Snare, HiHat, Synth, Intro, Drop, Outro } from '@score/dsl'
 
-// ── KEY / SCALE ───────────────────────────────────────────────────────────────
-// D minor (warm, introspective — classic deep house tonality)
-// All frequencies are exact: D2=73.42 Hz, A2=110 Hz, F3=174.6 Hz etc.
-
-const D2 = 73.42
-const A2 = 110.0
-const C3 = 130.8
-const D3 = 146.8
-const F3 = 174.6
-const A3 = 220.0
-
 // ── DRUMS ─────────────────────────────────────────────────────────────────────
-// Patterns: 16-step arrays, 1 = hit, 0 = rest
-// 4 steps per beat × 4 beats = one bar
+// Pattern: 16-step array. 1 = hit, 0 = rest. 4 steps = 1 beat.
 
 const kick = Kick({
   pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],   // four on the floor
@@ -32,7 +16,7 @@ const kick = Kick({
 })
 
 const snare = Snare({
-  pattern: [0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0],   // 2 and 4
+  pattern: [0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0],   // beats 2 and 4
   volume: 0.5,
 })
 
@@ -42,37 +26,43 @@ const hihat = HiHat({
 })
 
 // ── SYNTHESIS ─────────────────────────────────────────────────────────────────
-// Sequence notation: note values separated by spaces, '.' = rest
-// Notes resolve to their frequency at play time
+// Note names: 'D2', 'A2', 'F#3', 'Bb4' etc. Sharp = #  Flat = b  0 = rest.
 
 const bass = Synth({
   wave: 'sawtooth',
   gain: 0.28,
-  // Dm root movement over 2 bars (collapsed to 16 steps)
-  pattern: [D2, 0, D2, 0,  0, D2, 0, A2,  C3, 0, C3, 0,  0, D3, 0, 0],
+  envelope: { attack: 0.003, decay: 0.12, sustain: 0.6, release: 0.05 },
+  filter: { type: 'lowpass', frequency: 900, Q: 1.2 },
+  // Dm root movement over 2 bars
+  pattern: ['D2', 0, 'D2', 0,  0, 'D2', 0, 'A2',  'C3', 0, 'C3', 0,  0, 'D3', 0, 0],
 })
 
 const pad = Synth({
   wave: 'triangle',
   gain: 0.12,
+  envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 0.15 },
   // Sparse chord stabs — syncopated deep house feel
-  pattern: [F3, 0, 0, 0,  A3, 0, 0, 0,  0,  0,  F3, 0,  0, 0, A3, 0],
+  pattern: ['F3', 0, 0, 0,  'A3', 0, 0, 0,  0, 0, 'F3', 0,  0, 0, 'A3', 0],
 })
 
-// ── ARRANGEMENT ──────────────────────────────────────────────────────────────
-// Sections describe structure — the engine schedules audio accordingly.
-// Numbers = bars. Tracks listed = which instruments are active.
+const sax = Synth({
+  wave: 'sawtooth',           // raw, harmonically rich — sax fundamental
+  gain: 0.22,
+  envelope: { attack: 0.02, decay: 0.15, sustain: 0.85, release: 0.08 },
+  filter: { type: 'lowpass', frequency: 1400, Q: 2.5 },  // cuts highs, adds body
+  pattern: ['D3', 0, 'F3', 0,  'A3', 0, 0, 0,  'G3', 0, 'E3', 0,  'D3', 0, 0, 0],
+})
 
+
+// ── ARRANGEMENT ───────────────────────────────────────────────────────────────
 export default Song({
-  bpm:    124,
-  key:    'Dm',
-  genre:  'deep-house',
-
-  tracks: [kick, snare, hihat, bass, pad],
-
+  bpm: 124,
+  key: 'Dm',
+  genre: 'deep-house',
+  tracks: [kick, snare, hihat, bass, pad, sax],
   arrangement: [
     Intro(4,  [kick, bass]),
     Drop(16,  [kick, snare, hihat, bass, pad]),
-    Outro(4,  [kick, bass]),
+    Outro(16,  [kick, bass, sax]),
   ],
 })

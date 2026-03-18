@@ -149,6 +149,14 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
           gainNode.gain.setValueAtTime(gainNode.gain.value, t)
           gainNode.gain.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
+        scheduleEnvelope: ({ peak, attack, decay, sustain, release, startTime }) => {
+          const g = gainNode.gain
+          g.cancelScheduledValues(startTime)
+          g.setValueAtTime(0, startTime)
+          g.linearRampToValueAtTime(peak, startTime + attack)
+          g.linearRampToValueAtTime(peak * sustain, startTime + attack + decay)
+          g.linearRampToValueAtTime(0, startTime + attack + decay + release)
+        },
       }
     },
 

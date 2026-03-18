@@ -1,12 +1,51 @@
 import { resolve } from 'node:path'
-import { existsSync } from 'node:fs'
+import { existsSync, watch as fsWatch } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { ScoreError } from '@score/core'
 import type { SongDefinition } from '@score/dsl'
-import { createScoreEngine } from '../engine.js'
+import { createScoreEngine, type ScoreEngine } from '../engine.js'
+
+const loadSong = async (resolved: string, version: number): Promise<SongDefinition> => {
+  const url = version === 0
+    ? pathToFileURL(resolved).href
+    : pathToFileURL(resolved).href + '?v=' + String(version)
+  const mod = await import(url) as Record<string, unknown>
+  const raw: unknown = mod['default']
+  if (!raw || typeof raw !== 'object') {
+    throw ScoreError('Song file must have a default export', {
+      received: typeof raw,
+      fix: 'Add: export default Song({ bpm: 140, tracks: [...] })',
+      docs: 'https://score.dev/docs/dsl/song',
+    })
+  }
+  const song = raw as SongDefinition
+  if (!song.bpm || song.bpm <= 0) {
+    throw ScoreError('Song must have a valid bpm', {
+      received: song.bpm,
+      fix: 'Song({ bpm: 140, ... }) — bpm must be a positive number',
+      docs: 'https://score.dev/docs/dsl/song',
+    })
+  }
+  return song
+}
+
+const logSong = (song: SongDefinition): void => {
+  const keyStr   = song.key   ? ` — ${song.key}`   : ''
+  const genreStr = song.genre ? ` — ${song.genre}` : ''
+  console.log(`Score: Playing — ${String(song.bpm)} BPM${keyStr}${genreStr}`)
+  if (song.arrangement.length > 0) {
+    const sections = song.arrangement
+      .map((s) => `${s.sectionType}(${String(s.bars)}b)`)
+      .join(' → ')
+    console.log(`Score: Arrangement — ${sections}`)
+  }
+  console.log(`Score: ${String(song.tracks.length)} track(s) loaded`)
+}
 
 export const play = async (args: string[]): Promise<void> => {
+  const watch = args.includes('--watch') || args.includes('-w')
   const filePath = args.find(a => !a.startsWith('-'))
+
   if (!filePath) {
     throw ScoreError('No song file specified', {
       received: undefined,
@@ -24,51 +63,48 @@ export const play = async (args: string[]): Promise<void> => {
     })
   }
 
-  const mod: Record<string, unknown> = await import(pathToFileURL(resolved).href) as Record<string, unknown>
-  const rawSong: unknown = mod['default']
+  const song = await loadSong(resolved, 0)
+  logSong(song)
 
-  if (!rawSong || typeof rawSong !== 'object') {
-    throw ScoreError('Song file must have a default export', {
-      received: typeof rawSong,
-      fix: "Add: export default Song({ bpm: 140, tracks: [...] }) at the end of your song file",
-      docs: 'https://score.dev/docs/dsl/song',
-    })
-  }
-
-  const song = rawSong as SongDefinition
-
-  if (!song.bpm || song.bpm <= 0) {
-    throw ScoreError('Song must have a valid bpm', {
-      received: song.bpm,
-      fix: 'Song({ bpm: 140, ... }) — bpm must be a positive number',
-      docs: 'https://score.dev/docs/dsl/song',
-    })
-  }
-
-  const keyStr   = song.key   ? ` — ${song.key}`   : ''
-  const genreStr = song.genre ? ` — ${song.genre}` : ''
-  console.log(`Score: Playing — ${String(song.bpm)} BPM${keyStr}${genreStr}`)
-
-  if (song.arrangement.length > 0) {
-    const sections = song.arrangement
-      .map((s) => `${s.sectionType}(${String(s.bars)}b)`)
-      .join(' → ')
-    console.log(`Score: Arrangement — ${sections}`)
-  }
-
-  console.log(`Score: ${String(song.tracks.length)} track(s) loaded`)
-
-  const engine = createScoreEngine(song)
-  engine.start()
-  console.log('Score: Audio running — Press Ctrl+C to stop')
+  let currentEngine: ScoreEngine = createScoreEngine(song)
+  currentEngine.start()
+  console.log(`Score: Audio running — Press Ctrl+C to stop${watch ? ' (watch mode on)' : ''}`)
 
   const keepAlive = setInterval(() => {}, 1000)
 
   const cleanup = (): void => {
     clearInterval(keepAlive)
-    engine.dispose()
+    currentEngine.dispose()
     console.log('\nScore: Stopped')
     process.exit(0)
+  }
+
+  if (watch) {
+    let reloading = false
+    let reloadVersion = 1
+
+    fsWatch(resolved, () => {
+      if (reloading) return
+      reloading = true
+
+      setTimeout(() => {
+        void (async () => {
+          try {
+            console.log('\nScore: File changed — reloading...')
+            currentEngine.dispose()
+            const freshSong = await loadSong(resolved, reloadVersion++)
+            currentEngine = createScoreEngine(freshSong)
+            currentEngine.start()
+            console.log(`Score: Reloaded — ${String(freshSong.bpm)} BPM`)
+          } catch (err: unknown) {
+            console.error('Score: Reload failed —', err instanceof Error ? err.message : String(err))
+            console.error('Score: Keeping previous version')
+          } finally {
+            reloading = false
+          }
+        })()
+      }, 300)
+    })
   }
 
   process.once('SIGINT', cleanup)

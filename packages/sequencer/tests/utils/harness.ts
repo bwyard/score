@@ -38,6 +38,7 @@ export const mockContext = (): MockContext => {
       ...createMockNode(),
       gain: _props?.gain ?? 1.0,
       setGain: (_value: number, _time?: number) => {},
+      scheduleEnvelope: (_opts: { peak: number; attack: number; decay: number; sustain: number; release: number; startTime: number; duration: number }) => {},
     }),
     createNoise: (_props?: { type?: 'white' | 'pink' | 'brown' }) => ({
       ...createMockNode(),

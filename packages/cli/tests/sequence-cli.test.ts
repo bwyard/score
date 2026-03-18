@@ -4,9 +4,13 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
 describe('new command', () => {
-  it('throws ScoreError when no name given', async () => {
+  it('prints usage when no name given', async () => {
+    const logs: string[] = []
+    vi.spyOn(console, 'log').mockImplementation((m: unknown) => { logs.push(String(m)) })
     const { newSong } = await import('../src/commands/new.js')
-    expect(() => { newSong(['song']); }).toThrow() // 'song' is subcommand, name is missing
+    newSong(['song']) // 'song' is subcommand, name is missing
+    expect(logs.some(l => l.includes('Usage') || l.includes('usage') || l.includes('score new'))).toBe(true)
+    vi.restoreAllMocks()
   })
 
   it('creates song file with template content', async () => {

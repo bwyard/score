@@ -42,6 +42,7 @@ const createMockGainNode = (initialGain = 1.0, shouldThrowOnDisconnect = false):
     ...base,
     get gain() { return currentGain },
     setGain: (value: number, _time?: number) => { currentGain = value },
+    scheduleEnvelope: ({ peak }: { peak: number; attack: number; decay: number; sustain: number; release: number; startTime: number; duration: number }) => { currentGain = peak },
   }
 }
 
