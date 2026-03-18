@@ -102,7 +102,11 @@ Phase 6    ✅  Effects — all 14 effects complete
                ✅ Phaser, Flanger, Stereo Widener, Noise Gate
 Phase 6b   ✅  Effects chain utility (createEffectsChain) + BackendWaveShaperNode + BackendStereoPannerNode
 Phase 7    ✅  Mixer — Channel, Return, master bus, hard limiter, solo logic
-Phase 7b   ⬜  Mastering chain — Multiband Compressor, Saturation/Tape, Auto-Pan
+Phase 7b   ✅  Mastering chain — Multiband Compressor, Saturation/Tape, Auto-Pan
+               ✅ createMultibandCompressor — 3-band crossover with per-band threshold/ratio/makeup
+               ✅ createSaturation — tanh soft-clip via WaveShaperNode, drive 0-1
+               ✅ createAutoPan — sine/triangle LFO pan automation via StereoPannerNode
+               ✅ TSDoc added to all 16 existing effects
 Phase 8    ✅  Sequencer + Transport + TempoMap + Swing/Groove
 Phase 9    ⚠️  Song format + Automation system + Pattern reuse + Arpeggiator
                ✅ Song/Track/Section DSL complete (Song, Kick, Snare, HiHat, Synth, Sequence)
@@ -113,32 +117,36 @@ Phase 9    ⚠️  Song format + Automation system + Pattern reuse + Arpeggiator
                ⬜ Arrangement execution (sections mute/unmute tracks at section boundaries)
                ⬜ drift(pattern, rate) — gradual OU-process pattern evolution
                ⬜ keepFor(bars, pattern) — lock pattern for N bars during live reload
-Phase 9a   ⬜  Core modulation primitives — ADSR Envelope (standalone), LFO modulation source
-               ⬜ ADSR as reusable primitive: createADSR(attack, decay, sustain, release)
-               ⬜ LFO: createLFO(rate, shape, depth) — connects to any AudioParam
+Phase 9a   ✅  Core modulation primitives — @score/modulation (46 tests)
+               ✅ createADSR — standalone envelope, delegates to BackendGainNode.scheduleEnvelope
+               ✅ createLFO — connects oscillator to BackendAudioParam (frequencyParam/gainParam)
+               ✅ ramp, sine, cosine — pure step-function value sources
+               ✅ BackendAudioParam type + frequencyParam/gainParam on BackendFilterNode/GainNode
+               ✅ BackendOscillatorNode._connectTo — routes osc → AudioParam
                ⬜ automation() — connect modulator to component parameter by name
-               ⬜ ramp(from, to, bars) — linear value source over time
-               ⬜ sine(rate, depth) / cosine(rate, depth) — periodic value sources
-Phase 9b   ✅  @score/math — fibonacci, padovan, tribonacci, entropy, polyrhythm, boolean ops (23 tests)
-               ⬜ circleOfFifths(n) — still to add
-               ⬜ Tuning systems: just(), pythagorean(), meantone(), edo19(), edo31()
-Phase 9c   ✅  @score/pattern — euclidean, fast, slow, rev, every, degrade, shift, scaleNotes, chordNotes (32 tests)
+Phase 9b   ✅  @score/math — complete (158 tests)
+               ✅ fibonacci, padovan, tribonacci, entropy, polyrhythm, boolean ops
+               ✅ transforms: range, normalize, clip, smooth, quantize, interp
+               ✅ stochastic: drunk, markov (seeded LCG PRNG)
+               ✅ harmony: circleOfFifths, just, pythagorean, meantone, edo19, edo31
+Phase 9c   ✅  @score/pattern — complete (45 tests)
+               ✅ euclidean, fast, slow, rev, every, degrade, shift, scaleNotes, chordNotes
                ✅ 80+ scale library in scales.ts (major, minor, modes, pentatonic, blues)
-               ⬜ stack(...patterns) — layer multiple patterns into one (poly-rhythm combinator)
-               ⬜ beat(...steps) — shorthand for [1,0,0,0] style arrays with named steps
-               ⬜ humanize(amount, pattern) — Gaussian timing + velocity variation
-               ⬜ Full Facet scale list (ragas, Balinese, Messiaen, microtonal) — expand later
-Phase 9d   ⬜  @score/musical — plain language DSL (describe() function)
+               ✅ stack(...patterns) — poly-rhythm combinator, returns first non-zero per step
+               ✅ beat(...steps) — shorthand array literal helper
+               ⬜ humanize(amount, pattern) — Gaussian timing + velocity variation (Track-level prop)
+Phase 9d   ✅  @score/musical — describe() natural language → InstrumentDescriptor (37 tests)
+               ✅ Vocabulary-based tokenizer (not AI): SOUND/PATTERN/SPACE/VOLUME tables
+               ✅ buildDescriptor, extractTokens, normalizeText helpers
 Phase 9e   ✅  Song file security — AST validator (acorn) + Zod export validator + --trust flag (12 tests)
-Phase 9f   ⬜  Extended math — chaos theory + process models + advanced tuning
-               ⬜ Lorenz attractor (RK4 ODE) — chaotic sequence generator
-               ⬜ Logistic map bifurcation — simple chaos with tunable complexity
-               ⬜ Lyapunov exponent — measure + control chaos level
-               ⬜ L-system rewriting — self-similar pattern generation
-               ⬜ Wolfram cellular automata — Rule 30/90/110 rhythm generators
-               ⬜ RK4 integrator — generic ODE solver for any differential system
-               ⬜ OUProcess (Ornstein-Uhlenbeck) — mean-reverting drift automation
-               ⬜ circleOfFifths(n), tuning systems: just(), pythagorean(), meantone(), edo19(), edo31()
+Phase 9f   ✅  Extended math — chaos/stochastic/tuning in @score/math (see Phase 9b above)
+               ✅ Lorenz attractor (RK4 ODE)
+               ✅ Logistic map + logisticSequence()
+               ✅ Lyapunov exponent estimator
+               ✅ L-system string rewriting + lsystemToPattern()
+               ✅ Wolfram elementary CA (rule 0–255)
+               ✅ RK4 generic ODE integrator
+               ✅ OUProcess (Ornstein-Uhlenbeck mean-reverting process)
 Phase 10   ⚠️  CLI — core commands done, stem export + freeze/bounce remaining
                ✅ score play <file> — plays song via ScoreEngine
                ✅ score play --watch — live reload on file save (300ms debounce)
@@ -162,6 +170,7 @@ Phase 12   ⬜  MIDI bridge + XDJ profiles + hardware mixer modes
 Phase 12b  ⬜  Jam session — @score/session
 Phase 12c  ⬜  SuperCollider backend — fully embedded
 Phase 12d  ⬜  Advanced synthesis — FM, wavetable, physical modeling, granular, full warping
+Phase 12i  ⬜  Probabilistic / diffusion generation — granular grain scattering, spectral diffusion, stochastic resonance, generative composition via PRIME samplers (builds on Lorenz/logistic/OUProcess already in @score/math)
 Phase 12e  ⬜  DJ mode — Set format + deck management
 Phase 12f  ⬜  LiveSet mode — clip launching
 Phase 12g  ⬜  Advanced effects — Convolution reverb, Envelope follower, Ring modulator
@@ -1294,6 +1303,7 @@ Format: `YYYY-MM-DD sNNN — What was completed or significantly advanced`
 2026-03-17 s005 — Phase 9b (@score/math), 9c (@score/pattern), 9e (AST+Zod security), CLI polish (--watch, doctor, new song, --trust, --version), note names, ADSR+filter on Synth, docs/ folder — 701 tests
 2026-03-18 s006 — Session housekeeping: signals acknowledged, CLAUDE.md signal docs, handoff updated to reflect actual phase status, planning doc incorporated
 2026-03-18 s007 — Phase 9 roadmap audit: Phase 8b renamed to 9a (modulation primitives), Phase 9f added (chaos/OUProcess/L-systems/RK4/tuning), competitor gap analysis added (Section 11b vs TidalCycles/Strudel/Facet), stack()/beat()/humanize() added to Phase 9c plan, "## 9." section header fixed to "## 9b.", TSDoc standard locked (TypeDoc + eslint-plugin-tsdoc), handoff split to pointed spec files, GETTING_STARTED.md created, 5-agent pre-Phase-10 build plan drafted
+2026-03-18 s008 — Wave 1 complete: Phase 7b (multiband-compressor/saturation/autopan + TSDoc all effects), Phase 9a (@score/modulation: createLFO/createADSR/sources, BackendAudioParam), Phase 9b/9f (@score/math extended: chaos/harmony/stochastic/transforms, 158 tests), Phase 9c (stack/beat added, 45 tests), Phase 9d (@score/musical: describe() vocabulary tokenizer, 37 tests). PR #14 open. 1,074 tests total.
 ```
 
 ---
