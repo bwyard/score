@@ -245,6 +245,22 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@25.5.0)
 
+  packages/musical:
+    dependencies:
+      '@score/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
+      '@vitest/coverage-v8':
+        specifier: ^2.0.0
+        version: 2.1.9(vitest@2.1.9(@types/node@25.5.0))
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@25.5.0)
+
   packages/pattern:
     devDependencies:
       '@types/node':

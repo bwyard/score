@@ -8,7 +8,9 @@
     "packages/mixer/src/index.ts",
     "packages/sequencer/src/index.ts",
     "packages/dsl/src/index.ts",
-    "packages/components/src/index.ts"
+    "packages/components/src/index.ts",
+    "packages/modulation/src/index.ts",
+    "packages/musical/src/index.ts"
   ],
   "entryPointStrategy": "packages",
   "out": "docs/api",
