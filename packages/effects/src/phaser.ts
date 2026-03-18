@@ -6,13 +6,53 @@
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
 import { uid, ScoreError } from '@score/core'
 
+/**
+ * Configuration props for {@link createPhaser}.
+ *
+ * A phaser uses allpass filters to shift the phase of frequency bands,
+ * creating sweeping comb-filter notches. Classic on synths, guitars, and pads.
+ *
+ * @remarks
+ * This implementation uses fixed logarithmically-spaced filter frequencies.
+ * Phase 8b will introduce true LFO modulation for the classic swooping sweep.
+ */
 export type PhaserProps = {
+  /** LFO rate in Hz. Reserved for Phase 8b modulation. Default `0.5`. */
   readonly rate?: number
+  /** LFO depth `0–1`. Reserved for Phase 8b modulation. Default `0.5`. */
   readonly depth?: number
+  /** Number of allpass filter stages `2–12`. More stages = deeper notches. Default `4`. */
   readonly stages?: number
+  /** Feedback amount `0–0.95`. Higher values create more resonant, intense sweeps. Default `0.3`. */
   readonly feedback?: number
 }
 
+/**
+ * Create a phaser effect using a chain of allpass filters with feedback.
+ * Produces the sweeping, whooshing character of classic analogue phasers —
+ * from subtle shimmer to dramatic jet-plane swoops.
+ *
+ * @param context - Backend audio context from the Score engine.
+ * @param props - Phaser configuration.
+ * @returns AudioComponent with a `setFeedback` setter.
+ *
+ * @throws {ScoreError} If the filter stage count falls below 2 after clamping (internal guard — should not occur in practice).
+ *
+ * @example
+ * ```ts
+ * // Four-stage phaser on a funk synth chord
+ * const phase = createPhaser(context, { stages: 4, feedback: 0.5 })
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Twelve-stage deep phase on a trance supersaw
+ * const deep = createPhaser(context, { stages: 12, feedback: 0.7 })
+ * ```
+ *
+ * @see {@link createFlanger} — for short delay-based comb filtering
+ * @see {@link createChorus} — for voice-layering ensemble effects
+ */
 export const createPhaser = (
   context: ScoreAudioContext,
   props?: PhaserProps,
@@ -68,6 +108,14 @@ export const createPhaser = (
   } = {
     id: uid('phaser'),
     type: 'phaser' as const,
+
+    /**
+     * Set the phaser feedback amount. Higher feedback creates sharper, more resonant notches.
+     * Clamped to `0.95` to prevent instability.
+     *
+     * @param value - Feedback `0–0.95`.
+     * @param time - Optional schedule time in seconds.
+     */
     setFeedback: (value: number, time?: number) => {
       feedbackGain.setGain(Math.min(value, 0.95), time)
     },

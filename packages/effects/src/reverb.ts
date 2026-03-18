@@ -5,11 +5,42 @@ import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/c
 import type { BackendGainNode, BackendDelayNode } from '@score/core'
 import { uid } from '@score/core'
 
+/**
+ * Configuration props for {@link createReverb}.
+ *
+ * Controls the reverb tail length and wet/dry blend.
+ * Longer decay creates larger perceived spaces — from tight rooms to vast halls.
+ */
 export type ReverbProps = {
+  /** Reverb decay time in seconds. Longer = bigger room. Default `2.0`. */
   readonly decay?: number
+  /** Wet/dry mix `0–1`. `0` = dry, `1` = fully wet. Default `0.3`. */
   readonly mix?: number
 }
 
+/**
+ * Create a reverb effect using parallel delay taps with exponential decay.
+ * Simulates acoustic spaces from tight studios to cathedral halls.
+ * Use sparingly on bass — mud builds fast. Works beautifully on pads and leads.
+ *
+ * @param context - Backend audio context from the Score engine.
+ * @param props - Reverb configuration.
+ * @returns AudioComponent with a `setMix` setter.
+ *
+ * @example
+ * ```ts
+ * // Large hall reverb on a pad for ambient techno
+ * const verb = createReverb(context, { decay: 4.0, mix: 0.4 })
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Tight room verb on snare
+ * const snareVerb = createReverb(context, { decay: 0.8, mix: 0.2 })
+ * ```
+ *
+ * @see {@link createDelay} — for tempo-synced echo effects
+ */
 export const createReverb = (
   context: ScoreAudioContext,
   props?: ReverbProps,
@@ -53,6 +84,13 @@ export const createReverb = (
   } = {
     id: uid('reverb'),
     type: 'reverb' as const,
+
+    /**
+     * Set the wet/dry mix. `0` = fully dry, `1` = fully reverberant.
+     *
+     * @param value - Mix ratio `0–1`.
+     * @param time - Optional schedule time in seconds.
+     */
     setMix: (value: number, time?: number) => {
       dryGain.setGain(1.0 - value, time)
       wetGain.setGain(value, time)

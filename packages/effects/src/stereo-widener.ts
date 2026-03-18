@@ -5,10 +5,42 @@
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
 import { uid } from '@score/core'
 
+/**
+ * Configuration props for {@link createStereoWidener}.
+ *
+ * Controls the stereo width via mid/side gain balance.
+ * `0` = mono (center only), `1` = normal stereo, `2` = extra wide (boosted sides).
+ */
 export type StereoWidenerProps = {
+  /** Stereo width `0–2`. `0` = mono, `1` = unity, `2` = maximum width. Default `1.0`. */
   readonly width?: number
 }
 
+/**
+ * Create a stereo widener using mid/side processing.
+ * Widen narrow-sounding synth pads into expansive stereo fields,
+ * or narrow a muddy mix for tighter mono compatibility.
+ * Use carefully — excessive width collapses to silence in mono.
+ *
+ * @param context - Backend audio context from the Score engine.
+ * @param props - Stereo widener configuration.
+ * @returns AudioComponent with a `setWidth` setter.
+ *
+ * @example
+ * ```ts
+ * // Push a pad to the far edges of the stereo field
+ * const widen = createStereoWidener(context, { width: 1.8 })
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Narrow a full mix to 75% for more focused club sound
+ * const narrow = createStereoWidener(context, { width: 0.75 })
+ * ```
+ *
+ * @see {@link createChorus} — for width via multi-voice delay
+ * @see {@link createAutoPan} — for rhythmic stereo movement
+ */
 export const createStereoWidener = (
   context: ScoreAudioContext,
   props?: StereoWidenerProps,
@@ -38,6 +70,13 @@ export const createStereoWidener = (
   } = {
     id: uid('stereo-widener'),
     type: 'stereo-widener' as const,
+
+    /**
+     * Set the stereo width. `1.0` = unity (no change). `0` = mono. `2.0` = maximum width.
+     *
+     * @param value - Width `0–2.0`.
+     * @param time - Optional schedule time in seconds.
+     */
     setWidth: (value: number, time?: number) => {
       const clamped = Math.max(0, Math.min(value, 2.0))
       midGain.setGain(2.0 - clamped, time)
