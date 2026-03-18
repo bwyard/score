@@ -412,26 +412,28 @@ score/
 │   │       ├── compressor.ts         ← ✅ createCompressor() — DynamicsCompressorNode
 │   │       ├── eq.ts                 ← ✅ createEQ() — 3-band (lowshelf/peaking/highshelf)
 │   │       ├── sidechain.ts          ← ✅ createSidechain() — source is BackendNode (mixer resolves)
-│   │       ├── distortion.ts         ← ⬜ PLANNED — WaveShaperNode transfer curve
-│   │       ├── bitcrusher.ts         ← ⬜ PLANNED — sample rate + bit depth reduction
-│   │       ├── chorus.ts             ← ⬜ PLANNED — modulated delay voices
-│   │       ├── limiter.ts            ← ⬜ PLANNED — brick-wall hard limiter (WaveShaperNode)
-│   │       ├── phaser.ts             ← ⬜ PLANNED — allpass filter chain with LFO
-│   │       ├── flanger.ts            ← ⬜ PLANNED — short modulated delay + feedback
-│   │       ├── stereo-widener.ts     ← ⬜ PLANNED — mid/side processing
-│   │       ├── gate.ts               ← ⬜ PLANNED — noise gate (threshold-based)
+│   │       ├── distortion.ts         ← ✅ COMPLETE — WaveShaperNode transfer curve
+│   │       ├── bitcrusher.ts         ← ✅ COMPLETE — sample rate + bit depth reduction
+│   │       ├── chorus.ts             ← ✅ COMPLETE — modulated delay voices
+│   │       ├── limiter.ts            ← ✅ COMPLETE — brick-wall hard limiter (WaveShaperNode)
+│   │       ├── phaser.ts             ← ✅ COMPLETE — allpass filter chain with LFO
+│   │       ├── flanger.ts            ← ✅ COMPLETE — short modulated delay + feedback
+│   │       ├── stereo-widener.ts     ← ✅ COMPLETE — mid/side processing
+│   │       ├── gate.ts               ← ✅ COMPLETE — noise gate (threshold-based)
 │   │       └── index.ts
 │   │
-│   ├── dsl/             @score/dsl — STUB (Phase 8-9)
-│   ├── sequencer/       @score/sequencer — STUB (Phase 8)
-│   ├── mixer/           @score/mixer — STUB (Phase 7)
+│   ├── dsl/             @score/dsl — ✅ COMPLETE (Song, Kick, Snare, HiHat, Synth, Sequence, sections, note names)
+│   ├── sequencer/       @score/sequencer — ✅ COMPLETE (createClock, createTransport, createStepSequencer, createTempoMap)
+│   ├── mixer/           @score/mixer — ✅ COMPLETE (createChannel, createReturn, createGroup, createMixer)
+│   ├── pattern/         @score/pattern — ✅ COMPLETE (euclidean, fast/slow/rev/every/degrade/shift, scaleNotes, chordNotes)
+│   ├── math/            @score/math — ✅ COMPLETE (fibonacci, entropy, polyrhythm, boolean ops)
+│   ├── cli/             @score/cli — ✅ COMPLETE (play, --watch, --trust, doctor, new song, --version, AST+Zod validators)
 │   ├── mcp/             @score/mcp — STUB (Phase 1b/10b/15b)
-│   ├── cli/             @score/cli — NOT CREATED (Phase 10)
-│   ├── midi/            @score/midi — NOT CREATED (Phase 12)
+│   ├── midi/            @score/midi — STUB (Phase 12)
+│   ├── gui/             @score/gui — STUB (Phase 13)
 │   ├── session/         @score/session — NOT CREATED (Phase 12b)
 │   ├── decode/          @score/decode — NOT CREATED (Phase 10c)
-│   ├── math/            @score/math — NOT CREATED (Phase 9b)
-│   └── gui/             @score/gui — NOT CREATED (Phase 13)
+│   └── musical/         @score/musical — NOT CREATED (Phase 9d)
 ```
 
 ### Planned packages (not yet created)
