@@ -105,16 +105,41 @@ Phase 7    ✅  Mixer — Channel, Return, master bus, hard limiter, solo logic
 Phase 7b   ⬜  Mastering chain — Multiband Compressor, Saturation/Tape, Auto-Pan
 Phase 8    ✅  Sequencer + Transport + TempoMap + Swing/Groove
 Phase 8b   ⬜  Core primitives — ADSR Envelope, LFO modulation source
-Phase 9    ⬜  Song format + Automation system + Pattern reuse + Arpeggiator
-Phase 9b   ⬜  @score/math — mathematical music toolkit [ships in v1.0 — advanced feature]
-Phase 9c   ⬜  @score/pattern — functional Pattern<T> model, Strudel migration path [ships in v1.0 — advanced feature]
+Phase 9    ⚠️  Song format + Automation system + Pattern reuse + Arpeggiator
+               ✅ Song/Track/Section DSL complete (Song, Kick, Snare, HiHat, Synth, Sequence)
+               ✅ Note names: 'A2', 'F#3', 'Bb4' — noteHz() + resolveFreq() in @score/dsl
+               ✅ ADSR envelope + filter props on SynthDSLProps + scheduleEnvelope() on BackendGainNode
+               ✅ ScoreEngine: hydrates descriptors, schedules audio, master gain node
+               ⬜ Arpeggiator (Arp() DSL component)
+               ⬜ Arrangement execution (sections mute/unmute tracks at section boundaries)
+               ⬜ drift(pattern, rate) — gradual OU-process pattern evolution
+               ⬜ keepFor(bars, pattern) — lock pattern for N bars during live reload
+Phase 9b   ✅  @score/math — fibonacci, padovan, tribonacci, entropy, polyrhythm, boolean ops (23 tests)
+               ⬜ circleOfFifths(n) — still to add
+               ⬜ Tuning systems: just(), pythagorean(), meantone(), edo19(), edo31()
+Phase 9c   ✅  @score/pattern — euclidean, fast, slow, rev, every, degrade, shift, scaleNotes, chordNotes (32 tests)
+               ✅ 80+ scale library in scales.ts (major, minor, modes, pentatonic, blues)
+               ⬜ Full Facet scale list (ragas, Balinese, Messiaen, microtonal) — expand later
 Phase 9d   ⬜  @score/musical — plain language DSL (describe() function)
-Phase 9e   ⬜  Song file security — AST validator + module resolver + Zod export validation
-Phase 10   ⬜  CLI — all commands + stem export + freeze/bounce
+Phase 9e   ✅  Song file security — AST validator (acorn) + Zod export validator + --trust flag (12 tests)
+Phase 10   ⚠️  CLI — core commands done, stem export + freeze/bounce remaining
+               ✅ score play <file> — plays song via ScoreEngine
+               ✅ score play --watch — live reload on file save (300ms debounce)
+               ✅ score play --trust — skip AST validation
+               ✅ score doctor — system health checks (Node, pnpm, audio backend)
+               ✅ score new song <name> — template generator with note name syntax
+               ✅ --version / -v flag
+               ⬜ score export — WAV/stem render
+               ⬜ score list — song inspection/info
 Phase 10b  ⬜  score-audio MCP — effect catalog, signal flow, backend nodes, component catalog
 Phase 10b2 ⬜  score-game-tools MCP — song inspector, mixer state, transport state, audio graph
 Phase 10c  ⬜  Decode — audio analysis + format import (Rekordbox, Serato, FL Studio, MIDI)
-Phase 11   ⬜  Hot reload + live coding (3 levels)
+Phase 11   ⚠️  Hot reload + live coding (3 levels)
+               ✅ Level 1: --watch file watcher with ESM cache busting
+               ⬜ Level 2: patch() — surgical live parameter updates without full reload
+               ⬜ Level 3: update(props) — live prop changes fed to running engine
+               ⬜ bars variable — loop counter in song file live coding context
+               ⬜ cursor.x / cursor.y — mouse position as automation source (Phase 13 GUI)
 Phase 11b  ⬜  Live coding visualization — punchcard, piano roll, scope, pattern graph, waveform
 Phase 12   ⬜  MIDI bridge + XDJ profiles + hardware mixer modes
 Phase 12b  ⬜  Jam session — @score/session
@@ -1222,6 +1247,52 @@ Major festivals       → Multiple shows documented, established tool
 - Multi-sample instruments (velocity layers, round-robin)
 - Envelope follower, Ring modulator
 
+### Added from 2026-03-17 planning session
+
+**Phase 9 DSL additions (ships before v1.0):**
+- `drift(pattern, rate)` — gradual pattern evolution via OU process from @score/math. `rate: 0` = locked, `rate: 1` = immediate chaos. Used for imperceptible long-set evolution.
+- `keepFor(bars, pattern)` — lock pattern for N bars, prevents hot reload from changing it. Live performance control tool.
+
+**Phase 9b @score/math additions:**
+- `circleOfFifths(n)` — returns note at position n: `['C','G','D','A','E','B','F#','C#','G#','D#','A#','F'][n % 12]`
+- Tuning systems in `@score/math/harmony/tuning.ts`: `just()`, `pythagorean()`, `meantone()`, `edo19()`, `edo31()`
+
+**Phase 11 live coding additions:**
+- `bars` — global loop counter in song file live coding context. Starts at 0, increments each bar. Enables conditional pattern logic beyond `every()`.
+- `cursor.x` / `cursor.y` — mouse cursor position as real-time automation source in Score Studio. Maps to backend via `setParam()`. Phase 13 GUI dependency.
+
+**Phase 13 GUI additions:**
+- CPU% monitor (standard in live coding tools)
+- Fragment render — render single component to WAV (`kick.render('./my-kick.wav')` or `score render --fragment kick`)
+
+**Ecosystem position (confirmed 2026-03-17):**
+Score is uniquely positioned — no existing tool combines: component instrument model, full production mixer, pre-composed songs alongside live coding, Git-native format, scsynth backend, XDJ hardware, real-time collaboration, plain language DSL, full DAW GUI, @score/math, testing infrastructure, and festival-grade setup. Closest JS tool is Facet — which has none of these.
+
+**Community decisions (2026-03-17):**
+- Joined TOPLAP Discord (listening only — no announcement until Phase 16/17)
+- Announcement: Phase 16/17 only. When ready: PR to awesome-livecoding → TOPLAP forum → DM to Alex McLean (TidalCycles credit)
+- Coming from TidalCycles page planned for score.dev docs
+- Coming from Strudel page planned for score.dev docs
+
+**Licensing (final, implement at Phase 16 only):**
+- Free with no restrictions: personal use, performance (any venue), streaming, sales, sync, teaching, festivals, research, open source
+- Voluntary support at score.dev/support — never required
+- Contact required only for: building a competing DAW using Score code, embedding Score in a commercial product, white-labeling, or selling Score itself
+- Framework packages: MIT. Score Studio GUI: MIT. @score/dsp (post-v1.0): ELv2.
+- Override keys: free for universities, festival partners, invited artists — issued within 24 hours
+
+**@score/dsp — post-v1.0 (Phase 16b):**
+- AssemblyScript compiled to WebAssembly, runs in AudioWorklets
+- Core algorithms: FFT (Cooley-Tukey), phase vocoder, pitch shifter, ZDF filter, true peak limiter, convolution reverb
+- Target: within 5x of scsynth in browser context (~0.05ms FFT vs scsynth's ~0.01ms)
+- License: ELv2 (not MIT) — free for everything except managed service providers
+
+**Additional libraries to evaluate (not yet added as deps):**
+- `WebMIDI.js` — cleaner browser WebMIDI wrapper for @score/midi (Phase 12)
+- `Soundfont.js` — 128 GM instruments, zero download, good for @score/musical onboarding
+- `Wavesurfer.js` — waveform visualization for Phase 13 GUI
+- Faust, RNBO — post-v1.0 backend considerations
+
 ### Nice to have post-v1.0
 - Audio recording directly into session timeline
 - Ableton Link BPM sync
@@ -1232,6 +1303,8 @@ Major festivals       → Multiple shows documented, established tool
 - MIDI CC automation recording
 - Waveform visualization of clips
 - Waveshaping as first-class synth prop
+- Image → audio spectral conversion (PNG pixel brightness → frequency) — experimental/community
+- 2D MIDI pattern generation from geometric shapes — experimental/community
 
 ### Decisions deferred
 - Audio recording into timeline (complexity — post v1)
@@ -1390,6 +1463,8 @@ Format: `YYYY-MM-DD sNNN — What was completed or significantly advanced`
 2026-03-16 s004 — Handoff v4 unification, pre-Phase 7 audit, @score-music scope decision
 2026-03-16 s005 — Phase 6 completion (8 effects + chain + 2 backend nodes), Phase 7 Mixer, Phase 8 Sequencer — 553 tests
 2026-03-16 s006 — score-codebase MCP loaded; incorporated language+security decisions: Phase 9d (describe()), 9e (AST security), rules 20-28, @score/pattern design philosophy
+2026-03-17 s005 — Phase 9b (@score/math), 9c (@score/pattern), 9e (AST+Zod security), CLI polish (--watch, doctor, new song, --trust, --version), note names, ADSR+filter on Synth, docs/ folder — 701 tests
+2026-03-18 s006 — Session housekeeping: signals acknowledged, CLAUDE.md signal docs, handoff updated to reflect actual phase status, planning doc incorporated
 ```
 
 ---

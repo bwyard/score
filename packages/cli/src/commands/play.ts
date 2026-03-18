@@ -4,8 +4,14 @@ import { pathToFileURL } from 'node:url'
 import { ScoreError } from '@score/core'
 import type { SongDefinition } from '@score/dsl'
 import { createScoreEngine, type ScoreEngine } from '../engine.js'
+import { validateSongFile } from '../validator/SongValidator.js'
+import { validateSongExport } from '../validator/SongExportValidator.js'
 
-const loadSong = async (resolved: string, version: number): Promise<SongDefinition> => {
+const loadSong = async (resolved: string, version: number, trust: boolean): Promise<SongDefinition> => {
+  if (!trust) {
+    validateSongFile(resolved)
+  }
+
   const url = version === 0
     ? pathToFileURL(resolved).href
     : pathToFileURL(resolved).href + '?v=' + String(version)
@@ -18,6 +24,9 @@ const loadSong = async (resolved: string, version: number): Promise<SongDefiniti
       docs: 'https://score.dev/docs/dsl/song',
     })
   }
+
+  validateSongExport(raw)
+
   const song = raw as SongDefinition
   if (!song.bpm || song.bpm <= 0) {
     throw ScoreError('Song must have a valid bpm', {
@@ -44,6 +53,7 @@ const logSong = (song: SongDefinition): void => {
 
 export const play = async (args: string[]): Promise<void> => {
   const watch = args.includes('--watch') || args.includes('-w')
+  const trust = args.includes('--trust') || args.includes('-t')
   const filePath = args.find(a => !a.startsWith('-'))
 
   if (!filePath) {
@@ -63,7 +73,7 @@ export const play = async (args: string[]): Promise<void> => {
     })
   }
 
-  const song = await loadSong(resolved, 0)
+  const song = await loadSong(resolved, 0, trust)
   logSong(song)
 
   let currentEngine: ScoreEngine = createScoreEngine(song)
@@ -92,7 +102,7 @@ export const play = async (args: string[]): Promise<void> => {
           try {
             console.log('\nScore: File changed — reloading...')
             currentEngine.dispose()
-            const freshSong = await loadSong(resolved, reloadVersion++)
+            const freshSong = await loadSong(resolved, reloadVersion++, trust)
             currentEngine = createScoreEngine(freshSong)
             currentEngine.start()
             console.log(`Score: Reloaded — ${String(freshSong.bpm)} BPM`)
