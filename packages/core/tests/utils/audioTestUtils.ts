@@ -2,6 +2,7 @@
 // Used across all @score/* package tests — no real AudioContext required
 
 import type {
+  BackendAudioParam,
   BackendBuffer,
   BackendBufferSourceNode,
   BackendCompressorNode,
@@ -89,6 +90,7 @@ export const createMockOscillatorNode = (): MockBackendOscillatorNode => {
     ...base,
     startCalls,
     stopCalls,
+    _connectTo: (_destination: unknown) => {},
     start: (time?: number) => { startCalls.push({ time }) },
     stop: (time?: number) => { stopCalls.push({ time }) },
     setFrequency: (_value: number, _time?: number) => {},
@@ -96,12 +98,18 @@ export const createMockOscillatorNode = (): MockBackendOscillatorNode => {
   }
 }
 
+const createMockAudioParam = (): BackendAudioParam => ({
+  connectModulator: (_source: BackendNode) => {},
+  disconnectModulator: () => {},
+})
+
 export const createMockGainNode = (initialGain = 1.0): MockBackendGainNode => {
   const base = createMockBackendNode()
   let currentGain = initialGain
 
   return {
     ...base,
+    gainParam: createMockAudioParam(),
     get gain() { return currentGain },
     setGain: (value: number, _time?: number) => { currentGain = value },
     scheduleEnvelope: ({ peak }: { peak: number; attack: number; decay: number; sustain: number; release: number; startTime: number; duration: number }) => { currentGain = peak },
@@ -159,6 +167,7 @@ export const createMockFilterNode = (): MockBackendFilterNode => {
 
   return {
     ...base,
+    frequencyParam: createMockAudioParam(),
     setFrequency: (_value: number, _time?: number) => {},
     setQ: (_value: number, _time?: number) => {},
     setFilterGain: (_value: number, _time?: number) => {},

@@ -2,6 +2,7 @@
 // Usage: const h = useHarness() at top of describe, afterAll(() => h.cleanup())
 
 import type {
+  BackendAudioParam,
   BackendCompressorNode,
   BackendContext,
   BackendDelayNode,
@@ -34,12 +35,18 @@ const createMockNode = (shouldThrowOnDisconnect = false): MockNode => {
   }
 }
 
+const createMockAudioParam = (): BackendAudioParam => ({
+  connectModulator: (_source: BackendNode) => {},
+  disconnectModulator: () => {},
+})
+
 const createMockGainNode = (initialGain = 1.0, shouldThrowOnDisconnect = false): MockNode & BackendGainNode => {
   const base = createMockNode(shouldThrowOnDisconnect)
   let currentGain = initialGain
 
   return {
     ...base,
+    gainParam: createMockAudioParam(),
     get gain() { return currentGain },
     setGain: (value: number, _time?: number) => { currentGain = value },
     scheduleEnvelope: ({ peak }: { peak: number; attack: number; decay: number; sustain: number; release: number; startTime: number; duration: number }) => { currentGain = peak },
@@ -51,6 +58,7 @@ const createMockFilterNode = (shouldThrowOnDisconnect = false): MockNode & Backe
 
   return {
     ...base,
+    frequencyParam: createMockAudioParam(),
     setFrequency: (_value: number, _time?: number) => {},
     setQ: (_value: number, _time?: number) => {},
     setFilterGain: (_value: number, _time?: number) => {},
@@ -133,6 +141,7 @@ const createMockContext = (shouldThrowOnDisconnect = false): EffectsMockContext 
       const base = createMockNode()
       return {
         ...base,
+        _connectTo: (_destination: unknown) => {},
         start: (_time?: number) => {},
         stop: (_time?: number) => {},
         setFrequency: (_value: number, _time?: number) => {},

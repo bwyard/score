@@ -29,6 +29,7 @@ export const mockContext = (): MockContext => {
       detune?: number
     }) => ({
       ...createMockNode(),
+      _connectTo: (_destination: unknown) => {},
       start: (_time?: number) => {},
       stop: (_time?: number) => {},
       setFrequency: (_value: number, _time?: number) => {},
@@ -36,6 +37,7 @@ export const mockContext = (): MockContext => {
     }),
     createGain: (_props?: { gain?: number }) => ({
       ...createMockNode(),
+      gainParam: { connectModulator: (_source: unknown) => {}, disconnectModulator: () => {} },
       gain: _props?.gain ?? 1.0,
       setGain: (_value: number, _time?: number) => {},
       scheduleEnvelope: (_opts: { peak: number; attack: number; decay: number; sustain: number; release: number; startTime: number; duration: number }) => {},
@@ -69,6 +71,7 @@ export const mockContext = (): MockContext => {
       gain?: number
     }) => ({
       ...createMockNode(),
+      frequencyParam: { connectModulator: (_source: unknown) => {}, disconnectModulator: () => {} },
       setFrequency: (_value: number, _time?: number) => {},
       setQ: (_value: number, _time?: number) => {},
       setFilterGain: (_value: number, _time?: number) => {},

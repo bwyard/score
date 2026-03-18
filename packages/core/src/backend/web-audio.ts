@@ -121,6 +121,9 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
 
       return {
         ...base,
+        _connectTo: (destination: unknown) => {
+          osc.connect(destination as WebAudioNode)
+        },
         start: (time?: number) => { osc.start(time ?? ctx.currentTime) },
         stop: (time?: number) => { osc.stop(time ?? ctx.currentTime) },
         setFrequency: (value: number, time?: number) => {
@@ -143,6 +146,15 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
 
       return {
         ...base,
+        gainParam: {
+          connectModulator: (source: BackendNode) => {
+            const s = source as unknown as { _connectTo?: (dest: unknown) => void }
+            if (s._connectTo) s._connectTo(gainNode.gain)
+          },
+          disconnectModulator: () => {
+            try { gainNode.gain.value = gainNode.gain.value } catch { /* noop */ }
+          },
+        },
         get gain() { return gainNode.gain.value },
         setGain: (value: number, time?: number) => {
           const t = time ?? ctx.currentTime
@@ -256,6 +268,15 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
 
       return {
         ...base,
+        frequencyParam: {
+          connectModulator: (source: BackendNode) => {
+            const s = source as unknown as { _connectTo?: (dest: unknown) => void }
+            if (s._connectTo) s._connectTo(filter.frequency)
+          },
+          disconnectModulator: () => {
+            try { filter.frequency.value = filter.frequency.value } catch { /* noop */ }
+          },
+        },
         setFrequency: (value: number, time?: number) => {
           const t = time ?? ctx.currentTime
           filter.frequency.setValueAtTime(filter.frequency.value, t)

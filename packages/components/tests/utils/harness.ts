@@ -2,6 +2,7 @@
 // Provides mock context and buffer from @score/core's backend types
 
 import type {
+  BackendAudioParam,
   BackendBuffer,
   BackendBufferSourceNode,
   BackendContext,
@@ -49,6 +50,11 @@ const createMockNode = (): MockBackendNode => {
   }
 }
 
+const createMockAudioParam = (): BackendAudioParam => ({
+  connectModulator: (_source: BackendNode) => {},
+  disconnectModulator: () => {},
+})
+
 const createMockOscillatorNode = (): MockBackendOscillatorNode => {
   const base = createMockNode()
   const startCalls: MockBackendOscillatorNode['startCalls'] = []
@@ -58,6 +64,7 @@ const createMockOscillatorNode = (): MockBackendOscillatorNode => {
     ...base,
     startCalls,
     stopCalls,
+    _connectTo: (_destination: unknown) => {},
     start: (time?: number) => { startCalls.push({ time }) },
     stop: (time?: number) => { stopCalls.push({ time }) },
     setFrequency: (_value: number, _time?: number) => {},
@@ -71,6 +78,7 @@ const createMockGainNode = (initialGain = 1.0): MockBackendGainNode => {
 
   return {
     ...base,
+    gainParam: createMockAudioParam(),
     get gain() { return currentGain },
     setGain: (value: number, _time?: number) => { currentGain = value },
     scheduleEnvelope: ({ peak }: { peak: number; attack: number; decay: number; sustain: number; release: number; startTime: number; duration: number }) => { currentGain = peak },
@@ -154,7 +162,7 @@ export const createMockContext = (): MockBackendContext => {
 
     createFilter: (_props) => {
       const base = createMockNode()
-      return { ...base, setFrequency: () => {}, setQ: () => {}, setFilterGain: () => {} }
+      return { ...base, frequencyParam: createMockAudioParam(), setFrequency: () => {}, setQ: () => {}, setFilterGain: () => {} }
     },
 
     createDelay: (_props) => {

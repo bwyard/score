@@ -1,16 +1,12 @@
-// Mixer test harness — self-contained mock context for @score/mixer tests
+// Modulation test harness — self-contained mock context for @score/modulation tests
 // Usage: const h = useHarness() at top of describe, afterAll(() => h.cleanup())
 
 import type {
   BackendAudioParam,
-  BackendCompressorNode,
   BackendContext,
-  BackendDelayNode,
   BackendFilterNode,
   BackendGainNode,
   BackendNode,
-  BackendStereoPannerNode,
-  BackendWaveShaperNode,
 } from '@score/core'
 
 // --- Mock node factories ---
@@ -35,10 +31,12 @@ const createMockNode = (shouldThrowOnDisconnect = false): MockNode => {
   }
 }
 
-const createMockAudioParam = (): BackendAudioParam => ({
-  connectModulator: (_source: BackendNode) => {},
-  disconnectModulator: () => {},
-})
+const createMockAudioParamInternal = (): BackendAudioParam => {
+  return {
+    connectModulator: (_source: BackendNode) => {},
+    disconnectModulator: () => {},
+  }
+}
 
 const createMockGainNode = (initialGain = 1.0, shouldThrowOnDisconnect = false): MockNode & BackendGainNode => {
   const base = createMockNode(shouldThrowOnDisconnect)
@@ -46,7 +44,7 @@ const createMockGainNode = (initialGain = 1.0, shouldThrowOnDisconnect = false):
 
   return {
     ...base,
-    gainParam: createMockAudioParam(),
+    gainParam: createMockAudioParamInternal(),
     get gain() { return currentGain },
     setGain: (value: number, _time?: number) => { currentGain = value },
     scheduleEnvelope: ({ peak }: { peak: number; attack: number; decay: number; sustain: number; release: number; startTime: number; duration: number }) => { currentGain = peak },
@@ -58,72 +56,41 @@ const createMockFilterNode = (shouldThrowOnDisconnect = false): MockNode & Backe
 
   return {
     ...base,
-    frequencyParam: createMockAudioParam(),
+    frequencyParam: createMockAudioParamInternal(),
     setFrequency: (_value: number, _time?: number) => {},
     setQ: (_value: number, _time?: number) => {},
     setFilterGain: (_value: number, _time?: number) => {},
   }
 }
 
-const createMockDelayNode = (shouldThrowOnDisconnect = false): MockNode & BackendDelayNode => {
-  const base = createMockNode(shouldThrowOnDisconnect)
+// --- Mock AudioParam with tracking ---
 
+/**
+ * Create a mock BackendAudioParam that tracks connect and disconnect calls.
+ */
+export const createMockAudioParam = (): BackendAudioParam & { connectCount: number; disconnectCount: number } => {
+  let connectCount = 0
+  let disconnectCount = 0
   return {
-    ...base,
-    setDelayTime: (_value: number, _time?: number) => {},
-  }
-}
-
-const createMockCompressorNode = (shouldThrowOnDisconnect = false): MockNode & BackendCompressorNode => {
-  const base = createMockNode(shouldThrowOnDisconnect)
-
-  return {
-    ...base,
-    setThreshold: (_value: number, _time?: number) => {},
-    setRatio: (_value: number, _time?: number) => {},
-    setKnee: (_value: number, _time?: number) => {},
-    setAttack: (_value: number, _time?: number) => {},
-    setRelease: (_value: number, _time?: number) => {},
-  }
-}
-
-const createMockWaveShaperNode = (shouldThrowOnDisconnect = false): MockNode & BackendWaveShaperNode => {
-  const base = createMockNode(shouldThrowOnDisconnect)
-
-  return {
-    ...base,
-    setCurve: (_curve: Float32Array | null) => {},
-    setOversample: (_value: 'none' | '2x' | '4x') => {},
-  }
-}
-
-const createMockStereoPannerNode = (shouldThrowOnDisconnect = false): MockNode & BackendStereoPannerNode => {
-  const base = createMockNode(shouldThrowOnDisconnect)
-
-  return {
-    ...base,
-    setPan: (_value: number, _time?: number) => {},
+    connectModulator: (_source: BackendNode) => { connectCount++ },
+    disconnectModulator: () => { disconnectCount++ },
+    get connectCount() { return connectCount },
+    get disconnectCount() { return disconnectCount },
   }
 }
 
 // --- Mock context ---
 
-export type MixerMockContext = BackendContext & {
+export type ModulationMockContext = BackendContext & {
   readonly createdGains: Array<MockNode & BackendGainNode>
   readonly createdFilters: Array<MockNode & BackendFilterNode>
-  readonly createdDelays: Array<MockNode & BackendDelayNode>
-  readonly createdCompressors: Array<MockNode & BackendCompressorNode>
-  readonly createdWaveShapers: Array<MockNode & BackendWaveShaperNode>
-  readonly createdStereoPanners: Array<MockNode & BackendStereoPannerNode>
+  readonly oscillatorStartCalls: number[]
 }
 
-const createMockContext = (shouldThrowOnDisconnect = false): MixerMockContext => {
+const createMockContext = (shouldThrowOnDisconnect = false): ModulationMockContext => {
   const createdGains: Array<MockNode & BackendGainNode> = []
   const createdFilters: Array<MockNode & BackendFilterNode> = []
-  const createdDelays: Array<MockNode & BackendDelayNode> = []
-  const createdCompressors: Array<MockNode & BackendCompressorNode> = []
-  const createdWaveShapers: Array<MockNode & BackendWaveShaperNode> = []
-  const createdStereoPanners: Array<MockNode & BackendStereoPannerNode> = []
+  const oscillatorStartCalls: number[] = []
 
   return {
     currentTime: 0,
@@ -132,17 +99,16 @@ const createMockContext = (shouldThrowOnDisconnect = false): MixerMockContext =>
     destination: createMockNode(),
     createdGains,
     createdFilters,
-    createdDelays,
-    createdCompressors,
-    createdWaveShapers,
-    createdStereoPanners,
+    oscillatorStartCalls,
 
     createOscillator: (_props) => {
       const base = createMockNode()
       return {
         ...base,
-        _connectTo: (_destination: unknown) => {},
-        start: (_time?: number) => {},
+        _connectTo: (destination: unknown) => {
+          void destination
+        },
+        start: (time?: number) => { oscillatorStartCalls.push(time ?? 0) },
         stop: (_time?: number) => {},
         setFrequency: (_value: number, _time?: number) => {},
         setDetune: (_value: number, _time?: number) => {},
@@ -191,27 +157,40 @@ const createMockContext = (shouldThrowOnDisconnect = false): MixerMockContext =>
     },
 
     createDelay: (_props) => {
-      const node = createMockDelayNode(shouldThrowOnDisconnect)
-      createdDelays.push(node)
-      return node
+      const base = createMockNode()
+      return {
+        ...base,
+        setDelayTime: (_value: number, _time?: number) => {},
+      }
     },
 
     createCompressor: (_props) => {
-      const node = createMockCompressorNode(shouldThrowOnDisconnect)
-      createdCompressors.push(node)
-      return node
+      const base = createMockNode()
+      return {
+        ...base,
+        setThreshold: (_value: number, _time?: number) => {},
+        setRatio: (_value: number, _time?: number) => {},
+        setKnee: (_value: number, _time?: number) => {},
+        setAttack: (_value: number, _time?: number) => {},
+        setRelease: (_value: number, _time?: number) => {},
+      }
     },
 
     createWaveShaper: (_props) => {
-      const node = createMockWaveShaperNode(shouldThrowOnDisconnect)
-      createdWaveShapers.push(node)
-      return node
+      const base = createMockNode()
+      return {
+        ...base,
+        setCurve: (_curve: Float32Array) => {},
+        setOversample: (_value: 'none' | '2x' | '4x') => {},
+      }
     },
 
     createStereoPanner: (_props) => {
-      const node = createMockStereoPannerNode(shouldThrowOnDisconnect)
-      createdStereoPanners.push(node)
-      return node
+      const base = createMockNode()
+      return {
+        ...base,
+        setPan: (_value: number, _time?: number) => {},
+      }
     },
 
     suspend: () => Promise.resolve(),
@@ -223,17 +202,13 @@ const createMockContext = (shouldThrowOnDisconnect = false): MixerMockContext =>
 // --- Test harness ---
 
 export type TestHarness = {
-  readonly mockContext: () => MixerMockContext
-  readonly mockThrowingContext: () => MixerMockContext
-  readonly mockNode: () => MockNode
-  readonly mockThrowingNode: () => MockNode
+  readonly mockContext: () => ModulationMockContext
+  readonly mockThrowingContext: () => ModulationMockContext
   readonly cleanup: () => Promise<void>
 }
 
 export const useHarness = (): TestHarness => ({
   mockContext: () => createMockContext(),
   mockThrowingContext: () => createMockContext(true),
-  mockNode: () => createMockNode(),
-  mockThrowingNode: () => createMockNode(true),
   cleanup: () => Promise.resolve(),
 })

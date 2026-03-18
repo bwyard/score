@@ -29,7 +29,28 @@ const parseRoot = (root: string): number => {
   return NOTE_SEMITONES[normalized] ?? 0
 }
 
-// scaleNotes('Am', 2, 2) → ['A2', 'B2', 'C3', 'D3', 'E3', 'F3', 'G3', 'A3']
+/**
+ * Return all note names in a key's scale across one or more octaves.
+ * Detects major vs minor from the key string — `'Am'` = A minor, `'C'` = C major.
+ * Note names follow Score convention: `'A2'`, `'F#3'`, `'Bb4'`.
+ *
+ * @param key - Key and scale name, e.g. `'C'`, `'Am'`, `'F#'`, `'Bbm'`.
+ * @param startOctave - Lowest octave to include. Default `3`.
+ * @param octaves - Number of octaves to span. Default `1`.
+ * @returns Array of note name strings in ascending order.
+ *
+ * @example
+ * ```ts
+ * scaleNotes('C', 4, 1)    // → ['C4','D4','E4','F4','G4','A4','B4']
+ * scaleNotes('Am', 3, 1)   // → ['A3','B3','C4','D4','E4','F4','G4']
+ * scaleNotes('C', 3, 2)    // → 14 notes spanning two octaves
+ *
+ * // Feed scale tones directly into a melodic pattern
+ * const melody = Synth({ pattern: scaleNotes('Am', 3, 1) })
+ * ```
+ *
+ * @see {@link chordNotes} — get the triad notes for a chord symbol
+ */
 export const scaleNotes = (key: string, startOctave = 3, octaves = 1): string[] => {
   // Detect scale type from key string
   const scaleName = key.toLowerCase().includes('m') && !key.toLowerCase().includes('maj')
@@ -48,7 +69,27 @@ export const scaleNotes = (key: string, startOctave = 3, octaves = 1): string[] 
   return notes
 }
 
-// chordNotes('Am', 3) → ['A3', 'C4', 'E4']
+/**
+ * Return the three notes of a triad chord at the given octave.
+ * Detects major vs minor from the chord symbol — `'Am'` = minor, `'C'` = major.
+ * Note names follow Score convention: `'A3'`, `'C4'`, `'E4'`.
+ *
+ * @param chord - Chord symbol, e.g. `'C'`, `'Am'`, `'F#m'`, `'Bb'`.
+ * @param octave - Root note octave. Default `3`.
+ * @returns Array of three note name strings `[root, third, fifth]`.
+ *
+ * @example
+ * ```ts
+ * chordNotes('Am', 3)  // → ['A3', 'C4', 'E4']
+ * chordNotes('C', 4)   // → ['C4', 'E4', 'G4']
+ * chordNotes('Dm', 3)  // → ['D3', 'F3', 'A3']
+ *
+ * // Arpeggiate a chord by spreading its notes across pattern steps
+ * const arp = Synth({ pattern: chordNotes('Am', 3) })
+ * ```
+ *
+ * @see {@link scaleNotes} — get all notes in a scale
+ */
 export const chordNotes = (chord: string, octave = 3): string[] => {
   const isMinor = chord.includes('m') && !chord.includes('maj')
   const intervals = isMinor ? [0, 3, 7] : [0, 4, 7]
