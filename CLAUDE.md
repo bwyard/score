@@ -61,6 +61,7 @@ export default Song({ bpm: 140, tracks: [kick, bass] })
 8. Every component implements the `AudioComponent` interface (as a plain object shape, not a class)
 9. Audio scheduling always uses `audioContext.currentTime` — never `setTimeout` or `Date.now()`
 10. **All code is functional** — factory functions, `const`, arrow functions, zero classes
+11. **Every public export gets TSDoc** — `/** */` block with `@param`, `@returns`, `@example`, `@throws {ScoreError}`. Standard in `docs/spec/TSDOC_STANDARD.md`. No undocumented public exports.
 
 ## Git Workflow
 
