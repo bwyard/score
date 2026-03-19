@@ -32,6 +32,11 @@ export type BackendAudioParam = {
 export type BackendOscillatorNode = BackendNode & {
   /** @internal For modulation routing — connects the native oscillator to an AudioParam destination. */
   readonly _connectTo: (destination: unknown) => void
+  /**
+   * Modulatable frequency parameter. Connect an LFO to this for vibrato.
+   * @example `lfo.connect(osc.frequencyParam)`
+   */
+  readonly frequencyParam: BackendAudioParam
   readonly start: (time?: number) => void
   readonly stop: (time?: number) => void
   readonly setFrequency: (value: number, time?: number) => void

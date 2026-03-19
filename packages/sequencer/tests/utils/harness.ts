@@ -30,6 +30,7 @@ export const mockContext = (): MockContext => {
     }) => ({
       ...createMockNode(),
       _connectTo: (_destination: unknown) => {},
+      frequencyParam: { connectModulator: (_source: unknown) => {}, disconnectModulator: () => {} },
       start: (_time?: number) => {},
       stop: (_time?: number) => {},
       setFrequency: (_value: number, _time?: number) => {},

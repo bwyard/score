@@ -19,7 +19,9 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@score/core": "workspace:*"
+    "@score/core": "workspace:*",
+    "@score/modulation": "workspace:*",
+    "@score/musical": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

@@ -87,6 +87,12 @@ importers:
       '@score/core':
         specifier: workspace:*
         version: link:../core
+      '@score/modulation':
+        specifier: workspace:*
+        version: link:../modulation
+      '@score/musical':
+        specifier: workspace:*
+        version: link:../musical
     devDependencies:
       '@types/node':
         specifier: ^25.5.0
