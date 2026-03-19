@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // score-audio MCP — Audio domain intelligence for AI-assisted composition and debugging
-// Tools: effect_catalog, signal_flow, backend_nodes, component_catalog
+// Tools: effect_catalog, signal_flow, backend_nodes, component_catalog, instrument_source
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -419,9 +419,80 @@ const componentCatalog = {
   },
 }
 
+// ─── Tool: instrument_source ──────────────────────────────────────────
+
+const ALL_SOURCE_PACKAGES = [
+  { pkg: 'components',  dir: join(SCORE_ROOT, 'packages', 'components', 'src'),  kind: 'instrument' },
+  { pkg: 'effects',     dir: join(SCORE_ROOT, 'packages', 'effects', 'src'),      kind: 'effect' },
+  { pkg: 'mixer',       dir: join(SCORE_ROOT, 'packages', 'mixer', 'src'),        kind: 'mixer' },
+  { pkg: 'modulation',  dir: join(SCORE_ROOT, 'packages', 'modulation', 'src'),   kind: 'modulation' },
+  { pkg: 'musical',     dir: join(SCORE_ROOT, 'packages', 'musical', 'src'),      kind: 'musical' },
+  { pkg: 'math',        dir: join(SCORE_ROOT, 'packages', 'math', 'src'),         kind: 'math' },
+  { pkg: 'pattern',     dir: join(SCORE_ROOT, 'packages', 'pattern', 'src'),      kind: 'pattern' },
+]
+
+const instrumentSource = {
+  name: 'instrument_source',
+  description: 'Read the full TypeScript source of any instrument, effect, or audio module. Use this to understand exactly how a component is implemented before writing a new one — see the oscillator setup, filter routing, envelope scheduling, and factory function pattern.',
+  inputSchema: {
+    name: z.string()
+      .describe('File name without extension (e.g. "kick", "synth", "delay", "lfo", "describe"). Case-insensitive.'),
+    package: z.string().optional()
+      .describe('Package to search in (e.g. "components", "effects", "modulation", "musical", "math"). Omit to search all.'),
+  },
+  handler: async ({ name, package: pkgFilter }) => {
+    const target = name.toLowerCase().replace(/\.ts$/, '')
+
+    const candidates = []
+
+    for (const { pkg, dir, kind } of ALL_SOURCE_PACKAGES) {
+      if (pkgFilter && pkg !== pkgFilter) continue
+      if (!existsSync(dir)) continue
+
+      const files = readdirSync(dir).filter((f) => f.endsWith('.ts'))
+      for (const file of files) {
+        const base = file.replace('.ts', '').toLowerCase()
+        if (base === target || base.includes(target)) {
+          candidates.push({ pkg, kind, file, path: join(dir, file) })
+        }
+      }
+    }
+
+    if (candidates.length === 0) {
+      // Build list of all available names
+      const available = []
+      for (const { pkg, dir } of ALL_SOURCE_PACKAGES) {
+        if (!existsSync(dir)) continue
+        readdirSync(dir)
+          .filter((f) => f.endsWith('.ts') && f !== 'index.ts')
+          .forEach((f) => available.push(`${f.replace('.ts', '')} (@score/${pkg})`))
+      }
+      return { content: [{ type: 'text', text: `"${name}" not found.\n\nAvailable:\n${available.map((a) => `  - ${a}`).join('\n')}` }] }
+    }
+
+    if (candidates.length === 1) {
+      const { pkg, kind, file, path } = candidates[0]
+      const content = readFile(path)
+      return { content: [{ type: 'text', text: `# @score/${pkg}/${file} (${kind})\n\n\`\`\`ts\n${content}\n\`\`\`` }] }
+    }
+
+    // Multiple matches — show list and ask to narrow
+    if (candidates.length <= 3) {
+      const parts = candidates.map(({ pkg, kind, file, path }) => {
+        const content = readFile(path)
+        return `# @score/${pkg}/${file} (${kind})\n\n\`\`\`ts\n${content}\n\`\`\``
+      })
+      return { content: [{ type: 'text', text: parts.join('\n\n---\n\n') }] }
+    }
+
+    const list = candidates.map(({ pkg, file }) => `  - ${file} (@score/${pkg})`).join('\n')
+    return { content: [{ type: 'text', text: `Multiple matches for "${name}":\n${list}\n\nNarrow with the \`package\` param.` }] }
+  },
+}
+
 // ─── Server ──────────────────────────────────────────────────────────
 
-const tools = [effectCatalog, signalFlow, backendNodes, componentCatalog]
+const tools = [effectCatalog, signalFlow, backendNodes, componentCatalog, instrumentSource]
 
 const createServer = () => {
   const server = new McpServer({
