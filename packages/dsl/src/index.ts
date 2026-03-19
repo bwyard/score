@@ -2,7 +2,7 @@ export { Song } from './song.js'
 export { Intro, Buildup, Drop, Breakdown, Outro } from './sections.js'
 export { Track } from './track.js'
 export { Sequence } from './sequence.js'
-export { Kick, Snare, HiHat, Synth } from './instruments.js'
+export { Kick, Snare, HiHat, Synth, Sample } from './instruments.js'
 export { noteHz, resolveFreq } from './notes.js'
 export type {
   SongDefinition,
@@ -16,4 +16,5 @@ export type {
   SnareProps,
   HiHatProps,
   SynthDSLProps,
+  SampleProps,
 } from './types.js'

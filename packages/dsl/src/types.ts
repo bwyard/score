@@ -47,10 +47,25 @@ export type SynthDSLProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+export type SampleProps = {
+  /** Path to the audio file — absolute or relative to the song file. WAV, MP3, OGG, FLAC. */
+  readonly path: string
+  /** Trigger pattern — 1 = play, 0 = rest. Loops. Default: one-shot on step 0. */
+  readonly pattern?: number[]
+  /** Playback volume 0–1. Default: 1.0 */
+  readonly volume?: number
+  /** Playback rate multiplier. 1.0 = original pitch, 2.0 = octave up. Default: 1.0 */
+  readonly rate?: number
+  /** Loop the sample continuously. Default: false */
+  readonly loop?: boolean
+  /** Effects chain — use descriptor factories from the effects package (e.g. Delay, Reverb). */
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
 export type InstrumentDescriptor = {
   readonly _type: 'InstrumentDescriptor'
-  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth'
-  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps
+  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample'
+  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps
   // Minimal AudioComponent shape so Track() accepts it
   readonly id: string
   readonly type: string

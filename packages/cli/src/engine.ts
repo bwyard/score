@@ -5,12 +5,14 @@
 // mutes/unmutes channels at section boundaries.
 //
 // Synthesis models:
-//   kick  — sine sweep (freq→30 Hz over pitchDrop sec)
-//   snare — band-pass filtered noise burst + sine transient
-//   hihat — high-pass filtered noise burst (short decay)
-//   synth — oscillator with ADSR envelope + optional filter
+//   kick   — sine sweep (freq→30 Hz over pitchDrop sec)
+//   snare  — band-pass filtered noise burst + sine transient
+//   hihat  — high-pass filtered noise burst (short decay)
+//   synth  — oscillator with ADSR envelope + optional filter
+//   sample — decoded audio file played back on each hit
 
-import { webAudioBackend } from '@score/core'
+import { readFileSync } from 'node:fs'
+import { webAudioBackend, decodeSample, createSamplePlayer } from '@score/core'
 import type { EffectDescriptor, AudioComponent, ScoreAudioContext } from '@score/core'
 import { createMixer } from '@score/mixer'
 import {
@@ -22,7 +24,7 @@ import { createTransport, createStepSequencer } from '@score/sequencer'
 import { resolveFreq } from '@score/dsl'
 import type {
   SongDefinition, InstrumentDescriptor,
-  KickProps, SnareProps, HiHatProps, SynthDSLProps,
+  KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps,
 } from '@score/dsl'
 
 type Context = ReturnType<typeof webAudioBackend.createContext>
@@ -164,7 +166,7 @@ export type ScoreEngine = {
   readonly dispose: () => void
 }
 
-export const createScoreEngine = (song: SongDefinition): ScoreEngine => {
+export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngine> => {
   const ctx = webAudioBackend.createContext()
   const mixer = createMixer(ctx, { masterVolume: 0.85 })
   const transport = createTransport(ctx, { bpm: song.bpm, ticksPerBeat: 4 })
@@ -174,11 +176,28 @@ export const createScoreEngine = (song: SongDefinition): ScoreEngine => {
     .map(t => isInstrumentDescriptor(t) ? t : t.component)
     .filter(isInstrumentDescriptor)
 
+  // Pre-decode all sample buffers before wiring sequencers
+  // Keys: descriptor id → decoded BackendBuffer
+  type BackendBuffer = Awaited<ReturnType<typeof decodeSample>>
+  const sampleBuffers = new Map<string, BackendBuffer>()
+
+  await Promise.all(
+    descriptors
+      .filter(d => d.instrumentType === 'sample')
+      .map(async (d) => {
+        const props = d.props as SampleProps
+        const raw = readFileSync(props.path)
+        const arrayBuffer = raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength)
+        const buf = await decodeSample(ctx, arrayBuffer)
+        sampleBuffers.set(d.id, buf)
+      }),
+  )
+
   // Per-track channel + input node — indexed to match descriptors[]
   const channelInputs: GainNode[] = []
 
   for (const comp of descriptors) {
-    const props = comp.props as KickProps & SnareProps & HiHatProps & SynthDSLProps
+    const props = comp.props as KickProps & SnareProps & HiHatProps & SynthDSLProps & SampleProps
     const hydratedEffects = buildEffectsChain(ctx, props.effects)
 
     // Add a mixer channel for this track
@@ -228,6 +247,22 @@ export const createScoreEngine = (song: SongDefinition): ScoreEngine => {
         createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
           const freq = resolveFreq(val)
           if (freq > 0) triggerSynth(ctx, pos.time, props, freq, dest)
+        })
+        break
+      }
+      case 'sample': {
+        const props = comp.props as SampleProps
+        const buf = sampleBuffers.get(comp.id)
+        if (!buf) break
+        const player = createSamplePlayer(ctx, buf, {
+          loop: props.loop ?? false,
+          playbackRate: props.rate ?? 1.0,
+          gain: props.volume ?? 1.0,
+        })
+        player.connect(dest)
+        const pattern = props.pattern ?? [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+          if (hit) player.start(pos.time)
         })
         break
       }
