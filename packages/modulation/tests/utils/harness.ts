@@ -108,6 +108,7 @@ const createMockContext = (shouldThrowOnDisconnect = false): ModulationMockConte
         _connectTo: (destination: unknown) => {
           void destination
         },
+        frequencyParam: { connectModulator: (_source: unknown) => {}, disconnectModulator: () => {} },
         start: (time?: number) => { oscillatorStartCalls.push(time ?? 0) },
         stop: (_time?: number) => {},
         setFrequency: (_value: number, _time?: number) => {},

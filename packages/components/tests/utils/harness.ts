@@ -65,6 +65,7 @@ const createMockOscillatorNode = (): MockBackendOscillatorNode => {
     startCalls,
     stopCalls,
     _connectTo: (_destination: unknown) => {},
+    frequencyParam: createMockAudioParam(),
     start: (time?: number) => { startCalls.push({ time }) },
     stop: (time?: number) => { stopCalls.push({ time }) },
     setFrequency: (_value: number, _time?: number) => {},

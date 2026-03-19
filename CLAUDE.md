@@ -20,6 +20,16 @@ Read `current.md` at the start of every session. Update it and write a closed se
 This file is the authoritative project briefing. Read it fully before touching any file.
 Full architecture spec: `SCORE_HANDOFF.md`
 
+## Core Philosophy
+
+**Math reads as music.** Frequencies, rhythms, harmonics, envelopes — a song is a pure function of time.
+
+Describe music with functions, not data. No sample banks, no hardcoded patterns — generate everything at evaluation time. Pure functional throughout: same inputs, same outputs, no side effects, no state. TypeScript ESM strict mode, no `any`.
+
+This is what makes SCORE a reference implementation rather than just another audio library.
+
+**Probabilistic / diffusion direction (roadmap):** Granular synthesis via probabilistic grain scattering, spectral diffusion, stochastic resonance, generative composition. The chaos math already in `@score/math` (Lorenz, logistic map, OUProcess) is the foundation — this capability is planned, not immediate.
+
 ## Quick Reference
 
 - **Runtime:** Node 20 LTS minimum. Song files run as plain ESM, never compiled.
@@ -55,7 +65,7 @@ export default Song({ bpm: 140, tracks: [kick, bass] })
 2. Web Audio API is **never exposed** to song authors — fully abstracted
 3. **ScoreError** is the only error factory — never throw raw `Error`
 4. Tests and error handling **ship with the component** — never backfilled
-5. **No AI** generates music, patterns, or voices — ever
+5. **No AI** generates music, patterns, or full songs — ever. AI may generate **base instrument descriptors** (single timbre, single note, no patterns, no arrangements) as starting points for human live coding.
 6. **No audio files bundled** — `samples/` is gitignored except `.gitkeep` and `README.md`
 7. GUI is built **last** (Phase 13)
 8. Every component implements the `AudioComponent` interface (as a plain object shape, not a class)

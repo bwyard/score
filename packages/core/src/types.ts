@@ -23,6 +23,15 @@ export type GraphNode = {
   readonly connections: ReadonlyArray<string>
 }
 
+// EffectDescriptor — pure data description of an effect, no AudioContext required.
+// The engine hydrates these into AudioComponent instances at play time.
+// Song files import descriptor factories (Delay, Reverb, etc.) from @score/effects.
+export type EffectDescriptor = {
+  readonly _type: 'EffectDescriptor'
+  readonly effectType: string
+  readonly props: Record<string, unknown>
+}
+
 // AudioGraph — return type of createAudioGraph
 export type AudioGraph = {
   readonly context: BackendContext

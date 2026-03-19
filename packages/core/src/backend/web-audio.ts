@@ -124,6 +124,13 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
         _connectTo: (destination: unknown) => {
           osc.connect(destination as WebAudioNode)
         },
+        frequencyParam: {
+          connectModulator: (source: BackendNode) => {
+            const s = source as unknown as { _connectTo?: (dest: unknown) => void }
+            if (s._connectTo) s._connectTo(osc.frequency)
+          },
+          disconnectModulator: () => {},
+        },
         start: (time?: number) => { osc.start(time ?? ctx.currentTime) },
         stop: (time?: number) => { osc.stop(time ?? ctx.currentTime) },
         setFrequency: (value: number, time?: number) => {

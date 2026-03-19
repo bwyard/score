@@ -76,7 +76,7 @@ export const play = async (args: string[]): Promise<void> => {
   const song = await loadSong(resolved, 0, trust)
   logSong(song)
 
-  let currentEngine: ScoreEngine = createScoreEngine(song)
+  let currentEngine: ScoreEngine = await createScoreEngine(song)
   currentEngine.start()
   console.log(`Score: Audio running — Press Ctrl+C to stop${watch ? ' (watch mode on)' : ''}`)
 
@@ -103,7 +103,7 @@ export const play = async (args: string[]): Promise<void> => {
             console.log('\nScore: File changed — reloading...')
             currentEngine.dispose()
             const freshSong = await loadSong(resolved, reloadVersion++, trust)
-            currentEngine = createScoreEngine(freshSong)
+            currentEngine = await createScoreEngine(freshSong)
             currentEngine.start()
             console.log(`Score: Reloaded — ${String(freshSong.bpm)} BPM`)
           } catch (err: unknown) {
