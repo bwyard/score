@@ -211,3 +211,94 @@ const lead = Synth({
   sequence: Sequence('A2 . D3 . F3 . E3 .'),
 })
 ```
+
+---
+
+## Sample
+
+Plays an audio file. Pattern and volume work the same as other instruments.
+
+```js
+import { Sample } from '@score/dsl'
+
+const rim = Sample({
+  path: './samples/rimshot.wav',
+  pattern: [0, 0, 1, 0,  0, 0, 1, 0,  0, 0, 1, 0,  0, 0, 1, 0],
+  volume: 0.8,
+  rate: 1.0,
+})
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `path` | `string` | **required** | Relative path to the audio file from the song file's location. Supports `.wav`, `.mp3`, `.ogg`. |
+| `pattern` | `number[]` or `(step, bar) => number` | one hit per beat | 16-step rhythm. `1` = play, `0` = rest. |
+| `volume` | `number` | `0.8` | Output level 0–1. |
+| `rate` | `number` | `1.0` | Playback rate and pitch. `1.0` = original. `2.0` = octave up. `0.5` = octave down. `2 ** (semitones / 12)` for precise tuning. |
+| `loop` | `boolean` | `false` | Loop the sample continuously. |
+| `effects` | `EffectDescriptor[]` | `[]` | Effects chain — import descriptors from `@score/effects`. |
+
+All props except `path` are optional.
+
+### Path conventions
+
+Paths resolve relative to the song file. The `samples/` directory next to your song file is the convention:
+
+```
+my-project/
+  my-song.js
+  samples/
+    kick.wav
+    snare.wav
+    rimshot.wav
+```
+
+The `samples/` directory is gitignored — each user brings their own files. See [SAMPLE.md](SAMPLE.md) for full details.
+
+### Pitch shifting
+
+`rate` shifts pitch proportionally. `2 ** (semitones / 12)` converts semitone offsets to rates:
+
+| Rate | Pitch |
+|---|---|
+| `0.5` | 1 octave down |
+| `1.0` | Original |
+| `2.0` | 1 octave up |
+| `2 ** (7/12)` | Perfect fifth up (~1.498) |
+
+### Examples
+
+**Rim on the offbeat:**
+```js
+const rim = Sample({
+  path: './samples/rim.wav',
+  pattern: [0, 0, 1, 0,  0, 0, 1, 0,  0, 0, 1, 0,  0, 0, 1, 0],
+  volume: 0.5,
+})
+```
+
+**Looped vinyl crackle texture:**
+```js
+import { Sample } from '@score/dsl'
+
+const crackle = Sample({
+  path: './samples/vinyl-crackle.wav',
+  pattern: [1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0],
+  volume: 0.12,
+  loop: true,
+})
+```
+
+**Tuned bass sample — root at A2, shifted to D3 (+5 semitones):**
+```js
+const bass = Sample({
+  path: './samples/bass-a2.wav',
+  rate: 2 ** (5 / 12),
+  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
+  volume: 0.85,
+})
+```
+
+See [SAMPLE.md](SAMPLE.md) for the full Sample reference including file formats, the `sounds/` directory convention, and melodic sequencing examples.

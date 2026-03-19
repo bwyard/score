@@ -130,3 +130,102 @@ Save the file. Score reloads within ~300ms. If the reload fails, the previous ve
 - [LIVE_CODING.md](LIVE_CODING.md) — hot reload workflow
 - [MATH.md](MATH.md) — chaos, stochastic, and sequence math
 - [SONG_FORMAT.md](SONG_FORMAT.md) — Song() props and security model
+
+---
+
+## What's available in song files
+
+Every importable symbol across all packages.
+
+| Import | From | What it does |
+|---|---|---|
+| `Song` | `@score/dsl` | Song container — wraps tracks, bpm, key, arrangement |
+| `Kick` | `@score/dsl` | Synthesized bass drum |
+| `Snare` | `@score/dsl` | Synthesized snare drum |
+| `HiHat` | `@score/dsl` | Synthesized hi-hat (closed and open) |
+| `Synth` | `@score/dsl` | Subtractive synth with ADSR, filter, and effects |
+| `Sample` | `@score/dsl` | Audio file player with rate and pattern control |
+| `Sequence` | `@score/dsl` | Parses space-separated note name strings into arrays |
+| `Intro` | `@score/dsl` | Arrangement section — opening bars |
+| `Buildup` | `@score/dsl` | Arrangement section — tension before drop |
+| `Drop` | `@score/dsl` | Arrangement section — full energy section |
+| `Breakdown` | `@score/dsl` | Arrangement section — stripped-back section |
+| `Outro` | `@score/dsl` | Arrangement section — closing bars |
+| `describe` | `@score/musical` | Attaches plain language hints to instruments |
+| `euclidean` | `@score/pattern` | Generates euclidean (Bjorklund) rhythm patterns |
+| `fast` | `@score/pattern` | Doubles pattern speed |
+| `slow` | `@score/pattern` | Halves pattern speed |
+| `rev` | `@score/pattern` | Reverses a pattern |
+| `shift` | `@score/pattern` | Rotates a pattern left or right by N steps |
+| `degrade` | `@score/pattern` | Randomly drops hits by a given probability |
+| `every` | `@score/pattern` | Applies a transform every N bars |
+| `stack` | `@score/pattern` | Combines two patterns by OR (either hit plays) |
+| `beat` | `@score/pattern` | Builds a pattern from beat positions |
+| `scaleNotes` | `@score/pattern` | Returns note name array for a scale and root |
+| `chordNotes` | `@score/pattern` | Returns note name array for a chord symbol |
+| `Delay` | `@score/effects` | Repeating echo effect |
+| `Reverb` | `@score/effects` | Room/hall simulation |
+| `Filter` | `@score/effects` | Biquad filter (lowpass, highpass, bandpass, notch) |
+| `Distortion` | `@score/effects` | Waveshaping — soft, hard, or foldback |
+| `EQ` | `@score/effects` | Three-band equalizer (low shelf, mid peak, high shelf) |
+| `Compressor` | `@score/effects` | Dynamic range compression |
+| `Limiter` | `@score/effects` | Brick-wall output limiter |
+| `BitCrusher` | `@score/effects` | Bit depth and sample rate reduction |
+| `Chorus` | `@score/effects` | LFO-modulated pitch doubling |
+| `Phaser` | `@score/effects` | Allpass filter sweep |
+| `Flanger` | `@score/effects` | Short modulated delay with feedback |
+| `StereoWidener` | `@score/effects` | Mid-side stereo width control |
+| `Gate` | `@score/effects` | Noise gate — silences signal below threshold |
+| `fibonacci` | `@score/math` | Returns Fibonacci sequence values |
+| `fibonacciRhythm` | `@score/math` | Builds a rhythm from Fibonacci intervals |
+| `padovan` | `@score/math` | Padovan sequence generator |
+| `tribonacci` | `@score/math` | Tribonacci sequence generator |
+| `entropy` | `@score/math` | Measures information entropy of a pattern |
+| `isMusical` | `@score/math` | Tests whether a pattern has musical properties |
+| `density` | `@score/math` | Returns hit density of a pattern (0–1) |
+| `patternOr` | `@score/math` | Boolean OR of two patterns |
+| `patternAnd` | `@score/math` | Boolean AND of two patterns |
+| `patternXor` | `@score/math` | Boolean XOR of two patterns |
+| `patternNot` | `@score/math` | Boolean NOT of a pattern |
+| `tile` | `@score/math` | Repeats a pattern to fill a target length |
+| `polyrhythm` | `@score/math` | Combines patterns of different lengths into one |
+| `range` | `@score/math` | Generates an array of evenly spaced values |
+| `normalize` | `@score/math` | Scales values to 0–1 range |
+| `clip` | `@score/math` | Clamps values to a min/max range |
+| `smooth` | `@score/math` | Applies moving average smoothing |
+| `quantize` | `@score/math` | Snaps values to a grid |
+| `interp` | `@score/math` | Linear interpolation between two values |
+| `drunk` | `@score/math` | Random walk generator |
+| `markov` | `@score/math` | Markov chain sequence generator |
+| `createOUProcess` | `@score/math` | Ornstein-Uhlenbeck stochastic process |
+| `circleOfFifths` | `@score/math` | Returns note name at position N on circle of fifths |
+| `just` | `@score/math` | Just intonation frequency from note name |
+| `pythagorean` | `@score/math` | Pythagorean tuning frequency from note name |
+| `meantone` | `@score/math` | Quarter-comma meantone frequency |
+| `edo19` | `@score/math` | 19-TET frequency |
+| `edo31` | `@score/math` | 31-TET frequency |
+| `createLorenz` | `@score/math` | Lorenz attractor generator |
+| `logisticMap` | `@score/math` | Logistic map chaos function |
+| `logisticSequence` | `@score/math` | Sequence from iterated logistic map |
+| `lyapunovExponent` | `@score/math` | Measures chaos intensity of a sequence |
+| `lsystem` | `@score/math` | L-system string rewriting |
+| `lsystemToPattern` | `@score/math` | Converts L-system output to a step pattern |
+| `wolframCA` | `@score/math` | Wolfram elementary cellular automaton |
+| `rk4` | `@score/math` | Runge-Kutta 4th order ODE integrator |
+
+---
+
+## Further reading
+
+| File | Contents |
+|---|---|
+| [INSTRUMENTS.md](INSTRUMENTS.md) | Kick, Snare, HiHat, Synth, Sample — full props and examples |
+| [EFFECTS.md](EFFECTS.md) | All 14 effects — props, examples, and chain recipes |
+| [SCALES.md](SCALES.md) | scaleNotes, chordNotes, tuning systems, circleOfFifths |
+| [ARRANGEMENT.md](ARRANGEMENT.md) | Intro/Buildup/Drop/Breakdown/Outro — section-based arrangement |
+| [SAMPLE.md](SAMPLE.md) | Sample instrument — file formats, paths, rate, looping |
+| [PATTERNS.md](PATTERNS.md) | euclidean, transforms, pattern combinators |
+| [MATH.md](MATH.md) | Chaos, stochastic, sequence, and generative math |
+| [SONG_FORMAT.md](SONG_FORMAT.md) | Song() props, security model, key/bpm reference |
+| [EXAMPLES.md](EXAMPLES.md) | 8 complete runnable songs |
+| [LIVE_CODING.md](LIVE_CODING.md) | Hot reload workflow and live coding techniques |
