@@ -1,0 +1,30 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "packages/core/src/index.ts",
+    "packages/pattern/src/index.ts",
+    "packages/math/src/index.ts",
+    "packages/effects/src/index.ts",
+    "packages/mixer/src/index.ts",
+    "packages/sequencer/src/index.ts",
+    "packages/dsl/src/index.ts",
+    "packages/components/src/index.ts",
+    "packages/modulation/src/index.ts",
+    "packages/musical/src/index.ts"
+  ],
+  "entryPointStrategy": "packages",
+  "out": "docs/api",
+  "name": "Score Music API",
+  "includeVersion": true,
+  "readme": "docs/GETTING_STARTED.md",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "categorizeByGroup": true,
+  "sort": ["source-order"],
+  "plugin": [],
+  "navigationLinks": {
+    "Docs": "https://score.dev/docs",
+    "GitHub": "https://github.com/bwyard/score"
+  }
+}

@@ -13,7 +13,25 @@ export type BackendNode = {
   readonly disconnect: (dest?: BackendNode) => void
 }
 
+/**
+ * A modulatable audio parameter — wraps a Web Audio API AudioParam.
+ * Allows LFO and other modulation sources to connect directly to parameter values.
+ *
+ * @example
+ * ```ts
+ * const lfo = createLFO(context, { rate: 0.5, shape: 'sine', depth: 200 })
+ * const filter = context.createFilter({ type: 'lowpass', frequency: 1000 })
+ * lfo.connect(filter.frequencyParam)  // modulates 1000±200Hz
+ * ```
+ */
+export type BackendAudioParam = {
+  readonly connectModulator: (source: BackendNode) => void
+  readonly disconnectModulator: () => void
+}
+
 export type BackendOscillatorNode = BackendNode & {
+  /** @internal For modulation routing — connects the native oscillator to an AudioParam destination. */
+  readonly _connectTo: (destination: unknown) => void
   readonly start: (time?: number) => void
   readonly stop: (time?: number) => void
   readonly setFrequency: (value: number, time?: number) => void
@@ -21,6 +39,7 @@ export type BackendOscillatorNode = BackendNode & {
 }
 
 export type BackendGainNode = BackendNode & {
+  readonly gainParam: BackendAudioParam
   readonly gain: number
   readonly setGain: (value: number, time?: number) => void
   // ADSR envelope — schedules attack→decay→sustain→release without anchor conflicts
@@ -60,6 +79,7 @@ export type BackendBufferSourceNode = BackendNode & {
 export type FilterType = 'lowpass' | 'highpass' | 'bandpass' | 'notch' | 'allpass' | 'peaking' | 'lowshelf' | 'highshelf'
 
 export type BackendFilterNode = BackendNode & {
+  readonly frequencyParam: BackendAudioParam
   readonly setFrequency: (value: number, time?: number) => void
   readonly setQ: (value: number, time?: number) => void
   readonly setFilterGain: (value: number, time?: number) => void

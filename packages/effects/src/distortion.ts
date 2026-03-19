@@ -4,11 +4,27 @@
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
 import { uid } from '@score/core'
 
+/**
+ * Distortion algorithm character.
+ *
+ * - `'soft'` — smooth, rounded clipping — tube amplifier warmth
+ * - `'hard'` — abrupt hard clipping — solid-state grit
+ * - `'foldback'` — signal folds back on itself — harsh, aliased industrial character
+ */
 export type DistortionMode = 'soft' | 'hard' | 'foldback'
 
+/**
+ * Configuration props for {@link createDistortion}.
+ *
+ * Wave-shaping distortion adds harmonic content via nonlinear transfer curves.
+ * Low amounts add warmth; high amounts go from crunch to full saturation.
+ */
 export type DistortionProps = {
+  /** Distortion amount `0–1`. `0` = clean, `1` = maximum harmonic content. Default `0.5`. */
   readonly amount?: number
+  /** Distortion character — soft tube warmth, hard clip grit, or foldback chaos. Default `'soft'`. */
   readonly mode?: DistortionMode
+  /** Wet/dry mix `0–1`. Default `0.5`. */
   readonly mix?: number
 }
 
@@ -55,6 +71,31 @@ const curveGenerators: Readonly<Record<DistortionMode, (amount: number) => Float
   foldback: makeFoldbackCurve,
 }
 
+/**
+ * Create a wave-shaping distortion effect for grit, crunch, and harmonic saturation.
+ * Choose `'soft'` for tube-style warmth on synths and vocals,
+ * `'hard'` for aggressive guitar-amp crunch,
+ * or `'foldback'` for industrial mayhem.
+ *
+ * @param context - Backend audio context from the Score engine.
+ * @param props - Distortion configuration.
+ * @returns AudioComponent with `setAmount` and `setMix` setters.
+ *
+ * @example
+ * ```ts
+ * // Soft saturation on a bass synth for analogue warmth
+ * const warmth = createDistortion(context, { amount: 0.2, mode: 'soft', mix: 0.3 })
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Hard clip industrial lead at full drive
+ * const crunch = createDistortion(context, { amount: 0.9, mode: 'hard', mix: 0.8 })
+ * ```
+ *
+ * @see {@link createSaturation} — for tanh-based soft saturation with simpler controls
+ * @see {@link createBitCrusher} — for lo-fi digital distortion
+ */
 export const createDistortion = (
   context: ScoreAudioContext,
   props?: DistortionProps,
@@ -84,11 +125,26 @@ export const createDistortion = (
   } = {
     id: uid('distortion'),
     type: 'distortion' as const,
+
+    /**
+     * Set the distortion amount and optionally switch the mode.
+     * Regenerates the transfer curve immediately.
+     *
+     * @param value - Distortion amount `0–1`.
+     * @param mode - Optional new mode (`'soft'`, `'hard'`, `'foldback'`). Defaults to the initially configured mode.
+     */
     setAmount: (value: number, newMode?: DistortionMode) => {
       const clamped = Math.max(0, Math.min(value, 1.0))
       const m = newMode ?? mode
       shaper.setCurve(curveGenerators[m](clamped))
     },
+
+    /**
+     * Set the wet/dry mix. `0` = dry, `1` = fully distorted.
+     *
+     * @param value - Mix ratio `0–1`.
+     * @param time - Optional schedule time in seconds.
+     */
     setMix: (value: number, time?: number) => {
       const clamped = Math.max(0, Math.min(value, 1.0))
       dryGain.setGain(1.0 - clamped, time)

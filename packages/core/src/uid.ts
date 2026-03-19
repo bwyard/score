@@ -1,9 +1,15 @@
-// Unique ID generator for AudioComponent instances
-// Pattern: `${type}-${counter}` where counter increments globally
+import { randomUUID } from 'node:crypto'
 
-let counter = 0
-
-export const uid = (type: string): string => `${type}-${String(++counter)}`
-
-// Reset counter (for testing only)
-export const resetUidCounter = (): void => { counter = 0 }
+/**
+ * Generate a unique ID for an AudioComponent instance.
+ *
+ * @param type - Component type prefix (e.g. `'kick'`, `'delay'`, `'channel'`).
+ * @returns A unique string of the form `"type-<uuid>"`.
+ *
+ * @example
+ * ```ts
+ * uid('kick')    // → 'kick-a1b2c3d4-e5f6-...'
+ * uid('delay')   // → 'delay-9f8e7d6c-...'
+ * ```
+ */
+export const uid = (type: string): string => `${type}-${randomUUID()}`

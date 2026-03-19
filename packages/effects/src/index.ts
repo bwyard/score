@@ -43,3 +43,12 @@ export { createBitCrusher } from './bitcrusher.js'
 export type { BitCrusherProps } from './bitcrusher.js'
 
 export { createEffectsChain } from './chain.js'
+
+export { createMultibandCompressor } from './multiband-compressor.js'
+export type { MultibandCompressorProps, MultibandCompressorBandLow, MultibandCompressorBandMid, MultibandCompressorBandHigh } from './multiband-compressor.js'
+
+export { createSaturation } from './saturation.js'
+export type { SaturationProps } from './saturation.js'
+
+export { createAutoPan } from './autopan.js'
+export type { AutoPanProps, AutoPanShape } from './autopan.js'

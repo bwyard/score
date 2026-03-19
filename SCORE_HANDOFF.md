@@ -102,24 +102,75 @@ Phase 6    ✅  Effects — all 14 effects complete
                ✅ Phaser, Flanger, Stereo Widener, Noise Gate
 Phase 6b   ✅  Effects chain utility (createEffectsChain) + BackendWaveShaperNode + BackendStereoPannerNode
 Phase 7    ✅  Mixer — Channel, Return, master bus, hard limiter, solo logic
-Phase 7b   ⬜  Mastering chain — Multiband Compressor, Saturation/Tape, Auto-Pan
+Phase 7b   ✅  Mastering chain — Multiband Compressor, Saturation/Tape, Auto-Pan
+               ✅ createMultibandCompressor — 3-band crossover with per-band threshold/ratio/makeup
+               ✅ createSaturation — tanh soft-clip via WaveShaperNode, drive 0-1
+               ✅ createAutoPan — sine/triangle LFO pan automation via StereoPannerNode
+               ✅ TSDoc added to all 16 existing effects
 Phase 8    ✅  Sequencer + Transport + TempoMap + Swing/Groove
-Phase 8b   ⬜  Core primitives — ADSR Envelope, LFO modulation source
-Phase 9    ⬜  Song format + Automation system + Pattern reuse + Arpeggiator
-Phase 9b   ⬜  @score/math — mathematical music toolkit [ships in v1.0 — advanced feature]
-Phase 9c   ⬜  @score/pattern — functional Pattern<T> model, Strudel migration path [ships in v1.0 — advanced feature]
-Phase 9d   ⬜  @score/musical — plain language DSL (describe() function)
-Phase 9e   ⬜  Song file security — AST validator + module resolver + Zod export validation
-Phase 10   ⬜  CLI — all commands + stem export + freeze/bounce
+Phase 9    ⚠️  Song format + Automation system + Pattern reuse + Arpeggiator
+               ✅ Song/Track/Section DSL complete (Song, Kick, Snare, HiHat, Synth, Sequence)
+               ✅ Note names: 'A2', 'F#3', 'Bb4' — noteHz() + resolveFreq() in @score/dsl
+               ✅ ADSR envelope + filter props on SynthDSLProps + scheduleEnvelope() on BackendGainNode
+               ✅ ScoreEngine: hydrates descriptors, schedules audio, master gain node
+               ⬜ Arpeggiator (Arp() DSL component)
+               ⬜ Arrangement execution (sections mute/unmute tracks at section boundaries)
+               ⬜ drift(pattern, rate) — gradual OU-process pattern evolution
+               ⬜ keepFor(bars, pattern) — lock pattern for N bars during live reload
+Phase 9a   ✅  Core modulation primitives — @score/modulation (46 tests)
+               ✅ createADSR — standalone envelope, delegates to BackendGainNode.scheduleEnvelope
+               ✅ createLFO — connects oscillator to BackendAudioParam (frequencyParam/gainParam)
+               ✅ ramp, sine, cosine — pure step-function value sources
+               ✅ BackendAudioParam type + frequencyParam/gainParam on BackendFilterNode/GainNode
+               ✅ BackendOscillatorNode._connectTo — routes osc → AudioParam
+               ⬜ automation() — connect modulator to component parameter by name
+Phase 9b   ✅  @score/math — complete (158 tests)
+               ✅ fibonacci, padovan, tribonacci, entropy, polyrhythm, boolean ops
+               ✅ transforms: range, normalize, clip, smooth, quantize, interp
+               ✅ stochastic: drunk, markov (seeded LCG PRNG)
+               ✅ harmony: circleOfFifths, just, pythagorean, meantone, edo19, edo31
+Phase 9c   ✅  @score/pattern — complete (45 tests)
+               ✅ euclidean, fast, slow, rev, every, degrade, shift, scaleNotes, chordNotes
+               ✅ 80+ scale library in scales.ts (major, minor, modes, pentatonic, blues)
+               ✅ stack(...patterns) — poly-rhythm combinator, returns first non-zero per step
+               ✅ beat(...steps) — shorthand array literal helper
+               ⬜ humanize(amount, pattern) — Gaussian timing + velocity variation (Track-level prop)
+Phase 9d   ✅  @score/musical — describe() natural language → InstrumentDescriptor (37 tests)
+               ✅ Vocabulary-based tokenizer (not AI): SOUND/PATTERN/SPACE/VOLUME tables
+               ✅ buildDescriptor, extractTokens, normalizeText helpers
+Phase 9e   ✅  Song file security — AST validator (acorn) + Zod export validator + --trust flag (12 tests)
+Phase 9f   ✅  Extended math — chaos/stochastic/tuning in @score/math (see Phase 9b above)
+               ✅ Lorenz attractor (RK4 ODE)
+               ✅ Logistic map + logisticSequence()
+               ✅ Lyapunov exponent estimator
+               ✅ L-system string rewriting + lsystemToPattern()
+               ✅ Wolfram elementary CA (rule 0–255)
+               ✅ RK4 generic ODE integrator
+               ✅ OUProcess (Ornstein-Uhlenbeck mean-reverting process)
+Phase 10   ⚠️  CLI — core commands done, stem export + freeze/bounce remaining
+               ✅ score play <file> — plays song via ScoreEngine
+               ✅ score play --watch — live reload on file save (300ms debounce)
+               ✅ score play --trust — skip AST validation
+               ✅ score doctor — system health checks (Node, pnpm, audio backend)
+               ✅ score new song <name> — template generator with note name syntax
+               ✅ --version / -v flag
+               ⬜ score export — WAV/stem render
+               ⬜ score list — song inspection/info
 Phase 10b  ⬜  score-audio MCP — effect catalog, signal flow, backend nodes, component catalog
 Phase 10b2 ⬜  score-game-tools MCP — song inspector, mixer state, transport state, audio graph
 Phase 10c  ⬜  Decode — audio analysis + format import (Rekordbox, Serato, FL Studio, MIDI)
-Phase 11   ⬜  Hot reload + live coding (3 levels)
+Phase 11   ⚠️  Hot reload + live coding (3 levels)
+               ✅ Level 1: --watch file watcher with ESM cache busting
+               ⬜ Level 2: patch() — surgical live parameter updates without full reload
+               ⬜ Level 3: update(props) — live prop changes fed to running engine
+               ⬜ bars variable — loop counter in song file live coding context
+               ⬜ cursor.x / cursor.y — mouse position as automation source (Phase 13 GUI)
 Phase 11b  ⬜  Live coding visualization — punchcard, piano roll, scope, pattern graph, waveform
 Phase 12   ⬜  MIDI bridge + XDJ profiles + hardware mixer modes
 Phase 12b  ⬜  Jam session — @score/session
 Phase 12c  ⬜  SuperCollider backend — fully embedded
 Phase 12d  ⬜  Advanced synthesis — FM, wavetable, physical modeling, granular, full warping
+Phase 12i  ⬜  Probabilistic / diffusion generation — granular grain scattering, spectral diffusion, stochastic resonance, generative composition via PRIME samplers (builds on Lorenz/logistic/OUProcess already in @score/math)
 Phase 12e  ⬜  DJ mode — Set format + deck management
 Phase 12f  ⬜  LiveSet mode — clip launching
 Phase 12g  ⬜  Advanced effects — Convolution reverb, Envelope follower, Ring modulator
@@ -387,26 +438,28 @@ score/
 │   │       ├── compressor.ts         ← ✅ createCompressor() — DynamicsCompressorNode
 │   │       ├── eq.ts                 ← ✅ createEQ() — 3-band (lowshelf/peaking/highshelf)
 │   │       ├── sidechain.ts          ← ✅ createSidechain() — source is BackendNode (mixer resolves)
-│   │       ├── distortion.ts         ← ⬜ PLANNED — WaveShaperNode transfer curve
-│   │       ├── bitcrusher.ts         ← ⬜ PLANNED — sample rate + bit depth reduction
-│   │       ├── chorus.ts             ← ⬜ PLANNED — modulated delay voices
-│   │       ├── limiter.ts            ← ⬜ PLANNED — brick-wall hard limiter (WaveShaperNode)
-│   │       ├── phaser.ts             ← ⬜ PLANNED — allpass filter chain with LFO
-│   │       ├── flanger.ts            ← ⬜ PLANNED — short modulated delay + feedback
-│   │       ├── stereo-widener.ts     ← ⬜ PLANNED — mid/side processing
-│   │       ├── gate.ts               ← ⬜ PLANNED — noise gate (threshold-based)
+│   │       ├── distortion.ts         ← ✅ COMPLETE — WaveShaperNode transfer curve
+│   │       ├── bitcrusher.ts         ← ✅ COMPLETE — sample rate + bit depth reduction
+│   │       ├── chorus.ts             ← ✅ COMPLETE — modulated delay voices
+│   │       ├── limiter.ts            ← ✅ COMPLETE — brick-wall hard limiter (WaveShaperNode)
+│   │       ├── phaser.ts             ← ✅ COMPLETE — allpass filter chain with LFO
+│   │       ├── flanger.ts            ← ✅ COMPLETE — short modulated delay + feedback
+│   │       ├── stereo-widener.ts     ← ✅ COMPLETE — mid/side processing
+│   │       ├── gate.ts               ← ✅ COMPLETE — noise gate (threshold-based)
 │   │       └── index.ts
 │   │
-│   ├── dsl/             @score/dsl — STUB (Phase 8-9)
-│   ├── sequencer/       @score/sequencer — STUB (Phase 8)
-│   ├── mixer/           @score/mixer — STUB (Phase 7)
+│   ├── dsl/             @score/dsl — ✅ COMPLETE (Song, Kick, Snare, HiHat, Synth, Sequence, sections, note names)
+│   ├── sequencer/       @score/sequencer — ✅ COMPLETE (createClock, createTransport, createStepSequencer, createTempoMap)
+│   ├── mixer/           @score/mixer — ✅ COMPLETE (createChannel, createReturn, createGroup, createMixer)
+│   ├── pattern/         @score/pattern — ✅ COMPLETE (euclidean, fast/slow/rev/every/degrade/shift, scaleNotes, chordNotes)
+│   ├── math/            @score/math — ✅ COMPLETE (fibonacci, entropy, polyrhythm, boolean ops)
+│   ├── cli/             @score/cli — ✅ COMPLETE (play, --watch, --trust, doctor, new song, --version, AST+Zod validators)
 │   ├── mcp/             @score/mcp — STUB (Phase 1b/10b/15b)
-│   ├── cli/             @score/cli — NOT CREATED (Phase 10)
-│   ├── midi/            @score/midi — NOT CREATED (Phase 12)
+│   ├── midi/            @score/midi — STUB (Phase 12)
+│   ├── gui/             @score/gui — STUB (Phase 13)
 │   ├── session/         @score/session — NOT CREATED (Phase 12b)
 │   ├── decode/          @score/decode — NOT CREATED (Phase 10c)
-│   ├── math/            @score/math — NOT CREATED (Phase 9b)
-│   └── gui/             @score/gui — NOT CREATED (Phase 13)
+│   └── musical/         @score/musical — NOT CREATED (Phase 9d)
 ```
 
 ### Planned packages (not yet created)
@@ -739,383 +792,102 @@ Mixer: create/remove channels, master volume, master EQ,
 
 ---
 
-## 9. Mathematical Framework (@score/math — Phase 9b)
+## 9b. Mathematical Framework (@score/math — Phase 9b)
 
-Score's mathematical depth is a primary differentiator. Built with
-formal mathematical correctness — not approximations.
+Score's mathematical depth is a primary differentiator.
+Areas: discrete mathematics (Euclidean, polyrhythm, boolean algebra),
+chaos theory (Lorenz, logistic map, Lyapunov), recurrence relations
+(Fibonacci, Padovan, L-systems, Wolfram automata), calculus applied
+(ADSR as ODE, OUProcess, RK4 integrator), information theory (Shannon entropy).
 
-### Key Areas
-
-**Discrete Mathematics:**
-Euclidean rhythms (Bjorklund), polyrhythm via LCM, set operations on
-patterns (union/intersection/complement), boolean pattern algebra
-(AND/OR/XOR/NOT), modular arithmetic via CRT, graph routing optimization.
-
-**Chaos Theory:**
-Lorenz attractor (RK4 ODE integration), logistic map bifurcation,
-Lyapunov exponent for measuring and controlling chaos level.
-These generate aperiodic but bounded musical structures — never random,
-never repeating, always coherent.
-
-**Recurrence Relations:**
-Fibonacci, Padovan, Tribonacci rhythms. L-system rewriting for
-self-similar patterns. Wolfram cellular automata as rhythm generators.
-
-**Calculus Applied:**
-Continuous ADSR as ODE — not linear approximation.
-Biquad filter as second-order ODE — H(s) = ω₀²/(s²+(ω₀/Q)s+ω₀²).
-Ornstein-Uhlenbeck process for mean-reverting automation.
-Generic RK4 integrator for any differential system.
-
-**Information Theory:**
-Shannon entropy of rhythmic patterns.
-Most musical patterns have entropy 0.6-0.95.
-Use to validate generated patterns before committing.
+**Full design spec:** `docs/spec/MATH_SPEC.md`
 
 ```js
-// Example usage in song files
-import { Euclidean, Lorenz, entropy } from '@score-music/math'
-
-const kick = Kick({ pattern: Euclidean(3, 8) })  // [1,0,0,1,0,0,1,0]
-
-const attractor = Lorenz({ sigma: 10, rho: 28, beta: 8/3 })
-const lead = Synth({
-  sequence: attractor.toSequence({ scale: 'Am', length: 16 })
-})
+import { euclidean, entropy, fibonacci } from '@score/math'
+const kick = Kick({ pattern: euclidean(3, 8) })   // [1,0,0,1,0,0,1,0]
 ```
 
 ## 9c. Functional Pattern System (@score/pattern — Phase 9c)
 
-### Design goal — TidalCycles power, readable as music
+TidalCycles power with musician-readable syntax. Arrays always work.
+Pattern transforms: `fast`, `slow`, `rev`, `shift`, `degrade`, `every`.
+To add: `stack()`, `beat()`, `humanize()`, `mini()` bridge.
+`PatternInput<T>` = `T[] | (step, bar) => T` — both formats permanent.
 
-Score's pattern system is inspired by TidalCycles but prioritises
-human readability over terseness. A Score pattern should sound like
-it reads. A musician with no coding background should be able to
-follow what the code is doing by reading it aloud.
-
-TidalCycles is the academic inspiration — Score is the musician's
-implementation.
+**Full design spec:** `docs/spec/PATTERN_SPEC.md`
 
 ```ts
-// TidalCycles style (terse, powerful, cryptic to newcomers)
-d1 $ every 4 (fast 2) $ sound "bd sd hh cp"
-
-// Score style (same result — reads like a production note)
-const kick = Kick({ pattern: every(4, fast(2), beat(1,0,1,0)) })
+const kick = Kick({ pattern: every(4, fast(2), [1,0,0,0]) })
+const bass = Synth({ sequence: scaleNotes('Dorian', 'D3', 8) })
 ```
-
-The core type is functions from time arcs to events:
-
-```ts
-type Arc = [Time, Time]
-type Pattern<T> = (arc: Arc) => Event<T>[]
-```
-
-This enables composable transformations that nest freely:
-
-```ts
-fast(2, pat)              // double time — reads: "play this twice as fast"
-slow(2, pat)              // half time — reads: "play this half as fast"
-every(4, fast(2), pat)    // reads: "every 4 bars, play this twice as fast"
-stack(kick, snare, hihat) // reads: "layer kick, snare, and hihat together"
-degrade(0.8, pat)         // reads: "randomly drop 20% of hits"
-rev(pat)                  // reads: "reverse this pattern"
-```
-
-### Backward compatibility — arrays always work
-
-The existing array format `[1,0,0,0]` is supported permanently.
-The functional pattern type is additive, not a replacement.
-
-```ts
-// Both of these always work — arrays never removed
-const kick = Kick({ pattern: [1,0,0,0,1,0,0,0] })
-const kick = Kick({ pattern: every(4, fast(2), beat(1,0,0,0)) })
-```
-
-### PatternInput type union (built into Phase 8)
-
-The sequencer resolves either format before scheduling:
-
-```ts
-type PatternInput<T = number> = T[] | Pattern<T>
-
-const resolvePattern = <T>(input: PatternInput<T>, cycle: number = 0): T[] =>
-  Array.isArray(input)
-    ? input
-    : input([cycle, cycle + 1]).map(e => e.value)
-```
-
-### Score pattern language — code is music, read it as music
-
-Score patterns are designed to look like what they sound like:
-
-```ts
-// Score's native pattern syntax — readable, composable, functional
-const kick   = Kick({ pattern: beat(1, 0, 0, 0) })           // four-on-the-floor
-const snare  = Snare({ pattern: beat(0, 0, 1, 0) })          // backbeat
-const hihat  = HiHat({ pattern: every(16, beat(1, 1, 1, 1)) }) // 16ths
-const bass   = Synth({ pattern: euclidean(3, 8) })            // euclidean rhythm
-
-// Transforms read like music directions
-const buildup = fast(2, kick.pattern)                // double time
-const breakdown = degrade(0.3, hihat.pattern)        // thin out to 30%
-const drop = stack(kick, snare, hihat, bass)         // layer everything
-```
-
-### Strudel/TidalCycles migration path
-
-Score includes a `mini()` adapter for Strudel users migrating existing patterns:
-
-```ts
-// Strudel users can bring their patterns directly
-const pat = mini("bd sd [hh hh] cp")       // Strudel mini-notation → Score Pattern
-const pat = mini("bd(3,8)")                 // euclidean via mini-notation
-
-// But Score's native syntax is preferred — more readable, fully typed
-const pat = euclidean(3, 8)                 // Score native equivalent
-```
-
-Mini-notation is a **migration bridge**, not the primary interface.
-Score patterns are always arrays, functions, or composable transforms.
-
-### Live coding visualization (Phase 11b)
-
-Score provides real-time visual feedback for live coding sessions:
-
-- **Punchcard view** — grid showing active steps per track (like Strudel)
-- **Piano roll** — time-scrolling note display for melodic patterns
-- **Oscilloscope / spectrum** — real-time audio waveform + FFT via AnalyserNode
-- **Pattern graph** — visual DAG of pattern transformations (fast, every, stack, etc.)
-- **Waveform display** — rendered waveform of samples/audio buffers
-
-All visualizations are driven by the pattern system and transport position.
-GUI renders them (Phase 13), but data is available headlessly for terminal/REPL output.
-
-### REPL with live output (Phase 13f)
-
-```
-score> const kick = Kick({ pattern: mini("bd*4") })
-♪ Playing: bd bd bd bd  [120 BPM]
-
-score> kick.pattern = mini("bd ~ bd bd")
-♪ Updated: bd _ bd bd  [120 BPM]
-
-score> viz(kick)
-┌─┬─┬─┬─┬─┬─┬─┬─┐
-│●│ │●│●│●│ │●│●│  ← punchcard
-└─┴─┴─┴─┴─┴─┴─┴─┘
-```
-
-### Impact on existing code — minimal
-- @score/core, @score/effects, @score/mixer — no changes
-- @score/components — type widening only (non-breaking)
-- @score/sequencer — PatternInput type union (one change in Phase 8)
-- Existing song files and tests — no changes ever
 
 ---
 
 ## 9d. Plain Language Layer (@score/musical — Phase 9d)
 
-### Design goal — any musician can write Score on day one
+`describe()` translates plain English into component props via vocabulary lookup.
+No AI. No generation. Only translates decisions the artist has already made.
+Both syntaxes produce identical audio — choice is entirely the artist's.
 
-Score supports two syntaxes that produce identical audio output.
-The choice is entirely the artist's. Both are permanent.
+**Full design spec:** `docs/spec/MUSICAL_SPEC.md`
 
 ```js
-// Developer syntax — explicit component model
-const kick = Kick({
-  pattern:   [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
-  sidechain: true,
-  volume:    0.9,
-})
-
-// Musician syntax — plain language
 const kick = describe('deep kick hits every beat pumps hard loud')
-```
-
-Same audio. Different surface.
-
-### The `describe()` function
-
-`describe()` tokenizes the string and matches phrases to component
-props via a vocabulary system. It builds the component from matched
-vocabulary — no AI, no generation, just a lookup table.
-
-```
-Phrase                        Maps to
-──────────────────────────    ────────────────────────────────────
-"deep kick"                → Kick({ synth: { frequency: 58, pitchDrop: 0.06 } })
-"punchy kick"              → Kick({ synth: { frequency: 80, pitchDrop: 0.03 } })
-"hits every beat"          → pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0]
-"hits on 2 and 4"          → pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]
-"straight eighths"         → pattern: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0]
-"pumps hard"               → sidechain: true, compression: { ratio: 6 }
-"pumps gently"             → sidechain: true, compression: { ratio: 2 }
-"sits far back in reverb"  → reverb: 0.75
-"sits in reverb"           → reverb: 0.45
-"sits in reverb slightly"  → reverb: 0.25
-"loud"                     → volume: 0.85
-"quiet"                    → volume: 0.45
-"gritty"                   → distortion: 0.2
-"warm fm bass"             → FM({ modRatio: 1, modIndex: 3 })
-"soft string pad"          → PhysicalString({ coef: 0.3, decay: 4 })
-"filter wanders slowly"    → filter: { frequency: OUProcess({...}) }
-```
-
-### Arrangement in plain language
-
-```js
-// Musician syntax — reads like a track breakdown note
-const arrangement = song`
-  intro 8 bars
-    just hihat
-
-  drop 32 bars
-    full kit
-    bass and pad
-    kick pumps hard
-
-  breakdown 16 bars
-    strip to sax and pad
-    let it breathe
-`
-```
-
-### What plain language does NOT do
-
-It does not generate musical decisions. It does not choose patterns,
-notes, arrangements, or effects. It only translates descriptions of
-musical decisions the artist has already made into component props.
-All creative decisions are always the artist's.
-
-### The learning path this creates
-
-```
-Week 1  — artist writes: describe('deep kick hits every beat pumps hard')
-          Score Studio shows the code equivalent in the side panel
-          Artist sees: pattern: [1,0,0,0,1,0,0,0]
-
-Week 4  — artist starts writing pattern arrays directly
-
-Week 8  — artist discovers euclidean(3, 8) and @score/pattern
-          starts exploring functional transformations
-          learning through music
-```
-
-### Package structure
-
-```
-@score/musical
-└── src/
-    ├── vocabulary/
-    │   ├── sounds.ts        ← instrument character descriptors
-    │   ├── patterns.ts      ← rhythm plain language
-    │   ├── feel.ts          ← sidechain, humanize, distortion
-    │   ├── space.ts         ← reverb/delay descriptions
-    │   ├── volume.ts        ← loud/quiet/whisper
-    │   └── arrangement.ts   ← intro/drop/breakdown words
-    ├── parser.ts            ← tokenizer + component builder
-    ├── describe.ts          ← describe() exported function
-    └── index.ts
+// identical to: Kick({ pattern: [1,0,...], sidechain: true, volume: 0.9 })
 ```
 
 ---
 
 ## 9e. Song File Security (Phase 9e)
 
-### Why — song files are executable JavaScript
+**Implementation complete ✅** — 12 tests passing.
 
-A malicious song file from an untrusted source could import `fs`,
-spawn processes, or make network requests. The solution is
-language-level restriction before execution, not sandboxing.
+Two-layer enforcement:
 
-### Two-layer enforcement
+**Layer 1 — AST validation** (`SongValidator.ts` via acorn):
+Blocks before execution: `fs`, `child_process`, `net`, `http`, `https`, `os`, `crypto`,
+`worker_threads`, `process.*` access, `eval()`, `new Function()`, dynamic `import()`.
+Clear ScoreError with line number and fix.
 
-**Layer 1 — AST validation before execution (`SongValidator`):**
-Parses the file to an AST and rejects:
-- Blocked module imports (`fs`, `child_process`, `net`, `http`, `https`)
-- `process.*` access
-- `eval()` and `Function()` constructor calls
-- Dynamic `import()` calls
+**Layer 2 — Zod export validation** (`SongExportValidator.ts`):
+After execution, validates exported Song object shape before engine receives it.
 
-Clear ScoreError with line number and exact fix shown to artist.
+`--trust` flag skips Layer 1 only. Developer use only. Always shows warning.
 
-```bash
-$ score play ~/Downloads/sketchy-track.js
+**Full allowed/blocked lists:** `docs/SONG_FORMAT.md`
 
-✖ Score: Song validation failed
+---
 
-  Line 3: Blocked import "fs" — not allowed in Score songs
-  Fix: Remove this import — Score songs only use @score/* packages
+## 9f. Extended Math (Phase 9f) ⬜
 
-  Line 7: "process.exit" is not allowed in Score songs
-  Fix: Score songs do not have access to Node.js process
+Chaos theory, process models, tuning systems.
+**Full spec:** `docs/spec/MATH_SPEC.md`
 
-  2 errors found. Fix these before playing.
+```js
+import { lorenz, logistic, lsystem, ouprocess } from '@score/math'
+const chaos = lorenz({ sigma: 10, rho: 28, beta: 8/3 })
+const lead = Synth({ sequence: chaos.toSequence({ scale: 'Am', length: 16 }) })
 ```
 
-**Layer 2 — Module resolver at runtime (`ScoreModuleResolver`):**
-Intercepts all imports and checks the allowlist. Second line of
-defence after AST validation passes.
+---
 
-**Layer 3 — Zod export validation (`SongExportValidator`):**
-After execution, the exported Song object is Zod-validated before
-the engine receives it. Catches structural problems regardless of
-how they got there.
+## Former section 9d/9e package structure
 
-### Allowed in song files
-
-```
-@score/core, @score/math, @score/pattern, @score/musical
-@score/dsl, @score/components, @score/effects
-Local relative imports (./sounds/my-library.js etc)
-Math, Array, Object, Map, Set, String, Number, JSON, Date
-console.log (debugging only)
-```
-
-### Blocked in song files
-
-```
-fs, fs/promises, child_process, net, http, https
-fetch, WebSocket
-process (no process control)
-eval, Function() (no dynamic execution)
-setTimeout, setInterval (use Score transport)
-require() (use ESM imports)
-Any npm package not in @score/*)
-```
-
-### Mathematical operations are completely unaffected
-
-All @score/math exports (Lorenz, OUProcess, Euclidean, entropy etc)
-are fully available. Restrictions target dangerous system operations
-only. Live input, physical modeling, crowd recording — all work.
-
-### The --trust flag
-
-```bash
-score play --trust my-plugin-test.js
-# Skips validation — always shows warning
-# Developer use only — never for shared files
-```
-
-### New runtime folder in @score/cli
-
-```
-@score/cli/src/runtime/
-├── ScoreModuleResolver.ts   ← import allowlist enforcement
+```ts
+// @score/cli/src/runtime/ (Phase 9e — built)
 ├── SongValidator.ts         ← AST analysis before execution
-├── ScoreGlobals.ts          ← restricted global environment
-└── SongExportValidator.ts   ← Zod schema validation of export
+├── SongExportValidator.ts   ← Zod schema validation of export
+├── ScoreModuleResolver.ts   ← import allowlist (runtime)
+└── ScoreGlobals.ts          ← restricted global environment
+
+// @score/musical/src/ (Phase 9d — to build)
+├── vocabulary/              ← lookup tables per domain
+├── parser.ts                ← tokenizer + component builder
+├── describe.ts              ← describe() exported function
+└── index.ts
 ```
 
-### New dependencies
-
-```
-acorn        — JavaScript AST parser
-acorn-walk   — AST traversal
-```
+---
 
 ---
 
@@ -1222,6 +994,64 @@ Major festivals       → Multiple shows documented, established tool
 - Multi-sample instruments (velocity layers, round-robin)
 - Envelope follower, Ring modulator
 
+### Added from 2026-03-17 planning session
+
+**Phase 9a — core modulation primitives (added 2026-03-18):**
+- `createADSR(attack, decay, sustain, release)` — ADSR as standalone reusable primitive, not tied to any instrument
+- `createLFO(rate, shape, depth)` — connects to any AudioParam by name: `lfo.connect(filter, 'frequency')`
+- `automation(component, param, source)` — wire any modulation source to any component parameter
+- `ramp(from, to, bars)` — linear value source over N bars (automation sweep)
+- `sine(rate, depth)` / `cosine(rate, depth)` — periodic value sources for tremolo, vibrato, filter LFO
+
+**Phase 9 DSL additions (ships before v1.0):**
+- `drift(pattern, rate)` — gradual pattern evolution via OU process from @score/math. `rate: 0` = locked, `rate: 1` = immediate chaos. Used for imperceptible long-set evolution.
+- `keepFor(bars, pattern)` — lock pattern for N bars, prevents hot reload from changing it. Live performance control tool.
+
+**Phase 9c @score/pattern additions (added 2026-03-18):**
+- `stack(...patterns)` — layer multiple patterns into one (polyphony combinator — critical for TidalCycles parity)
+- `beat(...steps)` — shorthand for array literal: `beat(1,0,0,0)` = `[1,0,0,0]` with cleaner DSL look
+- `humanize(amount, pattern)` — Gaussian timing + velocity variation. `amount: 0` = mechanical, `amount: 1` = loose
+
+**Phase 9b @score/math additions:**
+- `circleOfFifths(n)` — returns note at position n: `['C','G','D','A','E','B','F#','C#','G#','D#','A#','F'][n % 12]`
+- Tuning systems in `@score/math/harmony/tuning.ts`: `just()`, `pythagorean()`, `meantone()`, `edo19()`, `edo31()`
+
+**Phase 11 live coding additions:**
+- `bars` — global loop counter in song file live coding context. Starts at 0, increments each bar. Enables conditional pattern logic beyond `every()`.
+- `cursor.x` / `cursor.y` — mouse cursor position as real-time automation source in Score Studio. Maps to backend via `setParam()`. Phase 13 GUI dependency.
+
+**Phase 13 GUI additions:**
+- CPU% monitor (standard in live coding tools)
+- Fragment render — render single component to WAV (`kick.render('./my-kick.wav')` or `score render --fragment kick`)
+
+**Ecosystem position (confirmed 2026-03-17):**
+Score is uniquely positioned — no existing tool combines: component instrument model, full production mixer, pre-composed songs alongside live coding, Git-native format, scsynth backend, XDJ hardware, real-time collaboration, plain language DSL, full DAW GUI, @score/math, testing infrastructure, and festival-grade setup. Closest JS tool is Facet — which has none of these.
+
+**Community decisions (2026-03-17):**
+- Joined TOPLAP Discord (listening only — no announcement until Phase 16/17)
+- Announcement: Phase 16/17 only. When ready: PR to awesome-livecoding → TOPLAP forum → DM to Alex McLean (TidalCycles credit)
+- Coming from TidalCycles page planned for score.dev docs
+- Coming from Strudel page planned for score.dev docs
+
+**Licensing (final, implement at Phase 16 only):**
+- Free with no restrictions: personal use, performance (any venue), streaming, sales, sync, teaching, festivals, research, open source
+- Voluntary support at score.dev/support — never required
+- Contact required only for: building a competing DAW using Score code, embedding Score in a commercial product, white-labeling, or selling Score itself
+- Framework packages: MIT. Score Studio GUI: MIT. @score/dsp (post-v1.0): ELv2.
+- Override keys: free for universities, festival partners, invited artists — issued within 24 hours
+
+**@score/dsp — post-v1.0 (Phase 16b):**
+- AssemblyScript compiled to WebAssembly, runs in AudioWorklets
+- Core algorithms: FFT (Cooley-Tukey), phase vocoder, pitch shifter, ZDF filter, true peak limiter, convolution reverb
+- Target: within 5x of scsynth in browser context (~0.05ms FFT vs scsynth's ~0.01ms)
+- License: ELv2 (not MIT) — free for everything except managed service providers
+
+**Additional libraries to evaluate (not yet added as deps):**
+- `WebMIDI.js` — cleaner browser WebMIDI wrapper for @score/midi (Phase 12)
+- `Soundfont.js` — 128 GM instruments, zero download, good for @score/musical onboarding
+- `Wavesurfer.js` — waveform visualization for Phase 13 GUI
+- Faust, RNBO — post-v1.0 backend considerations
+
 ### Nice to have post-v1.0
 - Audio recording directly into session timeline
 - Ableton Link BPM sync
@@ -1232,12 +1062,89 @@ Major festivals       → Multiple shows documented, established tool
 - MIDI CC automation recording
 - Waveform visualization of clips
 - Waveshaping as first-class synth prop
+- Image → audio spectral conversion (PNG pixel brightness → frequency) — experimental/community
+- 2D MIDI pattern generation from geometric shapes — experimental/community
 
 ### Decisions deferred
 - Audio recording into timeline (complexity — post v1)
 - Ableton Link (may conflict with Score transport — evaluate later)
 - VST support beyond JACK routing
 - `@score` npm scope — taken, using `@score-music` instead
+
+---
+
+## 11b. Competitor Analysis — Critical Gaps vs TidalCycles / Strudel / Facet
+
+*Audit completed 2026-03-18. Score's position vs each tool.*
+
+### TidalCycles (Haskell, 2009)
+The academic gold standard for algorithmic music. Score is the musician-readable implementation.
+
+| TidalCycles feature | Score status | Plan |
+|---------------------|-------------|------|
+| `stack` — layer patterns | **Missing** ⬜ | Phase 9c — `stack(...pats)` |
+| `every N f pat` — conditional transform | **Done** ✅ | `every(N, f, pat)` in @score/pattern |
+| `fast` / `slow` | **Done** ✅ | in @score/pattern |
+| `degrade` — random dropping | **Done** ✅ | in @score/pattern |
+| `rev` — reverse | **Done** ✅ | in @score/pattern |
+| `shift` — phase rotation | **Done** ✅ | in @score/pattern |
+| Mini-notation (e.g. `"bd*2 sd"`) | **Planned** ⬜ | Phase 9c — `mini()` adapter |
+| LFO as modulation source | **Missing** ⬜ | Phase 9a — `createLFO()` |
+| Pattern continuation (cycles/arcs) | Partial — array-based | Phase 9c — `Pattern<T>` arc type |
+| `<pattern>` alternation per cycle | **Not planned** | Post-v1.0 |
+
+### Strudel (JavaScript port of TidalCycles, 2022)
+The closest JavaScript equivalent. Score's `mini()` will serve as a migration bridge.
+
+| Strudel feature | Score status | Plan |
+|----------------|-------------|------|
+| Mini-notation string parsing | **Planned** ⬜ | Phase 9c — migration bridge only |
+| Punchcard visualizer | **Planned** ⬜ | Phase 11b |
+| REPL with live eval | **Planned** ⬜ | Phase 13f |
+| Web Audio backend | **Done** ✅ | @score/core web-audio.ts |
+| Pattern transforms | **Partial** ⚠️ | Missing stack, beat, humanize |
+| Scheduled parameter changes | **Planned** ⬜ | Phase 9a — automation system |
+
+### Facet (JavaScript, 2021 — closest JS production tool)
+Node.js-based, OSC, real-time. Score has far broader scope.
+
+| Facet feature | Score status | Plan |
+|---------------|-------------|------|
+| Array-based patterns | **Done** ✅ | Core pattern type |
+| `interp()` / `scale()` transform | Partial — in @score/math | Phase 9c additions |
+| `chaos()` function | **Missing** ⬜ | Phase 9f — Lorenz + logistic map |
+| `drunk()` random walk | **Missing** ⬜ | Phase 9f — OUProcess-based |
+| `sine()` / `cosine()` as value source | **Missing** ⬜ | Phase 9a |
+| `ramp()` automation | **Missing** ⬜ | Phase 9a |
+| OSC output | **Planned** ⬜ | Phase 12 |
+
+### What Score has that no competitor does
+
+| Score unique feature | Status |
+|---------------------|--------|
+| Full production mixer with festival-grade limiter | ✅ Phase 7 |
+| Git-native song format (ES modules, text diff, PR review) | ✅ By design |
+| Pre-composed song format + live coding in same file | ✅ By design |
+| scsynth professional audio backend | ⬜ Phase 12c |
+| Pioneer XDJ hardware integration | ⬜ Phase 12 |
+| Real-time jam session collaboration | ⬜ Phase 12b |
+| Score Studio full DAW GUI | ⬜ Phase 13 |
+| @score/math (discrete math + chaos + info theory) | ✅ Phase 9b |
+| Plain language DSL (`describe()`) | ⬜ Phase 9d |
+| Song file security (AST + Zod validation) | ✅ Phase 9e |
+| Full test infrastructure + CI enforcement | ✅ All phases |
+| Component model (Kick/Snare/Synth as typed props) | ✅ Phase 5 |
+
+### Critical path — build these before announcing Score
+
+These gaps block Score from being "better than TidalCycles/Strudel for EDM producers":
+
+1. **`stack()`** — Phase 9c — without this, polyphony is clunky
+2. **LFO + automation** — Phase 9a — essential for filter sweeps, tremolo, any movement
+3. **`ramp()` / `sine()` as value sources** — Phase 9a — standard in every live coding tool
+4. **`humanize()`** — Phase 9c — mechanical timing is the #1 complaint about algorithmic music
+5. **Arrangement execution** — Phase 9 remaining — sections must actually change what plays
+6. **Chaos generators** — Phase 9f — differentiator vs all competitors, already in spec
 
 ---
 
@@ -1271,6 +1178,9 @@ Major festivals       → Multiple shows documented, established tool
 26. PatternInput in sequencer accepts both number[] and Pattern<T> — arrays never removed
 27. Pattern<T> type is (arc: Arc) => Event<T>[] — functions from time, not data arrays
 28. @score/pattern and @score/math ship in v1.0 — advanced features, not required for basic songs
+29. Every public export (function, type, interface) gets a TSDoc `/** */` block — standard in `docs/spec/TSDOC_STANDARD.md`
+30. TSDoc format: `@param name — description` (no type), `@returns`, `@example` with real song usage, `@throws {ScoreError}` on invalid input
+31. TypeDoc generates HTML docs — `pnpm docs` → `docs/api/`. Config at `typedoc.json`.
 
 ---
 
@@ -1390,6 +1300,10 @@ Format: `YYYY-MM-DD sNNN — What was completed or significantly advanced`
 2026-03-16 s004 — Handoff v4 unification, pre-Phase 7 audit, @score-music scope decision
 2026-03-16 s005 — Phase 6 completion (8 effects + chain + 2 backend nodes), Phase 7 Mixer, Phase 8 Sequencer — 553 tests
 2026-03-16 s006 — score-codebase MCP loaded; incorporated language+security decisions: Phase 9d (describe()), 9e (AST security), rules 20-28, @score/pattern design philosophy
+2026-03-17 s005 — Phase 9b (@score/math), 9c (@score/pattern), 9e (AST+Zod security), CLI polish (--watch, doctor, new song, --trust, --version), note names, ADSR+filter on Synth, docs/ folder — 701 tests
+2026-03-18 s006 — Session housekeeping: signals acknowledged, CLAUDE.md signal docs, handoff updated to reflect actual phase status, planning doc incorporated
+2026-03-18 s007 — Phase 9 roadmap audit: Phase 8b renamed to 9a (modulation primitives), Phase 9f added (chaos/OUProcess/L-systems/RK4/tuning), competitor gap analysis added (Section 11b vs TidalCycles/Strudel/Facet), stack()/beat()/humanize() added to Phase 9c plan, "## 9." section header fixed to "## 9b.", TSDoc standard locked (TypeDoc + eslint-plugin-tsdoc), handoff split to pointed spec files, GETTING_STARTED.md created, 5-agent pre-Phase-10 build plan drafted
+2026-03-18 s008 — Wave 1 complete: Phase 7b (multiband-compressor/saturation/autopan + TSDoc all effects), Phase 9a (@score/modulation: createLFO/createADSR/sources, BackendAudioParam), Phase 9b/9f (@score/math extended: chaos/harmony/stochastic/transforms, 158 tests), Phase 9c (stack/beat added, 45 tests), Phase 9d (@score/musical: describe() vocabulary tokenizer, 37 tests). PR #14 open. 1,074 tests total.
 ```
 
 ---

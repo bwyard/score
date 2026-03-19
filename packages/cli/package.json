@@ -21,11 +21,15 @@
   "dependencies": {
     "@score/core": "workspace:*",
     "@score/dsl": "workspace:*",
-    "@score/sequencer": "workspace:*"
+    "@score/sequencer": "workspace:*",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/acorn": "^4.0.6",
     "@types/node": "^25.5.0",
     "@vitest/coverage-v8": "^2.0.0",
+    "acorn": "^8.14.0",
+    "acorn-walk": "^8.3.4",
     "vitest": "^2.0.0"
   }
 }
