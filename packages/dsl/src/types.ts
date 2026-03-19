@@ -1,4 +1,4 @@
-import type { AudioComponent } from '@score/core'
+import type { AudioComponent, EffectDescriptor } from '@score/core'
 
 // ── Instrument descriptors ────────────────────────────────────────────────────
 // Pure data — no AudioContext. The engine hydrates these at play time.
@@ -7,17 +7,23 @@ export type KickProps = {
   readonly pattern?: number[]
   readonly volume?: number
   readonly synth?: { frequency?: number; pitchDrop?: number }
+  /** Effects chain — use descriptor factories from the effects package (e.g. Delay, Reverb). */
+  readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
 export type SnareProps = {
   readonly pattern?: number[]
   readonly volume?: number
+  /** Effects chain — use descriptor factories from the effects package (e.g. Delay, Reverb). */
+  readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
 export type HiHatProps = {
   readonly pattern?: number[]
   readonly volume?: number
   readonly open?: boolean
+  /** Effects chain — use descriptor factories from the effects package (e.g. Delay, Reverb). */
+  readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
 export type SynthDSLProps = {
@@ -37,6 +43,8 @@ export type SynthDSLProps = {
     readonly frequency?: number  // Hz cutoff
     readonly Q?: number          // resonance, default 1
   }
+  /** Effects chain — use descriptor factories from the effects package (e.g. Delay, Reverb). */
+  readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
 export type InstrumentDescriptor = {

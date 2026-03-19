@@ -52,3 +52,9 @@ export type { SaturationProps } from './saturation.js'
 
 export { createAutoPan } from './autopan.js'
 export type { AutoPanProps, AutoPanShape } from './autopan.js'
+
+// Descriptor factories — use these in song files (no AudioContext required)
+export {
+  Delay, Reverb, Filter, Compressor, EQ, Distortion, Limiter,
+  BitCrusher, Chorus, Phaser, Flanger, StereoWidener, Gate,
+} from './descriptors.js'

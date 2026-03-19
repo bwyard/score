@@ -21,6 +21,8 @@
   "dependencies": {
     "@score/core": "workspace:*",
     "@score/dsl": "workspace:*",
+    "@score/effects": "workspace:*",
+    "@score/mixer": "workspace:*",
     "@score/sequencer": "workspace:*",
     "zod": "^3.23.8"
   },
