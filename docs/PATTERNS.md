@@ -1,219 +1,229 @@
-# Score Patterns — DSL Reference
+# Patterns
 
-Patterns control when notes and hits play. Score supports three pattern formats.
+Patterns control when notes and hits play. All pattern utilities are in `@score/pattern`.
+
+```js
+import { euclidean, fast, slow, rev, shift, degrade, every, stack, beat, scaleNotes, chordNotes } from '@score/pattern'
+```
 
 ---
 
-## Array patterns (always available)
+## Array patterns
 
-The simplest format. Each element is one 16th-note step.
+The simplest pattern — a plain JavaScript array. 16 steps = one bar at 16th-note resolution.
 
 ```js
-// 1 = play, 0 = silence
-const kick = Kick({ pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0] })
+// Rhythmic: 1 = hit, 0 = rest
+pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0]
 
-// For Synth, non-zero values are note names or Hz frequencies
-const bass = Synth({ pattern: ['A2', 0, 0, 0,  'D3', 0, 0, 0] })
+// Melodic: note name or 0 (rest)
+pattern: ['A2', 0, 'D3', 0,  'E3', 0, 'A3', 0]
 ```
 
-Patterns loop automatically. An 8-step pattern plays twice per bar.
+Patterns loop automatically. An 8-step array repeats every half bar.
 
 ---
 
-## Euclidean patterns (`@score/pattern`)
+## `beat(...steps)`
 
-Euclidean rhythms distribute hits as evenly as possible across steps.
-They appear in African, Cuban, and Middle Eastern music — they sound right because they are mathematically even.
-
-```js
-import { euclidean } from '@score/pattern'
-
-// euclidean(hits, steps, rotation?)
-euclidean(4, 16)   // [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0]  four on the floor
-euclidean(3, 8)    // [1,0,0,1,0,0,1,0]   classic clave (Cuba/West Africa)
-euclidean(5, 16)   // [1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0]  bossa nova feel
-euclidean(7, 16)   // denser, off-beat feel
-euclidean(2, 3)    // son clave 3-side
-```
-
-### Rotation
-
-Shifts the pattern by N steps (preserves the rhythm, changes where it starts):
+Shorthand for writing an array literal. Identical output.
 
 ```js
-euclidean(3, 8, 2)  // start 2 steps later — [1,0,0,1,0,0,1,0] → [0,1,0,0,1,0,0,1]
+beat(1, 0, 0, 0)               // → [1, 0, 0, 0]
+beat(1, 0, 1, 0, 1, 0, 1, 0)  // → [1, 0, 1, 0, 1, 0, 1, 0]
 ```
+
+---
+
+## `euclidean(hits, steps, rotation?)`
+
+Distributes `hits` as evenly as possible across `steps` using the Bjorklund algorithm.
+
+```js
+euclidean(3, 8)     // → [1,0,0,1,0,0,1,0]  Cuban clave
+euclidean(5, 8)     // → [1,0,1,0,1,1,0,1]  bossa nova
+euclidean(4, 16)    // → four-on-the-floor at 16th resolution
+euclidean(3, 8, 2)  // → clave rotated 2 steps right
+```
+
+| Param | Type | Description |
+|---|---|---|
+| `hits` | `number` | Active steps to distribute |
+| `steps` | `number` | Total pattern length |
+| `rotation` | `number` | Optional phase offset (default `0`) |
 
 ### Well-known euclidean rhythms
 
-| `euclidean(k, n)` | Pattern | Name |
-|-------------------|---------|------|
-| `(2, 3)` | `[1,0,1]` | Tresillo (son clave 3-side) |
-| `(3, 4)` | `[1,0,1,1]` | Cumbia rhythm |
-| `(3, 8)` | `[1,0,0,1,0,0,1,0]` | Cuban clave |
-| `(4, 9)` | `[1,0,1,0,1,0,1,0,0]` | Turkish aksak |
-| `(5, 8)` | `[1,0,1,0,1,1,0,1]` | Bossa nova |
-| `(7, 8)` | `[1,0,1,1,1,1,1,1]` | Seven attacks in 8 |
-| `(4, 16)` | 4-on-floor | House, techno |
-| `(5, 16)` | Syncopated | Hip-hop, R&B |
+| `euclidean(k, n)` | Name |
+|---|---|
+| `(2, 3)` | Tresillo (son clave 3-side) |
+| `(3, 8)` | Cuban clave |
+| `(4, 9)` | Turkish aksak |
+| `(5, 8)` | Bossa nova |
+| `(4, 16)` | Four-on-the-floor |
+| `(7, 16)` | Dense syncopated |
 
 ---
 
-## Pattern transforms (`@score/pattern`)
+## Function patterns
 
-Transform functions take a pattern and return a new pattern. They compose freely.
+A function `(step, bar) => value` is called once per step per bar.
 
 ```js
-import { fast, slow, rev, every, degrade, shift, scaleNotes, chordNotes } from '@score/pattern'
+// Alternate between two bass lines every bar
+pattern: (step, bar) => {
+  const lineA = ['A2', 0, 'D3', 0]
+  const lineB = ['E2', 0, 'A2', 0]
+  return (bar % 2 === 0 ? lineA : lineB)[step % 4]
+}
+
+// Extra kick hit on last bar of every 4
+pattern: (step, bar) => {
+  if (bar % 4 === 3 && step === 14) return 1
+  return [1, 0, 0, 0,  1, 0, 0, 0][step % 8]
+}
 ```
 
-### `fast(n, pattern)` — double time
+- `step` — 16th-note position within the bar (0–15 for 16 steps)
+- `bar` — bar counter starting at 0, increments each bar
 
-Speeds the pattern up by a factor of `n`. At `n=2`, the pattern plays twice per bar.
+All transforms return function patterns and receive `step` and `bar` at runtime.
+
+---
+
+## Transforms
+
+All transforms accept an array or function pattern and return a function pattern `(step, bar) => value`.
+
+### `fast(n, pattern)`
+
+Speed up by factor `n`. `fast(2, pat)` plays the pattern twice per bar.
 
 ```js
-const hihat = HiHat({ pattern: fast(2, [1,0,1,0]) })
-// The [1,0,1,0] pattern plays at 2x speed — 4 hits per step group instead of 2
+pattern: fast(2, [1, 0, 1, 0])        // 16th-note rush
+pattern: fast(4, euclidean(3, 8))      // rapid euclidean fill
 ```
 
-### `slow(n, pattern)` — half time
+### `slow(n, pattern)`
 
-Slows the pattern by a factor of `n`. At `n=2`, the pattern takes 2 bars.
+Slow down by factor `n`. Each step plays for `n` times as long.
 
 ```js
-const bass = Synth({ pattern: slow(2, ['A2', 0, 'D3', 0, 'F3', 0, 'E3', 0]) })
-// Plays through the pattern over 2 bars instead of 1
+pattern: slow(2, [0, 0, 1, 0,  0, 0, 1, 0])  // half-time snare
 ```
 
-### `rev(pattern)` — reverse
+### `rev(pattern)`
 
-Plays the pattern backwards.
+Reverse the pattern — last step to first.
 
 ```js
-const snare = Snare({ pattern: rev([1,0,0,0, 1,0,0,0, 0,0,1,0, 0,0,0,0]) })
+pattern: rev(['C4', 'E4', 'G4', 'A4'])  // retrograde melody
 ```
 
-### `shift(n, pattern)` — rotate
+### `shift(n, pattern)`
 
-Shifts the pattern start point by `n` steps. Equivalent to euclidean rotation.
+Rotate by `n` steps. Positive = shift right (later), negative = shift left (earlier).
 
 ```js
-const kick = Kick({ pattern: shift(2, [1,0,0,0, 1,0,0,0]) })
-// [0,0,1,0, 0,0,1,0] — same rhythm, 2 steps later
+pattern: shift(1, [0, 0, 1, 0,  0, 0, 1, 0])  // snare one 16th late
+pattern: shift(-2, euclidean(3, 8))             // clave shifted left 2
 ```
 
-### `every(n, transform, pattern)` — conditional transform
+### `degrade(probability, pattern)`
 
-Applies a transform every `n` bars. Leaves the pattern unchanged on other bars.
+Randomly silence hits. `probability` = chance (0–1) of dropping each active step per bar.
 
 ```js
-// Every 4 bars, play the kick pattern double-time
-const kick = Kick({
-  pattern: every(4, p => fast(2, p), [1,0,0,0, 1,0,0,0])
-})
-
-// Every 8 bars, reverse the hihat
-const hihat = HiHat({
-  pattern: every(8, rev, [1,0,1,0, 1,0,1,0])
-})
+pattern: degrade(0.3, [1, 1, 1, 1])    // drop ~30% of hits
+pattern: degrade(0.5, euclidean(5, 8)) // sparse euclidean
 ```
 
-### `degrade(probability, pattern)` — random drops
+### `every(n, transform, pattern)`
 
-Randomly silences hits with the given probability. `0` = keep all, `1` = drop all, `0.3` = drop 30%.
-The randomness is deterministic within each bar — the same bar always sounds the same.
+Apply `transform` on every `n`th bar. Original pattern on other bars.
 
 ```js
-const hihat = HiHat({
-  pattern: degrade(0.25, [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1])  // drop ~25%
-})
+// Kick doubles speed every 4 bars
+pattern: every(4, p => fast(2, p), [1, 0, 0, 0])
+
+// Hi-hat reverses every other bar
+pattern: every(2, rev, [1, 0, 1, 1])
+
+// Degrade on bars 0, 8, 16 ...
+pattern: every(8, p => degrade(0.5, p), [0, 0, 1, 0])
+```
+
+`transform` receives the current pattern and returns a new pattern.
+
+---
+
+## `stack(...patterns)`
+
+Layer multiple patterns. At each step, returns the first non-zero value found across all patterns.
+
+```js
+// Kick + snare in one track
+const groove = stack(
+  [1, 0, 0, 0,  1, 0, 0, 0],  // kick hits
+  [0, 0, 1, 0,  0, 0, 1, 0],  // snare hits
+)
+
+// Polyrhythmic overlay
+const poly = stack(euclidean(3, 8), euclidean(5, 8))
 ```
 
 ---
 
-## Scale and chord utilities (`@score/pattern`)
+## Scale and chord utilities
 
-### `scaleNotes(key, startOctave?, octaves?)` — get notes in a key
+### `scaleNotes(key, startOctave?, octaves?)`
 
-Returns all note names in a key as an array. Use these in a Synth pattern.
+Returns all note names in a scale, ascending.
 
 ```js
-import { scaleNotes } from '@score/pattern'
-
-scaleNotes('Am', 2, 2)
-// ['A2','B2','C3','D3','E3','F3','G3','A3','B3','C4','D4','E4','F4','G4','A4']
-
-scaleNotes('Cmaj', 3)   // one octave of C major from octave 3
-// ['C3','D3','E3','F3','G3','A3','B3']
+scaleNotes('C', 4, 1)   // → ['C4','D4','E4','F4','G4','A4','B4']
+scaleNotes('Am', 3, 1)  // → ['A3','B3','C4','D4','E4','F4','G4']
+scaleNotes('C', 3, 2)   // → 14 notes spanning two octaves
 ```
 
-Supported scale names: `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian`, `pentatonic`, `blues`.
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `key` | `string` | — | `'C'` = C major, `'Am'` = A minor, `'F#'` = F# major |
+| `startOctave` | `number` | `3` | Lowest octave |
+| `octaves` | `number` | `1` | Number of octaves |
 
-Key notation: `'Am'` or `'Amin'` = A minor. `'Cmaj'` or `'C'` = C major.
+If the key contains `m` (and not `maj`), minor is used. Otherwise major.
 
-### `chordNotes(chord, octave?)` — get notes in a chord
+Supported scale modes: `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian`, `pentatonic`, `blues`.
 
-Returns the three notes of a triad. Use for pad stabs, arpeggios, or chord comping.
+Feed directly into a Synth pattern:
+```js
+const melody = Synth({ pattern: scaleNotes('Am', 3, 1) })
+```
+
+### `chordNotes(chord, octave?)`
+
+Returns the three notes of a triad `[root, third, fifth]`.
 
 ```js
-import { chordNotes } from '@score/pattern'
-
-chordNotes('Am', 3)   // ['A3', 'C4', 'E4']   — A minor triad
-chordNotes('C', 4)    // ['C4', 'E4', 'G4']   — C major triad
-chordNotes('Dm', 3)   // ['D3', 'F3', 'A3']   — D minor triad
-chordNotes('G', 3)    // ['G3', 'B3', 'D4']   — G major triad
+chordNotes('Am', 3)  // → ['A3', 'C4', 'E4']
+chordNotes('C', 4)   // → ['C4', 'E4', 'G4']
+chordNotes('Dm', 3)  // → ['D3', 'F3', 'A3']
 ```
 
 ---
 
-## Function patterns (advanced)
-
-A pattern can be a function `(step, bar) => value`. The engine calls it every step.
+## Boolean pattern operations (`@score/math`)
 
 ```js
-// Rising bass line — different note each bar
-const bass = Synth({
-  pattern: (step, bar) => {
-    const notes = ['A2', 'D3', 'F3', 'E3']
-    if (step % 4 === 0) return notes[bar % notes.length]
-    return 0
-  }
-})
+import { patternOr, patternAnd, patternXor, patternNot, tile, polyrhythm } from '@score/math'
 
-// Infinite live-loop pattern — never the same twice
-const hihat = HiHat({
-  pattern: (step, bar) => Math.random() > 0.5 ? 1 : 0
-})
+patternOr([1,0,0,0], [0,0,1,0])   // → [1,0,1,0]  — hit where either hits
+patternAnd([1,0,1,0], [1,0,0,0])  // → [1,0,0,0]  — hit only where both hit
+patternXor([1,0,1,0], [1,0,0,0])  // → [0,0,1,0]  — hit where exactly one hits
+patternNot([1,0,0,0])             // → [0,1,1,1]  — flip all
+tile([1,0,0], 8)                  // → [1,0,0,1,0,0,1,0]  — fill to length
+polyrhythm([1,0,0], [1,0,0,0])   // — 12-step 3-against-4 combination
 ```
 
-Pattern functions receive:
-- `step` — the current step within the bar (0-15 for 16 steps)
-- `bar` — the current bar number (starts at 0, increments each bar)
-
----
-
-## Note name reference
-
-Format: **letter** + optional **# or b** + **octave number**
-
-```
-Octave 0  — sub-sub bass (rarely used)
-Octave 1  — sub bass (808 territory: A1 = 55 Hz)
-Octave 2  — bass (A2 = 110 Hz, deep bass line territory)
-Octave 3  — low-mid (A3 = 220 Hz, bass guitar open A)
-Octave 4  — mid (A4 = 440 Hz, standard tuning reference)
-Octave 5  — upper-mid (A5 = 880 Hz, lead melodies)
-Octave 6  — high (A6 = 1760 Hz, high leads, bells)
-Octave 7  — very high (mostly percussion tone tuning)
-```
-
-Full chromatic scale from C4:
-```
-C4  C#4  D4  Eb4  E4  F4  F#4  G4  Ab4  A4  Bb4  B4
-261  277  294  311  330  349  370  392  415  440  466  494 Hz
-```
-
-Sharps and flats are enharmonic equivalents:
-- `'C#4'` = `'Db4'` (same note, two names)
-- `'F#3'` = `'Gb3'`
-- In Score, use whichever feels natural for the key you're in.
+See [MATH.md](MATH.md) for the full reference.

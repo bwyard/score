@@ -1,229 +1,213 @@
-# Score Instruments — DSL Reference
+# Instruments
 
-All instruments are factory functions that return an `InstrumentDescriptor`.
-They accept a props object and are passed directly to `Song({ tracks: [...] })`.
+All instruments are imported from `@score/dsl`. They return descriptors — plain objects the engine hydrates at play time. No AudioContext is created in song files.
 
-No audio context required — the engine hydrates descriptors at play time.
+```js
+import { Kick, Snare, HiHat, Synth } from '@score/dsl'
+```
 
 ---
 
 ## Kick
 
-A synthesized kick drum. Uses an oscillator with pitch drop and a noise burst for the transient.
+Synthesized bass drum. Pitched sine with pitch drop envelope.
 
 ```js
-import { Kick } from '@score/dsl'
-
 const kick = Kick({
-  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],  // four-on-the-floor
-  volume:  0.9,
-  synth: {
-    frequency: 60,      // Hz — starting pitch of the pitch drop (default: 60)
-    pitchDrop: 0.04,    // seconds — how long the pitch drops over (default: 0.04)
-  },
+  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
+  volume: 0.9,
+  synth: { frequency: 75, pitchDrop: 0.09 },
 })
 ```
 
-### Pattern values
+### Props
 
-`1` = hit, `0` = silence. 16 steps = one bar at 16th-note resolution.
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `pattern` | `number[]` or `(step, bar) => number` | four-on-floor | 16-step rhythm. `1` = hit, `0` = rest. |
+| `volume` | `number` | `0.85` | Output level 0–1. |
+| `synth.frequency` | `number` | `80` | Starting pitch in Hz. |
+| `synth.pitchDrop` | `number` | `0.1` | How fast the pitch falls (seconds). |
+| `effects` | `EffectDescriptor[]` | `[]` | Effects chain — use descriptor factories from `@score/effects`. |
 
-| Pattern | Sound | Usage |
-|---------|-------|-------|
-| `[1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0]` | Four on the floor | House, techno |
-| `[1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0]` | Half time | Trap, hip-hop |
-| `[1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0]` | Push on the 3 | Funk |
-
-### Using euclidean patterns
-
-```js
-import { euclidean } from '@score/pattern'
-
-const kick = Kick({ pattern: euclidean(4, 16) })  // [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0]
-const kick = Kick({ pattern: euclidean(3, 8) })   // [1,0,0,1,0,0,1,0] — classic clave
-```
+All props are optional.
 
 ---
 
 ## Snare
 
-A synthesized snare with white noise body.
+Synthesized snare drum. Noise body with pitched transient.
 
 ```js
-import { Snare } from '@score/dsl'
-
 const snare = Snare({
-  pattern: [0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0],  // backbeat (2 and 4)
-  volume:  0.7,
+  pattern: [0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0],
+  volume: 0.6,
 })
 ```
 
-| Pattern | Sound | Usage |
-|---------|-------|-------|
-| `[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]` | Backbeat (2 and 4) | Almost everything |
-| `[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0]` | Off-beat snare | Reggae, dancehall |
-| `[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0]` | Every beat | Punk, metal |
+### Props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `pattern` | `number[]` or `(step, bar) => number` | beats 2 and 4 | 16-step rhythm. |
+| `volume` | `number` | `0.5` | Output level 0–1. |
+| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
+
+All props are optional.
 
 ---
 
 ## HiHat
 
-Synthesized hi-hat using filtered noise.
+Synthesized hi-hat. Open and closed variants via filtered noise.
 
 ```js
-import { HiHat } from '@score/dsl'
-
 const hihat = HiHat({
-  pattern: [1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0],  // straight 8ths
-  volume:  0.5,
-  open:    false,    // true = open hi-hat (longer decay), false = closed (short)
+  pattern: [1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0],
+  volume: 0.25,
+  open: false,
 })
 ```
 
-| `open` | Sound | Usage |
-|--------|-------|-------|
-| `false` | Tight, closed | 16th-note grooves, busy patterns |
-| `true` | Washy, sustained | Off-beats, buildups |
+### Props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `pattern` | `number[]` or `(step, bar) => number` | straight 8ths | 16-step rhythm. |
+| `volume` | `number` | `0.25` | Output level 0–1. |
+| `open` | `boolean` | `false` | `true` = open hi-hat (longer sustain). |
+| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
+
+All props are optional.
 
 ---
 
 ## Synth
 
-A subtractive synthesizer. One note plays per step of the pattern.
-Supports note names (`'A2'`, `'F#3'`, `'Bb4'`) or raw Hz values.
+Subtractive synthesizer with ADSR envelope and optional filter.
 
 ```js
-import { Synth } from '@score/dsl'
-
 const bass = Synth({
-  wave:      'sawtooth',    // 'sine' | 'square' | 'sawtooth' | 'triangle'
-  frequency: 110,           // default frequency when pattern values are 1/0
-  gain:      0.3,
-
-  // Pattern: each non-zero value triggers a note
-  pattern: ['A2', 0, 0, 0,  'D3', 0, 0, 0,  'F3', 0, 0, 0,  'E3', 0, 0, 0],
-
+  wave: 'sawtooth',
+  gain: 0.3,
   envelope: {
-    attack:  0.005,   // seconds — time to reach peak volume (default: 0.005)
-    decay:   0.08,    // seconds — time from peak to sustain level (default: 0.08)
-    sustain: 0.7,     // 0-1 — level to hold at during note (default: 0.7)
-    release: 0.05,    // seconds — time to fade to silence after note ends (default: 0.05)
+    attack: 0.005,
+    decay: 0.1,
+    sustain: 0.6,
+    release: 0.05,
   },
-
   filter: {
-    type:      'lowpass',   // 'lowpass' | 'highpass' | 'bandpass'
-    frequency: 800,          // Hz cutoff
-    Q:         1,            // resonance (1 = neutral, higher = more resonance)
+    type: 'lowpass',
+    frequency: 900,
+    Q: 1.2,
   },
+  pattern: ['A2', 0, 'A2', 0,  0, 'A2', 0, 'D3',  'E3', 0, 'E3', 0,  0, 'A3', 0, 0],
 })
 ```
 
-### Wave shapes and their character
+### Props
 
-| Wave | Sound | Real-world analogue | Usage |
-|------|-------|---------------------|-------|
-| `'sawtooth'` | Bright, buzzy, rich harmonics | Strings, brass, classic synth bass | Bass lines, leads |
-| `'square'` | Hollow, reedy, strong odd harmonics | Clarinets, NES, chiptune | Arps, retro leads |
-| `'sine'` | Pure, soft, no harmonics | Flute, sine-wave bass | Sub bass, soft pads |
-| `'triangle'` | Soft, flute-like, few harmonics | Flute, gentle pluck | Gentle melodies, soft leads |
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `wave` | `'sine'` \| `'square'` \| `'sawtooth'` \| `'triangle'` | `'sawtooth'` | Oscillator waveform. |
+| `frequency` | `number` | `440` | Base frequency in Hz when pattern values are `1`. |
+| `gain` | `number` | `0.25` | Output level 0–1. |
+| `pattern` | `(number\|string)[]` or `(step, bar) => string\|number` | — | Note names or Hz values. `0` = rest. |
+| `sequence` | `string[]` | — | Pre-parsed note array (output of `Sequence()`). |
+| `envelope.attack` | `number` | `0.005` | Seconds from silence to peak. Short = punchy, long = pad swell. |
+| `envelope.decay` | `number` | `0.08` | Seconds from peak to sustain level. |
+| `envelope.sustain` | `number` | `0.7` | Level held while note is active (0–1). |
+| `envelope.release` | `number` | `0.05` | Seconds to silence after note ends. |
+| `filter.type` | `'lowpass'` \| `'highpass'` \| `'bandpass'` | — | Filter shape. Omit to bypass filter. |
+| `filter.frequency` | `number` | `2000` | Filter cutoff in Hz. |
+| `filter.Q` | `number` | `1` | Resonance. Higher = more pronounced peak at cutoff. |
+| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
 
-### Note names
+### Wave shapes
 
-Score accepts standard music notation. The format is: **letter + optional accidental + octave number**.
+| Wave | Character | Use for |
+|---|---|---|
+| `sine` | Pure, no harmonics | Sub-bass, soft pads |
+| `triangle` | Soft, few harmonics | Warm leads, mellow pads |
+| `square` | Hollow, odd harmonics | Bass, retro leads |
+| `sawtooth` | Bright, all harmonics | Acid bass, leads, strings |
 
-| Note | Frequency | Description |
-|------|-----------|-------------|
-| `'C4'` | 261.63 Hz | Middle C |
-| `'A4'` | 440 Hz | Concert A (tuning reference) |
-| `'A2'` | 110 Hz | Deep bass A |
-| `'F#3'` | 185.00 Hz | F sharp, octave 3 |
-| `'Bb4'` | 466.16 Hz | B flat, octave 4 |
-
-**Octave numbers:** Each octave spans C to B. `C4` = middle C. Lower numbers = lower pitch.
-
-- `'#'` = sharp (raises by one semitone) — type a regular hash key
-- `'b'` = flat (lowers by one semitone) — type a regular letter b
-
-```js
-// Sub bass line in A minor
-pattern: ['A1', 0, 0, 0,  'A1', 0, 0, 0,  'F1', 0, 0, 0,  'G1', 0, 0, 0]
-
-// Mid bass melody
-pattern: ['A2', 0, 'C3', 0,  'E3', 0, 'G2', 0]
-
-// Lead melody
-pattern: ['E4', 0, 'D4', 0,  'C4', 0, 'A3', 0]
-```
-
-### ADSR envelope — what each stage does
+### ADSR diagram
 
 ```
 Volume
-  |         peak
-  |        /    \
-  |       /  D   \
-  |      /        \ S (sustain level)
-  |  A  /          \___________
-  |    /                       \   R
-  |   /                         \
-  |__/                           \___
-  0                               time
-       Attack  Decay     Hold    Release
+  1.0 │    /\
+      │   /  \
+sus   │  /    \____________________
+      │ /                          \
+  0.0 │/                            \___
+      └──────────────────────────────────▶ Time
+           A    D        S             R
 ```
 
-- **Attack** — how quickly the note reaches full volume. Short = punchy. Long = pad-like.
-- **Decay** — how quickly it falls from peak to sustain. Short = plucky. Long = slow bloom.
-- **Sustain** — the level it holds at while the note is playing (0 = silent, 1 = full volume).
-- **Release** — how quickly it fades after the note ends. Short = staccato. Long = reverb-like tail.
+- **A (attack)**: time from note-on to peak volume
+- **D (decay)**: time from peak down to sustain level
+- **S (sustain)**: level held until note-off
+- **R (release)**: time from note-off to silence
 
-### Envelope presets by instrument type
+### Envelope presets
 
 | Sound | attack | decay | sustain | release |
-|-------|--------|-------|---------|---------|
-| Punchy bass | 0.002 | 0.05 | 0.5 | 0.03 |
-| Pad / string | 0.4 | 0.1 | 0.8 | 0.6 |
-| Pluck | 0.001 | 0.15 | 0.0 | 0.08 |
-| Organ | 0.005 | 0.0 | 1.0 | 0.01 |
-| Brass hit | 0.01 | 0.1 | 0.7 | 0.2 |
+|---|---|---|---|---|
+| Punchy bass | `0.002` | `0.05` | `0.5` | `0.03` |
+| Pad / string | `0.4` | `0.1` | `0.8` | `0.6` |
+| Pluck | `0.001` | `0.15` | `0.0` | `0.08` |
+| Organ | `0.005` | `0.0` | `1.0` | `0.01` |
+| Brass hit | `0.01` | `0.1` | `0.7` | `0.2` |
 
-### Filter — shape the brightness
+### Note name format
 
-- **lowpass** — removes high frequencies. Lower cutoff = darker/warmer. Used on bass.
-- **highpass** — removes low frequencies. Higher cutoff = thinner/airier. Used on pads, hi-hats.
-- **bandpass** — passes only a narrow frequency band. Nasal, telephone-like character.
-- **Q** — resonance. Values > 2 add a ringing peak at the cutoff frequency.
+Format: **letter** + optional **`#`** (sharp) or **`b`** (flat) + **octave number**.
 
----
+| Note | Frequency | Description |
+|---|---|---|
+| `'C4'` | 261.63 Hz | Middle C |
+| `'A4'` | 440 Hz | Concert A |
+| `'A2'` | 110 Hz | Deep bass |
+| `'F#3'` | 185 Hz | F sharp octave 3 |
+| `'Bb4'` | 466 Hz | B flat octave 4 |
 
-## Arrangement (Song sections)
+Typical ranges:
+- Sub-bass: `A1`–`A2`
+- Bass: `A2`–`A3`
+- Mid: `A3`–`A4`
+- Lead: `A4`–`A5`
 
-Sections let you specify which tracks play during each part of the song.
+### Effects on instruments
 
 ```js
-import { Song, Intro, Drop, Breakdown, Outro } from '@score/dsl'
+import { Synth } from '@score/dsl'
+import { Delay, Reverb, Distortion } from '@score/effects'
 
-export default Song({
-  bpm: 128,
-  tracks: [kick, snare, hihat, bass, pad],
-
-  arrangement: [
-    Intro({ bars: 8,  tracks: [hihat] }),
-    Drop({ bars: 32,  tracks: [kick, snare, hihat, bass, pad] }),
-    Breakdown({ bars: 16, tracks: [pad, bass] }),
-    Drop({ bars: 32,  tracks: [kick, snare, hihat, bass, pad] }),
-    Outro({ bars: 8,  tracks: [hihat, pad] }),
+const lead = Synth({
+  wave: 'sawtooth',
+  gain: 0.2,
+  pattern: ['E4', 0, 'D4', 0,  'C4', 0, 'A3', 0],
+  effects: [
+    Distortion({ amount: 0.3 }),
+    Delay({ time: 0.375, feedback: 0.35, mix: 0.25 }),
+    Reverb({ decay: 1.5, mix: 0.15 }),
   ],
 })
 ```
 
-### Section types
+Effect descriptors are pure data — no AudioContext in song files. The engine hydrates them at play time. See [EFFECTS.md](EFFECTS.md) for all available effects.
 
-| Section | `sectionType` | Typical use |
-|---------|--------------|-------------|
-| `Intro()` | `'intro'` | Opening build — sparse arrangement |
-| `Buildup()` | `'buildup'` | Energy rise before drop |
-| `Drop()` | `'drop'` | Full arrangement, peak energy |
-| `Breakdown()` | `'breakdown'` | Strip back — emotional pause |
-| `Outro()` | `'outro'` | Fade or strip out |
+### Using Sequence()
 
-Each section plays the listed tracks for the specified number of bars, then moves to the next.
+`Sequence()` parses a space-separated string of note names and rests into an array. `.` = rest.
+
+```js
+import { Synth, Sequence } from '@score/dsl'
+
+const lead = Synth({
+  wave: 'sawtooth',
+  gain: 0.2,
+  sequence: Sequence('A2 . D3 . F3 . E3 .'),
+})
+```
