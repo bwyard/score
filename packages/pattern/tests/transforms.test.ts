@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { slow, rev, every, degrade, shift } from '../src/transforms.js'
+import { slow, rev, every, degrade, shift, humanize } from '../src/transforms.js'
 import { resolvePattern } from '../src/types.js'
 
 describe('resolvePattern', () => {
@@ -96,5 +96,45 @@ describe('every', () => {
     expect([0, 1, 2, 3].map(s => everyFn(s, 0))).toEqual([0, 0, 0, 1])
     // bar=1 (odd) → original → [1,0,0,0]
     expect([0, 1, 2, 3].map(s => everyFn(s, 1))).toEqual([1, 0, 0, 0])
+  })
+})
+
+describe('humanize', () => {
+  it('preserves zero steps', () => {
+    const fn = humanize(1.0, [0, 1, 0, 1])
+    expect(fn(0, 0)).toBe(0)
+    expect(fn(2, 0)).toBe(0)
+  })
+
+  it('non-zero steps are non-zero after humanization', () => {
+    const fn = humanize(0.1, [1, 0, 1, 0])
+    expect(fn(1, 0)).toBe(0)    // step 1 → 0 in pattern, stays 0
+    expect(fn(0, 0)).not.toBe(0)
+    expect(fn(2, 0)).not.toBe(0)
+  })
+
+  it('amount=0 leaves all values unchanged', () => {
+    const fn = humanize(0, [1, 0, 1, 0])
+    expect(fn(0, 0)).toBe(1)
+    expect(fn(2, 0)).toBe(1)
+  })
+
+  it('is deterministic — same step+bar always produces same value', () => {
+    const fn = humanize(0.2, [1, 1, 1, 1])
+    expect(fn(3, 5)).toBe(fn(3, 5))
+    expect(fn(0, 0)).toBe(fn(0, 0))
+  })
+
+  it('varies across steps for non-zero amount', () => {
+    const fn = humanize(0.3, [1, 1, 1, 1, 1, 1, 1, 1])
+    const vals = [0, 1, 2, 3, 4, 5, 6, 7].map(s => fn(s, 0))
+    const unique = new Set(vals)
+    expect(unique.size).toBeGreaterThan(1)
+  })
+
+  it('wraps pattern correctly', () => {
+    const fn = humanize(0, [1, 0])
+    expect(fn(2, 0)).toBe(1)  // step 2 → index 0 → 1
+    expect(fn(3, 0)).toBe(0)  // step 3 → index 1 → 0
   })
 })

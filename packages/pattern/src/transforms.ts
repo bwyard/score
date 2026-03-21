@@ -5,7 +5,7 @@ import { resolvePattern } from './types.js'
  * Double (or multiply) the playback speed of a pattern.
  * Each step plays `n` times faster — a 4/4 kick becomes a rapid 16th-note fill.
  *
- * @param n - Speed multiplier. `2` = double time, `4` = quadruple time. Must be > 0.
+ * @param n - Speed multiplier. `2` = double time, `4` = quadruple time. Must be \> 0.
  * @param pattern - Source pattern as an array or step function.
  * @returns A step function playing the pattern at `n×` speed.
  *
@@ -30,7 +30,7 @@ export const fast = <T>(n: number, pattern: PatternInput<T>): PatternFn<T> =>
  * Halve (or divide) the playback speed of a pattern.
  * Each step lasts `n` times longer — a driving 8th-note bass becomes a slow half-time groove.
  *
- * @param n - Speed divisor. `2` = half time (each step doubled), `4` = quarter time. Must be > 0.
+ * @param n - Speed divisor. `2` = half time (each step doubled), `4` = quarter time. Must be \> 0.
  * @param pattern - Source pattern as an array or step function.
  * @returns A step function playing the pattern at `1/n` speed.
  *
@@ -232,3 +232,38 @@ export const stack = <T extends number | string>(
  * @see {@link stack} — for layering multiple beat patterns
  */
 export const beat = <T>(...steps: T[]): T[] => [...steps]
+
+/**
+ * Add subtle velocity variation to a pattern — makes mechanical sequences feel human.
+ *
+ * Each active hit is multiplied by `(1 + amount × jitter)` where jitter is a
+ * deterministic pseudo-random value in `[−1, 1]` derived from the step and bar number.
+ * Zero steps are always preserved. The variation is reproducible — the same step+bar
+ * always produces the same jitter, so patterns stay consistent within a bar.
+ *
+ * @param amount - Variation intensity, `0`–`1`. `0.05` = barely noticeable, `0.2` = loose live feel.
+ * @param pattern - Source pattern. Non-zero values receive velocity variation.
+ * @returns A step function applying velocity humanization.
+ *
+ * @example
+ * ```ts
+ * // Slightly humanized hi-hat — each hit varies ±15% in velocity
+ * const hat = HiHat({ pattern: humanize(0.15, [1, 1, 1, 1]) })
+ *
+ * // Combine with degrade for a very loose feel
+ * const loose = HiHat({ pattern: humanize(0.2, degrade(0.1, [1, 1, 1, 1])) })
+ * ```
+ *
+ * @see {@link degrade} — randomly drop hits entirely
+ * @see {@link every} — apply transforms conditionally per bar
+ */
+export const humanize = (amount: number, pattern: PatternInput): PatternFn<number> =>
+  (step: number, bar: number): number => {
+    const arr = resolvePattern(pattern, Array.isArray(pattern) ? pattern.length : 16, bar)
+    const val = arr[step % arr.length] ?? 0
+    if (val === 0) return 0
+    // Deterministic hash jitter in [-1, 1] — reproducible per step+bar
+    const seed = ((step * 7919 + bar * 3571) ^ (step << 4)) >>> 0
+    const jitter = (seed % 65536) / 32768 - 1
+    return (val) * (1 + amount * jitter)
+  }

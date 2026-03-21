@@ -127,6 +127,12 @@ importers:
       '@score/core':
         specifier: workspace:*
         version: link:../core
+      '@score/math':
+        specifier: workspace:*
+        version: link:../math
+      '@score/pattern':
+        specifier: workspace:*
+        version: link:../pattern
     devDependencies:
       '@types/node':
         specifier: ^25.5.0
