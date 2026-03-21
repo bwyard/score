@@ -76,9 +76,13 @@ const writeTempSong = (content: string): string => {
   return path
 }
 
-/** Wait for all microtasks queued by an async readline handler to settle. */
+/**
+ * Wait for all async work queued by a readline handler to settle.
+ * Uses 100 ms so that real dynamic import() calls in loadSongFile have time
+ * to resolve before the next command is sent.
+ */
 const flushAsync = (): Promise<void> =>
-  new Promise(resolve => setTimeout(resolve, 0))
+  new Promise(resolve => setTimeout(resolve, 100))
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 

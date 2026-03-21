@@ -196,22 +196,16 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       }),
   )
 
-  // Per-track channel + input node — indexed to match descriptors[]
-  const channelInputs: GainNode[] = []
-
-  for (const comp of descriptors) {
+  // Per-track channel + input node — pure map, no push
+  const channelInputs: GainNode[] = descriptors.map(comp => {
     const props = comp.props as KickProps & SnareProps & HiHatProps & SynthDSLProps & SampleProps
     const hydratedEffects = buildEffectsChain(ctx, props.effects)
-
-    // Add a mixer channel for this track
     const channel = mixer.addChannel({
       name: comp.instrumentType,
       effects: hydratedEffects,
     })
-
-    // channel.input is the entry point — instrument output routes here
-    channelInputs.push(channel.input as unknown as GainNode)
-  }
+    return channel.input as unknown as GainNode
+  })
 
   // Wire step sequencers per track
   descriptors.forEach((comp, i) => {
@@ -306,22 +300,28 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
   // Build a bar→section map and mute/unmute channels on each tick.
 
   if (song.arrangement.length > 0) {
-    let cursor = 0
-    const sections = song.arrangement.map(section => {
-      const start = cursor
-      cursor += section.bars
-      return { ...section, startBar: start, endBar: cursor }
-    })
-    const totalBars = cursor
-    let lastSectionIndex = -1
+    // Build section map using reduce — threads cursor as accumulator, no let
+    type SectionWithBars = (typeof song.arrangement)[number] & { readonly startBar: number; readonly endBar: number }
+    const { sections, cursor: totalBars } = song.arrangement.reduce<{
+      readonly sections: SectionWithBars[]
+      readonly cursor: number
+    }>(
+      ({ sections, cursor }, section) => {
+        const endBar = cursor + section.bars
+        return { sections: [...sections, { ...section, startBar: cursor, endBar }], cursor: endBar }
+      },
+      { sections: [], cursor: 0 },
+    )
+    // Hardware-boundary exception: sectionState is engine-layer mutable state (calls setMute)
+    const sectionState = { lastSectionIndex: -1 }
 
     transport.onTick(position => {
       const currentBar = position.bar % totalBars
       const sectionIndex = sections.findIndex(
         s => currentBar >= s.startBar && currentBar < s.endBar,
       )
-      if (sectionIndex === lastSectionIndex) return
-      lastSectionIndex = sectionIndex
+      if (sectionIndex === sectionState.lastSectionIndex) return
+      sectionState.lastSectionIndex = sectionIndex
 
       const section = sections[sectionIndex]
       if (!section) return

@@ -76,8 +76,9 @@ export const createLorenz = (params?: LorenzParams) => {
   const initial: LorenzState = { x: 0.1, y: 0, z: 0 }
   const deriv = lorenzDeriv(sigma, rho, beta)
 
-  let current: LorenzState = { ...initial }
-  let t = 0
+  // Hardware-boundary exception: stateful generator — const binding, property mutation only.
+  // Named `sim` to avoid clash with the public `state` getter below.
+  const sim: { current: LorenzState; t: number } = { current: { ...initial }, t: 0 }
 
   return {
     /**
@@ -87,24 +88,24 @@ export const createLorenz = (params?: LorenzParams) => {
      * @returns New `LorenzState` after advancing by `dt`.
      */
     next(dt = 0.01): LorenzState {
-      current = rk4(current, t, dt, deriv, lorenzAdd, lorenzScale)
-      t += dt
-      return { ...current }
+      sim.current = rk4(sim.current, sim.t, dt, deriv, lorenzAdd, lorenzScale)
+      sim.t += dt
+      return { ...sim.current }
     },
 
     /**
      * Reset the simulation to the initial state and time.
      */
     reset(): void {
-      current = { ...initial }
-      t = 0
+      sim.current = { ...initial }
+      sim.t = 0
     },
 
     /**
      * The current state of the Lorenz system.
      */
     get state(): LorenzState {
-      return { ...current }
+      return { ...sim.current }
     },
   }
 }
