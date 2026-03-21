@@ -46,6 +46,7 @@ export default Song({
 | `score play songs/track.js` | Play a finished song                         |
 | `score live songs/track.js` | Live coding — hot reload on save             |
 | `score repl songs/track.js` | REPL — type commands, hear changes instantly |
+| `score playlist`            | Play all examples and songs in sequence      |
 
 ## Target genres
 

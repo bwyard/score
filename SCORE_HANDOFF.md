@@ -154,6 +154,7 @@ Phase 10   ⚠️  CLI — core commands done, stem export + freeze/bounce remai
                ✅ score doctor — system health checks (Node, pnpm, audio backend)
                ✅ score new song <name> — template generator with note name syntax
                ✅ --version / -v flag
+               ✅ score playlist — play all examples (8-bar) and songs (full form) in sequence
                ⬜ score export — WAV/stem render
                ⬜ score list — song inspection/info
 Phase 10b  ⬜  score-audio MCP — effect catalog, signal flow, backend nodes, component catalog

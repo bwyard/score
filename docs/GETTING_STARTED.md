@@ -116,6 +116,9 @@ Save the file. Score reloads within ~300ms. If the reload fails, the previous ve
 | `score play <file.js>` | Play a song |
 | `score play --watch <file.js>` | Play with live reload on save |
 | `score play --trust <file.js>` | Skip the security scan (dev only) |
+| `score playlist` | Play all examples and songs in sequence |
+| `score playlist --examples` | Play examples only (8-bar samples) |
+| `score playlist --songs` | Play full songs only |
 | `score new song <name>` | Create a song from the template |
 | `score doctor` | Check system requirements |
 | `score --version` | Print version |
