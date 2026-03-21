@@ -1,15 +1,17 @@
 import { describe, it, expect, afterAll } from 'vitest'
 import { useHarness } from './utils/harness.js'
 import { createMixer } from '../src/mixer.js'
-import type { AudioComponent } from '@score/core'
+import type { AudioComponent, BackendNode } from '@score/core'
 
 const h = useHarness()
 afterAll(() => h.cleanup())
 
-const createMockEffect = (): AudioComponent => {
-  const effect: AudioComponent = {
+const createMockEffect = (): AudioComponent & { readonly input: BackendNode } => {
+  const inputNode: BackendNode = { connect: () => {}, disconnect: () => {} }
+  const effect: AudioComponent & { readonly input: BackendNode } = {
     id: 'mock-effect-1',
     type: 'mock-effect',
+    input: inputNode,
     connect: (_d: unknown) => effect,
     disconnect: () => effect,
     dispose: () => {},
@@ -33,14 +35,14 @@ describe('createMixer', () => {
     expect(mixer.type).toBe('mixer')
   })
 
-  it('creates master gain, EQ filters, sub filter, limiter waveshaper', () => {
+  it('creates master gain, EQ filters, limiter waveshaper', () => {
     const ctx = h.mockContext()
     createMixer(ctx)
-    // masterGain, subOutputGain = 2+ gains
-    expect(ctx.createdGains.length).toBeGreaterThanOrEqual(2)
-    // masterEQ = 3 filters, subFilter = 1 filter
-    expect(ctx.createdFilters.length).toBeGreaterThanOrEqual(4)
-    // limiter = 1 waveshaper (Phase 6 limiter uses WaveShaper for hard clipping)
+    // masterGain = 1+ gains
+    expect(ctx.createdGains.length).toBeGreaterThanOrEqual(1)
+    // masterEQ = 3 filters (low/mid/high shelves) — sub filter removed (was in-series bug t092)
+    expect(ctx.createdFilters.length).toBeGreaterThanOrEqual(3)
+    // limiter = 1 waveshaper
     expect(ctx.createdWaveShapers.length).toBeGreaterThanOrEqual(1)
   })
 

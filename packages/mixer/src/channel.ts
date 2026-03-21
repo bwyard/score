@@ -7,6 +7,9 @@ import { uid } from '@score/core'
 import { createEQ, createEffectsChain } from '@score/effects'
 import type { EQProps } from '@score/effects'
 
+/**
+ * Configuration props for a channel strip.
+ */
 export type ChannelProps = {
   readonly name?: string
   readonly volume?: number      // 0-1, default 0.8
@@ -17,19 +20,60 @@ export type ChannelProps = {
   readonly eq?: EQProps
 }
 
+/**
+ * A send from this channel to a return bus.
+ * Created via {@link createChannel}'s `createSend` method.
+ */
 export type SendComponent = {
+  /** Sets the send level (0–1). Optionally ramps to value at the given audio-context time. */
   readonly setLevel: (value: number, time?: number) => void
+  /** Disconnects and releases the send gain node. Safe to call multiple times. */
   readonly dispose: () => void
 }
 
+/** Internal representation of a send connection. */
+type SendEntry = {
+  readonly gainNode: ReturnType<ScoreAudioContext['createGain']>
+}
+
+/** Mutable state held inside a channel factory closure. */
+type ChannelState = {
+  readonly mute: boolean
+  readonly solo: boolean
+  readonly sends: ReadonlyArray<SendEntry>
+}
+
+/**
+ * Creates a per-track channel strip with EQ, pan, volume, mute/solo, and send routing.
+ *
+ * Signal flow: `input → [effects chain] → EQ → pan → volume → mute → output`
+ * Send taps are taken after the mute gain so sends respect the mute state.
+ *
+ * @param context - The Score audio context used to create all internal nodes.
+ * @param props - Optional initial configuration for name, volume, pan, mute, solo, effects, and EQ.
+ * @param onSoloChange - Optional callback invoked whenever the solo state changes,
+ *   allowing the parent mixer to re-evaluate solo logic across all channels.
+ * @returns A channel component implementing `AudioComponent` with extended channel API.
+ *
+ * @example
+ * ```ts
+ * const ch = createChannel(context, { name: 'Kick', volume: 0.9 })
+ * ch.connect(masterGain)
+ * ```
+ */
 export const createChannel = (
   context: ScoreAudioContext,
   props?: ChannelProps,
   onSoloChange?: () => void,
 ) => {
   const channelName = props?.name ?? 'Channel'
-  let muteState = props?.mute ?? false
-  let soloState = props?.solo ?? false
+
+  // Single mutable state object — the only `let` in this factory
+  let state: ChannelState = {
+    mute: props?.mute ?? false,
+    solo: props?.solo ?? false,
+    sends: [],
+  }
 
   // Create nodes in signal flow order
   const inputGain = context.createGain({ gain: 1.0 })
@@ -55,16 +99,13 @@ export const createChannel = (
   // Pan -> Volume -> Mute -> Output
   const panNode = context.createStereoPanner({ pan: props?.pan ?? 0 })
   const volumeGain = context.createGain({ gain: props?.volume ?? 0.8 })
-  const muteGain = context.createGain({ gain: muteState ? 0 : 1 })
+  const muteGain = context.createGain({ gain: state.mute ? 0 : 1 })
   const outputGain = context.createGain({ gain: 1.0 })
 
   eq.connect(panNode)
   panNode.connect(volumeGain)
   volumeGain.connect(muteGain)
   muteGain.connect(outputGain)
-
-  // Send gains — each connected from muteGain to a return input
-  const sends: Array<{ readonly gainNode: ReturnType<typeof context.createGain>; disposed: boolean }> = []
 
   const component: AudioComponent & {
     readonly input: BackendNode
@@ -83,8 +124,8 @@ export const createChannel = (
     type: 'channel' as const,
     input: inputGain,
     get name() { return channelName },
-    get mute() { return muteState },
-    get solo() { return soloState },
+    get mute() { return state.mute },
+    get solo() { return state.solo },
 
     setVolume: (value: number, time?: number) => {
       volumeGain.setGain(value, time)
@@ -95,12 +136,12 @@ export const createChannel = (
     },
 
     setMute: (value: boolean) => {
-      muteState = value
+      state = { ...state, mute: value }
       muteGain.setGain(value ? 0 : 1)
     },
 
     setSolo: (value: boolean) => {
-      soloState = value
+      state = { ...state, solo: value }
       if (onSoloChange) {
         onSoloChange()
       }
@@ -116,16 +157,19 @@ export const createChannel = (
       const sendGain = context.createGain({ gain: 0.5 })
       muteGain.connect(sendGain)
       sendGain.connect(returnInput)
-      const sendEntry = { gainNode: sendGain, disposed: false }
-      sends.push(sendEntry)
+      state = { ...state, sends: [...state.sends, { gainNode: sendGain }] }
+
+      // Per-send disposed flag lives in a closure — no mutable object field needed
+      let isDisposed = false
 
       return {
         setLevel: (value: number, time?: number) => {
           sendGain.setGain(value, time)
         },
         dispose: () => {
-          if (!sendEntry.disposed) {
-            sendEntry.disposed = true
+          if (!isDisposed) {
+            isDisposed = true
+            state = { ...state, sends: state.sends.filter((s) => s.gainNode !== sendGain) }
             try { sendGain.disconnect() } catch { /* already disconnected */ }
           }
         },
@@ -152,11 +196,8 @@ export const createChannel = (
     },
 
     dispose: () => {
-      for (const send of sends) {
-        if (!send.disposed) {
-          send.disposed = true
-          try { send.gainNode.disconnect() } catch { /* already disconnected */ }
-        }
+      for (const send of state.sends) {
+        try { send.gainNode.disconnect() } catch { /* already disconnected */ }
       }
       if (chain) {
         try { chain.dispose() } catch { /* already disposed */ }

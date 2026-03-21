@@ -60,13 +60,11 @@ export const logisticMap = (r: number, x0: number, n: number): number[] => {
     })
   }
 
-  const result: number[] = []
-  let x = x0
-  for (let i = 0; i < n; i++) {
-    result.push(x)
-    x = r * x * (1 - x)
-  }
-  return result
+  type LogAcc = { readonly values: number[]; readonly x: number }
+  return (Array.from({ length: n })).reduce<LogAcc>(
+    ({ values, x }) => ({ values: [...values, x], x: r * x * (1 - x) }),
+    { values: [], x: x0 },
+  ).values
 }
 
 /**
@@ -93,10 +91,10 @@ export const logisticMap = (r: number, x0: number, n: number): number[] => {
  */
 export const logisticSequence = (r: number, x0 = 0.5): (() => number) => {
   validateLogistic(r, x0)
-  let x = x0
+  let state = x0
   return () => {
-    const current = x
-    x = r * x * (1 - x)
+    const current = state
+    state = r * state * (1 - state)
     return current
   }
 }

@@ -2,90 +2,158 @@
 // Uses the standard Web Audio scheduling pattern:
 // setTimeout drives a lookahead loop, actual events are scheduled against currentTime
 
+/**
+ * Configuration props for {@link createClock}.
+ */
 export type ClockProps = {
-  readonly bpm?: number           // default 120
-  readonly ticksPerBeat?: number  // default 4 (= 16th notes)
-  readonly lookaheadMs?: number   // default 25
-  readonly scheduleAheadSec?: number // default 0.1
+  /** Beats per minute. Defaults to `120`. */
+  readonly bpm?: number
+  /** Subdivision ticks per beat. Defaults to `4` (16th notes). */
+  readonly ticksPerBeat?: number
+  /** How often (in ms) the lookahead loop fires. Defaults to `25`. */
+  readonly lookaheadMs?: number
+  /** How far ahead (in seconds) to schedule events. Defaults to `0.1`. */
+  readonly scheduleAheadSec?: number
 }
 
+/**
+ * A running BPM clock that dispatches tick callbacks on a precise schedule
+ * derived from `audioContext.currentTime`.
+ */
 export type Clock = {
+  /** Start the clock from tick 0. No-op if already running. */
   readonly start: () => void
+  /** Stop the clock and reset the tick counter. No-op if already stopped. */
   readonly stop: () => void
+  /** Update the BPM at any time; takes effect on the next scheduled tick. */
   readonly setBPM: (bpm: number) => void
+  /**
+   * Register a callback that fires on every scheduled tick.
+   * @param callback - Receives the precise audio-context tick time and tick number.
+   */
   readonly onTick: (callback: (tickTime: number, tickNumber: number) => void) => void
+  /** The most recently scheduled tick number. */
   readonly currentTick: number
+  /** The current BPM setting. */
   readonly bpm: number
+  /** Whether the clock is currently running. */
   readonly isRunning: boolean
+  /** Stop the clock and remove all registered tick callbacks. */
   readonly dispose: () => void
 }
 
+/**
+ * Minimal interface for an audio rendering context.
+ * Compatible with `AudioContext` from the Web Audio API.
+ */
 export type ClockContext = {
+  /** Current audio playback time in seconds. */
   readonly currentTime: number
 }
 
+/** Internal mutable state for {@link createClock}. */
+type ClockState = {
+  readonly bpm: number
+  readonly tickDuration: number
+  readonly running: boolean
+  readonly tick: number
+  readonly nextTickTime: number
+  readonly timerId: ReturnType<typeof setTimeout> | null
+}
+
+/**
+ * Create a BPM-aware tick clock backed by `audioContext.currentTime`.
+ *
+ * The clock uses the standard Web Audio double-buffering pattern: a
+ * `setTimeout` loop fires every `lookaheadMs` milliseconds and pre-schedules
+ * all ticks that fall within the next `scheduleAheadSec` window.  Callbacks
+ * receive the *exact* scheduled audio time rather than the wall-clock time of
+ * the `setTimeout` callback, so downstream nodes can call
+ * `audioParam.setValueAtTime(value, tickTime)` without jitter.
+ *
+ * @param context - An object exposing `currentTime` (e.g. `AudioContext`).
+ * @param props   - Optional configuration (BPM, subdivisions, lookahead).
+ * @returns A {@link Clock} instance.
+ *
+ * @example
+ * ```ts
+ * const ctx = new AudioContext()
+ * const clock = createClock(ctx, { bpm: 140, ticksPerBeat: 4 })
+ * clock.onTick((tickTime, tickNumber) => {
+ *   osc.frequency.setValueAtTime(440, tickTime)
+ * })
+ * clock.start()
+ * ```
+ */
 export const createClock = (context: ClockContext, props?: ClockProps): Clock => {
   const ticksPerBeat = props?.ticksPerBeat ?? 4
   const lookaheadMs = props?.lookaheadMs ?? 25
   const scheduleAheadSec = props?.scheduleAheadSec ?? 0.1
 
-  // Mutable state — the one exception to the const rule
-  let currentBPM = props?.bpm ?? 120
-  let tickDuration = 60 / (currentBPM * ticksPerBeat)
-  let running = false
-  let tick = 0
-  let nextTickTime = 0
-  let timerId: ReturnType<typeof setTimeout> | null = null
+  // Single mutable state object — the one `let` allowed per factory function.
+  let state: ClockState = {
+    bpm: props?.bpm ?? 120,
+    tickDuration: 60 / ((props?.bpm ?? 120) * ticksPerBeat),
+    running: false,
+    tick: 0,
+    nextTickTime: 0,
+    timerId: null,
+  }
+
+  // Callback registry — const array; mutation is the unavoidable event-system boundary.
   const callbacks: Array<(tickTime: number, tickNumber: number) => void> = []
 
   const schedule = (): void => {
-    while (nextTickTime < context.currentTime + scheduleAheadSec) {
-      const currentTickNumber = tick
-      const currentTickTime = nextTickTime
+    while (state.nextTickTime < context.currentTime + scheduleAheadSec) {
+      const currentTickNumber = state.tick
+      const currentTickTime = state.nextTickTime
       for (const cb of callbacks) {
         cb(currentTickTime, currentTickNumber)
       }
-      tick += 1
-      nextTickTime += tickDuration
+      state = {
+        ...state,
+        tick: state.tick + 1,
+        nextTickTime: state.nextTickTime + state.tickDuration,
+      }
     }
   }
 
   const loop = (): void => {
-    if (!running) return
+    if (!state.running) return
     schedule()
-    timerId = setTimeout(loop, lookaheadMs)
+    state = { ...state, timerId: setTimeout(loop, lookaheadMs) }
   }
 
   const clock: Clock = {
     start: (): void => {
-      if (running) return
-      running = true
-      nextTickTime = context.currentTime
-      tick = 0
+      if (state.running) return
+      state = {
+        ...state,
+        running: true,
+        nextTickTime: context.currentTime,
+        tick: 0,
+      }
       loop()
     },
 
     stop: (): void => {
-      running = false
-      if (timerId !== null) {
-        clearTimeout(timerId)
-        timerId = null
+      if (state.timerId !== null) {
+        clearTimeout(state.timerId)
       }
-      tick = 0
+      state = { ...state, running: false, tick: 0, timerId: null }
     },
 
     setBPM: (bpm: number): void => {
-      currentBPM = bpm
-      tickDuration = 60 / (currentBPM * ticksPerBeat)
+      state = { ...state, bpm, tickDuration: 60 / (bpm * ticksPerBeat) }
     },
 
     onTick: (callback: (tickTime: number, tickNumber: number) => void): void => {
       callbacks.push(callback)
     },
 
-    get currentTick() { return tick },
-    get bpm() { return currentBPM },
-    get isRunning() { return running },
+    get currentTick() { return state.tick },
+    get bpm() { return state.bpm },
+    get isRunning() { return state.running },
 
     dispose: (): void => {
       clock.stop()

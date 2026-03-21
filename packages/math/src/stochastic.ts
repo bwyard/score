@@ -43,14 +43,14 @@ const lcg = (seed: number): () => number => {
  */
 export const drunk = (stepSize: number, length: number, seed = 42): number[] => {
   const rand = lcg(seed)
-  const result: number[] = []
-  let current = 0.5
-  for (let i = 0; i < length; i++) {
-    result.push(current)
-    const next = current + (rand() * 2 - 1) * stepSize
-    current = Math.max(0, Math.min(1, next))
-  }
-  return result
+  type WalkAcc = { readonly values: number[]; readonly cursor: number }
+  return (Array.from({ length })).reduce<WalkAcc>(
+    ({ values, cursor }) => ({
+      values: [...values, cursor],
+      cursor: Math.max(0, Math.min(1, cursor + (rand() * 2 - 1) * stepSize)),
+    }),
+    { values: [], cursor: 0.5 },
+  ).values
 }
 
 /**
@@ -89,22 +89,20 @@ export const drunk = (stepSize: number, length: number, seed = 42): number[] => 
  */
 export const markov = (matrix: readonly (readonly number[])[], length: number, seed = 42): number[] => {
   const rand = lcg(seed)
-  const result: number[] = []
-  let state = 0
-  for (let i = 0; i < length; i++) {
-    result.push(state)
-    const row = matrix[state] ?? []
-    let r = rand()
-    let next = 0
-    for (let j = 0; j < row.length; j++) {
-      r -= row[j] ?? 0
-      if (r <= 0) {
-        next = j
-        break
-      }
-      next = j
-    }
-    state = next
+
+  // Pick the next state by walking the probability row — freeze once cumulative sum >= r
+  const pickNext = (currentState: number): number => {
+    const row = matrix[currentState] ?? []
+    return row.reduce<{ readonly next: number; readonly remaining: number }>(
+      ({ next, remaining }, prob, j) =>
+        remaining > 0 ? { next: j, remaining: remaining - prob } : { next, remaining },
+      { next: 0, remaining: rand() },
+    ).next
   }
-  return result
+
+  type MarkovAcc = { readonly values: number[]; readonly state: number }
+  return (Array.from({ length })).reduce<MarkovAcc>(
+    ({ values, state }) => ({ values: [...values, state], state: pickNext(state) }),
+    { values: [], state: 0 },
+  ).values
 }

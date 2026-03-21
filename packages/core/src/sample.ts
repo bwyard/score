@@ -37,7 +37,8 @@ export const createSamplePlayer = (
   },
 ) => {
   const gainNode = context.createGain({ gain: props?.gain ?? 1.0 })
-  let activeSource: BackendBufferSourceNode | null = null
+  type SampleState = { readonly activeSource: BackendBufferSourceNode | null }
+  let state: SampleState = { activeSource: null }
 
   const component: AudioComponent & {
     readonly start: (time?: number, offset?: number, duration?: number) => void
@@ -52,32 +53,33 @@ export const createSamplePlayer = (
 
     start: (time?: number, offset?: number, duration?: number) => {
       // Clean up previous source to prevent memory leak (Web Audio sources are one-shot)
-      if (activeSource) {
-        try { activeSource.stop() } catch { /* already stopped */ }
-        try { activeSource.disconnect() } catch { /* already disconnected */ }
+      if (state.activeSource) {
+        try { state.activeSource.stop() } catch { /* already stopped */ }
+        try { state.activeSource.disconnect() } catch { /* already disconnected */ }
       }
-      activeSource = context.createBufferSource(buffer, {
+      const newSource = context.createBufferSource(buffer, {
         loop: props?.loop ?? false,
         playbackRate: props?.playbackRate ?? 1.0,
       })
-      activeSource.connect(gainNode)
-      activeSource.start(time, offset, duration)
+      state = { ...state, activeSource: newSource }
+      newSource.connect(gainNode)
+      newSource.start(time, offset, duration)
     },
 
     stop: (time?: number) => {
-      if (activeSource) {
+      if (state.activeSource) {
         try {
-          activeSource.stop(time)
+          state.activeSource.stop(time)
         } catch {
           // Already stopped
         }
-        activeSource = null
+        state = { ...state, activeSource: null }
       }
     },
 
     setPlaybackRate: (rate: number, time?: number) => {
-      if (activeSource) {
-        activeSource.setPlaybackRate(rate, time)
+      if (state.activeSource) {
+        state.activeSource.setPlaybackRate(rate, time)
       }
     },
 
@@ -100,18 +102,18 @@ export const createSamplePlayer = (
     },
 
     dispose: () => {
-      if (activeSource) {
+      if (state.activeSource) {
         try {
-          activeSource.stop()
+          state.activeSource.stop()
         } catch {
           // Already stopped
         }
         try {
-          activeSource.disconnect()
+          state.activeSource.disconnect()
         } catch {
           // Already disconnected
         }
-        activeSource = null
+        state = { ...state, activeSource: null }
       }
       try {
         gainNode.disconnect()

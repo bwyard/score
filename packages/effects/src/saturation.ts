@@ -17,6 +17,12 @@ export type SaturationProps = {
   readonly mix?: number
 }
 
+/**
+ * Internal mutable state for {@link createSaturation}.
+ * Only one `let state` variable is used per factory invocation.
+ */
+type SaturationState = { readonly drive: number }
+
 const makeTanhCurve = (drive: number): Float32Array => {
   const samples = 256
   const curve = new Float32Array(samples)
@@ -56,8 +62,7 @@ export const createSaturation = (
   const driveAmount = Math.max(0, Math.min(props?.drive ?? 0.3, 1.0))
   const mixAmount = Math.max(0, Math.min(props?.mix ?? 0.5, 1.0))
 
-  // Track current drive in closure for re-generation via setDrive
-  let currentDrive = driveAmount
+  let state: SaturationState = { drive: driveAmount }
 
   const inputGain = context.createGain({ gain: 1.0 })
   const outputGain = context.createGain({ gain: 1.0 })
@@ -92,8 +97,8 @@ export const createSaturation = (
      * @param time - Optional — unused for curve changes, accepted for API consistency.
      */
     setDrive: (drive: number, _time?: number) => {
-      currentDrive = Math.max(0, Math.min(drive, 1.0))
-      shaper.setCurve(makeTanhCurve(currentDrive))
+      state = { ...state, drive: Math.max(0, Math.min(drive, 1.0)) }
+      shaper.setCurve(makeTanhCurve(state.drive))
     },
 
     /**
