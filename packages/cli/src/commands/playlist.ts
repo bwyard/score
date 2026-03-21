@@ -1,15 +1,7 @@
-// playlist.ts — Play song files in sequence
-//
-// Usage: score playlist                        Play all examples + songs
-//        score playlist songs/my-track.js      Play specific files
-//        score playlist my-set.playlist        Play from a playlist file
-
 import { spawn, type ChildProcess } from 'node:child_process'
 import { resolve } from 'node:path'
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-
-// ── Types ───────────────────────────────────────────────────────────────────
 
 type PlaylistEntry = {
   readonly file: string
@@ -21,8 +13,6 @@ type SongMeta = {
   readonly key: string | null
   readonly sections: ReadonlyArray<{ readonly sectionType: string; readonly bars: number }>
 }
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
 
 const barDurationSec = (bpm: number, bars: number): number => (bars * 4 * 60) / bpm
 
@@ -38,7 +28,6 @@ const totalBarsFromSections = (sections: SongMeta['sections']): number =>
 const pause = (sec: number): Promise<void> =>
   new Promise((res) => setTimeout(res, sec * 1000))
 
-// Parse song metadata from source text to avoid dynamic import side-effects
 const parseSongMeta = (filePath: string): SongMeta => {
   const src = readFileSync(filePath, 'utf-8')
   const bpmMatch = src.match(/bpm:\s*(\d+)/)
@@ -57,7 +46,6 @@ const parseSongMeta = (filePath: string): SongMeta => {
   }
 }
 
-// Discover song files from a directory, sorted by name
 const discoverSongs = (dir: string): ReadonlyArray<string> => {
   if (!existsSync(dir)) return []
   return readdirSync(dir)
@@ -66,23 +54,19 @@ const discoverSongs = (dir: string): ReadonlyArray<string> => {
     .map((f) => resolve(dir, f))
 }
 
-// Has arrangement sections → full form, otherwise once through
 const hasArrangement = (meta: SongMeta): boolean => meta.sections.length > 0
 
-// Shuffle — sort by random key, pure and allocation-only
 const shuffle = <T>(arr: ReadonlyArray<T>): ReadonlyArray<T> =>
   [...arr]
     .map((item) => ({ item, key: Math.random() }))
     .sort((a, b) => a.key - b.key)
     .map(({ item }) => item)
 
-// Build entry from a file path — auto-detect mode from arrangement
 const toEntry = (file: string): PlaylistEntry => {
   const meta = parseSongMeta(file)
   return { file, bars: hasArrangement(meta) ? null : 1 }
 }
 
-// Read a .playlist file — one path per line, # comments, blank lines ignored
 const readPlaylistFile = (filePath: string): ReadonlyArray<string> => {
   const dir = resolve(filePath, '..')
   return readFileSync(filePath, 'utf-8')
@@ -93,8 +77,6 @@ const readPlaylistFile = (filePath: string): ReadonlyArray<string> => {
 }
 
 const isPlaylistFile = (path: string): boolean => path.endsWith('.playlist')
-
-// ── Playback ────────────────────────────────────────────────────────────────
 
 const cliEntry = resolve(
   fileURLToPath(import.meta.url), '..', '..', 'index.js',
@@ -138,8 +120,6 @@ const logEntry = (
   }
 }
 
-// ── Main ────────────────────────────────────────────────────────────────────
-
 /**
  * Play a set of songs back-to-back — like a DJ queue.
  *
@@ -170,13 +150,11 @@ export const playlist = async (args: string[]): Promise<void> => {
   const shuffled = args.includes('--shuffle') || args.includes('-s')
   const rawArgs = args.filter((a) => !a.startsWith('-'))
 
-  // Expand .playlist files into their listed paths, pass .js files through
   const files = rawArgs.flatMap((f) => {
     const resolved = resolve(cwd, f)
     return isPlaylistFile(resolved) ? readPlaylistFile(resolved) : [resolved]
   })
 
-  // Explicit files → play those. No files → discover from examples/ + songs/
   const entries: ReadonlyArray<PlaylistEntry> = files.length > 0
     ? files
         .filter((f) => {
