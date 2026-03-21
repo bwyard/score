@@ -16,7 +16,7 @@ const kick = Kick({
 
 const snare = Snare({
   pattern: [1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1],
-  volume: 0.05,
+  volume: 0.75,
 })
 
 const hihat = HiHat({
@@ -28,11 +28,12 @@ const hihat = HiHat({
 // Note names: 'A2', 'D3', 'E4' etc. Sharp = #  Flat = b  0 = rest.
 
 const bass = Synth({
-  wave: 'square',
-  gain: 0.30,
+  wave: 'sine',
+  gain: 0.40,
   envelope: { attack: 0.003, decay: 0.10, sustain: 0.5, release: 0.04 },
-  filter: { type: 'bandpass', frequency: 800, Q: 2.0 },
+  filter: { type: 'highpass', frequency: 800, Q: 2.0 },
   pattern: ['G2', 0, 'A2', 0,  0, 'G2', 0, 'D3',  'E3', 0, 'E3', 0,  0, 'G3', 0, 0],
+  volume: .75,
 })
 
 const lead = Synth({
@@ -40,6 +41,10 @@ const lead = Synth({
   gain: 0.25,
   envelope: { attack: 0.01, decay: 0.06, sustain: 0.3, release: 0.03 },
   pattern: [0, 0, 'E4', 0,  'Eb4', 0, 'B3', 0,  0, 'E4', 0, 'Eb3', 0,  'Bb3', 0, 0],
+  effects: [
+    Delay({ time: 0.375, feedback: 0.4, mix: 0.3 }),
+    Reverb({ decay: 2.0, mix: 0.2 }),
+  ],
 })
 
 const harpsichord = Synth({
@@ -87,15 +92,15 @@ const chantVoice = Synth({
 
 // ── ARRANGEMENT ───────────────────────────────────────────────────────────────
 export default Song({
-  bpm: 110,
-  key: 'B',
+  bpm: 170,
+  key: 'G',
   genre: 'techno',
-  tracks: [kick, snare, harpsichord, hihat, bass, lead],
+  tracks: [kick, snare, harpsichord, hihat, bass, lead, chantVoice],
   arrangement: [
     Intro(4,       [kick, bass, harpsichord 
     ]),
     Drop(16,       [kick, snare, hihat, bass, lead]),
-    Breakdown(8,   [hihat, bass]),
+    Breakdown(8,   [hihat, bass, bass, chantVoice]),
     Drop(16,       [kick, snare, hihat, bass, lead]),
     Outro(4,       [kick, bass]),
   ],

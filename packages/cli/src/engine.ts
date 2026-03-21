@@ -14,6 +14,7 @@
 import { readFileSync } from 'node:fs'
 import { webAudioBackend, decodeSample, createSamplePlayer } from '@score/core'
 import type { EffectDescriptor, AudioComponent, ScoreAudioContext } from '@score/core'
+import { Theremin as ThereminComponent, Sax as SaxComponent } from '@score/components'
 import { createMixer } from '@score/mixer'
 import {
   createDelay, createReverb, createFilter, createCompressor, createEQ,
@@ -24,7 +25,7 @@ import { createTransport, createStepSequencer } from '@score/sequencer'
 import { resolveFreq } from '@score/dsl'
 import type {
   SongDefinition, InstrumentDescriptor,
-  KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps,
+  KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps,
 } from '@score/dsl'
 
 type Context = ReturnType<typeof webAudioBackend.createContext>
@@ -263,6 +264,36 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         const pattern = props.pattern ?? [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
           if (hit) player.start(pos.time)
+        })
+        break
+      }
+      case 'theremin': {
+        const props = comp.props as ThereminDSLProps
+        const t = ThereminComponent(ctx, {
+          ...(props.note         !== undefined && { note:         props.note }),
+          ...(props.vibratoRate  !== undefined && { vibratoRate:  props.vibratoRate }),
+          ...(props.vibratoDepth !== undefined && { vibratoDepth: props.vibratoDepth }),
+          ...(props.gain         !== undefined && { gain:         props.gain }),
+        })
+        t.connect(dest)
+        t.start()
+        break
+      }
+      case 'sax': {
+        const props = comp.props as SaxDSLProps
+        const s = SaxComponent(ctx, {
+          ...(props.note !== undefined && { note: props.note }),
+          ...(props.gain !== undefined && { gain: props.gain }),
+        })
+        s.connect(dest)
+        s.start()
+        const rawPattern = props.pattern ?? ['A4', 0, 0, 0,  'A4', 0, 0, 0,  'A4', 0, 0, 0,  'A4', 0, 0, 0]
+        createStepSequencer(transport, { pattern: rawPattern }, (val: number | string, _step, pos) => {
+          const freq = resolveFreq(val)
+          if (freq > 0) {
+            s.setFrequency(freq)
+            s.trigger(pos.time, props.duration ?? 0.35)
+          }
         })
         break
       }

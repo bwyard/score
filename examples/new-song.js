@@ -47,7 +47,7 @@ import { Song, Kick, Snare, HiHat, Synth } from '@score/dsl'
 
 const kick = Kick({
   pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.9,
+  volume: 2,
 })
 
 const snare = Snare({

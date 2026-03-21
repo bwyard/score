@@ -64,7 +64,7 @@ export const play = async (args: string[]): Promise<void> => {
     })
   }
 
-  const resolved = resolve(process.cwd(), filePath)
+  const resolved = resolve(process.cwd(), filePath.replace(/\\/g, '/'))
   if (!existsSync(resolved)) {
     throw ScoreError(`Song file not found: ${filePath}`, {
       received: resolved,

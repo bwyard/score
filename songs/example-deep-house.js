@@ -11,7 +11,7 @@ import { Song, Kick, Snare, HiHat, Synth, Intro, Drop, Outro } from '@score/dsl'
 
 const kick = Kick({
   pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],   // four on the floor
-  synth: { frequency: 75, pitchDrop: 0.09 },                         // tuned to D
+  synth: { frequency: 100, pitchDrop: 0.09 },                         // tuned to D
   volume: 0.9,
 })
 
@@ -38,31 +38,61 @@ const bass = Synth({
 })
 
 const pad = Synth({
-  wave: 'triangle',
-  gain: 0.12,
+  wave: 'Sawtooth',
+  gain: 0.52,
   envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 0.15 },
   // Sparse chord stabs — syncopated deep house feel
   pattern: ['F3', 0, 0, 0,  'A3', 0, 0, 0,  0, 0, 'F3', 0,  0, 0, 'A3', 0],
 })
 
 const sax = Synth({
-  wave: 'sawtooth',           // raw, harmonically rich — sax fundamental
-  gain: 0.12,
+  wave: 'square',           // raw, harmonically rich — sax fundamental
+  gain: 0.72,
   envelope: { attack: 0.02, decay: 0.15, sustain: 0.85, release: 0.08 },
-  filter: { type: 'lowpass', frequency: 1400, Q: 2.5 },  // cuts highs, adds body
+  filter: { type: 'bandpass', frequency: 1400, Q: 2.5 },  // cuts highs, adds body
   pattern: ['D3', 0, 'F3', 0,  'A3', 0, 0, 0,  'G3', 0, 'E3', 0,  'D3', 0, 0, 0],
 })
+
+// ── Theremin-style synth ──────────────────────────────────────────────────
+  // Sine wave, slow attack, long notes overlapping = continuous floating tone.
+  // Edit wave, filter cutoff, and pattern notes to shape the sound.
+
+  const theremin = Synth({
+    wave: 'sawtooth',           // 'sine' = theremin | 'triangle' = warmer | 'sawtooth' = buzzy
+    gain: 0.6,
+
+    envelope: {
+      attack:  0.2,         // slow attack = smooth entry
+      decay:   0.5,
+      sustain: 0.5,         // high sustain = note holds
+      release: 1.0,         // slow release = notes blur into each other
+    },
+
+    filter: {
+      type: 'bandpass',
+      frequency: 2000,      // raise for brightness, lower for darkness
+      Q: 0.5,
+    },
+
+    // Notes repeat — change freely while playing (--watch)
+    pattern: [
+      'GF4', 'D4', 'B4', 'E4',
+      'Eb4', 'Bb4', 'B4', 'E4',
+      'Eb4', 'Bb4', 'B4', 'E4',
+      'E4', 'E4', 'E4', 'E4',
+    ],
+  })
 
 
 // ── ARRANGEMENT ───────────────────────────────────────────────────────────────
 export default Song({
-  bpm: 124,
-  key: 'Dm',
+  bpm: 120,
+  key: 'Em',
   genre: 'deep-house',
-  tracks: [kick, snare, hihat, sax, bass, pad],
+  tracks: [kick, snare, hihat, sax, bass, pad, theremin],
   arrangement: [
-    Intro(4,  [kick, bass]),
-    Drop(16,  [kick, snare, hihat, bass, pad]),
-    Outro(16,  [kick, bass, sax]),
+    Intro(4,  [kick, bass, theremin]),
+    Drop(16,  [kick, sax, snare, theremin, hihat, bass, pad]),
+    Outro(16,  [kick, bass, sax, pad]),
   ],
 })

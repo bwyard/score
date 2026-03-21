@@ -47,9 +47,9 @@ export const createChannel = (
 
   // Connect chain output (or input directly) to EQ
   if (chain) {
-    chain.connect(eq as unknown as BackendNode)
+    chain.connect(eq.input)
   } else {
-    inputGain.connect(eq as unknown as BackendNode)
+    inputGain.connect(eq.input)
   }
 
   // Pan -> Volume -> Mute -> Output
