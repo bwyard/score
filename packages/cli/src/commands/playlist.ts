@@ -1,8 +1,8 @@
-// playlist.ts — Play all examples (8-bar sample) and songs (full form) in sequence
+// playlist.ts — Play song files in sequence
 //
-// Usage: score playlist
-//        score playlist --examples   Only examples
-//        score playlist --songs      Only full songs
+// Usage: score playlist                        Play all examples + songs
+//        score playlist songs/my-track.js      Play specific files
+//        score playlist my-set.playlist        Play from a playlist file
 
 import { spawn, type ChildProcess } from 'node:child_process'
 import { resolve } from 'node:path'
@@ -69,6 +69,24 @@ const discoverSongs = (dir: string): ReadonlyArray<string> => {
 // Has arrangement sections → full form, otherwise 8-bar sample
 const hasArrangement = (meta: SongMeta): boolean => meta.sections.length > 0
 
+// Build entry from a file path — auto-detect mode from arrangement
+const toEntry = (file: string): PlaylistEntry => {
+  const meta = parseSongMeta(file)
+  return { file, bars: hasArrangement(meta) ? null : 8 }
+}
+
+// Read a .playlist file — one path per line, # comments, blank lines ignored
+const readPlaylistFile = (filePath: string): ReadonlyArray<string> => {
+  const dir = resolve(filePath, '..')
+  return readFileSync(filePath, 'utf-8')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith('#'))
+    .map((line) => resolve(dir, line))
+}
+
+const isPlaylistFile = (path: string): boolean => path.endsWith('.playlist')
+
 // ── Playback ────────────────────────────────────────────────────────────────
 
 const cliEntry = resolve(
@@ -100,31 +118,37 @@ const playSongFile = (
 // ── Main ────────────────────────────────────────────────────────────────────
 
 export const playlist = async (args: string[]): Promise<void> => {
-  const onlyExamples = args.includes('--examples')
-  const onlySongs = args.includes('--songs')
   const cwd = process.cwd()
+  const rawArgs = args.filter((a) => !a.startsWith('-'))
 
-  const examplesDir = resolve(cwd, 'examples')
-  const songsDir = resolve(cwd, 'songs')
+  // Expand .playlist files into their listed paths, pass .js files through
+  const files = rawArgs.flatMap((f) => {
+    const resolved = resolve(cwd, f)
+    return isPlaylistFile(resolved) ? readPlaylistFile(resolved) : [resolved]
+  })
 
-  const entries: PlaylistEntry[] = [
-    ...(!onlySongs
-      ? discoverSongs(examplesDir).map((file) => {
-          const meta = parseSongMeta(file)
-          return { file, bars: hasArrangement(meta) ? null : 8 } as PlaylistEntry
+  // Explicit files → play those. No files → discover from examples/ + songs/
+  const entries: ReadonlyArray<PlaylistEntry> = files.length > 0
+    ? files
+        .filter((f) => {
+          if (!existsSync(f)) {
+            console.log(`Score: Skipping — not found: ${f}`)
+            return false
+          }
+          return true
         })
-      : []),
-    ...(!onlyExamples
-      ? discoverSongs(songsDir).map((file) => ({ file, bars: null }) as PlaylistEntry)
-      : []),
-  ]
+        .map(toEntry)
+    : [
+        ...discoverSongs(resolve(cwd, 'examples')).map(toEntry),
+        ...discoverSongs(resolve(cwd, 'songs')).map(toEntry),
+      ]
 
   if (entries.length === 0) {
-    console.log('Score: No song files found in examples/ or songs/')
+    console.log('Score: No song files found')
     return
   }
 
-  console.log(`Score: Playlist mode — ${String(entries.length)} tracks queued`)
+  console.log(`Score: Playlist — ${String(entries.length)} tracks queued`)
 
   const state = Object.seal({ child: null as ChildProcess | null })
 
