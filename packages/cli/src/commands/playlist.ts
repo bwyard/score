@@ -93,27 +93,43 @@ const cliEntry = resolve(
   fileURLToPath(import.meta.url), '..', '..', 'index.js',
 )
 
-const playSongFile = (
-  filePath: string,
-  durationSec: number,
-  state: { child: ChildProcess | null },
-): Promise<void> =>
+const playSongFile = (filePath: string, durationSec: number): Promise<ChildProcess> =>
   new Promise((res) => {
     const child = spawn(
-      'pw-jack',
-      ['node', cliEntry, 'play', '--trust', filePath],
+      'node',
+      [cliEntry, 'play', '--trust', filePath],
       { stdio: 'inherit', env: { ...process.env, NODE_NO_WARNINGS: '1' } },
     )
 
-    state.child = child
     const timer = setTimeout(() => child.kill('SIGTERM'), durationSec * 1000)
 
     child.on('close', () => {
       clearTimeout(timer)
-      state.child = null
-      res()
+      res(child)
     })
   })
+
+const logEntry = (
+  i: number,
+  total: number,
+  entry: PlaylistEntry,
+  meta: SongMeta,
+  bars: number,
+  duration: number,
+): void => {
+  const mode = entry.bars === null ? 'full form' : '8-bar sample'
+  const keyStr = meta.key ? ` — ${meta.key}` : ''
+
+  console.log(`Score: [${String(i + 1)}/${String(total)}] ${entry.file}`)
+  console.log(`Score: ${String(meta.bpm)} BPM${keyStr} — ${String(bars)} bars — ${formatDuration(duration)} — ${mode}`)
+
+  if (entry.bars === null && meta.sections.length > 0) {
+    const flow = meta.sections
+      .map((s) => `${s.sectionType}(${String(s.bars)}b)`)
+      .join(' → ')
+    console.log(`Score: Arrangement — ${flow}`)
+  }
+}
 
 // ── Main ────────────────────────────────────────────────────────────────────
 
@@ -150,10 +166,7 @@ export const playlist = async (args: string[]): Promise<void> => {
 
   console.log(`Score: Playlist — ${String(entries.length)} tracks queued`)
 
-  const state = Object.seal({ child: null as ChildProcess | null })
-
   const cleanup = (): void => {
-    if (state.child) state.child.kill('SIGTERM')
     console.log('\nScore: Playlist stopped')
     process.exit(0)
   }
@@ -167,20 +180,9 @@ export const playlist = async (args: string[]): Promise<void> => {
     const meta = parseSongMeta(entry.file)
     const bars = entry.bars ?? totalBarsFromSections(meta.sections)
     const duration = barDurationSec(meta.bpm, bars)
-    const mode = entry.bars === null ? 'full form' : '8-bar sample'
-    const keyStr = meta.key ? ` — ${meta.key}` : ''
 
-    console.log(`Score: [${String(i + 1)}/${String(entries.length)}] ${entry.file}`)
-    console.log(`Score: ${String(meta.bpm)} BPM${keyStr} — ${String(bars)} bars — ${formatDuration(duration)} — ${mode}`)
-
-    if (entry.bars === null && meta.sections.length > 0) {
-      const flow = meta.sections
-        .map((s) => `${s.sectionType}(${String(s.bars)}b)`)
-        .join(' → ')
-      console.log(`Score: Arrangement — ${flow}`)
-    }
-
-    await playSongFile(entry.file, duration + 1, state)
+    logEntry(i, entries.length, entry, meta, bars, duration)
+    await playSongFile(entry.file, duration + 1)
     await pause(1)
   }, Promise.resolve())
 
