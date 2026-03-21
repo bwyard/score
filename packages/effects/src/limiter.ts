@@ -1,7 +1,7 @@
 // Limiter effect — hard ceiling with lookahead
 // Uses WaveShaperNode for hard clipping + DelayNode for lookahead
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -76,11 +76,13 @@ export const createLimiter = (
   shaper.connect(outputGain)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setCeiling: (value: number) => void
     readonly setLookahead: (value: number, time?: number) => void
   } = {
     id: uid('limiter'),
     type: 'limiter' as const,
+    input: inputGain,
 
     /**
      * Set the output ceiling in dBFS. Regenerates the clipping curve.

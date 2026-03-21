@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { register } from 'node:module'
+register(new URL('./score-loader.js', import.meta.url).href)
 import { play } from './commands/play.js'
 import { newSong } from './commands/new.js'
 import { doctor } from './commands/doctor.js'

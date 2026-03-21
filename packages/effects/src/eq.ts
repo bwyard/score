@@ -1,7 +1,7 @@
 // EQ effect — 3-band equalizer using three filter instances
 // lowshelf (320 Hz), peaking (1000 Hz), highshelf (3200 Hz)
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendFilterNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode, BackendFilterNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -71,12 +71,14 @@ export const createEQ = (
   midFilter.connect(highFilter)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setLow: (value: number, time?: number) => void
     readonly setMid: (value: number, time?: number) => void
     readonly setHigh: (value: number, time?: number) => void
   } = {
     id: uid('eq'),
     type: 'eq' as const,
+    input: lowFilter,
 
     /**
      * Set the low shelf gain at 320 Hz.

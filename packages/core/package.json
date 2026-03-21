@@ -21,9 +21,7 @@
   "devDependencies": {
     "@types/node": "^25.5.0",
     "@vitest/coverage-v8": "^2.0.0",
+    "node-web-audio-api": "^1.0.8",
     "vitest": "^2.0.0"
-  },
-  "dependencies": {
-    "node-web-audio-api": "^1.0.8"
   }
 }

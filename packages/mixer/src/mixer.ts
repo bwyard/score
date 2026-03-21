@@ -2,7 +2,7 @@
 // Channels -> Master gain <- Returns
 // Master gain -> Master EQ -> Sub bus (lowpass 80Hz -> sub output) -> Limiter -> destination
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
 import { uid } from '@score/core'
 import { createEQ, createLimiter } from '@score/effects'
 import { createChannel } from './channel.js'
@@ -32,10 +32,10 @@ export const createMixer = (
   const limiter = createLimiter(context, { ceiling: props?.limiterCeiling ?? -0.3 })
 
   // Master routing: masterGain -> masterEQ -> subFilter -> subOutputGain -> limiter -> destination
-  masterGain.connect(masterEQ as unknown as BackendNode)
+  masterGain.connect(masterEQ.input)
   masterEQ.connect(subFilter)
   subFilter.connect(subOutputGain)
-  subOutputGain.connect(limiter as unknown as BackendNode)
+  subOutputGain.connect(limiter.input)
   limiter.connect(context.destination)
 
   // Channel, return, and group arrays (mutable for add/remove)

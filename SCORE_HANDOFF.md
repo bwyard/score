@@ -934,6 +934,7 @@ Status: FESTIVAL READY ✅
 ### Warehouse Show — Phase 14 Milestone
 The warehouse show is a required milestone, not optional.
 It is the real-world validation that Score works as a live instrument.
+No fixed date — happens when the software is ready, not on a calendar deadline.
 
 Minimum phases needed before warehouse show:
 - Phases 1-12 complete

@@ -62,10 +62,36 @@ export type SampleProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+export type ThereminDSLProps = {
+  /** Initial note name (e.g. `'A4'`) or frequency in Hz. Default: `'A4'`. */
+  readonly note?: string
+  /** Vibrato rate in Hz. Default: 5. */
+  readonly vibratoRate?: number
+  /** Vibrato depth in Hz. Default: 8. */
+  readonly vibratoDepth?: number
+  /** Output gain 0–1. Default: 0.4. */
+  readonly gain?: number
+  /** Effects chain. */
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
+export type SaxDSLProps = {
+  /** Initial note name (e.g. `'A4'`). Default: `'A4'`. */
+  readonly note?: string
+  /** Peak output gain 0–1. Default: 0.4. */
+  readonly gain?: number
+  /** Note pattern — string note names (e.g. `'A3'`) or `0` for rest. */
+  readonly pattern?: (number | string)[]
+  /** Note duration in seconds. Default: 0.35. */
+  readonly duration?: number
+  /** Effects chain. */
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
 export type InstrumentDescriptor = {
   readonly _type: 'InstrumentDescriptor'
-  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample'
-  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps
+  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample' | 'theremin' | 'sax'
+  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps | ThereminDSLProps | SaxDSLProps
   // Minimal AudioComponent shape so Track() accepts it
   readonly id: string
   readonly type: string

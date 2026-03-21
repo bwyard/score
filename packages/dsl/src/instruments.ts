@@ -6,7 +6,7 @@
 
 import type { BackendNode } from '@score/core'
 import { uid } from '@score/core'
-import type { InstrumentDescriptor, KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps } from './types.js'
+import type { InstrumentDescriptor, KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps } from './types.js'
 
 const makeDescriptor = (
   instrumentType: InstrumentDescriptor['instrumentType'],
@@ -45,4 +45,6 @@ export const Synth  = (props?: SynthDSLProps): InstrumentDescriptor => makeDescr
  * export default Song({ bpm: 128, tracks: [kick] })
  * ```
  */
-export const Sample = (props: SampleProps):    InstrumentDescriptor => makeDescriptor('sample', props)
+export const Sample   = (props: SampleProps):       InstrumentDescriptor => makeDescriptor('sample',   props)
+export const Theremin = (props?: ThereminDSLProps): InstrumentDescriptor => makeDescriptor('theremin', props ?? {})
+export const Sax      = (props?: SaxDSLProps):      InstrumentDescriptor => makeDescriptor('sax',      props ?? {})
