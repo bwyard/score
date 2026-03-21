@@ -134,7 +134,11 @@ export const createMixer = (
 
     addChannel: (channelProps?: ChannelProps) => {
       const ch = createChannel(context, channelProps, () => { updateSoloState(state.channels); })
-      ch.connect(masterGain)
+      // Route to group bus if groupId is specified and the group exists; else masterGain
+      const targetGroup = channelProps?.groupId
+        ? state.groups.find((g) => g.id === channelProps.groupId)
+        : undefined
+      ch.connect(targetGroup ? targetGroup.input : masterGain)
       state.channels.push(ch)
       return ch
     },

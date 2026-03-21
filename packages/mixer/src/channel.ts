@@ -18,6 +18,8 @@ export type ChannelProps = {
   readonly solo?: boolean       // default false
   readonly effects?: ReadonlyArray<AudioComponent>
   readonly eq?: EQProps
+  /** Optional group ID to route this channel to a group bus instead of masterGain. */
+  readonly groupId?: string
 }
 
 /**

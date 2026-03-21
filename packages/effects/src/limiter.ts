@@ -1,5 +1,6 @@
-// Limiter effect — hard ceiling with lookahead
-// Uses WaveShaperNode for hard clipping + DelayNode for lookahead
+// Limiter effect — true look-ahead gain reduction limiter
+// Uses DynamicsCompressorNode (ratio 20:1, 1ms attack) + DelayNode for lookahead
+// No waveform distortion — gain is reduced before the signal arrives
 
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
@@ -7,39 +8,32 @@ import { uid } from '@score/core'
 /**
  * Configuration props for {@link createLimiter}.
  *
- * A brickwall limiter prevents any signal from exceeding the ceiling level.
- * Essential on master buses to prevent clipping during playback and export.
+ * A true look-ahead limiter prevents any signal from exceeding the ceiling
+ * level via gain reduction — no waveform clipping or distortion.
+ * Essential on master buses to prevent intersample peaks during playback.
  */
 export type LimiterProps = {
   /** Output ceiling in dBFS. Default `-0.3` (leaves -0.3dB headroom for inter-sample peaks). */
   readonly ceiling?: number
   /** Lookahead delay in seconds. Helps catch transients before they clip. Default `0.005` (5ms). */
   readonly lookahead?: number
-  /** Release time in seconds — reserved for future gain reduction control. Default unused. */
+  /** Release time in seconds. Default `0.1` (100ms). */
   readonly release?: number
 }
 
-const makeHardClipCurve = (ceilingLinear: number): Float32Array => {
-  const samples = 44100
-  const curve = new Float32Array(samples)
-  for (let i = 0; i < samples; i++) {
-    const x = (i * 2) / samples - 1
-    curve[i] = Math.max(-ceilingLinear, Math.min(ceilingLinear, x))
-  }
-  return curve
-}
-
-const dbToLinear = (db: number): number => Math.pow(10, db / 20)
-
 /**
- * Create a brickwall limiter for master bus ceiling control.
- * Prevents the output from exceeding the `ceiling` level — no peaks escape.
- * Uses a WaveShaper for hard clipping after a short lookahead delay for
- * transient interception. Always place last in the mastering chain.
+ * Create a true look-ahead limiter for master bus ceiling control.
+ *
+ * Uses a `DynamicsCompressorNode` (ratio 20:1, 1ms attack) preceded by a short
+ * lookahead delay so the gain reduction arrives before the transient peak.
+ * Unlike a WaveShaper, this approach reduces gain rather than clipping the
+ * waveform — no harmonic distortion at the ceiling.
+ *
+ * Always place last in the mastering chain.
  *
  * @param context - Backend audio context from the Score engine.
- * @param props - Limiter configuration.
- * @returns AudioComponent with `setCeiling` and `setLookahead` setters.
+ * @param props - Limiter configuration: ceiling (dBFS), lookahead (s), release (s).
+ * @returns AudioComponent with `setCeiling`, `setLookahead`, and `setRelease` setters.
  *
  * @example
  * ```ts
@@ -50,12 +44,11 @@ const dbToLinear = (db: number): number => Math.pow(10, db / 20)
  *
  * @example
  * ```ts
- * // Louder master for streaming normalization (-1 LUFS ceiling target)
- * const loud = createLimiter(context, { ceiling: -1.0, lookahead: 0.01 })
+ * // Tight mastering ceiling with faster release
+ * const loud = createLimiter(context, { ceiling: -1.0, release: 0.05 })
  * ```
  *
  * @see {@link createCompressor} — for dynamic range compression
- * @see {@link createMultibandCompressor} — for per-band mastering dynamics
  */
 export const createLimiter = (
   context: ScoreAudioContext,
@@ -63,35 +56,44 @@ export const createLimiter = (
 ) => {
   const ceilingDb = props?.ceiling ?? -0.3
   const lookaheadTime = props?.lookahead ?? 0.005
-  const ceilingLinear = dbToLinear(ceilingDb)
+  const releaseTime = props?.release ?? 0.1
 
   const inputGain = context.createGain({ gain: 1.0 })
   const lookaheadDelay = context.createDelay({ delayTime: lookaheadTime, maxDelayTime: 0.05 })
-  const shaper = context.createWaveShaper({ curve: makeHardClipCurve(ceilingLinear), oversample: '4x' })
+  // Limiter-mode compressor: high ratio, fast attack, hard knee
+  const compressor = context.createCompressor({
+    threshold: ceilingDb,
+    ratio: 20,
+    knee: 0,
+    attack: 0.001,
+    release: releaseTime,
+  })
   const outputGain = context.createGain({ gain: 1.0 })
 
-  // Route: input -> lookahead delay -> shaper -> output
+  // Route: input -> lookahead delay -> compressor -> output
   inputGain.connect(lookaheadDelay)
-  lookaheadDelay.connect(shaper)
-  shaper.connect(outputGain)
+  lookaheadDelay.connect(compressor)
+  compressor.connect(outputGain)
 
   const component: AudioComponent & {
     readonly input: BackendNode
-    readonly setCeiling: (value: number) => void
+    readonly setCeiling: (value: number, time?: number) => void
     readonly setLookahead: (value: number, time?: number) => void
+    readonly setRelease: (value: number, time?: number) => void
   } = {
     id: uid('limiter'),
     type: 'limiter' as const,
     input: inputGain,
 
     /**
-     * Set the output ceiling in dBFS. Regenerates the clipping curve.
+     * Set the ceiling threshold in dBFS. The compressor limits at this level.
      * Lower values (more negative) leave more headroom.
      *
      * @param value - Ceiling in dBFS. Typical range `-6` to `0`. Default `-0.3`.
+     * @param time - Optional schedule time in seconds.
      */
-    setCeiling: (value: number) => {
-      shaper.setCurve(makeHardClipCurve(dbToLinear(value)))
+    setCeiling: (value: number, time?: number) => {
+      compressor.setThreshold(value, time)
     },
 
     /**
@@ -103,6 +105,16 @@ export const createLimiter = (
      */
     setLookahead: (value: number, time?: number) => {
       lookaheadDelay.setDelayTime(value, time)
+    },
+
+    /**
+     * Set the gain reduction release time.
+     *
+     * @param value - Release in seconds. Default `0.1` (100ms).
+     * @param time - Optional schedule time in seconds.
+     */
+    setRelease: (value: number, time?: number) => {
+      compressor.setRelease(value, time)
     },
 
     connect: (destination: ScoreAudioNode) => {
@@ -118,7 +130,7 @@ export const createLimiter = (
     dispose: () => {
       try { inputGain.disconnect() } catch { /* already disconnected */ }
       try { lookaheadDelay.disconnect() } catch { /* already disconnected */ }
-      try { shaper.disconnect() } catch { /* already disconnected */ }
+      try { compressor.disconnect() } catch { /* already disconnected */ }
       try { outputGain.disconnect() } catch { /* already disconnected */ }
     },
   }

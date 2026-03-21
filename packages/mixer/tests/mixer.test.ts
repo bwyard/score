@@ -35,15 +35,15 @@ describe('createMixer', () => {
     expect(mixer.type).toBe('mixer')
   })
 
-  it('creates master gain, EQ filters, limiter waveshaper', () => {
+  it('creates master gain, EQ filters, limiter compressor', () => {
     const ctx = h.mockContext()
     createMixer(ctx)
     // masterGain = 1+ gains
     expect(ctx.createdGains.length).toBeGreaterThanOrEqual(1)
     // masterEQ = 3 filters (low/mid/high shelves) — sub filter removed (was in-series bug t092)
     expect(ctx.createdFilters.length).toBeGreaterThanOrEqual(3)
-    // limiter = 1 waveshaper
-    expect(ctx.createdWaveShapers.length).toBeGreaterThanOrEqual(1)
+    // limiter = 1 compressor (replaced WaveShaper, t095)
+    expect(ctx.createdCompressors.length).toBeGreaterThanOrEqual(1)
   })
 
   it('accepts masterVolume prop', () => {

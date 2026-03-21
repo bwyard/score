@@ -14,6 +14,19 @@ export type ClockProps = {
   readonly lookaheadMs?: number
   /** How far ahead (in seconds) to schedule events. Defaults to `0.1`. */
   readonly scheduleAheadSec?: number
+  /**
+   * Optional loop scheduler — defaults to `setTimeout`.
+   * Inject a manual scheduler in tests for deterministic tick advancement:
+   * ```ts
+   * let pending: (() => void) | null = null
+   * const schedule = (fn: () => void) => { pending = fn }
+   * const clock = createClock(ctx, { schedule })
+   * clock.start()
+   * pending?.() // advance one loop cycle
+   * ```
+   * SuperCollider or offline backends can pass their own scheduler here.
+   */
+  readonly schedule?: (fn: () => void, ms: number) => unknown
 }
 
 /**
@@ -62,7 +75,7 @@ type ClockState = {
   running: boolean
   tick: number
   nextTickTime: number
-  timerId: ReturnType<typeof setTimeout> | null
+  timerId: unknown
 }
 
 /**
@@ -93,6 +106,7 @@ export const createClock = (context: ClockContext, props?: ClockProps): Clock =>
   const ticksPerBeat = props?.ticksPerBeat ?? 4
   const lookaheadMs = props?.lookaheadMs ?? 25
   const scheduleAheadSec = props?.scheduleAheadSec ?? 0.1
+  const scheduleFn = props?.schedule ?? ((fn: () => void, ms: number) => setTimeout(fn, ms))
 
   // Single mutable state object — const binding, property mutation only
   const state: ClockState = {
@@ -122,7 +136,7 @@ export const createClock = (context: ClockContext, props?: ClockProps): Clock =>
   const loop = (): void => {
     if (!state.running) return
     schedule()
-    state.timerId = setTimeout(loop, lookaheadMs)
+    state.timerId = scheduleFn(loop, lookaheadMs)
   }
 
   const clock: Clock = {
@@ -136,7 +150,7 @@ export const createClock = (context: ClockContext, props?: ClockProps): Clock =>
 
     stop: (): void => {
       if (state.timerId !== null) {
-        clearTimeout(state.timerId)
+        clearTimeout(state.timerId as ReturnType<typeof setTimeout>)
       }
       state.running = false
       state.tick = 0

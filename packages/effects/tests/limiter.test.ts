@@ -14,10 +14,10 @@ describe('createLimiter', () => {
     expect(typeof d.dispose).toBe('function')
   })
 
-  it('creates backend waveshaper, delay, and gain nodes', () => {
+  it('creates backend compressor, delay, and gain nodes', () => {
     const ctx = h.mockContext()
     createLimiter(ctx)
-    expect(ctx.createdWaveShapers.length).toBe(1)
+    expect(ctx.createdCompressors.length).toBe(1)
     expect(ctx.createdDelays.length).toBe(1)
     expect(ctx.createdGains.length).toBeGreaterThanOrEqual(1)
   })
@@ -56,6 +56,18 @@ describe('createLimiter', () => {
     const ctx = h.mockContext()
     const d = createLimiter(ctx)
     expect(() => { d.setLookahead(0.01, 1.0) }).not.toThrow()
+  })
+
+  it('setRelease does not throw', () => {
+    const ctx = h.mockContext()
+    const d = createLimiter(ctx)
+    expect(() => { d.setRelease(0.05) }).not.toThrow()
+  })
+
+  it('setCeiling accepts optional time parameter', () => {
+    const ctx = h.mockContext()
+    const d = createLimiter(ctx)
+    expect(() => { d.setCeiling(-1.0, 1.0) }).not.toThrow()
   })
 
   it('connect returns self for chaining', () => {
