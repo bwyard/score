@@ -2,6 +2,7 @@
 import { register } from 'node:module'
 register(new URL('./score-loader.js', import.meta.url).href)
 import { play } from './commands/play.js'
+import { repl } from './commands/repl.js'
 import { newSong } from './commands/new.js'
 import { doctor } from './commands/doctor.js'
 
@@ -14,6 +15,7 @@ if (command === '--version' || command === '-v') {
 
 const commands: Record<string, (args: string[]) => Promise<void> | void> = {
   play:   args => play(args),
+  repl:   args => repl(args),
   new:    args => { newSong(args); },
   doctor: args => { doctor(args); },
 }
@@ -25,6 +27,7 @@ if (!handler) {
   console.log('Usage:')
   console.log('  score play <song.js>         Play a song file')
   console.log('  score play <song.js> --watch Live reload on file save')
+  console.log('  score repl [song.js]         Interactive live coding REPL')
   console.log('  score new song <name>        Create a new song from template')
   console.log('  score doctor                 Check system requirements')
   console.log('  score --version              Show version')

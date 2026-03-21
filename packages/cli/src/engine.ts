@@ -165,6 +165,8 @@ export type ScoreEngine = {
   readonly start:   () => void
   readonly stop:    () => void
   readonly dispose: () => void
+  readonly bpm:     number
+  readonly onBar:   (callback: () => void) => void
 }
 
 export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngine> => {
@@ -348,5 +350,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       mixer.dispose()
       ctx.close().catch(() => {})
     },
+    get bpm() { return transport.bpm },
+    onBar: (callback: () => void) => { transport.onBar(callback) },
   }
 }
