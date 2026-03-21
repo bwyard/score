@@ -133,6 +133,18 @@ const logEntry = (
 
 // ── Main ────────────────────────────────────────────────────────────────────
 
+/**
+ * Play song files in sequence — examples get 8-bar samples, songs play full form.
+ *
+ * @param args - Positional file paths (`.js` or `.playlist`). Empty = discover all.
+ *
+ * @example
+ * ```ts
+ * await playlist([])                                    // all examples + songs
+ * await playlist(['songs/example-techno.js'])           // one file
+ * await playlist(['my-set.playlist'])                   // from playlist file
+ * ```
+ */
 export const playlist = async (args: string[]): Promise<void> => {
   const cwd = process.cwd()
   const rawArgs = args.filter((a) => !a.startsWith('-'))
