@@ -30,6 +30,7 @@ if (!handler) {
   console.log('  score playlist               Play all examples and songs')
   console.log('  score playlist <files...>    Play specific song files')
   console.log('  score playlist set.playlist  Play from a playlist file')
+  console.log('  score playlist --shuffle     Randomize play order')
   console.log('  score new song <name>        Create a new song from template')
   console.log('  score doctor                 Check system requirements')
   console.log('  score --version              Show version')

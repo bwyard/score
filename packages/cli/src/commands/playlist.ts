@@ -66,8 +66,15 @@ const discoverSongs = (dir: string): ReadonlyArray<string> => {
     .map((f) => resolve(dir, f))
 }
 
-// Has arrangement sections → full form, otherwise 8-bar sample
+// Has arrangement sections → full form, otherwise once through
 const hasArrangement = (meta: SongMeta): boolean => meta.sections.length > 0
+
+// Shuffle — sort by random key, pure and allocation-only
+const shuffle = <T>(arr: ReadonlyArray<T>): ReadonlyArray<T> =>
+  [...arr]
+    .map((item) => ({ item, key: Math.random() }))
+    .sort((a, b) => a.key - b.key)
+    .map(({ item }) => item)
 
 // Build entry from a file path — auto-detect mode from arrangement
 const toEntry = (file: string): PlaylistEntry => {
@@ -151,6 +158,7 @@ const logEntry = (
  */
 export const playlist = async (args: string[]): Promise<void> => {
   const cwd = process.cwd()
+  const shuffled = args.includes('--shuffle') || args.includes('-s')
   const rawArgs = args.filter((a) => !a.startsWith('-'))
 
   // Expand .playlist files into their listed paths, pass .js files through
@@ -180,7 +188,9 @@ export const playlist = async (args: string[]): Promise<void> => {
     return
   }
 
-  console.log(`Score: Playlist — ${String(entries.length)} tracks queued`)
+  const ordered = shuffled ? shuffle(entries) : entries
+
+  console.log(`Score: Playlist — ${String(ordered.length)} tracks queued${shuffled ? ' (shuffled)' : ''}`)
 
   const cleanup = (): void => {
     console.log('\nScore: Playlist stopped')
@@ -190,14 +200,14 @@ export const playlist = async (args: string[]): Promise<void> => {
   process.once('SIGINT', cleanup)
   process.once('SIGTERM', cleanup)
 
-  await entries.reduce(async (prev, entry, i) => {
+  await ordered.reduce(async (prev, entry, i) => {
     await prev
 
     const meta = parseSongMeta(entry.file)
     const bars = entry.bars ?? totalBarsFromSections(meta.sections)
     const duration = barDurationSec(meta.bpm, bars)
 
-    logEntry(i, entries.length, entry, meta, bars, duration)
+    logEntry(i, ordered.length, entry, meta, bars, duration)
     await playSongFile(entry.file, duration + 1)
     await pause(1)
   }, Promise.resolve())
