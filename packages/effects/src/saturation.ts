@@ -18,10 +18,10 @@ export type SaturationProps = {
 }
 
 /**
- * Internal mutable state for {@link createSaturation}.
- * Only one `let state` variable is used per factory invocation.
+ * Hardware-boundary exception: engine-layer mutable state.
+ * `const` binding — identity never changes, only `drive` is mutated by `setDrive`.
  */
-type SaturationState = { readonly drive: number }
+type SaturationState = { drive: number }
 
 const makeTanhCurve = (drive: number): Float32Array => {
   const samples = 256
@@ -62,7 +62,7 @@ export const createSaturation = (
   const driveAmount = Math.max(0, Math.min(props?.drive ?? 0.3, 1.0))
   const mixAmount = Math.max(0, Math.min(props?.mix ?? 0.5, 1.0))
 
-  let state: SaturationState = { drive: driveAmount }
+  const state: SaturationState = { drive: driveAmount }
 
   const inputGain = context.createGain({ gain: 1.0 })
   const outputGain = context.createGain({ gain: 1.0 })
@@ -97,7 +97,7 @@ export const createSaturation = (
      * @param time - Optional — unused for curve changes, accepted for API consistency.
      */
     setDrive: (drive: number, _time?: number) => {
-      state = { ...state, drive: Math.max(0, Math.min(drive, 1.0)) }
+      state.drive = Math.max(0, Math.min(drive, 1.0))
       shaper.setCurve(makeTanhCurve(state.drive))
     },
 

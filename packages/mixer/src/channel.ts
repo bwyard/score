@@ -36,11 +36,15 @@ type SendEntry = {
   readonly gainNode: ReturnType<ScoreAudioContext['createGain']>
 }
 
-/** Mutable state held inside a channel factory closure. */
+/**
+ * Mutable state held inside a channel factory closure.
+ * `const` binding — the object identity never changes, only its properties.
+ * Property mutation is the hardware-boundary exception (engine layer only).
+ */
 type ChannelState = {
-  readonly mute: boolean
-  readonly solo: boolean
-  readonly sends: ReadonlyArray<SendEntry>
+  mute: boolean
+  solo: boolean
+  sends: SendEntry[]
 }
 
 /**
@@ -68,8 +72,8 @@ export const createChannel = (
 ) => {
   const channelName = props?.name ?? 'Channel'
 
-  // Single mutable state object — the only `let` in this factory
-  let state: ChannelState = {
+  // Single mutable state object — const binding, property mutation only
+  const state: ChannelState = {
     mute: props?.mute ?? false,
     solo: props?.solo ?? false,
     sends: [],
@@ -136,12 +140,12 @@ export const createChannel = (
     },
 
     setMute: (value: boolean) => {
-      state = { ...state, mute: value }
+      state.mute = value
       muteGain.setGain(value ? 0 : 1)
     },
 
     setSolo: (value: boolean) => {
-      state = { ...state, solo: value }
+      state.solo = value
       if (onSoloChange) {
         onSoloChange()
       }
@@ -157,19 +161,19 @@ export const createChannel = (
       const sendGain = context.createGain({ gain: 0.5 })
       muteGain.connect(sendGain)
       sendGain.connect(returnInput)
-      state = { ...state, sends: [...state.sends, { gainNode: sendGain }] }
+      state.sends.push({ gainNode: sendGain })
 
-      // Per-send disposed flag lives in a closure — no mutable object field needed
-      let isDisposed = false
+      // Per-send disposed flag — const object, property mutation at hardware boundary
+      const sendState = { disposed: false }
 
       return {
         setLevel: (value: number, time?: number) => {
           sendGain.setGain(value, time)
         },
         dispose: () => {
-          if (!isDisposed) {
-            isDisposed = true
-            state = { ...state, sends: state.sends.filter((s) => s.gainNode !== sendGain) }
+          if (!sendState.disposed) {
+            sendState.disposed = true
+            state.sends = state.sends.filter((s) => s.gainNode !== sendGain)
             try { sendGain.disconnect() } catch { /* already disconnected */ }
           }
         },

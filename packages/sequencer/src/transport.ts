@@ -67,10 +67,14 @@ export type Transport = {
   readonly dispose: () => void
 }
 
-/** Internal mutable state for {@link createTransport}. */
+/**
+ * Internal mutable state for {@link createTransport}.
+ * `const` binding — the object identity never changes, only its properties.
+ * Property mutation is the hardware-boundary exception (engine layer only).
+ */
 type TransportInternalState = {
-  readonly transportState: TransportState
-  readonly pos: Position
+  transportState: TransportState
+  pos: Position
 }
 
 /**
@@ -95,8 +99,8 @@ export const createTransport = (context: ClockContext, props?: TransportProps): 
   const ticksPerBeat = props?.ticksPerBeat ?? 4
   const beatsPerBar = props?.timeSignature?.[0] ?? 4
 
-  // Single mutable state object — the one `let` allowed per factory function.
-  let state: TransportInternalState = {
+  // Single mutable state object — const binding, property mutation only
+  const state: TransportInternalState = {
     transportState: 'stopped',
     pos: { bar: 0, beat: 0, tick: 0, time: 0 },
   }
@@ -123,7 +127,7 @@ export const createTransport = (context: ClockContext, props?: TransportProps): 
     const nextBeat = rawBeat >= beatsPerBar ? 0 : rawBeat
     const nextBar  = (advBeat && rawBeat >= beatsPerBar) ? state.pos.bar + 1 : state.pos.bar
 
-    state = { ...state, pos: { bar: nextBar, beat: nextBeat, tick: nextTick, time: tickTime } }
+    state.pos = { bar: nextBar, beat: nextBeat, tick: nextTick, time: tickTime }
     const snapshot = { ...state.pos }
 
     for (const cb of tickCallbacks) {
@@ -146,31 +150,25 @@ export const createTransport = (context: ClockContext, props?: TransportProps): 
   const transport: Transport = {
     play: (): void => {
       if (state.transportState === 'playing') return
-      state = { ...state, transportState: 'playing' }
+      state.transportState = 'playing'
       clock.start()
     },
 
     stop: (): void => {
       if (state.transportState === 'stopped') return
-      state = {
-        ...state,
-        transportState: 'stopped',
-        pos: { bar: 0, beat: 0, tick: 0, time: 0 },
-      }
+      state.transportState = 'stopped'
+      state.pos = { bar: 0, beat: 0, tick: 0, time: 0 }
       clock.stop()
     },
 
     pause: (): void => {
       if (state.transportState !== 'playing') return
-      state = { ...state, transportState: 'paused' }
+      state.transportState = 'paused'
       clock.stop()
     },
 
     seek: (bar: number, beat?: number, tick?: number): void => {
-      state = {
-        ...state,
-        pos: { bar, beat: beat ?? 0, tick: tick ?? 0, time: state.pos.time },
-      }
+      state.pos = { bar, beat: beat ?? 0, tick: tick ?? 0, time: state.pos.time }
     },
 
     get position() { return { ...state.pos } },
@@ -195,7 +193,7 @@ export const createTransport = (context: ClockContext, props?: TransportProps): 
 
     dispose: (): void => {
       if (state.transportState === 'playing') {
-        state = { ...state, transportState: 'stopped' }
+        state.transportState = 'stopped'
       }
       clock.dispose()
       tickCallbacks.length = 0

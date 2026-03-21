@@ -51,14 +51,18 @@ export type ClockContext = {
   readonly currentTime: number
 }
 
-/** Internal mutable state for {@link createClock}. */
+/**
+ * Internal mutable state for {@link createClock}.
+ * `const` binding — the object identity never changes, only its properties.
+ * Property mutation is the hardware-boundary exception (engine layer only).
+ */
 type ClockState = {
-  readonly bpm: number
-  readonly tickDuration: number
-  readonly running: boolean
-  readonly tick: number
-  readonly nextTickTime: number
-  readonly timerId: ReturnType<typeof setTimeout> | null
+  bpm: number
+  tickDuration: number
+  running: boolean
+  tick: number
+  nextTickTime: number
+  timerId: ReturnType<typeof setTimeout> | null
 }
 
 /**
@@ -90,8 +94,8 @@ export const createClock = (context: ClockContext, props?: ClockProps): Clock =>
   const lookaheadMs = props?.lookaheadMs ?? 25
   const scheduleAheadSec = props?.scheduleAheadSec ?? 0.1
 
-  // Single mutable state object — the one `let` allowed per factory function.
-  let state: ClockState = {
+  // Single mutable state object — const binding, property mutation only
+  const state: ClockState = {
     bpm: props?.bpm ?? 120,
     tickDuration: 60 / ((props?.bpm ?? 120) * ticksPerBeat),
     running: false,
@@ -100,7 +104,7 @@ export const createClock = (context: ClockContext, props?: ClockProps): Clock =>
     timerId: null,
   }
 
-  // Callback registry — const array; mutation is the unavoidable event-system boundary.
+  // Callback registry — const array; push is the unavoidable event-system boundary.
   const callbacks: Array<(tickTime: number, tickNumber: number) => void> = []
 
   const schedule = (): void => {
@@ -110,29 +114,23 @@ export const createClock = (context: ClockContext, props?: ClockProps): Clock =>
       for (const cb of callbacks) {
         cb(currentTickTime, currentTickNumber)
       }
-      state = {
-        ...state,
-        tick: state.tick + 1,
-        nextTickTime: state.nextTickTime + state.tickDuration,
-      }
+      state.tick += 1
+      state.nextTickTime += state.tickDuration
     }
   }
 
   const loop = (): void => {
     if (!state.running) return
     schedule()
-    state = { ...state, timerId: setTimeout(loop, lookaheadMs) }
+    state.timerId = setTimeout(loop, lookaheadMs)
   }
 
   const clock: Clock = {
     start: (): void => {
       if (state.running) return
-      state = {
-        ...state,
-        running: true,
-        nextTickTime: context.currentTime,
-        tick: 0,
-      }
+      state.running = true
+      state.nextTickTime = context.currentTime
+      state.tick = 0
       loop()
     },
 
@@ -140,11 +138,14 @@ export const createClock = (context: ClockContext, props?: ClockProps): Clock =>
       if (state.timerId !== null) {
         clearTimeout(state.timerId)
       }
-      state = { ...state, running: false, tick: 0, timerId: null }
+      state.running = false
+      state.tick = 0
+      state.timerId = null
     },
 
     setBPM: (bpm: number): void => {
-      state = { ...state, bpm, tickDuration: 60 / (bpm * ticksPerBeat) }
+      state.bpm = bpm
+      state.tickDuration = 60 / (bpm * ticksPerBeat)
     },
 
     onTick: (callback: (tickTime: number, tickNumber: number) => void): void => {

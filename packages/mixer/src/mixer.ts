@@ -23,11 +23,15 @@ export type MixerProps = {
   readonly limiterCeiling?: number  // dB, default -0.3
 }
 
-/** Mutable state held inside the mixer factory closure. */
+/**
+ * Mutable state held inside the mixer factory closure.
+ * `const` binding — the object identity never changes, only its array properties.
+ * Array mutation is the hardware-boundary exception (engine layer only).
+ */
 type MixerState = {
-  readonly channels: ReadonlyArray<ReturnType<typeof createChannel>>
-  readonly returns: ReadonlyArray<ReturnType<typeof createReturn>>
-  readonly groups: ReadonlyArray<ReturnType<typeof createGroup>>
+  channels: Array<ReturnType<typeof createChannel>>
+  returns: Array<ReturnType<typeof createReturn>>
+  groups: Array<ReturnType<typeof createGroup>>
 }
 
 /**
@@ -67,8 +71,8 @@ export const createMixer = (
   masterEQ.connect(limiter.input)
   limiter.connect(context.destination)
 
-  // Single mutable state object — the only `let` in this factory
-  let state: MixerState = { channels: [], returns: [], groups: [] }
+  // Single mutable state object — const binding, property mutation only
+  const state: MixerState = { channels: [], returns: [], groups: [] }
 
   // Solo state management — pure function over the channels array; side effects are
   // setMuteGain calls which are the intentional audio-graph boundary.
@@ -84,7 +88,7 @@ export const createMixer = (
     for (const chProps of props.channels) {
       const ch = createChannel(context, chProps, () => { updateSoloState(state.channels); })
       ch.connect(masterGain)
-      state = { ...state, channels: [...state.channels, ch] }
+      state.channels.push(ch)
     }
   }
 
@@ -93,7 +97,7 @@ export const createMixer = (
     for (const retProps of props.returns) {
       const ret = createReturn(context, retProps)
       ret.connect(masterGain)
-      state = { ...state, returns: [...state.returns, ret] }
+      state.returns.push(ret)
     }
   }
 
@@ -102,7 +106,7 @@ export const createMixer = (
     for (const grpProps of props.groups) {
       const grp = createGroup(context, grpProps)
       grp.connect(masterGain)
-      state = { ...state, groups: [...state.groups, grp] }
+      state.groups.push(grp)
     }
   }
 
@@ -131,14 +135,14 @@ export const createMixer = (
     addChannel: (channelProps?: ChannelProps) => {
       const ch = createChannel(context, channelProps, () => { updateSoloState(state.channels); })
       ch.connect(masterGain)
-      state = { ...state, channels: [...state.channels, ch] }
+      state.channels.push(ch)
       return ch
     },
 
     addGroup: (groupProps?: GroupProps) => {
       const grp = createGroup(context, groupProps)
       grp.connect(masterGain)
-      state = { ...state, groups: [...state.groups, grp] }
+      state.groups.push(grp)
       return grp
     },
 
@@ -147,7 +151,7 @@ export const createMixer = (
       if (ch) {
         ch.disconnect()
         ch.dispose()
-        state = { ...state, channels: state.channels.filter((_, i) => i !== index) }
+        state.channels = state.channels.filter((_, i) => i !== index)
         updateSoloState(state.channels)
       }
     },

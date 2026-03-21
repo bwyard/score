@@ -37,8 +37,9 @@ export const createSamplePlayer = (
   },
 ) => {
   const gainNode = context.createGain({ gain: props?.gain ?? 1.0 })
-  type SampleState = { readonly activeSource: BackendBufferSourceNode | null }
-  let state: SampleState = { activeSource: null }
+  // Hardware-boundary exception: engine-layer mutable state. const binding, property mutation only.
+  type SampleState = { activeSource: BackendBufferSourceNode | null }
+  const state: SampleState = { activeSource: null }
 
   const component: AudioComponent & {
     readonly start: (time?: number, offset?: number, duration?: number) => void
@@ -61,7 +62,7 @@ export const createSamplePlayer = (
         loop: props?.loop ?? false,
         playbackRate: props?.playbackRate ?? 1.0,
       })
-      state = { ...state, activeSource: newSource }
+      state.activeSource = newSource
       newSource.connect(gainNode)
       newSource.start(time, offset, duration)
     },
@@ -73,7 +74,7 @@ export const createSamplePlayer = (
         } catch {
           // Already stopped
         }
-        state = { ...state, activeSource: null }
+        state.activeSource = null
       }
     },
 
@@ -113,7 +114,7 @@ export const createSamplePlayer = (
         } catch {
           // Already disconnected
         }
-        state = { ...state, activeSource: null }
+        state.activeSource = null
       }
       try {
         gainNode.disconnect()

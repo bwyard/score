@@ -30,14 +30,14 @@ export type AutoPanProps = {
 }
 
 /**
- * Internal mutable state for {@link createAutoPan}.
- * Only one `let state` variable is used per factory invocation.
+ * Hardware-boundary exception: engine-layer mutable state.
+ * `const` binding — identity never changes, only properties are mutated by setters.
  */
 type AutoPanState = {
-  readonly rate: number
-  readonly depth: number
-  readonly shape: AutoPanShape
-  readonly scheduled: boolean
+  rate: number
+  depth: number
+  shape: AutoPanShape
+  scheduled: boolean
 }
 
 const SCHEDULE_STEPS = 64
@@ -90,7 +90,7 @@ export const createAutoPan = (
   context: ScoreAudioContext,
   props?: AutoPanProps,
 ) => {
-  let state: AutoPanState = {
+  const state: AutoPanState = {
     rate: Math.max(0.001, props?.rate ?? 0.5),
     depth: Math.max(0, Math.min(props?.depth ?? 0.8, 1.0)),
     shape: props?.shape ?? 'sine',
@@ -125,7 +125,7 @@ export const createAutoPan = (
      * @param hz - LFO rate in Hz. Must be > 0.
      */
     setRate: (hz: number) => {
-      state = { ...state, rate: Math.max(0.001, hz) }
+      state.rate = Math.max(0.001, hz)
       if (state.scheduled) reschedule()
     },
 
@@ -136,7 +136,7 @@ export const createAutoPan = (
      * @param depth - Pan depth `0–1`.
      */
     setDepth: (depth: number) => {
-      state = { ...state, depth: Math.max(0, Math.min(depth, 1.0)) }
+      state.depth = Math.max(0, Math.min(depth, 1.0))
       if (state.scheduled) reschedule()
     },
 
@@ -146,14 +146,14 @@ export const createAutoPan = (
      * @param shape - `'sine'` for smooth sweeps, `'triangle'` for linear ramps.
      */
     setShape: (shape: AutoPanShape) => {
-      state = { ...state, shape }
+      state.shape = shape
       if (state.scheduled) reschedule()
     },
 
     connect: (destination: ScoreAudioNode) => {
       outputGain.connect(destination)
       if (!state.scheduled) {
-        state = { ...state, scheduled: true }
+        state.scheduled = true
         reschedule()
       }
       return component
