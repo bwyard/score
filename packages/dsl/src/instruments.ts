@@ -6,7 +6,7 @@
 
 import type { BackendNode } from '@score/core'
 import { uid } from '@score/core'
-import type { InstrumentDescriptor, KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps } from './types.js'
+import type { InstrumentDescriptor, KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps } from './types.js'
 
 const makeDescriptor = (
   instrumentType: InstrumentDescriptor['instrumentType'],
@@ -48,3 +48,26 @@ export const Synth  = (props?: SynthDSLProps): InstrumentDescriptor => makeDescr
 export const Sample   = (props: SampleProps):       InstrumentDescriptor => makeDescriptor('sample',   props)
 export const Theremin = (props?: ThereminDSLProps): InstrumentDescriptor => makeDescriptor('theremin', props ?? {})
 export const Sax      = (props?: SaxDSLProps):      InstrumentDescriptor => makeDescriptor('sax',      props ?? {})
+/**
+ * Arpeggiator instrument — cycles through a chord's notes in sequence on each trigger step.
+ *
+ * The engine advances through `notes` each time a step is active, cycling based on `mode`.
+ * Each note is synthesised using an oscillator+ADSR, exactly like `Synth`.
+ *
+ * @param props - `notes` is required. All other props are optional.
+ * @returns An `InstrumentDescriptor` of type `'arp'`.
+ *
+ * @example
+ * ```js
+ * import { Song, Arp } from '@score/dsl'
+ * const arp = Arp({
+ *   notes: ['C4', 'E4', 'G4', 'B4'],
+ *   mode: 'up',
+ *   wave: 'triangle',
+ *   gain: 0.3,
+ *   envelope: { attack: 0.01, decay: 0.1, sustain: 0.6, release: 0.05 },
+ * })
+ * export default Song({ bpm: 128, tracks: [arp] })
+ * ```
+ */
+export const Arp = (props: ArpDSLProps): InstrumentDescriptor => makeDescriptor('arp', props)

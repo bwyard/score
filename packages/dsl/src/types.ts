@@ -88,10 +88,34 @@ export type SaxDSLProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+export type ArpDSLProps = {
+  /** Note names to arpeggiate in order, e.g. `['C4', 'E4', 'G4', 'B4']`. Required. */
+  readonly notes: string[]
+  /** Arpeggio traversal mode. Default: `'up'`. */
+  readonly mode?: 'up' | 'down' | 'pingpong' | 'random'
+  /** Steps per note advance — `1` = change note every step, `2` = every other step. Default: `1`. */
+  readonly rate?: number
+  /** Oscillator wave type. Default: `'triangle'`. */
+  readonly wave?: 'sine' | 'square' | 'sawtooth' | 'triangle'
+  /** Peak output gain 0–1. Default: `0.3`. */
+  readonly gain?: number
+  /** ADSR envelope. */
+  readonly envelope?: {
+    readonly attack?: number
+    readonly decay?: number
+    readonly sustain?: number
+    readonly release?: number
+  }
+  /** Trigger pattern — non-zero = play, 0 = rest. Default: all steps active. */
+  readonly pattern?: (number | string)[]
+  /** Effects chain. */
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
 export type InstrumentDescriptor = {
   readonly _type: 'InstrumentDescriptor'
-  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample' | 'theremin' | 'sax'
-  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps | ThereminDSLProps | SaxDSLProps
+  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample' | 'theremin' | 'sax' | 'arp'
+  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps | ThereminDSLProps | SaxDSLProps | ArpDSLProps
   // Minimal AudioComponent shape so Track() accepts it
   readonly id: string
   readonly type: string

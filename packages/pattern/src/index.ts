@@ -1,5 +1,5 @@
 export { euclidean } from './euclidean.js'
-export { fast, slow, rev, every, degrade, shift, stack, beat } from './transforms.js'
+export { fast, slow, rev, every, degrade, shift, stack, beat, humanize } from './transforms.js'
 export { scaleNotes, chordNotes } from './scales.js'
 export { resolvePattern } from './types.js'
 export type { PatternInput, PatternArray, PatternFn } from './types.js'

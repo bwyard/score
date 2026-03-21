@@ -25,7 +25,7 @@ import { createTransport, createStepSequencer } from '@score/sequencer'
 import { resolveFreq } from '@score/dsl'
 import type {
   SongDefinition, InstrumentDescriptor,
-  KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps,
+  KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps,
 } from '@score/dsl'
 
 type Context = ReturnType<typeof webAudioBackend.createContext>
@@ -289,6 +289,45 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
           if (freq > 0) {
             s.setFrequency(freq)
             s.trigger(pos.time, props.duration ?? 0.35)
+          }
+        })
+        break
+      }
+      case 'arp': {
+        const props = comp.props as ArpDSLProps
+        const notes = props.notes
+        const mode = props.mode ?? 'up'
+        const rate = props.rate ?? 1
+        // Hardware-boundary exception: arp step counter — sequential, const-bound state
+        const arpState = { noteIndex: 0, pingDir: 1 }
+        const defaultPattern = Array.from({ length: 16 }, () => 1)
+        const rawPattern = props.pattern ?? defaultPattern
+        createStepSequencer(transport, { pattern: rawPattern }, (val: number | string, _step, pos) => {
+          const active = typeof val === 'number' ? val : resolveFreq(val)
+          if (active <= 0) return
+          const idx = Math.floor(arpState.noteIndex / rate) % notes.length
+          const note = notes[idx] ?? notes[0] ?? 'C4'
+          const freq = resolveFreq(note)
+          if (freq > 0) triggerSynth(ctx, pos.time, {
+            wave: props.wave ?? 'triangle',
+            gain: props.gain ?? 0.3,
+            envelope: props.envelope,
+          } as SynthDSLProps, freq, dest)
+          // Advance note index based on mode
+          if (mode === 'up') {
+            arpState.noteIndex += 1
+          } else if (mode === 'down') {
+            arpState.noteIndex -= 1
+          } else if (mode === 'pingpong') {
+            arpState.noteIndex += arpState.pingDir
+            const realIdx = Math.floor(arpState.noteIndex / rate) % notes.length
+            if (realIdx >= notes.length - 1 || realIdx <= 0) {
+              arpState.pingDir *= -1
+            }
+          } else {
+            // random — deterministic based on noteIndex+time
+            const seed = (arpState.noteIndex * 7919) >>> 0
+            arpState.noteIndex = seed % notes.length
           }
         })
         break
