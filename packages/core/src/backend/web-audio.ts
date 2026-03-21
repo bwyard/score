@@ -401,6 +401,64 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
     },
   }
 }
+// --- Renderable context (offline) ---
+
+/**
+ * A {@link BackendContext} that supports offline rendering.
+ * Created via {@link createOfflineContext} — use it to render a song to an audio buffer
+ * without a real-time audio device.
+ */
+export type RenderableBackendContext = BackendContext & {
+  /**
+   * Render all scheduled audio and return the resulting buffer.
+   * Call this after scheduling all note events.
+   */
+  readonly startRendering: () => Promise<{
+    readonly length: number
+    readonly sampleRate: number
+    readonly numberOfChannels: number
+    readonly getChannelData: (channel: number) => Float32Array
+  }>
+}
+
+/**
+ * Create an offline {@link RenderableBackendContext} for WAV rendering.
+ *
+ * @param options - Offline render configuration.
+ *   - `length` — total number of samples to render.
+ *   - `sampleRate` — sample rate in Hz. Defaults to `44100`.
+ *   - `numberOfChannels` — channel count. Defaults to `2`.
+ * @returns A backend context with `startRendering()` for offline render.
+ *
+ * @example
+ * ```ts
+ * const ctx = createOfflineContext({ length: 44100 * 10, sampleRate: 44100 })
+ * // schedule audio events...
+ * const buffer = await ctx.startRendering()
+ * ```
+ */
+export const createOfflineContext = (options: {
+  length: number
+  sampleRate?: number
+  numberOfChannels?: number
+}): RenderableBackendContext => {
+  const sampleRate = options.sampleRate ?? 44100
+  const raw = new OfflineAudioContext(
+    options.numberOfChannels ?? 2,
+    options.length,
+    sampleRate,
+  )
+  return {
+    ...createBackendContext(raw),
+    startRendering: () => raw.startRendering() as Promise<{
+      readonly length: number
+      readonly sampleRate: number
+      readonly numberOfChannels: number
+      readonly getChannelData: (channel: number) => Float32Array
+    }>,
+  }
+}
+
 // --- Web Audio BackendProvider ---
 
 export const webAudioBackend: BackendProvider = {

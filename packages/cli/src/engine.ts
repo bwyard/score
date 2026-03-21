@@ -65,7 +65,7 @@ const buildEffectsChain = (
 
 // ── Type guard ────────────────────────────────────────────────────────────────
 
-const isInstrumentDescriptor = (comp: unknown): comp is InstrumentDescriptor => {
+export const isInstrumentDescriptor = (comp: unknown): comp is InstrumentDescriptor => {
   if (typeof comp !== 'object' || comp === null) return false
   return (comp as { _type?: unknown })._type === 'InstrumentDescriptor'
 }
@@ -78,8 +78,9 @@ const DEFAULT_HIHAT_PATTERN = [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
 const DEFAULT_SYNTH_PATTERN = [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0]
 
 // ── Instrument trigger functions ──────────────────────────────────────────────
+// Exported for use by the offline renderer (renderer.ts).
 
-const triggerKick = (ctx: Context, time: number, props: KickProps, dest: GainNode): void => {
+export const triggerKick = (ctx: Context, time: number, props: KickProps, dest: GainNode): void => {
   const freq = props.synth?.frequency ?? 80
   const drop = props.synth?.pitchDrop ?? 0.1
   const gain = props.volume ?? 0.85
@@ -92,7 +93,7 @@ const triggerKick = (ctx: Context, time: number, props: KickProps, dest: GainNod
   osc.stop(time + drop + 0.15)
 }
 
-const triggerSnare = (ctx: Context, time: number, props: SnareProps, dest: GainNode): void => {
+export const triggerSnare = (ctx: Context, time: number, props: SnareProps, dest: GainNode): void => {
   const gain = props.volume ?? 0.5
   const body  = ctx.createOscillator({ type: 'sine', frequency: 185 })
   const bGain = ctx.createGain({ gain: gain * 0.7 })
@@ -111,7 +112,7 @@ const triggerSnare = (ctx: Context, time: number, props: SnareProps, dest: GainN
   noise.stop(time + 0.12)
 }
 
-const triggerHiHat = (ctx: Context, time: number, props: HiHatProps, dest: GainNode): void => {
+export const triggerHiHat = (ctx: Context, time: number, props: HiHatProps, dest: GainNode): void => {
   const gain = props.volume ?? 0.25
   const dur  = props.open ? 0.3 : 0.06
   const noise  = ctx.createNoise({ type: 'white' })
@@ -124,7 +125,7 @@ const triggerHiHat = (ctx: Context, time: number, props: HiHatProps, dest: GainN
   noise.stop(time + dur)
 }
 
-const triggerSynth = (
+export const triggerSynth = (
   ctx: Context,
   time: number,
   props: SynthDSLProps,
