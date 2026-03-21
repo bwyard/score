@@ -134,14 +134,18 @@ const logEntry = (
 // ── Main ────────────────────────────────────────────────────────────────────
 
 /**
- * Play song files in sequence — examples get 8-bar samples, songs play full form.
+ * Play a set of songs back-to-back — like a DJ queue.
  *
- * @param args - Positional file paths (`.js` or `.playlist`). Empty = discover all.
+ * Loops without arrangement get an 8-bar preview. Songs with sections
+ * (intro → drop → breakdown → outro) play the full form.
+ *
+ * @param args - Song file paths (`.js`) or a `.playlist` file. Empty = play everything in `examples/` and `songs/`.
+ * @returns Resolves when the last track finishes.
  *
  * @example
  * ```ts
  * await playlist([])                                    // all examples + songs
- * await playlist(['songs/example-techno.js'])           // one file
+ * await playlist(['songs/example-techno.js'])           // one track
  * await playlist(['my-set.playlist'])                   // from playlist file
  * ```
  */
