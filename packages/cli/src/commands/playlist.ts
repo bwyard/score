@@ -157,6 +157,15 @@ const logEntry = (
  * ```
  */
 export const playlist = async (args: string[]): Promise<void> => {
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log('Usage:')
+    console.log('  score playlist               Play all examples and songs')
+    console.log('  score playlist <files...>    Play specific song files')
+    console.log('  score playlist set.playlist  Play from a playlist file')
+    console.log('  score playlist --shuffle     Randomize play order')
+    return
+  }
+
   const cwd = process.cwd()
   const shuffled = args.includes('--shuffle') || args.includes('-s')
   const rawArgs = args.filter((a) => !a.startsWith('-'))
