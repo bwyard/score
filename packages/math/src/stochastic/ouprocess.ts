@@ -46,7 +46,9 @@ const gaussian = (): number => {
  * ```
  */
 export const createOUProcess = (theta = 0.5, mu = 0, sigma = 0.3) => {
-  let x = mu
+  // Hardware-boundary exception: stateful generator — same class as LCG/Lorenz.
+  // const binding enforces no external rebinding; only .x is mutated inside the closure.
+  const state: { x: number } = { x: mu }
 
   return {
     /**
@@ -56,22 +58,22 @@ export const createOUProcess = (theta = 0.5, mu = 0, sigma = 0.3) => {
      * @returns New value after the stochastic update.
      */
     next(dt = 0.01): number {
-      x = x + theta * (mu - x) * dt + sigma * Math.sqrt(dt) * gaussian()
-      return x
+      state.x = state.x + theta * (mu - state.x) * dt + sigma * Math.sqrt(dt) * gaussian()
+      return state.x
     },
 
     /**
      * Reset the process value back to the long-term mean `mu`.
      */
     reset(): void {
-      x = mu
+      state.x = mu
     },
 
     /**
      * The current value of the process.
      */
     get value(): number {
-      return x
+      return state.x
     },
   }
 }

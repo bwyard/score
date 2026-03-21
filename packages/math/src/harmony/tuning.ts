@@ -159,11 +159,7 @@ export const meantone = (): Record<string, number> => ({
  */
 export const edo19 = (): Record<string, number> => {
   const step = Math.pow(2, 1 / 19)
-  const result: Record<string, number> = {}
-  for (let i = 0; i < 19; i++) {
-    result[String(i)] = Math.pow(step, i)
-  }
-  return result
+  return Object.fromEntries(Array.from({ length: 19 }, (_, i) => [String(i), Math.pow(step, i)]))
 }
 
 /**
@@ -204,9 +200,5 @@ export const edo19 = (): Record<string, number> => {
  */
 export const edo31 = (): Record<string, number> => {
   const step = Math.pow(2, 1 / 31)
-  const result: Record<string, number> = {}
-  for (let i = 0; i < 31; i++) {
-    result[String(i)] = Math.pow(step, i)
-  }
-  return result
+  return Object.fromEntries(Array.from({ length: 31 }, (_, i) => [String(i), Math.pow(step, i)]))
 }

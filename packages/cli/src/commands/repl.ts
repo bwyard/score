@@ -1,233 +1,210 @@
-// score repl — interactive live coding REPL
-//
-// Starts Score with a song file (or empty) and opens an interactive prompt.
-// Commands let you inspect state and reload songs without restarting.
-// Bar-boundary hot swap (keep-last-good) is active for loaded files.
-//
-// Full expression eval and surgical patch() are Phase 11 Level 2.
-//
-// Usage:
-//   score repl                      Start empty REPL
-//   score repl ./song.js --trust    Start with a song loaded
-
-import { createInterface } from 'node:readline'
-import { existsSync, watch as fsWatch, type FSWatcher } from 'node:fs'
+import { createInterface, type Interface as ReadlineInterface } from 'node:readline'
 import { resolve } from 'node:path'
+import { existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { ScoreError } from '@score/core'
 import type { SongDefinition } from '@score/dsl'
 import { createScoreEngine, type ScoreEngine } from '../engine.js'
-import { validateSongFile } from '../validator/SongValidator.js'
-import { validateSongExport } from '../validator/SongExportValidator.js'
 
-// ── Terminal colours ──────────────────────────────────────────────────────────
-
-const C = {
-  green:  '\x1b[32m',
-  yellow: '\x1b[33m',
-  red:    '\x1b[31m',
-  cyan:   '\x1b[36m',
-  dim:    '\x1b[2m',
-  reset:  '\x1b[0m',
-} as const
-
-const log   = (msg: string): void => { process.stdout.write(`${C.green}score>${C.reset} ${msg}\n`) }
-const warn  = (msg: string): void => { process.stdout.write(`${C.yellow}score>${C.reset} ${msg}\n`) }
-const err   = (msg: string): void => { process.stderr.write(`${C.red}score>${C.reset} ${msg}\n`) }
-const info  = (msg: string): void => { process.stdout.write(`${C.dim}${msg}${C.reset}\n`) }
-
-const HELP = `
-${C.cyan}Score REPL — live coding mode${C.reset}
-
-Commands:
-  ${C.green}status${C.reset}             Show current song state
-  ${C.green}load <file>${C.reset}        Load and play a song file
-  ${C.green}reload${C.reset}             Reload the current song file
-  ${C.green}stop${C.reset}               Stop audio
-  ${C.green}play${C.reset}               Resume audio
-  ${C.green}help${C.reset}               Show this help
-  ${C.green}.exit${C.reset} / ${C.green}Ctrl+C${C.reset}    Exit
-
-${C.dim}Tip: run with a file to start immediately — score repl ./song.js${C.reset}
-${C.dim}Full expression eval (patch/update) arrives in Phase 11 Level 2.${C.reset}
-`
-
-// ── REPL state ────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type ReplState = {
-  readonly engine:        ScoreEngine | null
-  readonly file:          string | null
-  readonly version:       number
-  readonly pendingReload: boolean
-  readonly watcher:       FSWatcher | null
+  readonly loadedFile: string | null
+  readonly song: SongDefinition | null
+  readonly engine: ScoreEngine | null
+  readonly playing: boolean
 }
 
-const emptyState: ReplState = {
-  engine:        null,
-  file:          null,
-  version:       0,
-  pendingReload: false,
-  watcher:       null,
-}
+// ── Help text ─────────────────────────────────────────────────────────────────
 
-// ── Song loading ──────────────────────────────────────────────────────────────
+const HELP_TEXT = `
+Score REPL — interactive session
 
-const loadSong = async (filePath: string, version: number, trust: boolean): Promise<SongDefinition> => {
-  if (!trust) validateSongFile(filePath)
-  const url = pathToFileURL(filePath).href + (version > 0 ? `?v=${String(version)}` : '')
+Commands:
+  load <file>    Load a song file (.js / .mjs)
+  play           Start playback
+  stop           Stop playback
+  status         Show current status
+  help           Show this help
+  exit / .exit   Quit the REPL
+`.trim()
+
+// ── Song loader ────────────────────────────────────────────────────────────────
+
+const loadSongFile = async (filePath: string): Promise<SongDefinition | null> => {
+  const resolved = resolve(process.cwd(), filePath.replace(/\\/g, '/'))
+  if (!existsSync(resolved)) {
+    console.log(`Score REPL: File not found — ${filePath}`)
+    return null
+  }
+
+  const url = pathToFileURL(resolved).href + '?v=' + String(Date.now())
   const mod = await import(url) as Record<string, unknown>
   const raw: unknown = mod['default']
+
   if (!raw || typeof raw !== 'object') {
-    throw ScoreError('Song file must have a default export', {
-      received: typeof raw,
-      fix: 'Add: export default Song({ bpm: 140, tracks: [...] })',
-      docs: 'https://score.dev/docs/dsl/song',
-    })
+    console.log(`Score REPL: Song file must have a default export (received: ${typeof raw})`)
+    return null
   }
-  validateSongExport(raw)
+
   const song = raw as SongDefinition
   if (!song.bpm || song.bpm <= 0) {
-    throw ScoreError('Song must have a valid bpm', {
-      received: song.bpm,
-      fix: 'Song({ bpm: 140, ... }) — bpm must be a positive number',
-      docs: 'https://score.dev/docs/dsl/song',
-    })
+    console.log(`Score REPL: Song must have a valid bpm`)
+    return null
   }
+
   return song
 }
 
-// ── REPL entry point ──────────────────────────────────────────────────────────
+// ── Command handlers ──────────────────────────────────────────────────────────
 
-export const repl = async (args: string[]): Promise<void> => {
-  const trust   = args.includes('--trust') || args.includes('-t')
-  const fileArg = args.find(a => !a.startsWith('-'))
-
-  // Single mutable state reference — all updates produce a new ReplState
-  let state: ReplState = emptyState
-
-  // Register bar-boundary watch on the currently loaded file.
-  // Returns the new state with watcher wired in.
-  const withWatch = (filePath: string, engine: ScoreEngine): ReplState => {
-    state.watcher?.close()
-    const watcher = fsWatch(filePath, () => {
-      if (!state.pendingReload) {
-        state = { ...state, pendingReload: true }
-        warn('File changed — will reload at next bar boundary...')
-      }
-    })
-
-    engine.onBar(() => {
-      if (!state.pendingReload || !state.file) return
-      state = { ...state, pendingReload: false }
-      void (async () => {
-        try {
-          const freshSong = await loadSong(state.file as string, state.version, trust)
-          const freshEngine = await createScoreEngine(freshSong)
-          freshEngine.start()
-          const old = state.engine
-          state = { ...state, engine: freshEngine, version: state.version + 1 }
-          old?.dispose()
-          log(`Reloaded — ${C.cyan}${String(freshEngine.bpm)} BPM${C.reset}`)
-        } catch (e: unknown) {
-          err(`Reload failed — ${e instanceof Error ? e.message : String(e)}`)
-          warn('Keeping last good version')
-        }
-      })()
-    })
-
-    return { ...state, watcher }
+const handleStatus = (state: ReplState): void => {
+  if (!state.song || !state.loadedFile) {
+    console.log('Score REPL: No song loaded')
+    return
   }
-
-  const loadAndPlay = async (filePath: string): Promise<void> => {
-    const resolved = resolve(process.cwd(), filePath.replace(/\\/g, '/'))
-    if (!existsSync(resolved)) { err(`File not found: ${filePath}`); return }
-
-    try {
-      const song = await loadSong(resolved, state.version, trust)
-      const engine = await createScoreEngine(song)
-      engine.start()
-      state.engine?.dispose()
-      state = withWatch(resolved, engine)
-      state = { ...state, engine, file: resolved, version: state.version + 1 }
-      log(`Loaded ${C.cyan}${filePath}${C.reset} — ${String(song.bpm)} BPM, ${String(song.tracks.length)} track(s)`)
-    } catch (e: unknown) {
-      err(`Load failed — ${e instanceof Error ? e.message : String(e)}`)
-    }
-  }
-
-  if (fileArg) await loadAndPlay(fileArg)
-
-  info('\nScore REPL — type help for commands\n')
-
-  const rl = createInterface({
-    input:    process.stdin,
-    output:   process.stdout,
-    prompt:   `${C.green}score${C.reset} ${C.dim}›${C.reset} `,
-    terminal: true,
-  })
-
-  rl.prompt()
-
-  rl.on('line', (line: string) => {
-    const parts  = line.trim().split(/\s+/)
-    const cmd    = parts[0] ?? ''
-    const cmdArg = parts.slice(1).join(' ')
-
-    switch (cmd) {
-      case 'help':
-        process.stdout.write(HELP)
-        break
-
-      case 'status':
-        if (!state.engine || !state.file) {
-          warn('No song loaded. Use: load <file>')
-        } else {
-          log(`File:  ${C.cyan}${state.file}${C.reset}`)
-          log(`BPM:   ${C.cyan}${String(state.engine.bpm)}${C.reset}`)
-          log(`Watch: ${C.cyan}active${C.reset}`)
-        }
-        break
-
-      case 'load':
-        if (!cmdArg) { err('Usage: load <file>'); break }
-        void loadAndPlay(cmdArg)
-        break
-
-      case 'reload':
-        if (!state.file) { err('No file loaded'); break }
-        void loadAndPlay(state.file)
-        break
-
-      case 'stop':
-        if (!state.engine) { warn('Nothing playing'); break }
-        state.engine.stop()
-        log('Stopped')
-        break
-
-      case 'play':
-        if (!state.engine) { warn('No song loaded. Use: load <file>'); break }
-        state.engine.start()
-        log('Playing')
-        break
-
-      case '.exit':
-      case 'exit':
-      case '':
-        if (cmd !== '') rl.close()
-        break
-
-      default:
-        warn(`Unknown command: ${cmd}. Type ${C.green}help${C.reset} for commands.`)
-        break
-    }
-
-    rl.prompt()
-  })
-
-  rl.on('close', () => {
-    state.watcher?.close()
-    state.engine?.dispose()
-    log('Goodbye')
-    process.exit(0)
-  })
+  const playingStr = state.playing ? 'playing' : 'stopped'
+  console.log(`Score REPL: ${state.loadedFile} — ${String(state.song.bpm)} BPM — ${playingStr}`)
 }
+
+const handleLoad = async (
+  args: string,
+  state: ReplState,
+): Promise<ReplState> => {
+  const filePath = args.trim()
+  if (!filePath) {
+    console.log('Score REPL: Usage — load <file>')
+    return state
+  }
+
+  if (state.engine) {
+    state.engine.dispose()
+  }
+
+  const song = await loadSongFile(filePath)
+  if (!song) {
+    return { ...state, loadedFile: null, song: null, engine: null, playing: false }
+  }
+
+  console.log(`Score REPL: Loaded — ${filePath} (${String(song.bpm)} BPM)`)
+  return { ...state, loadedFile: filePath, song, engine: null, playing: false }
+}
+
+const handlePlay = async (state: ReplState): Promise<ReplState> => {
+  if (!state.song) {
+    console.log('Score REPL: No song loaded — use load <file> first')
+    return state
+  }
+
+  if (state.playing && state.engine) {
+    console.log('Score REPL: Already playing')
+    return state
+  }
+
+  const engine = await createScoreEngine(state.song)
+  engine.start()
+  console.log(`Score REPL: Playing — ${String(state.song.bpm)} BPM`)
+  return { ...state, engine, playing: true }
+}
+
+const handleStop = (state: ReplState): ReplState => {
+  if (!state.playing || !state.engine) {
+    console.log('Score REPL: Nothing is playing')
+    return state
+  }
+
+  state.engine.stop()
+  console.log('Score REPL: Stopped')
+  return { ...state, playing: false }
+}
+
+// ── Main dispatch ─────────────────────────────────────────────────────────────
+
+const dispatch = async (
+  line: string,
+  state: ReplState,
+  rl: ReadlineInterface,
+): Promise<ReplState> => {
+  const trimmed = line.trim()
+  if (!trimmed) return state
+
+  const spaceIdx = trimmed.indexOf(' ')
+  const cmd  = spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx)
+  const rest = spaceIdx === -1 ? '' : trimmed.slice(spaceIdx + 1)
+
+  switch (cmd) {
+    case 'status':
+      handleStatus(state)
+      return state
+
+    case 'load':
+      return handleLoad(rest, state)
+
+    case 'play':
+      return handlePlay(state)
+
+    case 'stop':
+      return handleStop(state)
+
+    case 'help':
+      console.log(HELP_TEXT)
+      return state
+
+    case 'exit':
+    case '.exit':
+      rl.close()
+      return state
+
+    default:
+      console.log(`Score REPL: Unknown command — ${cmd}`)
+      console.log('Type "help" for available commands.')
+      return state
+  }
+}
+
+// ── Entry point ───────────────────────────────────────────────────────────────
+
+/**
+ * Launches the Score interactive REPL session.
+ *
+ * Opens a readline prompt that accepts song-management commands.
+ * Type `help` inside the REPL for the full command list.
+ *
+ * @param _args - CLI arguments (reserved; currently unused)
+ * @returns A promise that resolves when the REPL session ends
+ * @example
+ * // From the CLI:
+ * // score repl
+ */
+export const repl = (_args: string[]): Promise<void> =>
+  new Promise((resolve) => {
+    const rl = createInterface({
+      input:  process.stdin,
+      output: process.stdout,
+      prompt: 'score> ',
+    })
+
+    let state: ReplState = {
+      loadedFile: null,
+      song:       null,
+      engine:     null,
+      playing:    false,
+    }
+
+    console.log('Score REPL — type "help" for commands, "exit" to quit.')
+    rl.prompt()
+
+    rl.on('line', (line: string) => {
+      void dispatch(line, state, rl).then((nextState) => {
+        state = nextState
+        rl.prompt()
+      })
+    })
+
+    rl.on('close', () => {
+      if (state.engine) {
+        state.engine.dispose()
+      }
+      console.log('Score REPL: Goodbye.')
+      resolve()
+    })
+  })

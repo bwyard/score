@@ -19,6 +19,14 @@ export type ReverbProps = {
 }
 
 /**
+ * A single parallel delay tap used internally by {@link createReverb}.
+ */
+type ReverbTap = {
+  readonly tapDelay: BackendDelayNode
+  readonly tapGain: BackendGainNode
+}
+
+/**
  * Create a reverb effect using parallel delay taps with exponential decay.
  * Simulates acoustic spaces from tight studios to cathedral halls.
  * Use sparingly on bass — mud builds fast. Works beautifully on pads and leads.
@@ -58,12 +66,9 @@ export const createReverb = (
   inputGain.connect(dryGain)
   dryGain.connect(outputGain)
 
-  // Create parallel delay taps to simulate reverb reflections
+  // Create parallel delay taps to simulate reverb reflections — declarative, no push
   const taps = 6
-  const tapDelays: BackendDelayNode[] = []
-  const tapGains: BackendGainNode[] = []
-
-  for (let i = 0; i < taps; i++) {
+  const tapNodes: readonly ReverbTap[] = Array.from({ length: taps }, (_, i) => {
     const tapDelay = context.createDelay({
       delayTime: (i + 1) * decay / taps,
       maxDelayTime: decay + 1,
@@ -72,9 +77,8 @@ export const createReverb = (
     inputGain.connect(tapDelay)
     tapDelay.connect(tapGain)
     tapGain.connect(wetGain)
-    tapDelays.push(tapDelay)
-    tapGains.push(tapGain)
-  }
+    return { tapDelay, tapGain } as const
+  })
 
   // Wet -> output
   wetGain.connect(outputGain)
@@ -111,12 +115,10 @@ export const createReverb = (
     },
 
     dispose: () => {
-      for (const g of tapGains) {
-        try { g.disconnect() } catch { /* already disconnected */ }
-      }
-      for (const d of tapDelays) {
-        try { d.disconnect() } catch { /* already disconnected */ }
-      }
+      tapNodes.forEach(({ tapGain, tapDelay }) => {
+        try { tapGain.disconnect() } catch { /* already disconnected */ }
+        try { tapDelay.disconnect() } catch { /* already disconnected */ }
+      })
       try { inputGain.disconnect() } catch { /* already disconnected */ }
       try { dryGain.disconnect() } catch { /* already disconnected */ }
       try { wetGain.disconnect() } catch { /* already disconnected */ }

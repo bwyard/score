@@ -1,15 +1,17 @@
 import { describe, it, expect, afterAll } from 'vitest'
 import { useHarness } from './utils/harness.js'
 import { createReturn } from '../src/return.js'
-import type { AudioComponent } from '@score/core'
+import type { AudioComponent, BackendNode } from '@score/core'
 
 const h = useHarness()
 afterAll(() => h.cleanup())
 
-const createMockEffect = (): AudioComponent => {
-  const effect: AudioComponent = {
+const createMockEffect = (): AudioComponent & { readonly input: BackendNode } => {
+  const inputNode: BackendNode = { connect: () => {}, disconnect: () => {} }
+  const effect: AudioComponent & { readonly input: BackendNode } = {
     id: 'mock-effect-1',
     type: 'mock-effect',
+    input: inputNode,
     connect: (_d: unknown) => effect,
     disconnect: () => effect,
     dispose: () => {},

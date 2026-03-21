@@ -83,21 +83,20 @@ export const wolframCA = (
     ? seed.slice(0, width).concat(Array(Math.max(0, width - seed.length)).fill(0))
     : Array.from({ length: width }, (_, i) => (i === Math.floor(width / 2) ? 1 : 0))
 
-  const rows: number[][] = [initialRow]
-
-  for (let g = 1; g < generations; g++) {
-    const prev = rows[g - 1]!
-    const next: number[] = []
-    for (let c = 0; c < width; c++) {
-      const left = prev[(c - 1 + width) % width]!
-      const center = prev[c]!
-      const right = prev[(c + 1) % width]!
-      next.push(applyRule(rule, left, center, right))
-    }
-    rows.push(next)
-  }
-
-  return rows
+  // Pure reduce — each generation is derived from the previous row, no push, no let loops
+  return (Array.from({ length: generations - 1 })).reduce<number[][]>(
+    (acc) => {
+      const prev = acc[acc.length - 1]!
+      const next = Array.from({ length: width }, (_, c) => {
+        const left = prev[(c - 1 + width) % width]!
+        const center = prev[c]!
+        const right = prev[(c + 1) % width]!
+        return applyRule(rule, left, center, right)
+      })
+      return [...acc, next]
+    },
+    [initialRow],
+  )
 }
 
 /**

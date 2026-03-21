@@ -29,6 +29,17 @@ export type AutoPanProps = {
   readonly shape?: AutoPanShape
 }
 
+/**
+ * Hardware-boundary exception: engine-layer mutable state.
+ * `const` binding — identity never changes, only properties are mutated by setters.
+ */
+type AutoPanState = {
+  rate: number
+  depth: number
+  shape: AutoPanShape
+  scheduled: boolean
+}
+
 const SCHEDULE_STEPS = 64
 const SCHEDULE_DURATION = 8 // seconds of pre-scheduled automation
 
@@ -45,18 +56,9 @@ const schedulePan = (
   for (let i = 0; i <= SCHEDULE_STEPS; i++) {
     const t = i * stepDuration
     const phase = (t / period) * Math.PI * 2
-
-    let panValue: number
-    if (shape === 'triangle') {
-      // Triangle: linear ramp between -1 and +1
-      const normalized = ((t / period) % 1)
-      panValue = normalized < 0.5
-        ? (normalized * 4 - 1) * depth
-        : (3 - normalized * 4) * depth
-    } else {
-      // Sine: smooth sinusoidal sweep
-      panValue = Math.sin(phase) * depth
-    }
+    const normalized = (t / period) % 1
+    const triangleVal = normalized < 0.5 ? normalized * 4 - 1 : 3 - normalized * 4
+    const panValue = shape === 'triangle' ? triangleVal * depth : Math.sin(phase) * depth
 
     panner.setPan(Math.max(-1, Math.min(1, panValue)), baseTime + t)
   }
@@ -88,9 +90,12 @@ export const createAutoPan = (
   context: ScoreAudioContext,
   props?: AutoPanProps,
 ) => {
-  let currentRate = Math.max(0.001, props?.rate ?? 0.5)
-  let currentDepth = Math.max(0, Math.min(props?.depth ?? 0.8, 1.0))
-  let currentShape: AutoPanShape = props?.shape ?? 'sine'
+  const state: AutoPanState = {
+    rate: Math.max(0.001, props?.rate ?? 0.5),
+    depth: Math.max(0, Math.min(props?.depth ?? 0.8, 1.0)),
+    shape: props?.shape ?? 'sine',
+    scheduled: false,
+  }
 
   const inputGain = context.createGain({ gain: 1.0 })
   const outputGain = context.createGain({ gain: 1.0 })
@@ -100,12 +105,9 @@ export const createAutoPan = (
   inputGain.connect(panner)
   panner.connect(outputGain)
 
-  // Track whether connect has been called so we can schedule on first connect
-  let scheduled = false
-
   const reschedule = (): void => {
     const baseTime = context.currentTime
-    schedulePan(panner, baseTime, currentRate, currentDepth, currentShape)
+    schedulePan(panner, baseTime, state.rate, state.depth, state.shape)
   }
 
   const component: AudioComponent & {
@@ -123,8 +125,8 @@ export const createAutoPan = (
      * @param hz - LFO rate in Hz. Must be > 0.
      */
     setRate: (hz: number) => {
-      currentRate = Math.max(0.001, hz)
-      if (scheduled) reschedule()
+      state.rate = Math.max(0.001, hz)
+      if (state.scheduled) reschedule()
     },
 
     /**
@@ -134,8 +136,8 @@ export const createAutoPan = (
      * @param depth - Pan depth `0–1`.
      */
     setDepth: (depth: number) => {
-      currentDepth = Math.max(0, Math.min(depth, 1.0))
-      if (scheduled) reschedule()
+      state.depth = Math.max(0, Math.min(depth, 1.0))
+      if (state.scheduled) reschedule()
     },
 
     /**
@@ -144,14 +146,14 @@ export const createAutoPan = (
      * @param shape - `'sine'` for smooth sweeps, `'triangle'` for linear ramps.
      */
     setShape: (shape: AutoPanShape) => {
-      currentShape = shape
-      if (scheduled) reschedule()
+      state.shape = shape
+      if (state.scheduled) reschedule()
     },
 
     connect: (destination: ScoreAudioNode) => {
       outputGain.connect(destination)
-      if (!scheduled) {
-        scheduled = true
+      if (!state.scheduled) {
+        state.scheduled = true
         reschedule()
       }
       return component

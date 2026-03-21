@@ -68,21 +68,18 @@ export const createChorus = (
   inputGain.connect(dryGain)
   dryGain.connect(outputGain)
 
-  // Create voice delay lines with spread offsets
-  const voiceDelays: Array<ReturnType<ScoreAudioContext['createDelay']>> = []
-  const voiceGains: Array<ReturnType<ScoreAudioContext['createGain']>> = []
+  // Create voice delay lines with spread offsets — declarative, no push
   const mixNode = context.createGain({ gain: 1.0 / voiceCount })
 
-  for (let i = 0; i < voiceCount; i++) {
+  const voices = Array.from({ length: voiceCount }, (_, i) => {
     const offset = depth * ((i + 1) / voiceCount)
     const voiceDelay = context.createDelay({ delayTime: 0.01 + offset, maxDelayTime: 0.05 })
     const voiceGain = context.createGain({ gain: 1.0 })
     inputGain.connect(voiceDelay)
     voiceDelay.connect(voiceGain)
     voiceGain.connect(mixNode)
-    voiceDelays.push(voiceDelay)
-    voiceGains.push(voiceGain)
-  }
+    return { voiceDelay, voiceGain } as const
+  })
 
   mixNode.connect(wetGain)
   wetGain.connect(outputGain)
@@ -103,13 +100,10 @@ export const createChorus = (
      */
     setDepth: (value: number, time?: number) => {
       const clamped = Math.max(0, Math.min(value, 0.02))
-      for (let i = 0; i < voiceDelays.length; i++) {
-        const d = voiceDelays[i]
-        if (d) {
-          const offset = clamped * ((i + 1) / voiceDelays.length)
-          d.setDelayTime(0.01 + offset, time)
-        }
-      }
+      voices.forEach((v, i) => {
+        const offset = clamped * ((i + 1) / voices.length)
+        v.voiceDelay.setDelayTime(0.01 + offset, time)
+      })
     },
 
     /**
@@ -139,12 +133,10 @@ export const createChorus = (
       try { dryGain.disconnect() } catch { /* already disconnected */ }
       try { wetGain.disconnect() } catch { /* already disconnected */ }
       try { mixNode.disconnect() } catch { /* already disconnected */ }
-      for (const d of voiceDelays) {
-        try { d.disconnect() } catch { /* already disconnected */ }
-      }
-      for (const g of voiceGains) {
-        try { g.disconnect() } catch { /* already disconnected */ }
-      }
+      voices.forEach(v => {
+        try { v.voiceDelay.disconnect() } catch { /* already disconnected */ }
+        try { v.voiceGain.disconnect() } catch { /* already disconnected */ }
+      })
       try { outputGain.disconnect() } catch { /* already disconnected */ }
     },
   }

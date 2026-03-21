@@ -26,54 +26,43 @@ export type TempoMap = {
 export const createTempoMap = (props?: TempoMapProps): TempoMap => {
   const startBPM = props?.initialBPM ?? 120
 
-  // Mutable state
-  let swingAmount = Math.max(0, Math.min(1, props?.swing ?? 0))
-  let changeList: Array<TempoChange> = props?.changes
-    ? [...props.changes].sort((a, b) => a.bar - b.bar)
-    : []
+  // Hardware-boundary exception: engine-layer mutable state. const binding, property mutation only.
+  type TempoMapState = { changes: Array<TempoChange>; swingAmount: number }
+  const state: TempoMapState = {
+    swingAmount: Math.max(0, Math.min(1, props?.swing ?? 0)),
+    changes: props?.changes ? [...props.changes].sort((a, b) => a.bar - b.bar) : [],
+  }
 
   const tempoMap: TempoMap = {
-    getBPMAtBar: (bar: number): number => {
-      // Find the last tempo change at or before this bar
-      let bpm = startBPM
-      for (const change of changeList) {
-        if (change.bar <= bar) {
-          bpm = change.bpm
-        } else {
-          break
-        }
-      }
-      return bpm
-    },
+    getBPMAtBar: (bar: number): number =>
+      // Reduce over sorted changes — the last change at or before `bar` wins
+      state.changes.reduce((bpm, change) => change.bar <= bar ? change.bpm : bpm, startBPM),
 
     getSwingOffset: (tick: number, tickDuration: number): number => {
-      // Even ticks (0, 2, 4...) are on the grid
       if (tick % 2 === 0) return 0
-      // Odd ticks are delayed by swing amount
-      return swingAmount * tickDuration * 0.5
+      return state.swingAmount * tickDuration * 0.5
     },
 
     addChange: (bar: number, bpm: number): void => {
-      // Remove any existing change at this bar
-      changeList = changeList.filter((c) => c.bar !== bar)
-      changeList.push({ bar, bpm })
-      changeList.sort((a, b) => a.bar - b.bar)
+      // Filter, append, re-sort — no in-place push or sort mutation
+      state.changes = [...state.changes.filter((c) => c.bar !== bar), { bar, bpm }]
+        .sort((a, b) => a.bar - b.bar)
     },
 
     removeChange: (bar: number): void => {
-      changeList = changeList.filter((c) => c.bar !== bar)
+      state.changes = state.changes.filter((c) => c.bar !== bar)
     },
 
     setSwing: (amount: number): void => {
-      swingAmount = Math.max(0, Math.min(1, amount))
+      state.swingAmount = Math.max(0, Math.min(1, amount))
     },
 
-    get swing() { return swingAmount },
+    get swing() { return state.swingAmount },
     get initialBPM() { return startBPM },
-    get changes(): ReadonlyArray<TempoChange> { return [...changeList] },
+    get changes(): ReadonlyArray<TempoChange> { return [...state.changes] },
 
     dispose: (): void => {
-      changeList.length = 0
+      state.changes = []
     },
   }
 

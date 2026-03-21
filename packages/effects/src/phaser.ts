@@ -65,13 +65,11 @@ export const createPhaser = (
   const wetGain = context.createGain({ gain: 0.5 })
   const feedbackGain = context.createGain({ gain: feedbackAmount })
 
-  // Create allpass filter chain with logarithmically spaced frequencies
-  const filters: Array<ReturnType<ScoreAudioContext['createFilter']>> = []
-  for (let i = 0; i < stageCount; i++) {
+  // Create allpass filter chain with logarithmically spaced frequencies — declarative, no push
+  const filters = Array.from({ length: stageCount }, (_, i) => {
     const freq = 200 * Math.pow(2, (i / stageCount) * 4)
-    const filter = context.createFilter({ type: 'allpass', frequency: freq, Q: 0.7 })
-    filters.push(filter)
-  }
+    return context.createFilter({ type: 'allpass', frequency: freq, Q: 0.7 })
+  })
 
   // Chain allpass filters in series — stageCount >= 2, so filters always has elements
   const firstFilter = filters[0]
@@ -84,13 +82,10 @@ export const createPhaser = (
     })
   }
   inputGain.connect(firstFilter)
-  for (let i = 0; i < filters.length - 1; i++) {
-    const current = filters[i]
+  filters.forEach((current, i) => {
     const next = filters[i + 1]
-    if (current && next) {
-      current.connect(next)
-    }
-  }
+    if (next) current.connect(next)
+  })
 
   // Wet path from last filter
   lastFilter.connect(wetGain)
@@ -134,9 +129,9 @@ export const createPhaser = (
       try { inputGain.disconnect() } catch { /* already disconnected */ }
       try { wetGain.disconnect() } catch { /* already disconnected */ }
       try { feedbackGain.disconnect() } catch { /* already disconnected */ }
-      for (const f of filters) {
+      filters.forEach(f => {
         try { f.disconnect() } catch { /* already disconnected */ }
-      }
+      })
       try { outputGain.disconnect() } catch { /* already disconnected */ }
     },
   }

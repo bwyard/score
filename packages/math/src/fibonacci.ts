@@ -31,11 +31,11 @@
 export const fibonacci = (n: number): number[] => {
   if (n <= 0) return []
   if (n === 1) return [1]
-  const seq = [1, 1]
-  while (seq.length < n) {
-    seq.push((seq[seq.length - 1] ?? 0) + (seq[seq.length - 2] ?? 0))
-  }
-  return seq.slice(0, n)
+  type FibAcc = { readonly seq: number[]; readonly last: number; readonly prev: number }
+  return (Array.from({ length: n - 2 })).reduce<FibAcc>(
+    ({ seq, last, prev }) => ({ seq: [...seq, last + prev], last: last + prev, prev: last }),
+    { seq: [1, 1], last: 1, prev: 1 },
+  ).seq
 }
 
 /**
@@ -68,15 +68,17 @@ export const fibonacci = (n: number): number[] => {
  * @see {@link patternOr} — combine this with other rhythms
  */
 export const fibonacciRhythm = (steps: number): number[] => {
-  const fibPositions = new Set<number>()
-  let a = 0, b = 1
-  while (a < steps) {
-    fibPositions.add(a)
-    const next = a + b
-    a = b
-    b = next
-  }
-  return Array.from({ length: steps }, (_, i) => fibPositions.has(i) ? 1 : 0)
+  // Generate fibonacci values as an array (duplicates handled by Set below)
+  type FibPosAcc = { readonly positions: number[]; readonly a: number; readonly b: number }
+  const { positions } = (Array.from({ length: steps })).reduce<FibPosAcc>(
+    ({ positions, a, b }) =>
+      a >= steps
+        ? { positions, a, b }
+        : { positions: [...positions, a], a: b, b: a + b },
+    { positions: [], a: 0, b: 1 },
+  )
+  const fibSet = new Set(positions)
+  return Array.from({ length: steps }, (_, i) => fibSet.has(i) ? 1 : 0)
 }
 
 /**
@@ -107,11 +109,15 @@ export const fibonacciRhythm = (steps: number): number[] => {
 export const padovan = (n: number): number[] => {
   if (n <= 0) return []
   if (n <= 3) return Array(n).fill(1) as number[]
-  const seq = [1, 1, 1]
-  while (seq.length < n) {
-    seq.push((seq[seq.length - 2] ?? 0) + (seq[seq.length - 3] ?? 0))
-  }
-  return seq.slice(0, n)
+  // P(k) = P(k-2) + P(k-3); track last three values as [a=last, b=second, c=third]
+  type PadAcc = { readonly seq: number[]; readonly last: [number, number, number] }
+  return (Array.from({ length: n - 3 })).reduce<PadAcc>(
+    ({ seq, last: [a, b, c] }) => {
+      const next = b + c
+      return { seq: [...seq, next], last: [next, a, b] }
+    },
+    { seq: [1, 1, 1], last: [1, 1, 1] },
+  ).seq
 }
 
 /**
@@ -143,9 +149,13 @@ export const tribonacci = (n: number): number[] => {
   if (n <= 0) return []
   if (n === 1) return [0]
   if (n === 2) return [0, 0]
-  const seq = [0, 0, 1]
-  while (seq.length < n) {
-    seq.push((seq[seq.length - 1] ?? 0) + (seq[seq.length - 2] ?? 0) + (seq[seq.length - 3] ?? 0))
-  }
-  return seq.slice(0, n)
+  // T(k) = T(k-1) + T(k-2) + T(k-3); track last three as [a=last, b=second, c=third]
+  type TribAcc = { readonly seq: number[]; readonly last: [number, number, number] }
+  return (Array.from({ length: n - 3 })).reduce<TribAcc>(
+    ({ seq, last: [a, b, c] }) => {
+      const next = a + b + c
+      return { seq: [...seq, next], last: [next, a, b] }
+    },
+    { seq: [0, 0, 1], last: [1, 0, 0] },
+  ).seq
 }
