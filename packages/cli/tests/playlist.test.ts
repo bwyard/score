@@ -108,7 +108,7 @@ describe('playlist', () => {
     spy.mockRestore()
   })
 
-  it('detects 8-bar sample mode for songs without arrangement', async () => {
+  it('detects once through mode for songs without arrangement', async () => {
     const dir = makeTempDir()
     writeFileSync(join(dir, 'loop.js'), SONG_CONTENT)
     process.chdir(dir)
@@ -117,7 +117,7 @@ describe('playlist', () => {
     await playlist(['loop.js'])
 
     const output = spy.mock.calls.map((c: unknown[]) => String(c[0])).join('\n')
-    expect(output).toContain('8-bar sample')
+    expect(output).toContain('once through')
     expect(output).toContain('128 BPM')
     spy.mockRestore()
   })

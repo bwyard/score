@@ -72,7 +72,7 @@ const hasArrangement = (meta: SongMeta): boolean => meta.sections.length > 0
 // Build entry from a file path — auto-detect mode from arrangement
 const toEntry = (file: string): PlaylistEntry => {
   const meta = parseSongMeta(file)
-  return { file, bars: hasArrangement(meta) ? null : 8 }
+  return { file, bars: hasArrangement(meta) ? null : 1 }
 }
 
 // Read a .playlist file — one path per line, # comments, blank lines ignored
@@ -117,7 +117,7 @@ const logEntry = (
   bars: number,
   duration: number,
 ): void => {
-  const mode = entry.bars === null ? 'full form' : '8-bar sample'
+  const mode = entry.bars === null ? 'full form' : 'once through'
   const keyStr = meta.key ? ` — ${meta.key}` : ''
 
   console.log(`Score: [${String(i + 1)}/${String(total)}] ${entry.file}`)
@@ -136,7 +136,7 @@ const logEntry = (
 /**
  * Play a set of songs back-to-back — like a DJ queue.
  *
- * Loops without arrangement get an 8-bar preview. Songs with sections
+ * Songs without arrangement play once through. Songs with sections
  * (intro → drop → breakdown → outro) play the full form.
  *
  * @param args - Song file paths (`.js`) or a `.playlist` file. Empty = play everything in `examples/` and `songs/`.
