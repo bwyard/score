@@ -6,9 +6,11 @@ import { tmpdir } from 'node:os'
 // Mock the engine so tests never open a real audio context (avoids JACK dependency on CI)
 vi.mock('../src/engine.js', () => ({
   createScoreEngine: vi.fn(() => ({
-    start: vi.fn(),
-    stop: vi.fn(),
+    start:   vi.fn(),
+    stop:    vi.fn(),
     dispose: vi.fn(),
+    bpm:     140,
+    onBar:   vi.fn(),
   })),
 }))
 

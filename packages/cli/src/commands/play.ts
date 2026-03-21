@@ -7,6 +7,16 @@ import { createScoreEngine, type ScoreEngine } from '../engine.js'
 import { validateSongFile } from '../validator/SongValidator.js'
 import { validateSongExport } from '../validator/SongExportValidator.js'
 
+const GREEN  = '\x1b[32m'
+const YELLOW = '\x1b[33m'
+const RED    = '\x1b[31m'
+const CYAN   = '\x1b[36m'
+const RESET  = '\x1b[0m'
+
+const log   = (msg: string): void => { console.log(`${GREEN}Score:${RESET} ${msg}`) }
+const warn  = (msg: string): void => { console.log(`${YELLOW}Score:${RESET} ${msg}`) }
+const error = (msg: string): void => { console.error(`${RED}Score:${RESET} ${msg}`) }
+
 const loadSong = async (resolved: string, version: number, trust: boolean): Promise<SongDefinition> => {
   if (!trust) {
     validateSongFile(resolved)
@@ -41,14 +51,14 @@ const loadSong = async (resolved: string, version: number, trust: boolean): Prom
 const logSong = (song: SongDefinition): void => {
   const keyStr   = song.key   ? ` — ${song.key}`   : ''
   const genreStr = song.genre ? ` — ${song.genre}` : ''
-  console.log(`Score: Playing — ${String(song.bpm)} BPM${keyStr}${genreStr}`)
+  log(`Playing — ${CYAN}${String(song.bpm)} BPM${RESET}${keyStr}${genreStr}`)
   if (song.arrangement.length > 0) {
     const sections = song.arrangement
       .map((s) => `${s.sectionType}(${String(s.bars)}b)`)
       .join(' → ')
-    console.log(`Score: Arrangement — ${sections}`)
+    log(`Arrangement — ${sections}`)
   }
-  console.log(`Score: ${String(song.tracks.length)} track(s) loaded`)
+  log(`${String(song.tracks.length)} track(s) loaded`)
 }
 
 export const play = async (args: string[]): Promise<void> => {
@@ -78,42 +88,51 @@ export const play = async (args: string[]): Promise<void> => {
 
   let currentEngine: ScoreEngine = await createScoreEngine(song)
   currentEngine.start()
-  console.log(`Score: Audio running — Press Ctrl+C to stop${watch ? ' (watch mode on)' : ''}`)
+  log(`Audio running — ${CYAN}${String(currentEngine.bpm)} BPM${RESET} — Press Ctrl+C to stop${watch ? ` ${YELLOW}(watch mode)${RESET}` : ''}`)
 
   const keepAlive = setInterval(() => {}, 1000)
 
   const cleanup = (): void => {
     clearInterval(keepAlive)
     currentEngine.dispose()
-    console.log('\nScore: Stopped')
+    log('Stopped')
     process.exit(0)
   }
 
   if (watch) {
-    let reloading = false
+    let pendingReload = false
     let reloadVersion = 1
 
+    // Mark that a reload is needed — actual swap happens at the next bar boundary
+    // to prevent mid-beat glitches.
     fsWatch(resolved, () => {
-      if (reloading) return
-      reloading = true
+      if (!pendingReload) {
+        pendingReload = true
+        warn('File changed — will reload at next bar boundary...')
+      }
+    })
 
-      setTimeout(() => {
-        void (async () => {
-          try {
-            console.log('\nScore: File changed — reloading...')
-            currentEngine.dispose()
-            const freshSong = await loadSong(resolved, reloadVersion++, trust)
-            currentEngine = await createScoreEngine(freshSong)
-            currentEngine.start()
-            console.log(`Score: Reloaded — ${String(freshSong.bpm)} BPM`)
-          } catch (err: unknown) {
-            console.error('Score: Reload failed —', err instanceof Error ? err.message : String(err))
-            console.error('Score: Keeping previous version')
-          } finally {
-            reloading = false
-          }
-        })()
-      }, 300)
+    // On each bar: if a reload is pending, load the new song first (keep-last-good),
+    // then swap atomically and dispose the old engine.
+    currentEngine.onBar(() => {
+      if (!pendingReload) return
+      pendingReload = false
+
+      void (async () => {
+        try {
+          const freshSong = await loadSong(resolved, reloadVersion++, trust)
+          const freshEngine = await createScoreEngine(freshSong)
+          freshEngine.start()
+          const oldEngine = currentEngine
+          currentEngine = freshEngine
+          oldEngine.dispose()
+          log(`Reloaded — ${CYAN}${String(freshEngine.bpm)} BPM${RESET}`)
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err)
+          error(`Reload failed — ${msg}`)
+          warn('Keeping last good version')
+        }
+      })()
     })
   }
 
