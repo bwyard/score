@@ -20,6 +20,7 @@ import type {
 } from 'node-web-audio-api'
 import { ScoreError } from '../errors/ScoreError.js'
 import type {
+  BackendAnalyserNode,
   BackendBuffer,
   BackendContext,
   BackendNode,
@@ -400,7 +401,7 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
         ...base,
         get frequencyBinCount() { return analyser.frequencyBinCount },
         getFloatTimeDomainData: (array: Float32Array) => { analyser.getFloatTimeDomainData(array as Float32Array<ArrayBuffer>); },
-      }
+      } satisfies BackendAnalyserNode
     },
 
     suspend: () => (ctx as unknown as { suspend: () => Promise<void> }).suspend(),
