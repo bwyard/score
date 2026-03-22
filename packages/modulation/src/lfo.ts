@@ -95,7 +95,7 @@ export type LFOComponent = {
  * ```
  *
  * @see {@link createADSR} — for one-shot envelope modulation
- * @throws {ScoreError} If `rate` is negative.
+ * @throws `ScoreError` If `rate` is negative.
  */
 export const createLFO = (
   context: BackendContext,

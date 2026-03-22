@@ -1,28 +1,83 @@
 // Tempo map — BPM changes over time + swing/groove
 
+/**
+ * A single BPM change event anchored to a bar number.
+ */
 export type TempoChange = {
+  /** The bar (zero-indexed) at which the BPM change takes effect. */
   readonly bar: number
+  /** The new beats-per-minute value from this bar onward. */
   readonly bpm: number
 }
 
+/**
+ * Configuration props for {@link createTempoMap}.
+ */
 export type TempoMapProps = {
-  readonly initialBPM?: number        // default 120
+  /** Starting BPM before any changes. Defaults to `120`. */
+  readonly initialBPM?: number
+  /** Pre-seeded list of BPM change events, sorted or unsorted. */
   readonly changes?: ReadonlyArray<TempoChange>
-  readonly swing?: number             // 0-1, default 0
+  /** Swing amount 0–1 (0 = straight, 1 = full triplet feel). Defaults to `0`. */
+  readonly swing?: number
 }
 
+/**
+ * A lookup table mapping bar positions to BPM values with optional swing offset.
+ * Supports incremental edits — changes can be added or removed while a song is running.
+ */
 export type TempoMap = {
+  /** Returns the BPM in effect at the given bar, falling back to `initialBPM`. */
   readonly getBPMAtBar: (bar: number) => number
+  /**
+   * Returns the swing time offset (in seconds) for a given tick.
+   * Odd ticks are delayed by `swing × tickDuration × 0.5`; even ticks return `0`.
+   *
+   * @param tick         - The tick number (0-based).
+   * @param tickDuration - Duration of one tick in seconds.
+   */
   readonly getSwingOffset: (tick: number, tickDuration: number) => number
+  /**
+   * Insert or replace a BPM change at the given bar.
+   * @param bar - The bar number (zero-indexed).
+   * @param bpm - The new BPM value.
+   */
   readonly addChange: (bar: number, bpm: number) => void
+  /**
+   * Remove the BPM change at the given bar, if present.
+   * @param bar - The bar number to remove.
+   */
   readonly removeChange: (bar: number) => void
+  /**
+   * Update the global swing amount.
+   * @param amount - Clamped to `[0, 1]`.
+   */
   readonly setSwing: (amount: number) => void
+  /** Current swing amount (clamped `[0, 1]`). */
   readonly swing: number
+  /** The baseline BPM used when no change precedes the requested bar. */
   readonly initialBPM: number
+  /** A read-only snapshot of all registered BPM change events, sorted by bar. */
   readonly changes: ReadonlyArray<TempoChange>
+  /** Clear all BPM changes. Does not reset `initialBPM` or swing. */
   readonly dispose: () => void
 }
 
+/**
+ * Create a tempo map that resolves BPM at any bar position and computes swing offsets.
+ * Changes can be added or removed at runtime, making it suitable for songs with
+ * mid-track tempo shifts or live tempo automation.
+ *
+ * @param props - Optional initial configuration: `initialBPM`, `changes`, and `swing`.
+ * @returns A {@link TempoMap} instance.
+ *
+ * @example
+ * ```ts
+ * const tempoMap = createTempoMap({ initialBPM: 128, swing: 0.3 })
+ * tempoMap.addChange(8, 140)   // jump to 140 BPM at bar 8
+ * const bpm = tempoMap.getBPMAtBar(8)  // 140
+ * ```
+ */
 export const createTempoMap = (props?: TempoMapProps): TempoMap => {
   const startBPM = props?.initialBPM ?? 120
 

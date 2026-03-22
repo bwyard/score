@@ -46,7 +46,7 @@ export const fibonacci = (n: number): number[] => {
  * pattern is irregular, non-repeating, and self-similar — it sounds like
  * a human groove rather than a mathematical exercise.
  *
- * @param steps - Total length of the pattern. Must be > 0.
+ * @param steps - Total length of the pattern. Must be \> 0.
  * @returns Binary array of length `steps` — `1` = hit, `0` = rest,
  *   with hits at positions 0, 1, 2, 3, 5, 8, 13, ... up to `steps - 1`.
  *

@@ -22,14 +22,14 @@ export type LRule = Record<string, string>
  *
  * At each generation, every character in the current string is replaced by
  * its corresponding rule string, or left unchanged if no rule applies.
- * The string length grows exponentially, so keep `generations` small (< 10)
+ * The string length grows exponentially, so keep `generations` small (\< 10)
  * for long rule expansions.
  *
  * @param axiom - Starting string (generation 0).
  * @param rules - Rewrite rules mapping each symbol to its expansion.
  * @param generations - Number of rewriting steps. `0` returns the axiom unchanged.
  * @returns The L-system string after `generations` rewrites.
- * @throws {ScoreError} if `generations < 0`.
+ * @throws `ScoreError` if `generations < 0`.
  *
  * @example
  * ```ts
@@ -70,7 +70,7 @@ export const lsystem = (axiom: string, rules: LRule, generations: number): strin
  * @param generations - Number of rewriting steps.
  * @param alphabet - String of characters that map to `1`. All others map to `0`.
  * @returns Binary array — `1` for characters in `alphabet`, `0` for all others.
- * @throws {ScoreError} if `generations < 0`.
+ * @throws `ScoreError` if `generations < 0`.
  *
  * @example
  * ```ts

@@ -59,7 +59,7 @@ export const normalize = (pattern: readonly number[]): number[] => {
  *
  * Prevents runaway values from exceeding safe parameter limits — useful
  * after summing or processing patterns where outputs may drift outside
- * a valid range (e.g. volume > 1 or frequency < 20 Hz).
+ * a valid range (e.g. volume \> 1 or frequency \< 20 Hz).
  *
  * @param min - Lower bound. Values below this are raised to min.
  * @param max - Upper bound. Values above this are clamped to max.

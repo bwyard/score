@@ -17,7 +17,7 @@ const NOTE_SEMITONES: Record<string, number> = {
  *
  * @param name - Note name in the format `<Letter>[#|b]<Octave>`. E.g. `'A4'`, `'F#3'`, `'Bb2'`.
  * @returns Frequency in Hz.
- * @throws {ScoreError} if the note name does not match the expected format.
+ * @throws `ScoreError` if the note name does not match the expected format.
  *
  * @example
  * ```ts

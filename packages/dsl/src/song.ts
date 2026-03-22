@@ -1,6 +1,34 @@
 import { ScoreError } from '@score/core'
 import type { SongProps, SongDefinition } from './types.js'
 
+/**
+ * Define a complete song — the top-level DSL entry point.
+ * Returns a {@link SongDefinition} that the engine renders to audio.
+ *
+ * Validates that `bpm` is positive and that at least one track is provided.
+ * All other fields are optional — `arrangement` defaults to an empty array
+ * (the engine loops all tracks indefinitely).
+ *
+ * @param props - Song configuration including bpm, tracks, and optional arrangement,
+ *   key, genre, backend, and XDJ routing.
+ * @returns A validated {@link SongDefinition}.
+ * @throws `ScoreError` if `bpm` is missing or non-positive.
+ * @throws `ScoreError` if `tracks` is empty.
+ *
+ * @example
+ * ```ts
+ * export default Song({
+ *   bpm: 128,
+ *   key: 'Am',
+ *   tracks: [kick, snare, hihat, bass],
+ *   arrangement: [Intro(4, [kick]), Drop(16, [kick, snare, hihat, bass])],
+ * })
+ * ```
+ *
+ * @see {@link Kick}, {@link Snare}, {@link HiHat}, {@link Synth} — instrument factories
+ * @see {@link Track} — wrap an instrument with mix settings before passing to tracks
+ * @see {@link Intro}, {@link Drop}, {@link Outro} — section factories for arrangement
+ */
 export const Song = (props: SongProps): SongDefinition => {
   if (!props.bpm || props.bpm <= 0) {
     throw ScoreError('Song bpm must be a positive number', {

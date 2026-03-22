@@ -34,7 +34,7 @@ const applyRule = (rule: number, left: number, center: number, right: number): n
  * @param generations - Number of rows to generate (including the seed row). Must be ≥ 1.
  * @param seed - Initial cell state. Default: single `1` in the center cell.
  * @returns 2D array `[generation][cell]` of `0`s and `1`s, with `generations` rows.
- * @throws {ScoreError} if `rule < 0`, `rule > 255`, `width < 1`, or `generations < 1`.
+ * @throws `ScoreError` if `rule < 0`, `rule > 255`, `width < 1`, or `generations < 1`.
  *
  * @example
  * ```ts

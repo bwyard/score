@@ -1,6 +1,21 @@
 import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from './types.js'
 import { uid } from './uid.js'
 
+/**
+ * Create an oscillator backend node.
+ * Wraps a periodic waveform generator with start/stop and real-time frequency/detune control.
+ *
+ * @param context - The audio context.
+ * @param props   - Node configuration: waveform `type`, `frequency` in Hz, and `detune` in cents.
+ * @returns An `AudioComponent` with `start`, `stop`, `setFrequency`, and `setDetune` methods.
+ *
+ * @example
+ * ```ts
+ * const osc = createOscillator(ctx, { type: 'sine', frequency: 440 })
+ * osc.start(ctx.currentTime)
+ * osc.connect(masterGain)
+ * ```
+ */
 export const createOscillator = (
   context: ScoreAudioContext,
   props: {

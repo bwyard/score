@@ -36,7 +36,7 @@ export type PhaserProps = {
  * @param props - Phaser configuration.
  * @returns AudioComponent with a `setFeedback` setter.
  *
- * @throws {ScoreError} If the filter stage count falls below 2 after clamping (internal guard — should not occur in practice).
+ * @throws `ScoreError` If the filter stage count falls below 2 after clamping (internal guard — should not occur in practice).
  *
  * @example
  * ```ts
