@@ -91,7 +91,8 @@ House · Deep House · Techno · Industrial · Hardcore · Grime
 | `@score/pattern`   | Pattern combinators, Euclidean rhythms, permutations           |
 | `@score/musical`   | Natural language instrument description (`describe()`)         |
 | `@score/cli`       | play, repl, list, export, new, doctor commands                 |
-| `@score/midi`      | WebMIDI, Pioneer XDJ profiles (Phase 12)                       |
+| `@score/midi`      | WebMIDI bridge, Pioneer XDJ profiles, controller mappings      |
+| `@score/session`   | Jam session — engine + MIDI coordination for live performance  |
 | `@score/mcp`       | MCP servers for Claude Code integration                        |
 | `@score/gui`       | Score Studio — React DAW interface (Phase 13)                  |
 
