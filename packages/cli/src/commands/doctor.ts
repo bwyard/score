@@ -1,7 +1,17 @@
 import { execSync } from 'node:child_process'
 import { createRequire } from 'node:module'
+import { parseFlags } from '../flags.js'
 
-export const doctor = (_args: string[]): void => {
+const printUsage = (): void => {
+  console.log('Score doctor — check system requirements\n')
+  console.log('Usage:')
+  console.log('  score doctor\n')
+  console.log('Options:')
+  console.log('  -h, --help    Show this help')
+}
+
+export const doctor = (args: string[]): void => {
+  parseFlags(args, {}, printUsage)
   console.log('Score Doctor — system check\n')
 
   // Node version

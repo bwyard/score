@@ -1,14 +1,25 @@
 import { writeFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { parseFlags } from '../flags.js'
+
+const printUsage = (): void => {
+  console.log('Score new — create a new song file\n')
+  console.log('Usage:')
+  console.log('  score new song <name>\n')
+  console.log('Options:')
+  console.log('  -h, --help    Show this help')
+}
 
 export const newSong = (args: string[]): void => {
-  if (args[0] !== 'song' || !args[1]) {
-    console.log('Usage:')
-    console.log('  score new song <name>    Create a new song from template')
-    return
+  const { positionals } = parseFlags(args, {}, printUsage)
+
+  if (positionals[0] !== 'song' || !positionals[1]) {
+    console.error('Score: Usage — score new song <name>\n')
+    printUsage()
+    process.exit(1)
   }
 
-  const name = args[1]
+  const name = positionals[1]
   const fileName = name.endsWith('.js') ? name : `${name}.js`
   const filePath = resolve(process.cwd(), fileName)
 
