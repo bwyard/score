@@ -28,6 +28,7 @@
     ]
   },
   "devDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.59.1",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",

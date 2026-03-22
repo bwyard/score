@@ -9,7 +9,7 @@ import { TransportBar }             from '../src/renderer/components/shared/Tran
 
 const setup = (hardware: 'pc-only' | 'controller' | 'aio' = 'pc-only') => ({
   user: userEvent.setup(),
-  ...render(<TransportBar hardware={hardware} />),
+  ...render(<TransportBar hardware={hardware} onHome={() => undefined} />),
 })
 
 // ── Rendering ─────────────────────────────────────────────────────────────────

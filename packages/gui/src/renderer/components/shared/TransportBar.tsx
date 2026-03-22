@@ -11,6 +11,7 @@ type EngineState = {
 
 type Props = {
   readonly hardware: HardwareLevel
+  readonly onHome:   () => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -20,7 +21,7 @@ type Props = {
  * Subscribes to engine state pushed from the main process.
  * Play/stop/BPM changes are forwarded back via IPC.
  */
-export const TransportBar = ({ hardware }: Props) => {
+export const TransportBar = ({ hardware, onHome }: Props) => {
   const bpmId   = useId()
   const barsId  = useId()
 
@@ -54,11 +55,23 @@ export const TransportBar = ({ hardware }: Props) => {
   return (
     <div role="toolbar" aria-label="Transport controls" style={styles.bar}>
 
+      {/* Home — return to splash */}
+      <button
+        aria-label="Score Studio home"
+        style={styles.homeBtn}
+        onClick={onHome}
+        title="Back to mode selector"
+      >
+        Score
+      </button>
+
+      <div style={styles.divider} aria-hidden="true" />
+
       {/* Play / stop */}
       <button
         aria-label={engine.playing ? 'Stop' : 'Play'}
         aria-pressed={engine.playing}
-        style={styles.playBtn}
+        style={engine.playing ? { ...styles.playBtn, ...styles.playBtnActive } : styles.playBtn}
         onClick={toggle}
       >
         {engine.playing ? '■' : '▶'}
@@ -104,74 +117,111 @@ export const TransportBar = ({ hardware }: Props) => {
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
 const styles = {
+  homeBtn: {
+    background:    'none',
+    border:        'none',
+    color:         '#4a8fff',
+    fontFamily:    'system-ui, sans-serif',
+    fontSize:      '0.75rem',
+    fontWeight:    700,
+    letterSpacing: '0.15em',
+    textTransform: 'uppercase' as const,
+    cursor:        'pointer',
+    padding:       '0.2rem 0.5rem',
+    flexShrink:    0,
+    opacity:       0.85,
+  },
+  divider: {
+    width:      '1px',
+    height:     '18px',
+    background: '#252528',
+    flexShrink: 0,
+  },
   bar: {
     display:      'flex',
     alignItems:   'center',
-    gap:          '1.5rem',
-    height:       '48px',
-    padding:      '0 1rem',
-    background:   '#111114',
-    borderBottom: '1px solid #2a2a2e',
+    gap:          '1.1rem',
+    height:       '42px',
+    padding:      '0 0.85rem',
+    background:   '#0e0e11',
+    borderBottom: '1px solid #1e1e22',
     flexShrink:   0,
+    userSelect:   'none' as const,
   },
   playBtn: {
-    width:          '36px',
-    height:         '36px',
-    background:     '#1e2a3a',
-    border:         '1px solid #4a8fff',
-    borderRadius:   '6px',
-    color:          '#4a8fff',
-    fontSize:       '1rem',
+    width:          '30px',
+    height:         '30px',
+    background:     '#111318',
+    border:         '1px solid #252c3a',
+    borderRadius:   '3px',
+    color:          '#6a9fff',
+    fontSize:       '0.75rem',
     cursor:         'pointer',
     display:        'flex',
     alignItems:     'center',
     justifyContent: 'center',
+    flexShrink:     0,
+    transition:     'all 0.1s ease',
+  },
+  playBtnActive: {
+    background: '#152035',
+    border:     '1px solid #4a8fff',
+    color:      '#7ab0ff',
+    boxShadow:  '0 0 6px rgba(74,143,255,0.25)',
   },
   bpmGroup: {
     display:    'flex',
     alignItems: 'center',
-    gap:        '0.4rem',
+    gap:        '0.3rem',
   },
   bpmInput: {
-    width:        '60px',
-    background:   '#1a1a1e',
-    border:       '1px solid #3a3a3e',
-    borderRadius: '4px',
-    color:        '#e8e8e8',
-    fontSize:     '0.9rem',
-    padding:      '0.2rem 0.4rem',
-    textAlign:    'center' as const,
+    width:              '52px',
+    background:         '#080809',
+    border:             '1px solid #1e1e22',
+    borderRadius:       '2px',
+    color:              '#c8d8f8',
+    fontFamily:         "'JetBrains Mono', 'Fira Code', monospace",
+    fontSize:           '0.8rem',
+    fontVariantNumeric: 'tabular-nums',
+    padding:            '0.12rem 0.25rem',
+    textAlign:          'center' as const,
   },
   barCount: {
     display:    'flex',
     alignItems: 'center',
-    gap:        '0.4rem',
+    gap:        '0.3rem',
   },
   label: {
-    fontSize:      '0.65rem',
-    color:         '#666',
-    letterSpacing: '0.08em',
+    fontFamily:    'system-ui, sans-serif',
+    fontSize:      '0.58rem',
+    color:         '#3e3e46',
+    letterSpacing: '0.12em',
     textTransform: 'uppercase' as const,
   },
   value: {
-    fontSize:           '0.95rem',
-    color:              '#e8e8e8',
+    fontFamily:         "'JetBrains Mono', 'Fira Code', monospace",
+    fontSize:           '0.8rem',
+    color:              '#9aadbe',
     fontVariantNumeric: 'tabular-nums',
+    minWidth:           '2ch',
+    textAlign:          'right' as const,
   },
   hwBadge: {
     marginLeft: 'auto',
   },
   hw: {
-    fontSize:      '0.65rem',
-    color:         '#666',
-    letterSpacing: '0.08em',
-    padding:       '0.2rem 0.5rem',
-    border:        '1px solid #2a2a2e',
-    borderRadius:  '4px',
+    fontFamily:    'system-ui, sans-serif',
+    fontSize:      '0.58rem',
+    color:         '#3e3e46',
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase' as const,
+    padding:       '0.12rem 0.4rem',
+    border:        '1px solid #1e1e22',
+    borderRadius:  '2px',
   },
   hwActive: {
-    color:      '#4a8fff',
-    border:     '1px solid #4a8fff',
-    background: '#1e2a3a',
+    color:      '#6a9fff',
+    border:     '1px solid #253050',
+    background: '#0d1928',
   },
 } as const
