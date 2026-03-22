@@ -3,7 +3,7 @@ import { existsSync, watch as fsWatch } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { ScoreError } from '@score/core'
 import type { SongDefinition } from '@score/dsl'
-import { createScoreEngine, type ScoreEngine } from '../engine.js'
+import { createScoreEngine, isInstrumentDescriptor, type ScoreEngine } from '../engine.js'
 import { validateSongFile } from '../validator/SongValidator.js'
 import { validateSongExport } from '../validator/SongExportValidator.js'
 
@@ -87,6 +87,7 @@ export const play = async (args: string[]): Promise<void> => {
   logSong(song)
 
   let currentEngine: ScoreEngine = await createScoreEngine(song)
+  let currentSong: SongDefinition = song
   currentEngine.start()
   log(`Audio running — ${CYAN}${String(currentEngine.bpm)} BPM${RESET} — Press Ctrl+C to stop${watch ? ` ${YELLOW}(watch mode)${RESET}` : ''}`)
 
@@ -112,8 +113,23 @@ export const play = async (args: string[]): Promise<void> => {
       }
     })
 
-    // On each bar: if a reload is pending, load the new song first (keep-last-good),
-    // then swap atomically and dispose the old engine.
+    // Determine if a new song can be applied via live update (patch) or needs full swap.
+    // Live update is safe when track count + instrument types are unchanged.
+    // Full swap is needed for pattern, track structure, or effect chain changes.
+    const resolveDescriptors = (song: SongDefinition) =>
+      song.tracks
+        .map(t => isInstrumentDescriptor(t) ? t : t.component as unknown)
+        .filter(isInstrumentDescriptor)
+
+    const isLivePatchable = (prev: SongDefinition, next: SongDefinition): boolean => {
+      const prevDescs = resolveDescriptors(prev)
+      const nextDescs = resolveDescriptors(next)
+      if (prevDescs.length !== nextDescs.length) return false
+      return prevDescs.every((d, i) => d.instrumentType === nextDescs[i]?.instrumentType)
+    }
+
+    // On each bar: apply file changes at a bar boundary to avoid mid-beat glitches.
+    // Prefer live update() when structure is unchanged; fall back to full engine swap.
     currentEngine.onBar(() => {
       if (!pendingReload) return
       pendingReload = false
@@ -121,12 +137,20 @@ export const play = async (args: string[]): Promise<void> => {
       void (async () => {
         try {
           const freshSong = await loadSong(resolved, reloadVersion++, trust)
-          const freshEngine = await createScoreEngine(freshSong)
-          freshEngine.start()
-          const oldEngine = currentEngine
-          currentEngine = freshEngine
-          oldEngine.dispose()
-          log(`Reloaded — ${CYAN}${String(freshEngine.bpm)} BPM${RESET}`)
+
+          if (isLivePatchable(currentSong, freshSong)) {
+            currentEngine.update(freshSong)
+            currentSong = freshSong
+            log(`Updated — ${CYAN}${String(freshSong.bpm)} BPM${RESET} (bar ${String(currentEngine.bars)})`)
+          } else {
+            const freshEngine = await createScoreEngine(freshSong)
+            freshEngine.start()
+            const oldEngine = currentEngine
+            currentEngine = freshEngine
+            currentSong = freshSong
+            oldEngine.dispose()
+            log(`Reloaded — ${CYAN}${String(freshEngine.bpm)} BPM${RESET}`)
+          }
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err)
           error(`Reload failed — ${msg}`)

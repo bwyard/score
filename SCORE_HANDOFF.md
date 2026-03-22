@@ -159,11 +159,12 @@ Phase 10   ⚠️  CLI — core commands done, stem export + freeze/bounce remai
 Phase 10b  ⬜  score-audio MCP — effect catalog, signal flow, backend nodes, component catalog
 Phase 10b2 ⬜  score-game-tools MCP — song inspector, mixer state, transport state, audio graph
 Phase 10c  ⬜  Decode — audio analysis + format import (Rekordbox, Serato, FL Studio, MIDI)
-Phase 11   ⚠️  Hot reload + live coding (3 levels)
+Phase 11   ✅  Hot reload + live coding (3 levels)
                ✅ Level 1: --watch file watcher with ESM cache busting
-               ⬜ Level 2: patch() — surgical live parameter updates without full reload
-               ⬜ Level 3: update(props) — live prop changes fed to running engine
-               ⬜ bars variable — loop counter in song file live coding context
+               ✅ Level 2: patch() — surgical live BPM/volume/mute updates without full reload
+               ✅ Level 3: update(song) — diffs incoming song; live-patches BPM + track volumes, full swap for structural changes
+               ✅ bars — engine.bars exposes current bar count; REPL shows it in status
+               ✅ muteEnvelope(bar, arrangement, trackId) — pure function replaces imperative section state
                ⬜ cursor.x / cursor.y — mouse position as automation source (Phase 13 GUI)
 Phase 11b  ⬜  Live coding visualization — punchcard, piano roll, scope, pattern graph, waveform
 Phase 12   ⬜  MIDI bridge + XDJ profiles + hardware mixer modes
