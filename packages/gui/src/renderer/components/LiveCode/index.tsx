@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { TransportBar }                      from '../shared/TransportBar.js'
 import type { HardwareLevel }               from '../../../main/ipc-types.js'
 import { PunchcardGrid }                    from '../visualizer/PunchcardGrid.js'
@@ -131,6 +131,9 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [stripStates, setStripStates] = useState<ReadonlyArray<StripState>>([])
   const [fftBins,     setFftBins]     = useState<readonly number[]>([])
   const [logEntries,  setLogEntries]  = useState<ReadonlyArray<LogEntry>>([])
+  // Set to true when the user clicks play before eval — song:update handler will
+  // fire transport:play once the eval succeeds (eval-then-play flow).
+  const autoPlayRef = useRef(false)
   const [panels, setPanels] = useState<PanelVisibility>({
     punchcard: true,
     scope:     true,
@@ -152,6 +155,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('error:report', ({ message }) => {
+      autoPlayRef.current = false
       setError(message)
       setEvalStatus('error')
       addLog('error', message)
@@ -166,6 +170,11 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       setEvalStatus('ok')
       setEvalTimestamp(Date.now())
       addLog('ok', `Song loaded — ${t.length} track${t.length === 1 ? '' : 's'}`)
+      // Auto-play after eval when the user clicked play (not standalone Eval btn)
+      if (autoPlayRef.current) {
+        autoPlayRef.current = false
+        window.scoreBridge.send('transport:play', undefined)
+      }
     })
     return unsub
   }, [addLog])
@@ -220,11 +229,26 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     window.scoreBridge.send('engine:eval', { code })
   }, [code, addLog])
 
+  // Play: always eval the current code first, then auto-start once song:update fires.
+  // This mirrors TidalCycles / Strudl — pressing play runs the code.
+  const onPlay = useCallback((): void => {
+    autoPlayRef.current = true
+    setError(null)
+    setEvalStatus('pending')
+    addLog('info', 'Evaluating…')
+    window.scoreBridge.send('engine:eval', { code })
+  }, [code, addLog])
+
+  const onStop = useCallback((): void => {
+    autoPlayRef.current = false
+    window.scoreBridge.send('transport:stop', undefined)
+  }, [])
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div style={styles.root}>
-      <TransportBar hardware={hardware} onHome={onHome} />
+      <TransportBar hardware={hardware} onHome={onHome} onPlay={onPlay} onStop={onStop} />
 
       {/* Status bar */}
       <div style={styles.statusBar}>
