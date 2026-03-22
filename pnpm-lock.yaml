@@ -165,6 +165,10 @@ importers:
 
   packages/gui:
     dependencies:
+      node-web-audio-api:
+        specifier: ^1.0.8
+        version: 1.0.8
+    devDependencies:
       '@score/cli':
         specifier: workspace:*
         version: link:../cli
@@ -177,7 +181,6 @@ importers:
       '@score/session':
         specifier: workspace:*
         version: link:../session
-    devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.4.0
         version: 6.9.1

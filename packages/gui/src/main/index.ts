@@ -3,14 +3,11 @@ import path                                    from 'node:path'
 import { tmpdir }                              from 'node:os'
 import { writeFileSync }                       from 'node:fs'
 import { pathToFileURL }                       from 'node:url'
+import { createScoreEngine }         from '@score/cli/engine'
 import { Kick, Synth, Track, Song }  from '@score/dsl'
 import type { SongDefinition }       from '@score/dsl'
 import type { ScoreEngine }          from '@score/cli/engine'
 import type { RendererToMain }       from './ipc-types.js'
-
-// BOUNDARY — IO: dynamic import so ESM engine loads correctly from CJS main bundle
-const loadEngine = (): Promise<{ createScoreEngine: (song: SongDefinition) => Promise<ScoreEngine> }> =>
-  import('@score/cli/engine') as Promise<{ createScoreEngine: (song: SongDefinition) => Promise<ScoreEngine> }>
 
 // ── Default starter song ────────────────────────────────────────────────────
 // Used when entering any mode — mirrors the Live Code textarea starter.
@@ -66,7 +63,6 @@ const teardown = (): void => {
 
 const boot = async (song: SongDefinition): Promise<void> => {
   teardown()
-  const { createScoreEngine } = await loadEngine()
   const engine = await createScoreEngine(song)
   slot = { engine, playing: false, bpm: song.bpm, bars: 0 }
   engine.onBar(() => {
