@@ -40,8 +40,11 @@ type EngineSlot = {
 
 // One engine slot at a time — reinitialised on mode change.
 // Wrapped in const objects so references are never reassigned (no let).
-const slotRef: { value: EngineSlot | null }        = { value: null }
-const winRef:  { value: BrowserWindow | null }     = { value: null }
+const slotRef:    { value: EngineSlot | null }        = { value: null }
+const winRef:     { value: BrowserWindow | null }     = { value: null }
+// Bar-boundary hot-swap: when code is eval'd while playing, the new song queues
+// here and is applied at the next onBar callback for a seamless transition.
+const pendingRef: { value: SongDefinition | null }    = { value: null }
 
 const send = <K extends keyof MainToRenderer>(channel: K, payload: MainToRenderer[K]): void => {
   const win = winRef.value
@@ -68,11 +71,13 @@ const pushSong = (song: SongDefinition): void => {
 const teardown = (): void => {
   const slot = slotRef.value
   if (!slot) return
-  try {
-    slot.engine.stop()
-    slot.engine.dispose()
-  } catch { /* ignore disposal errors */ }
   slotRef.value = null
+  try { slot.engine.stop() } catch { /* ignore */ }
+  // Defer dispose by 300 ms — scheduled oscillator notes finish their natural
+  // envelope before the audio context closes, preventing a hard-cut pop.
+  setTimeout(() => {
+    try { slot.engine.dispose() } catch { /* ignore */ }
+  }, 300)
 }
 
 const boot = async (song: SongDefinition): Promise<void> => {
@@ -83,6 +88,24 @@ const boot = async (song: SongDefinition): Promise<void> => {
     const s = slotRef.value
     if (!s) return
     s.bars = engine.bars
+    // Bar-boundary hot-swap: if a new song was eval'd while playing, apply it
+    // at this bar boundary so changes land on a clean musical boundary.
+    const pending = pendingRef.value
+    if (pending) {
+      pendingRef.value = null
+      const wasPlaying = s.playing
+      void boot(pending).then(() => {
+        if (wasPlaying) {
+          const next = slotRef.value
+          if (next && !next.playing) {
+            next.engine.start()
+            next.playing = true
+            pushState()
+          }
+        }
+      })
+      return
+    }
     pushState()
   })
   pushState()
@@ -198,12 +221,14 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
     const song = mod.default
     if (!song || typeof song !== 'object') return
     const slot = slotRef.value
-    if (slot) {
-      slot.engine.update(song)
-      pushSong(song)
+    if (slot?.playing) {
+      // Engine is playing — queue song for bar-boundary swap so the change
+      // lands on a clean musical boundary rather than mid-bar.
+      pendingRef.value = song
+      pushSong(song) // update punchcard preview immediately
     } else {
+      // Engine stopped or not yet booted — apply immediately
       void boot(song)
-      // boot() calls pushSong internally
     }
   }).catch((err: unknown) => {
     try { unlinkSync(tmp) } catch { /* ignore cleanup errors */ }
