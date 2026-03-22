@@ -123,6 +123,7 @@ const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
     const pending = pendingRef.value
     if (pending) {
       pendingRef.value = null
+      send('engine:pending', { pending: false })
       const wasPlaying = s.playing
       const currentBars = s.bars
       void boot(pending, currentBars).then(() => {
@@ -259,6 +260,7 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
       // Engine is playing — queue song for bar-boundary swap so the change
       // lands on a clean musical boundary rather than mid-bar.
       pendingRef.value = song
+      send('engine:pending', { pending: true })
       pushSong(song) // update punchcard preview immediately
     } else {
       // Engine stopped or not yet booted — apply immediately

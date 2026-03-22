@@ -35,4 +35,6 @@ export type MainToRenderer = {
   'error:report':    { message: string }
   'song:update':     { tracks: ReadonlyArray<{ name: string; type: string; pattern: ReadonlyArray<number | string> }> }
   'engine:analysis': { waveform: readonly number[] }
+  /** Fires when a bar-boundary swap is queued or cleared. */
+  'engine:pending':  { pending: boolean }
 }

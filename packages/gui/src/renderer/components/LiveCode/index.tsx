@@ -3,13 +3,31 @@ import { TransportBar }                      from '../shared/TransportBar.js'
 import type { HardwareLevel }               from '../../../main/ipc-types.js'
 import { PunchcardGrid }                    from '../visualizer/PunchcardGrid.js'
 import { Scope }                            from '../visualizer/Scope.js'
+import { SpectrumAnalyser }                 from '../visualizer/SpectrumAnalyser.js'
+import { PianoRoll }                        from '../visualizer/PianoRoll.js'
+import { MasterLevel }                      from '../shared/MasterLevel.js'
+import { MixerStrip }                       from '../shared/MixerStrip.js'
+import { DraggablePanel }                   from '../shared/DraggablePanel.js'
 import type { PunchcardTrack }              from '../visualizer/PunchcardGrid.js'
+import { EvalStatus }                       from '../status/index.js'
+import type { EvalStatusKind }             from '../status/EvalStatus.js'
+import { BarCounter }                       from '../status/index.js'
+import { PendingSwapBadge }                 from '../status/index.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type Props = {
   readonly hardware: HardwareLevel
   readonly onHome:   () => void
+}
+
+// Panel visibility state — each panel can be toggled independently.
+type PanelVisibility = {
+  punchcard: boolean
+  scope:     boolean
+  spectrum:  boolean
+  piano:     boolean
+  mixer:     boolean
 }
 
 // ── Starter template ───────────────────────────────────────────────────────────
@@ -33,60 +51,127 @@ export default Song({
   ],
 })`
 
+// ── Mixer strip state ──────────────────────────────────────────────────────────
+
+type StripState = {
+  readonly volume: number
+  readonly muted:  boolean
+}
+
+const defaultStripState = (): StripState => ({ volume: 1, muted: false })
+
+const updateStrip = (
+  prev: ReadonlyArray<StripState>,
+  index: number,
+  patch: Partial<StripState>,
+): ReadonlyArray<StripState> =>
+  prev.map((s, i) => (i === index ? { ...s, ...patch } : s))
+
+// ── Panel toggle button ─────────────────────────────────────────────────────────
+
+type PanelToggleProps = {
+  readonly label:   string
+  readonly active:  boolean
+  readonly onClick: () => void
+}
+
+const PanelToggle = ({ label, active, onClick }: PanelToggleProps) => (
+  <button
+    aria-pressed={active}
+    onClick={onClick}
+    style={{
+      padding:       '0.2rem 0.5rem',
+      background:    active ? '#152035' : 'none',
+      border:        active ? '1px solid #2a4a7a' : '1px solid #1e1e22',
+      borderRadius:  '2px',
+      color:         active ? '#6a9fff' : '#3a3a46',
+      fontSize:      '0.65rem',
+      fontFamily:    'system-ui, sans-serif',
+      letterSpacing: '0.06em',
+      cursor:        'pointer',
+    }}
+  >
+    {label}
+  </button>
+)
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 /**
- * Live Code mode — textarea editor left, visualizer right.
- * Phase 11b: IPC wiring, song:update subscription, Ctrl+Enter eval.
+ * Live Code mode — editor on the left, floating visualizer panels on the right.
+ * Phase 11b t140: status bar, all visualizer panels, floating panel layout.
  * Phase 13f: swap textarea for Monaco editor.
- * Phase 11b t140: wire tracks into Punchcard + Scope visualizers.
  */
 export const LiveCode = ({ hardware, onHome }: Props) => {
   const [code,   setCode]   = useState(STARTER)
   const [error,  setError]  = useState<string | null>(null)
   const [tracks, setTracks] = useState<ReadonlyArray<PunchcardTrack>>([])
   const [waveform,    setWaveform]    = useState<readonly number[]>([])
-  const [activeTab,   setActiveTab]   = useState<'punchcard' | 'scope'>('punchcard')
-  const [engineState, setEngineState] = useState<{ playing: boolean; bars: number }>({ playing: false, bars: 0 })
-  // currentStep tracks the live step index from the sequencer — accurate sub-bar cursor.
-  // Replaces the old `bars % 8` hack which only updated once per bar (8× too slow).
-  const [currentStep,   setCurrentStep]   = useState(0)
+  const [engineState, setEngineState] = useState<{ playing: boolean; bpm: number; bars: number }>({
+    playing: false, bpm: 128, bars: 0,
+  })
+  const [currentStep,      setCurrentStep]      = useState(0)
   const [currentStepCount, setCurrentStepCount] = useState(8)
+  const [evalStatus,    setEvalStatus]    = useState<EvalStatusKind>('idle')
+  const [evalTimestamp, setEvalTimestamp] = useState<number | undefined>(undefined)
+  const [pendingSwap, setPendingSwap] = useState(false)
+  const [stripStates, setStripStates] = useState<ReadonlyArray<StripState>>([])
+  const [fftBins,     setFftBins]     = useState<readonly number[]>([])
+  // Panel visibility toggles
+  const [panels, setPanels] = useState<PanelVisibility>({
+    punchcard: true,
+    scope:     false,
+    spectrum:  false,
+    piano:     false,
+    mixer:     false,
+  })
 
-  // Subscribe to error reports from the main process
+  const togglePanel = useCallback((key: keyof PanelVisibility): void => {
+    setPanels(prev => ({ ...prev, [key]: !prev[key] }))
+  }, [])
+
+  // ── IPC subscriptions ──────────────────────────────────────────────────────
+
   useEffect(() => {
     const unsub = window.scoreBridge.on('error:report', ({ message }) => {
       setError(message)
+      setEvalStatus('error')
     })
     return unsub
   }, [])
 
-  // Subscribe to song structure updates pushed after boot or eval
   useEffect(() => {
     const unsub = window.scoreBridge.on('song:update', ({ tracks: t }) => {
       setTracks(t)
+      setStripStates(prev => t.map((_, i) => prev[i] ?? defaultStripState()))
+      setEvalStatus('ok')
+      setEvalTimestamp(Date.now())
     })
     return unsub
   }, [])
 
-  // Subscribe to waveform data from AnalyserNode
   useEffect(() => {
     const unsub = window.scoreBridge.on('engine:analysis', ({ waveform: w }) => {
       setWaveform(w)
+      const binCount  = 32
+      const chunkSize = Math.floor(w.length / binCount)
+      const bins = Array.from({ length: binCount }, (_, b) => {
+        const start = b * chunkSize
+        const chunk = w.slice(start, start + chunkSize)
+        return Math.sqrt(chunk.reduce((s, v) => s + v * v, 0) / Math.max(chunk.length, 1))
+      })
+      setFftBins(bins)
     })
     return unsub
   }, [])
 
-  // Subscribe to engine playing state and bar count
   useEffect(() => {
-    const unsub = window.scoreBridge.on('engine:state', ({ playing, bars }) => {
-      setEngineState({ playing, bars })
+    const unsub = window.scoreBridge.on('engine:state', ({ playing, bpm, bars }) => {
+      setEngineState({ playing, bpm, bars })
     })
     return unsub
   }, [])
 
-  // Subscribe to per-step cursor updates — fires every sequencer step (not just bar).
-  // This is the accurate cursor for punchcard + future beat-highlighting features.
   useEffect(() => {
     const unsub = window.scoreBridge.on('engine:step', ({ step, stepCount }) => {
       setCurrentStep(step)
@@ -95,18 +180,52 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     return unsub
   }, [])
 
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('engine:pending', ({ pending }) => {
+      setPendingSwap(pending)
+    })
+    return unsub
+  }, [])
+
   const onEval = useCallback((): void => {
     setError(null)
-    // BOUNDARY — IO: send code to main process for eval + engine update
+    setEvalStatus('pending')
     window.scoreBridge.send('engine:eval', { code })
   }, [code])
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div style={styles.root}>
       <TransportBar hardware={hardware} onHome={onHome} />
 
+      {/* Status bar */}
+      <div style={styles.statusBar}>
+        <BarCounter
+          bars={engineState.bars}
+          step={currentStep}
+          stepCount={currentStepCount}
+          bpm={engineState.bpm}
+          playing={engineState.playing}
+        />
+        <div style={styles.statusRight}>
+          {pendingSwap && (
+            <PendingSwapBadge
+              pending={pendingSwap}
+              step={currentStep}
+              stepCount={currentStepCount}
+            />
+          )}
+          <EvalStatus
+            status={evalStatus}
+            {...(error !== null    ? { message:   error         } : {})}
+            {...(evalTimestamp !== undefined ? { timestamp: evalTimestamp } : {})}
+          />
+        </div>
+      </div>
+
       <div style={styles.body}>
-        {/* Editor pane — Phase 13f: swap for Monaco */}
+        {/* Editor pane */}
         <div style={styles.editorPane}>
           {error !== null && (
             <div style={styles.errorBanner} role="alert">
@@ -126,45 +245,120 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               }
             }}
           />
-          <button style={styles.evalBtn} onClick={onEval} aria-label="Eval song">
-            ▶ Eval
-          </button>
-        </div>
-
-        {/* Visualizer pane — Phase 11b t140: tabbed Punchcard + Scope */}
-        <div style={styles.visualizer}>
-          {/* Tab bar */}
-          <div style={styles.tabBar}>
-            <button
-              style={activeTab === 'punchcard' ? { ...styles.tab, ...styles.tabActive } : styles.tab}
-              onClick={() => setActiveTab('punchcard')}
-            >
-              Punchcard
-            </button>
-            <button
-              style={activeTab === 'scope' ? { ...styles.tab, ...styles.tabActive } : styles.tab}
-              onClick={() => setActiveTab('scope')}
-            >
-              Scope
+          <div style={styles.editorFooter}>
+            <MasterLevel waveform={waveform} playing={engineState.playing} />
+            <button style={styles.evalBtn} onClick={onEval} aria-label="Eval song">
+              ▶ Eval
             </button>
           </div>
+        </div>
 
-          {/* Visualizer content */}
-          <div style={styles.vizContent}>
-            {activeTab === 'punchcard' && (
+        {/* Floating panel canvas */}
+        <div style={styles.canvas}>
+          {/* Panel toggle toolbar */}
+          <div style={styles.panelToolbar}>
+            <PanelToggle label="Grid"     active={panels.punchcard} onClick={() => togglePanel('punchcard')} />
+            <PanelToggle label="Piano"    active={panels.piano}     onClick={() => togglePanel('piano')}     />
+            <PanelToggle label="Scope"    active={panels.scope}     onClick={() => togglePanel('scope')}     />
+            <PanelToggle label="FFT"      active={panels.spectrum}  onClick={() => togglePanel('spectrum')}  />
+            <PanelToggle label="Mixer"    active={panels.mixer}     onClick={() => togglePanel('mixer')}     />
+          </div>
+
+          {/* Floating panels — each lives inside the canvas container */}
+          {panels.punchcard && (
+            <DraggablePanel
+              title="Punchcard Grid"
+              defaultX={8}
+              defaultY={48}
+              defaultWidth={420}
+              defaultHeight={180}
+              onClose={() => togglePanel('punchcard')}
+            >
               <PunchcardGrid
                 tracks={tracks}
                 currentStep={currentStep}
                 stepCount={currentStepCount}
               />
-            )}
-            {activeTab === 'scope' && (
-              <Scope
-                waveform={waveform}
-                playing={engineState.playing}
+            </DraggablePanel>
+          )}
+
+          {panels.piano && (
+            <DraggablePanel
+              title="Piano Roll"
+              defaultX={8}
+              defaultY={240}
+              defaultWidth={420}
+              defaultHeight={200}
+              onClose={() => togglePanel('piano')}
+            >
+              <PianoRoll
+                notes={[]}
+                currentStep={currentStep}
+                stepCount={currentStepCount}
               />
-            )}
-          </div>
+            </DraggablePanel>
+          )}
+
+          {panels.scope && (
+            <DraggablePanel
+              title="Oscilloscope"
+              defaultX={440}
+              defaultY={48}
+              defaultWidth={280}
+              defaultHeight={180}
+              onClose={() => togglePanel('scope')}
+            >
+              <Scope waveform={waveform} playing={engineState.playing} />
+            </DraggablePanel>
+          )}
+
+          {panels.spectrum && (
+            <DraggablePanel
+              title="Spectrum"
+              defaultX={440}
+              defaultY={240}
+              defaultWidth={280}
+              defaultHeight={200}
+              onClose={() => togglePanel('spectrum')}
+            >
+              <SpectrumAnalyser bins={fftBins} playing={engineState.playing} />
+            </DraggablePanel>
+          )}
+
+          {panels.mixer && (
+            <DraggablePanel
+              title="Mixer"
+              defaultX={8}
+              defaultY={452}
+              defaultWidth={420}
+              defaultHeight={220}
+              onClose={() => togglePanel('mixer')}
+            >
+              <div style={styles.mixerInner}>
+                {tracks.map((track, i) => (
+                  <MixerStrip
+                    key={`${track.name}-${i}`}
+                    name={track.name}
+                    type={track.type}
+                    volume={stripStates[i]?.volume ?? 1}
+                    muted={stripStates[i]?.muted ?? false}
+                    level={0}
+                    onVolume={v => {
+                      setStripStates(prev => updateStrip(prev, i, { volume: v }))
+                    }}
+                    onMute={() => {
+                      setStripStates(prev =>
+                        updateStrip(prev, i, { muted: !(prev[i]?.muted ?? false) }),
+                      )
+                    }}
+                  />
+                ))}
+                {tracks.length === 0 && (
+                  <span style={styles.mixerEmpty}>No tracks — eval a song first</span>
+                )}
+              </div>
+            </DraggablePanel>
+          )}
         </div>
       </div>
     </div>
@@ -175,9 +369,24 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
 const styles = {
   root:       { display: 'flex', flexDirection: 'column' as const, height: '100vh', background: '#0c0c0e' },
-  body:       { display: 'flex', flex: 1, overflow: 'hidden' },
+  statusBar: {
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    padding:        '0 0.75rem',
+    height:         '36px',
+    flexShrink:     0,
+    borderBottom:   '1px solid #1e1e22',
+    background:     '#0a0a0d',
+  },
+  statusRight: {
+    display:    'flex',
+    alignItems: 'center',
+    gap:        '0.5rem',
+  },
+  body: { display: 'flex', flex: 1, overflow: 'hidden' },
   editorPane: {
-    flex:          '0 0 60%',
+    flex:          '0 0 50%',
     borderRight:   '1px solid #1e1e22',
     display:       'flex',
     flexDirection: 'column' as const,
@@ -205,50 +414,53 @@ const styles = {
     resize:     'none' as const,
     tabSize:    2,
   },
+  editorFooter: {
+    flexShrink:     0,
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    padding:        '4px 8px',
+    borderTop:      '1px solid #1e1e22',
+    background:     '#0a0a0d',
+  },
   evalBtn: {
-    flexShrink:    0,
-    height:        '36px',
+    height:        '28px',
     background:    '#152035',
     border:        '1px solid #2a4a7a',
-    borderRadius:  '0',
+    borderRadius:  '2px',
     color:         '#6a9fff',
     fontSize:      '0.75rem',
     fontWeight:    600,
     letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
     cursor:        'pointer',
+    padding:       '0 1rem',
   },
-  visualizer: {
-    flex:          1,
-    display:       'flex',
-    flexDirection: 'column' as const,
-    background:    '#0c0c0e',
+  // Right half: relative-positioned so DraggablePanels use absolute coords within it
+  canvas: {
+    flex:     1,
+    position: 'relative' as const,
+    overflow: 'hidden',
+    background: '#090909',
   },
-  tabBar: {
-    display:      'flex',
-    flexShrink:   0,
-    borderBottom: '1px solid #1e1e22',
-    background:   '#0c0c0e',
+  panelToolbar: {
+    position:   'absolute' as const,
+    top:        8,
+    left:       8,
+    zIndex:     200,
+    display:    'flex',
+    gap:        '4px',
   },
-  tab: {
-    padding:       '0.35rem 0.85rem',
-    background:    'none',
-    border:        'none',
-    borderBottom:  '2px solid transparent',
-    color:         '#3a3a46',
-    fontSize:      '0.7rem',
-    fontFamily:    'system-ui, sans-serif',
-    letterSpacing: '0.06em',
-    cursor:        'pointer',
+  mixerInner: {
+    display:  'flex',
+    flexWrap: 'wrap' as const,
+    gap:      '4px',
+    padding:  '6px',
   },
-  tabActive: {
-    color:        '#6a9fff',
-    borderBottom: '2px solid #6a9fff',
-  },
-  vizContent: {
-    flex:          1,
-    overflow:      'hidden',
-    display:       'flex',
-    flexDirection: 'column' as const,
+  mixerEmpty: {
+    color:      '#3a3a46',
+    fontSize:   '0.75rem',
+    fontFamily: "'JetBrains Mono', monospace",
+    padding:    '8px',
   },
 } as const
