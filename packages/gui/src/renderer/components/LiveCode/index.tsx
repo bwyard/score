@@ -1,93 +1,120 @@
-import { useState, useEffect } from 'react'
-import { TransportBar } from '../shared/TransportBar.js'
-import type { HardwareLevel } from '../../../main/ipc-types.js'
+import { useState, useEffect, useCallback } from 'react'
+import { TransportBar }                      from '../shared/TransportBar.js'
+import type { HardwareLevel }               from '../../../main/ipc-types.js'
 
-// ── Default starter song ───────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
-const STARTER = `import { Song, Kick, Synth, Pattern } from '@score/core'
-
-const kick = Kick({
-  pattern: Pattern.steps([1, 0, 0, 0, 1, 0, 0, 0]),
-  volume:  0.9,
-})
-
-const bass = Synth({
-  wave:    'sawtooth',
-  note:    'C2',
-  pattern: Pattern.steps([1, 0, 1, 0, 0, 1, 0, 0]),
-  filter:  { type: 'lowpass', frequency: 400 },
-  volume:  0.7,
-})
-
-export default Song({
-  bpm:    140,
-  tracks: [kick, bass],
-})`
-
-// ── Component ──────────────────────────────────────────────────────────────────
-
-type Props = { readonly hardware: HardwareLevel; readonly onHome: () => void }
+type Props = {
+  readonly hardware: HardwareLevel
+  readonly onHome:   () => void
+}
 
 /**
- * Live Code mode — code editor left, visualizer right.
+ * A single track's punchcard data — name, instrument type, and step pattern.
+ * Matches the payload shape of the `song:update` IPC channel.
+ * Will be consumed by the Punchcard visualizer in t140.
+ */
+type PunchcardTrack = {
+  readonly name:    string
+  readonly type:    string
+  readonly pattern: ReadonlyArray<number | string>
+}
+
+// ── Starter template ───────────────────────────────────────────────────────────
+
+const STARTER = `import { Song, Track, Kick, Synth } from '@score/dsl'
+
+export default Song({
+  bpm: 128,
+  tracks: [
+    Track(Kick({
+      pattern: [1, 0, 0, 0, 1, 0, 0, 0],
+      volume:  0.9,
+    })),
+    Track(Synth({
+      wave:      'sawtooth',
+      frequency: 65.41,
+      pattern:   [1, 0, 1, 0, 0, 1, 0, 0],
+      filter:    { type: 'lowpass', frequency: 400 },
+      gain:      0.7,
+    })),
+  ],
+})`
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+/**
+ * Live Code mode — textarea editor left, visualizer right.
+ * Phase 11b: IPC wiring, song:update subscription, Ctrl+Enter eval.
  * Phase 13f: swap textarea for Monaco editor.
- * Phase 11b: add waveform / piano roll / scope visualizer.
+ * Phase 11b t140: wire tracks into Punchcard + Scope visualizers.
  */
 export const LiveCode = ({ hardware, onHome }: Props) => {
-  const [code, setCode] = useState(STARTER)
-  const [log,  setLog]  = useState<readonly string[]>([])
+  const [code,   setCode]   = useState(STARTER)
+  const [error,  setError]  = useState<string | null>(null)
+  const [tracks, setTracks] = useState<ReadonlyArray<PunchcardTrack>>([])
 
-  // BOUNDARY — IO: receive eval errors from main process
+  // Subscribe to error reports from the main process
   useEffect(() => {
     const unsub = window.scoreBridge.on('error:report', ({ message }) => {
-      setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Error: ${message}`])
+      setError(message)
     })
     return unsub
   }, [])
 
-  const onEval = () => {
+  // Subscribe to song structure updates pushed after boot or eval
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('song:update', ({ tracks: t }) => {
+      setTracks(t)
+    })
+    return unsub
+  }, [])
+
+  const onEval = useCallback((): void => {
+    setError(null)
     // BOUNDARY — IO: send code to main process for eval + engine update
     window.scoreBridge.send('engine:eval', { code })
-    setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Evaluating…`])
-  }
+  }, [code])
 
   return (
     <div style={styles.root}>
       <TransportBar hardware={hardware} onHome={onHome} />
 
       <div style={styles.body}>
-        {/* Editor pane */}
+        {/* Editor pane — Phase 13f: swap for Monaco */}
         <div style={styles.editorPane}>
-          <div style={styles.editorToolbar}>
-            <span style={styles.filename}>song.ts</span>
-            <button style={styles.evalBtn} onClick={onEval} aria-label="Evaluate song">
-              ▶ Eval
-            </button>
-          </div>
+          {error !== null && (
+            <div style={styles.errorBanner} role="alert">
+              {error}
+            </div>
+          )}
           <textarea
-            style={styles.editor}
+            style={styles.textarea}
             value={code}
             onChange={e => { setCode(e.target.value) }}
             spellCheck={false}
             aria-label="Song code editor"
+            onKeyDown={e => {
+              if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault()
+                onEval()
+              }
+            }}
           />
-          {log.length > 0 && (
-            <div style={styles.repl} aria-label="Eval output">
-              {log.map((line, i) => (
-                <div key={i} style={line.includes('Error:') ? styles.replLineError : styles.replLine}>
-                  {line}
-                </div>
-              ))}
-            </div>
-          )}
+          <button style={styles.evalBtn} onClick={onEval} aria-label="Eval song">
+            ▶ Eval
+          </button>
         </div>
 
-        {/* Visualizer pane */}
-        <div style={styles.visualizerPane}>
+        {/* Visualizer pane — Phase 11b t140: wire tracks here */}
+        <div style={styles.visualizer}>
           <div style={styles.placeholder}>
             <span style={styles.placeholderIcon}>〰</span>
             <span>Visualizer — Phase 11b</span>
-            <span style={styles.sub}>Waveform · Piano roll · Punchcard · Scope</span>
+            <span style={styles.sub}>Punchcard · Scope</span>
+            {tracks.length > 0 && (
+              <span style={styles.sub}>{`${String(tracks.length)} track${tracks.length === 1 ? '' : 's'} loaded`}</span>
+            )}
           </div>
         </div>
       </div>
@@ -100,7 +127,6 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 const styles = {
   root:       { display: 'flex', flexDirection: 'column' as const, height: '100vh', background: '#0c0c0e' },
   body:       { display: 'flex', flex: 1, overflow: 'hidden' },
-
   editorPane: {
     flex:          '0 0 60%',
     borderRight:   '1px solid #1e1e22',
@@ -108,37 +134,17 @@ const styles = {
     flexDirection: 'column' as const,
     background:    '#0d0d10',
   },
-  editorToolbar: {
-    display:         'flex',
-    alignItems:      'center',
-    justifyContent:  'space-between',
-    padding:         '0.3rem 0.6rem',
-    background:      '#111113',
-    borderBottom:    '1px solid #1e1e22',
-    flexShrink:      0,
+  errorBanner: {
+    background:   '#3a1a1a',
+    color:        '#ff6b6b',
+    padding:      '0.4rem 0.75rem',
+    fontSize:     '0.75rem',
+    borderBottom: '1px solid #5a2a2a',
+    flexShrink:   0,
+    fontFamily:   "'JetBrains Mono', 'Fira Code', monospace",
   },
-  filename: {
-    fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",
-    fontSize:      '0.7rem',
-    color:         '#3e3e46',
-    letterSpacing: '0.04em',
-  },
-  evalBtn: {
-    fontFamily:    'system-ui, sans-serif',
-    fontSize:      '0.7rem',
-    fontWeight:    600,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase' as const,
-    padding:       '0.2rem 0.65rem',
-    background:    '#152035',
-    color:         '#6a9fff',
-    border:        '1px solid #2a4a7a',
-    borderRadius:  '2px',
-    cursor:        'pointer',
-  },
-  editor: {
+  textarea: {
     flex:       1,
-    width:      '100%',
     background: '#080809',
     color:      '#c8d8f8',
     border:     'none',
@@ -150,37 +156,20 @@ const styles = {
     resize:     'none' as const,
     tabSize:    2,
   },
-  repl: {
-    borderTop:  '1px solid #1e1e22',
-    background: '#060607',
-    padding:    '0.4rem 0.65rem',
-    maxHeight:  '100px',
-    overflowY:  'auto' as const,
-    flexShrink: 0,
+  evalBtn: {
+    flexShrink:    0,
+    height:        '36px',
+    background:    '#152035',
+    border:        '1px solid #2a4a7a',
+    borderRadius:  '0',
+    color:         '#6a9fff',
+    fontSize:      '0.75rem',
+    fontWeight:    600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    cursor:        'pointer',
   },
-  replLine: {
-    fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",
-    fontSize:      '0.7rem',
-    color:         '#4a6a9f',
-    lineHeight:    1.6,
-    letterSpacing: '0.02em',
-  },
-  replLineError: {
-    fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",
-    fontSize:      '0.7rem',
-    color:         '#c05a5a',
-    lineHeight:    1.6,
-    letterSpacing: '0.02em',
-  },
-
-  visualizerPane: {
-    flex:            1,
-    display:         'flex',
-    flexDirection:   'column' as const,
-    alignItems:      'center',
-    justifyContent:  'center',
-    background:      '#0c0c0e',
-  },
+  visualizer:      { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0c0c0e' },
   placeholder:     { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.5rem', color: '#2e2e36' },
   placeholderIcon: { fontFamily: 'monospace', fontSize: '2rem', color: '#1e2e3e' },
   sub:             { fontFamily: 'system-ui, sans-serif', fontSize: '0.68rem', color: '#2a2a32', letterSpacing: '0.06em' },
