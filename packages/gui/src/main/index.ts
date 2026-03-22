@@ -80,21 +80,23 @@ const teardown = (): void => {
   }, 300)
 }
 
-const boot = async (song: SongDefinition): Promise<void> => {
+const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
   teardown()
   const engine = await createScoreEngine(song)
-  slotRef.value = { engine, playing: false, bpm: song.bpm, bars: 0 }
+  slotRef.value = { engine, playing: false, bpm: song.bpm, bars: barOffset }
   engine.onBar(() => {
     const s = slotRef.value
     if (!s) return
-    s.bars = engine.bars
+    // Accumulate bar count across engine restarts — never reset the session counter
+    s.bars = barOffset + engine.bars
     // Bar-boundary hot-swap: if a new song was eval'd while playing, apply it
     // at this bar boundary so changes land on a clean musical boundary.
     const pending = pendingRef.value
     if (pending) {
       pendingRef.value = null
       const wasPlaying = s.playing
-      void boot(pending).then(() => {
+      const currentBars = s.bars
+      void boot(pending, currentBars).then(() => {
         if (wasPlaying) {
           const next = slotRef.value
           if (next && !next.playing) {
