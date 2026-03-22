@@ -38,8 +38,9 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [log,  setLog]  = useState<readonly string[]>([])
 
   const onEval = () => {
-    // BOUNDARY — IO: eval output only, no actual audio in Phase 13 scaffold
-    setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Evaluated — engine integration Phase 13b`])
+    // BOUNDARY — IO: send code to main process for eval + engine update
+    window.scoreBridge.send('engine:eval', { code })
+    setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Sent to engine`])
   }
 
   return (

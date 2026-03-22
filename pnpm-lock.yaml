@@ -165,9 +165,15 @@ importers:
 
   packages/gui:
     dependencies:
+      '@score/cli':
+        specifier: workspace:*
+        version: link:../cli
       '@score/core':
         specifier: workspace:*
         version: link:../core
+      '@score/dsl':
+        specifier: workspace:*
+        version: link:../dsl
       '@score/session':
         specifier: workspace:*
         version: link:../session

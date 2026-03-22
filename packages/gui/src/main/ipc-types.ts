@@ -20,6 +20,7 @@ export type RendererToMain = {
   'transport:play':     undefined
   'transport:stop':     undefined
   'transport:bpm-set':  { bpm: number }
+  'engine:eval':        { code: string }
   'midi:connect':       undefined
   'midi:disconnect':    undefined
   'engine:patch':       Record<string, unknown>

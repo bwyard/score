@@ -14,7 +14,9 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@score/core": "workspace:*",
+    "@score/cli":     "workspace:*",
+    "@score/core":    "workspace:*",
+    "@score/dsl":     "workspace:*",
     "@score/session": "workspace:*"
   },
   "devDependencies": {
