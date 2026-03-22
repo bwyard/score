@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react'
 import { TransportBar }        from '../shared/TransportBar.js'
 import type { HardwareLevel }  from '../../../main/ipc-types.js'
 
-type Props = { readonly hardware: HardwareLevel }
+type Props = { readonly hardware: HardwareLevel; readonly onHome: () => void }
 
 /**
  * Jam Session mode — live performance with MIDI hardware.
  * Powered by @score/session (createJamSession) in the main process.
  * Phase 13b: full jam session GUI, MIDI mapping visualiser, track mutes.
  */
-export const JamSession = ({ hardware }: Props) => {
+export const JamSession = ({ hardware, onHome }: Props) => {
   const [midiConnected, setMidiConnected] = useState(false)
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export const JamSession = ({ hardware }: Props) => {
 
   return (
     <div style={styles.root}>
-      <TransportBar hardware={hardware} />
+      <TransportBar hardware={hardware} onHome={onHome} />
 
       <div style={styles.body}>
         {/* MIDI status + connect */}

@@ -1,7 +1,7 @@
 import { TransportBar } from '../shared/TransportBar.js'
 import type { HardwareLevel } from '../../../main/ipc-types.js'
 
-type Props = { readonly hardware: HardwareLevel }
+type Props = { readonly hardware: HardwareLevel; readonly onHome: () => void }
 
 /**
  * Produce mode — DAW-style arrangement view.
@@ -9,9 +9,9 @@ type Props = { readonly hardware: HardwareLevel }
  * Phase 13d: automation lanes.
  * Phase 13e: plugin architecture.
  */
-export const Produce = ({ hardware }: Props) => (
+export const Produce = ({ hardware, onHome }: Props) => (
   <div style={styles.root}>
-    <TransportBar hardware={hardware} />
+    <TransportBar hardware={hardware} onHome={onHome} />
 
     <div style={styles.body}>
       {/* Track headers */}

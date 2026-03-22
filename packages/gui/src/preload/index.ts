@@ -2,7 +2,7 @@
 // Electron APIs are fully typed once `pnpm install` runs.
 
 import { contextBridge, ipcRenderer } from 'electron'
-import type { RendererToMain, MainToRenderer } from './ipc-types.js'
+import type { RendererToMain, MainToRenderer } from '../main/ipc-types.js'
 
 // ── Score Bridge ───────────────────────────────────────────────────────────────
 
@@ -12,7 +12,7 @@ const scoreBridge = {
     channel: K,
     payload: RendererToMain[K],
   ): void {
-    ipcRenderer.send(channel, payload)
+    ipcRenderer.send(channel as string, payload)
   },
 
   /** Register a listener for messages pushed from the main process. */
@@ -21,8 +21,8 @@ const scoreBridge = {
     handler: (payload: MainToRenderer[K]) => void,
   ): () => void {
     const wrapped = (_: Electron.IpcRendererEvent, p: MainToRenderer[K]) => { handler(p); }
-    ipcRenderer.on(channel, wrapped)
-    return () => ipcRenderer.removeListener(channel, wrapped)
+    ipcRenderer.on(channel as string, wrapped)
+    return () => ipcRenderer.removeListener(channel as string, wrapped)
   },
 }
 

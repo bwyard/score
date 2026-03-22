@@ -58,7 +58,7 @@ type Props = {
 }
 
 export const SplashScreen = ({ onSelect }: Props) => {
-  const [selectedMode,     setSelectedMode]     = useState<StudioMode | null>(null)
+  const [selectedMode,     setSelectedMode]     = useState<StudioMode | null>('live-code')
   const [selectedHardware, setSelectedHardware] = useState<HardwareLevel>('pc-only')
 
   const activeMode = MODES.find(m => m.id === selectedMode)

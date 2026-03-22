@@ -1,8 +1,4 @@
- 
-// Electron APIs are fully typed once `pnpm install` runs.
-// The eslint-disable above covers the type-resolution gap before that.
-
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, globalShortcut, ipcMain, shell } from 'electron'
 import path                                    from 'node:path'
 import type { RendererToMain }                 from './ipc-types.js'
 
@@ -17,21 +13,18 @@ const createWindow = (): BrowserWindow => {
     backgroundColor: '#0d0d0f',
     titleBarStyle: 'hiddenInset',
     webPreferences: {
-      preload:          path.join(__dirname, '../preload/preload.js'),
+      preload:          path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration:  false,
       sandbox:          false,
     },
   })
 
-  // In development, electron-forge sets MAIN_WINDOW_VITE_DEV_SERVER_URL
-  if (process.env['MAIN_WINDOW_VITE_DEV_SERVER_URL']) {
-    void win.loadURL(process.env['MAIN_WINDOW_VITE_DEV_SERVER_URL'])
-    win.webContents.openDevTools()
+  // BOUNDARY — IO: electron-vite sets ELECTRON_RENDERER_URL in dev; use loadFile in prod
+  if (process.env['ELECTRON_RENDERER_URL']) {
+    void win.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    void win.loadFile(
-      path.join(__dirname, `../renderer/${process.env['MAIN_WINDOW_VITE_NAME'] ?? 'main_window'}/index.html`),
-    )
+    void win.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 
   // Open external links in the OS browser, not in-app
@@ -45,7 +38,14 @@ const createWindow = (): BrowserWindow => {
 
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
 
-app.on('ready', createWindow)
+app.on('ready', () => {
+  createWindow()
+  // F12 toggles devtools — off by default, no auto-open
+  globalShortcut.register('F12', () => {
+    const win = BrowserWindow.getFocusedWindow()
+    if (win) win.webContents.toggleDevTools()
+  })
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()

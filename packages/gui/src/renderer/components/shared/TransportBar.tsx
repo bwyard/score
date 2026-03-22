@@ -11,6 +11,7 @@ type EngineState = {
 
 type Props = {
   readonly hardware: HardwareLevel
+  readonly onHome:   () => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -20,7 +21,7 @@ type Props = {
  * Subscribes to engine state pushed from the main process.
  * Play/stop/BPM changes are forwarded back via IPC.
  */
-export const TransportBar = ({ hardware }: Props) => {
+export const TransportBar = ({ hardware, onHome }: Props) => {
   const bpmId   = useId()
   const barsId  = useId()
 
@@ -53,6 +54,18 @@ export const TransportBar = ({ hardware }: Props) => {
 
   return (
     <div role="toolbar" aria-label="Transport controls" style={styles.bar}>
+
+      {/* Home — return to splash */}
+      <button
+        aria-label="Score Studio home"
+        style={styles.homeBtn}
+        onClick={onHome}
+        title="Back to mode selector"
+      >
+        Score
+      </button>
+
+      <div style={styles.divider} aria-hidden="true" />
 
       {/* Play / stop */}
       <button
@@ -104,6 +117,23 @@ export const TransportBar = ({ hardware }: Props) => {
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
 const styles = {
+  homeBtn: {
+    background:    'none',
+    border:        'none',
+    color:         '#4a8fff',
+    fontSize:      '0.85rem',
+    fontWeight:    700,
+    letterSpacing: '0.08em',
+    cursor:        'pointer',
+    padding:       '0.2rem 0.4rem',
+    flexShrink:    0,
+  },
+  divider: {
+    width:      '1px',
+    height:     '24px',
+    background: '#2a2a2e',
+    flexShrink: 0,
+  },
   bar: {
     display:      'flex',
     alignItems:   'center',

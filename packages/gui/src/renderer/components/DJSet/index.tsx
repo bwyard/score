@@ -1,7 +1,7 @@
 import { TransportBar } from '../shared/TransportBar.js'
 import type { HardwareLevel } from '../../../main/ipc-types.js'
 
-type Props = { readonly hardware: HardwareLevel }
+type Props = { readonly hardware: HardwareLevel; readonly onHome: () => void }
 
 /**
  * DJ Set mode — Score IS the DJ software when no AIO hardware is connected.
@@ -12,9 +12,9 @@ type Props = { readonly hardware: HardwareLevel }
  * Phase 12e: deck management, BPM analysis, key detection, hot cues,
  *            library/crate management, two-deck sync engine, stem separation.
  */
-export const DJSet = ({ hardware }: Props) => (
+export const DJSet = ({ hardware, onHome }: Props) => (
   <div style={styles.root}>
-    <TransportBar hardware={hardware} />
+    <TransportBar hardware={hardware} onHome={onHome} />
 
     <div style={styles.body}>
       {/* Deck A */}

@@ -14,6 +14,8 @@ type AppState =
 export const App = () => {
   const [state, setState] = useState<AppState>({ screen: 'splash' })
 
+  const goHome = () => { setState({ screen: 'splash' }) }
+
   if (state.screen === 'splash') {
     return (
       <SplashScreen
@@ -29,10 +31,10 @@ export const App = () => {
 
   return (
     <>
-      {mode === 'live-code'   && <LiveCode   hardware={hardware} />}
-      {mode === 'produce'     && <Produce    hardware={hardware} />}
-      {mode === 'dj-set'      && <DJSet      hardware={hardware} />}
-      {mode === 'jam-session' && <JamSession hardware={hardware} />}
+      {mode === 'live-code'   && <LiveCode   hardware={hardware} onHome={goHome} />}
+      {mode === 'produce'     && <Produce    hardware={hardware} onHome={goHome} />}
+      {mode === 'dj-set'      && <DJSet      hardware={hardware} onHome={goHome} />}
+      {mode === 'jam-session' && <JamSession hardware={hardware} onHome={goHome} />}
     </>
   )
 }
