@@ -10,6 +10,7 @@ import type { SongDefinition, InstrumentDescriptor } from '@score/dsl'
 import { validateSongFile } from '../validator/SongValidator.js'
 import { validateSongExport } from '../validator/SongExportValidator.js'
 import { isInstrumentDescriptor } from '../engine.js'
+import { parseFlags } from '../flags.js'
 
 const CYAN  = '\x1b[36m'
 const GREEN = '\x1b[32m'
@@ -34,9 +35,22 @@ const row    = (label: string, value: string): void => {
  * score list my-track.js --trust
  * ```
  */
+const printUsage = (): void => {
+  console.log('Score list — display song metadata and track info\n')
+  console.log('Usage:')
+  console.log('  score list <song.js> [options]\n')
+  console.log('Options:')
+  console.log('  -t, --trust   Skip AST security scan')
+  console.log('  -h, --help    Show this help')
+}
+
 export const list = async (args: string[]): Promise<void> => {
-  const trust    = args.includes('--trust') || args.includes('-t')
-  const filePath = args.find(a => !a.startsWith('-'))
+  const { values, positionals } = parseFlags(args, {
+    trust: { type: 'boolean', short: 't', default: false },
+  }, printUsage)
+
+  const trust    = values['trust'] === true
+  const filePath = positionals[0]
 
   if (!filePath) {
     throw ScoreError('No song file specified', {

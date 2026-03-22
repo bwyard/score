@@ -78,22 +78,30 @@ describe('newSong', () => {
 
   it('prints usage when no name provided', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('process.exit:1')
+    }) as (code?: string | number | null) => never)
 
-    newSong(['song'])
+    expect(() => { newSong(['song']); }).toThrow('process.exit:1')
 
     const output = logSpy.mock.calls.map((c: unknown[]) => String(c[0])).join('\n')
     expect(output).toContain('Usage:')
     expect(writeFileSync).not.toHaveBeenCalled()
     logSpy.mockRestore()
+    exitSpy.mockRestore()
   })
 
   it('prints usage when not given song subcommand', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('process.exit:1')
+    }) as (code?: string | number | null) => never)
 
-    newSong([])
+    expect(() => { newSong([]); }).toThrow('process.exit:1')
 
     const output = logSpy.mock.calls.map((c: unknown[]) => String(c[0])).join('\n')
     expect(output).toContain('Usage:')
     logSpy.mockRestore()
+    exitSpy.mockRestore()
   })
 })

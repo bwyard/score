@@ -15,6 +15,7 @@ import type { SongDefinition } from '@score/dsl'
 import { validateSongFile } from '../validator/SongValidator.js'
 import { validateSongExport } from '../validator/SongExportValidator.js'
 import { renderSong, encodeWav } from '../renderer.js'
+import { parseFlags } from '../flags.js'
 
 const GREEN  = '\x1b[32m'
 const CYAN   = '\x1b[36m'
@@ -66,9 +67,28 @@ const loadSong = async (resolved: string, trust: boolean): Promise<SongDefinitio
  *
  * @throws `ScoreError` if the file is missing or the song is invalid.
  */
+const printUsage = (): void => {
+  console.log('Score export — render a song to a WAV file\n')
+  console.log('Usage:')
+  console.log('  score export <song.js> [options]\n')
+  console.log('Options:')
+  console.log('  -o, --out <path>   Output file path (default: <song>.wav)')
+  console.log('  -b, --bars <n>     Number of bars to render (default: arrangement length or 8)')
+  console.log('      --sr <n>       Sample rate in Hz (default: 44100)')
+  console.log('  -t, --trust        Skip AST security scan')
+  console.log('  -h, --help         Show this help')
+}
+
 export const exportSong = async (args: string[]): Promise<void> => {
-  const trust    = args.includes('--trust') || args.includes('-t')
-  const filePath = args.find(a => !a.startsWith('-'))
+  const { values, positionals } = parseFlags(args, {
+    out:   { type: 'string',  short: 'o' },
+    bars:  { type: 'string',  short: 'b' },
+    sr:    { type: 'string' },
+    trust: { type: 'boolean', short: 't', default: false },
+  }, printUsage)
+
+  const trust    = values['trust'] === true
+  const filePath = positionals[0]
 
   if (!filePath) {
     throw ScoreError('No song file specified', {
@@ -87,19 +107,17 @@ export const exportSong = async (args: string[]): Promise<void> => {
     })
   }
 
-  // Parse --out / -o
-  const outFlagIdx = args.findIndex(a => a === '--out' || a === '-o')
-  const outArg     = outFlagIdx !== -1 ? args[outFlagIdx + 1] : undefined
+  const outArg  = typeof values['out']  === 'string' ? values['out']  : undefined
+  const barsArg = typeof values['bars'] === 'string' ? values['bars'] : undefined
+  const srArg   = typeof values['sr']   === 'string' ? values['sr']   : undefined
+
   const defaultOut = resolve(
     dirname(resolved),
     `${basename(filePath, extname(filePath))}.wav`,
   )
   const outPath = outArg ? resolve(process.cwd(), outArg.replace(/\\/g, '/')) : defaultOut
 
-  // Parse --bars / -b
-  const barsFlagIdx = args.findIndex(a => a === '--bars' || a === '-b')
-  const barsArg     = barsFlagIdx !== -1 ? args[barsFlagIdx + 1] : undefined
-  const bars        = barsArg !== undefined ? parseInt(barsArg, 10) : undefined
+  const bars = barsArg !== undefined ? parseInt(barsArg, 10) : undefined
   if (bars !== undefined && (isNaN(bars) || bars <= 0)) {
     throw ScoreError('--bars must be a positive integer', {
       received: barsArg,
@@ -108,9 +126,6 @@ export const exportSong = async (args: string[]): Promise<void> => {
     })
   }
 
-  // Parse --sr
-  const srFlagIdx = args.findIndex(a => a === '--sr')
-  const srArg     = srFlagIdx !== -1 ? args[srFlagIdx + 1] : undefined
   const sampleRate = srArg !== undefined ? parseInt(srArg, 10) : 44100
   if (isNaN(sampleRate) || sampleRate <= 0) {
     throw ScoreError('--sr must be a positive integer', {

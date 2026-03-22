@@ -6,6 +6,7 @@ import type { SongDefinition } from '@score/dsl'
 import { createScoreEngine, isInstrumentDescriptor, type ScoreEngine } from '../engine.js'
 import { validateSongFile } from '../validator/SongValidator.js'
 import { validateSongExport } from '../validator/SongExportValidator.js'
+import { parseFlags } from '../flags.js'
 
 const GREEN  = '\x1b[32m'
 const YELLOW = '\x1b[33m'
@@ -61,10 +62,25 @@ const logSong = (song: SongDefinition): void => {
   log(`${String(song.tracks.length)} track(s) loaded`)
 }
 
+const printUsage = (): void => {
+  console.log('Score play — play a song file\n')
+  console.log('Usage:')
+  console.log('  score play <song.js> [options]\n')
+  console.log('Options:')
+  console.log('  -w, --watch   Hot-reload on every file save')
+  console.log('  -t, --trust   Skip AST security scan (faster for trusted files)')
+  console.log('  -h, --help    Show this help')
+}
+
 export const play = async (args: string[]): Promise<void> => {
-  const watch = args.includes('--watch') || args.includes('-w')
-  const trust = args.includes('--trust') || args.includes('-t')
-  const filePath = args.find(a => !a.startsWith('-'))
+  const { values, positionals } = parseFlags(args, {
+    watch: { type: 'boolean', short: 'w', default: false },
+    trust: { type: 'boolean', short: 't', default: false },
+  }, printUsage)
+
+  const watch = values['watch'] === true
+  const trust = values['trust'] === true
+  const filePath = positionals[0]
 
   if (!filePath) {
     throw ScoreError('No song file specified', {

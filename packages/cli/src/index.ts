@@ -10,35 +10,48 @@ import { exportSong } from './commands/export.js'
 
 const [,, command, ...args] = process.argv
 
+const printGlobalUsage = (): void => {
+  console.log('Score — EDM audio framework\n')
+  console.log('Usage:')
+  console.log('  score <command> [options]\n')
+  console.log('Commands:')
+  console.log('  play <song.js>        Play a song file')
+  console.log('  play <song.js> -w     Hot-reload on every file save')
+  console.log('  repl                  Interactive live coding REPL')
+  console.log('  list <song.js>        Show song metadata and track info')
+  console.log('  export <song.js>      Render song to WAV')
+  console.log('  new song <name>       Create a new song from template')
+  console.log('  doctor                Check system requirements\n')
+  console.log('Options:')
+  console.log('  -h, --help            Show help for a command')
+  console.log('  -v, --version         Show version\n')
+  console.log('Run `score <command> --help` for command-specific options.')
+}
+
 if (command === '--version' || command === '-v') {
   console.log('0.0.1')
   process.exit(0)
 }
 
-const commands: Record<string, (args: string[]) => Promise<void> | void> = {
-  play:   args => play(args),
-  repl:   args => repl(args),
-  new:    args => { newSong(args); },
-  doctor: args => { doctor(args); },
-  list:   args => list(args),
-  export: args => exportSong(args),
+if (!command || command === '--help' || command === '-h' || command === 'help') {
+  printGlobalUsage()
+  process.exit(0)
 }
 
-const handler = commands[command ?? '']
+const commands: Record<string, (args: string[]) => Promise<void> | void> = {
+  play:   cmdArgs => play(cmdArgs),
+  repl:   cmdArgs => repl(cmdArgs),
+  list:   cmdArgs => list(cmdArgs),
+  export: cmdArgs => exportSong(cmdArgs),
+  new:    cmdArgs => { newSong(cmdArgs); },
+  doctor: cmdArgs => { doctor(cmdArgs); },
+}
+
+const handler = commands[command]
 if (!handler) {
-  console.log('Score — EDM audio framework')
-  console.log('')
-  console.log('Usage:')
-  console.log('  score play <song.js>              Play a song file')
-  console.log('  score play <song.js> --watch      Live reload on file save')
-  console.log('  score repl [song.js]              Interactive live coding REPL')
-  console.log('  score list <song.js>              Show song info and track list')
-  console.log('  score export <song.js>            Render song to WAV')
-  console.log('  score export <song.js> --bars 16  Render specified number of bars')
-  console.log('  score new song <name>             Create a new song from template')
-  console.log('  score doctor                      Check system requirements')
-  console.log('  score --version                   Show version')
-  process.exit(0)
+  console.error(`Score: Unknown command — ${command}\n`)
+  printGlobalUsage()
+  process.exit(1)
 }
 
 void Promise.resolve(handler(args)).catch((err: unknown) => {

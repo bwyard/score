@@ -147,15 +147,16 @@ Phase 9f   ✅  Extended math — chaos/stochastic/tuning in @score/math (see Ph
                ✅ Wolfram elementary CA (rule 0–255)
                ✅ RK4 generic ODE integrator
                ✅ OUProcess (Ornstein-Uhlenbeck mean-reverting process)
-Phase 10   ⚠️  CLI — core commands done, stem export + freeze/bounce remaining
+Phase 10   ✅  CLI — all core commands complete
                ✅ score play <file> — plays song via ScoreEngine
                ✅ score play --watch — live reload on file save (300ms debounce)
                ✅ score play --trust — skip AST validation
                ✅ score doctor — system health checks (Node, pnpm, audio backend)
                ✅ score new song <name> — template generator with note name syntax
                ✅ --version / -v flag
-               ⬜ score export — WAV/stem render
-               ⬜ score list — song inspection/info
+               ✅ score export — WAV render via OfflineAudioContext, --out/--bars/--sr flags
+               ✅ score list — song metadata + track inspection
+               ✅ --help / -h — standardised across all commands (parseFlags utility)
 Phase 10b  ⬜  score-audio MCP — effect catalog, signal flow, backend nodes, component catalog
 Phase 10b2 ⬜  score-game-tools MCP — song inspector, mixer state, transport state, audio graph
 Phase 10c  ⬜  Decode — audio analysis + format import (Rekordbox, Serato, FL Studio, MIDI)

@@ -7,8 +7,11 @@ describe('new command', () => {
   it('prints usage when no name given', async () => {
     const logs: string[] = []
     vi.spyOn(console, 'log').mockImplementation((m: unknown) => { logs.push(String(m)) })
+    vi.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('process.exit:1')
+    }) as (code?: string | number | null) => never)
     const { newSong } = await import('../src/commands/new.js')
-    newSong(['song']) // 'song' is subcommand, name is missing
+    expect(() => { newSong(['song']); }).toThrow('process.exit:1') // 'song' is subcommand, name is missing
     expect(logs.some(l => l.includes('Usage') || l.includes('usage') || l.includes('score new'))).toBe(true)
     vi.restoreAllMocks()
   })

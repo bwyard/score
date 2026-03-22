@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import type { SongDefinition } from '@score/dsl'
 import { createScoreEngine, type ScoreEngine, type PatchProps } from '../engine.js'
+import { parseFlags } from '../flags.js'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -213,14 +214,23 @@ const dispatch = async (
  * Opens a readline prompt that accepts song-management commands.
  * Type `help` inside the REPL for the full command list.
  *
- * @param _args - CLI arguments (reserved; currently unused)
+ * @param args - CLI arguments (`--help` / `-h` supported)
  * @returns A promise that resolves when the REPL session ends
  * @example
  * // From the CLI:
  * // score repl
  */
-export const repl = (_args: string[]): Promise<void> =>
-  new Promise((resolve) => {
+export const repl = (args: string[]): Promise<void> => {
+  const printUsage = (): void => {
+    console.log('Score repl — interactive live coding session\n')
+    console.log('Usage:')
+    console.log('  score repl\n')
+    console.log('Options:')
+    console.log('  -h, --help    Show this help')
+  }
+  parseFlags(args, {}, printUsage)
+
+  return new Promise((resolve) => {
     const rl = createInterface({
       input:  process.stdin,
       output: process.stdout,
@@ -252,3 +262,4 @@ export const repl = (_args: string[]): Promise<void> =>
       resolve()
     })
   })
+}
