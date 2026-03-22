@@ -65,7 +65,7 @@ const buildEffectsChain = (
 
 // ── Type guard ────────────────────────────────────────────────────────────────
 
-const isInstrumentDescriptor = (comp: unknown): comp is InstrumentDescriptor => {
+export const isInstrumentDescriptor = (comp: unknown): comp is InstrumentDescriptor => {
   if (typeof comp !== 'object' || comp === null) return false
   return (comp as { _type?: unknown })._type === 'InstrumentDescriptor'
 }
@@ -159,6 +159,60 @@ const triggerSynth = (
   osc.stop(time + noteDur)
 }
 
+// ── muteEnvelope — pure function of time ──────────────────────────────────────
+// Computes whether a track should be muted at a given bar.
+// Returns true (muted) when the track is not in the active arrangement section.
+// If there is no arrangement, always returns false (all tracks play).
+//
+// Hardware boundary: called from onBar (timer-driven), result feeds setMute.
+
+export const muteEnvelope = (
+  bar: number,
+  arrangement: SongDefinition['arrangement'],
+  trackId: string,
+): boolean => {
+  if (arrangement.length === 0) return false
+
+  const totalBars = arrangement.reduce((sum, s) => sum + s.bars, 0)
+  const currentBar = bar % totalBars
+
+  type SectionRange = { readonly startBar: number; readonly endBar: number } & (typeof arrangement)[number]
+  const { sections } = arrangement.reduce<{ readonly sections: SectionRange[]; readonly cursor: number }>(
+    ({ sections, cursor }, section) => {
+      const endBar = cursor + section.bars
+      return { sections: [...sections, { ...section, startBar: cursor, endBar }], cursor: endBar }
+    },
+    { sections: [], cursor: 0 },
+  )
+
+  const active = sections.find(s => currentBar >= s.startBar && currentBar < s.endBar)
+  if (!active) return false
+
+  const activeIds = new Set(
+    active.tracks
+      .map(t => isInstrumentDescriptor(t) ? t : t.component)
+      .filter(isInstrumentDescriptor)
+      .map(d => d.id),
+  )
+  return !activeIds.has(trackId)
+}
+
+// ── Patch props ───────────────────────────────────────────────────────────────
+
+/** Surgical parameter updates applied to a running {@link ScoreEngine}. */
+export type PatchProps = {
+  /** New BPM. Applied immediately via the transport clock. */
+  readonly bpm?: number
+  /** New master volume in `[0, 1]`. Applied to the mixer master gain. */
+  readonly masterVolume?: number
+  /** Per-track updates. Each entry targets a track by its zero-based index. */
+  readonly tracks?: ReadonlyArray<{
+    readonly index: number
+    readonly volume?: number
+    readonly mute?: boolean
+  }>
+}
+
 // ── Engine ────────────────────────────────────────────────────────────────────
 
 export type ScoreEngine = {
@@ -166,7 +220,21 @@ export type ScoreEngine = {
   readonly stop:    () => void
   readonly dispose: () => void
   readonly bpm:     number
+  /** Current bar count (absolute, resets on stop). */
+  readonly bars:    number
   readonly onBar:   (callback: () => void) => void
+  /**
+   * Apply surgical parameter updates to the running engine without reload.
+   * Supports: `bpm`, `masterVolume`, per-track `volume` and `mute`.
+   */
+  readonly patch:   (props: PatchProps) => void
+  /**
+   * Apply a new song definition to the running engine, updating what is
+   * possible without a full teardown. BPM and track volumes/mutes are applied
+   * live. Pattern or track structure changes are logged as warnings — use
+   * `--watch` for full reload on those changes.
+   */
+  readonly update:  (song: SongDefinition) => void
 }
 
 export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngine> => {
@@ -335,48 +403,16 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
     }
   })
 
-  // ── Arrangement execution ───────────────────────────────────────────────────
-  // Build a bar→section map and mute/unmute channels on each tick.
+  // ── Arrangement execution — pure muteEnvelope per bar ───────────────────────
+  // muteEnvelope(bar, arrangement, trackId) is a pure function of time.
+  // No stored sectionIndex — mute state is recomputed on each bar boundary.
 
   if (song.arrangement.length > 0) {
-    // Build section map using reduce — threads cursor as accumulator, no let
-    type SectionWithBars = (typeof song.arrangement)[number] & { readonly startBar: number; readonly endBar: number }
-    const { sections, cursor: totalBars } = song.arrangement.reduce<{
-      readonly sections: SectionWithBars[]
-      readonly cursor: number
-    }>(
-      ({ sections, cursor }, section) => {
-        const endBar = cursor + section.bars
-        return { sections: [...sections, { ...section, startBar: cursor, endBar }], cursor: endBar }
-      },
-      { sections: [], cursor: 0 },
-    )
-    // Hardware-boundary exception: sectionState is engine-layer mutable state (calls setMute)
-    const sectionState = { lastSectionIndex: -1 }
-
-    transport.onTick(position => {
-      const currentBar = position.bar % totalBars
-      const sectionIndex = sections.findIndex(
-        s => currentBar >= s.startBar && currentBar < s.endBar,
-      )
-      if (sectionIndex === sectionState.lastSectionIndex) return
-      sectionState.lastSectionIndex = sectionIndex
-
-      const section = sections[sectionIndex]
-      if (!section) return
-
-      // Build set of active descriptor ids for this section
-      const activeIds = new Set(
-        section.tracks
-          .map(t => isInstrumentDescriptor(t) ? t : t.component)
-          .filter(isInstrumentDescriptor)
-          .map(d => d.id),
-      )
-
+    transport.onBar(position => {
       descriptors.forEach((desc, i) => {
         const channel = mixer.getChannel(i)
         if (!channel) return
-        channel.setMute(!activeIds.has(desc.id))
+        channel.setMute(muteEnvelope(position.bar, song.arrangement, desc.id))
       })
     })
   }
@@ -389,7 +425,46 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       mixer.dispose()
       ctx.close().catch(() => {})
     },
-    get bpm() { return transport.bpm },
+    get bpm()  { return transport.bpm },
+    get bars() { return transport.position.bar },
     onBar: (callback: () => void) => { transport.onBar(callback) },
+
+    patch: (props: PatchProps): void => {
+      if (props.bpm !== undefined) transport.setBPM(props.bpm)
+      if (props.masterVolume !== undefined) mixer.setMasterVolume(props.masterVolume)
+      if (props.tracks) {
+        for (const t of props.tracks) {
+          const channel = mixer.getChannel(t.index)
+          if (!channel) continue
+          if (t.volume !== undefined) channel.setVolume(t.volume)
+          if (t.mute  !== undefined) channel.setMute(t.mute)
+        }
+      }
+    },
+
+    update: (nextSong: SongDefinition): void => {
+      // Apply BPM diff
+      if (nextSong.bpm !== transport.bpm) transport.setBPM(nextSong.bpm)
+
+      // Apply per-track volume/mute diffs
+      const nextDescriptors = nextSong.tracks
+        .map(t => isInstrumentDescriptor(t) ? t : t.component)
+        .filter(isInstrumentDescriptor)
+
+      nextDescriptors.forEach((nextDesc, i) => {
+        const curDesc = descriptors[i]
+        if (!curDesc || curDesc.instrumentType !== nextDesc.instrumentType) {
+          // Track structure changed — cannot patch live
+          return
+        }
+        const channel = mixer.getChannel(i)
+        if (!channel) return
+        const nextProps = nextDesc.props as KickProps & SnareProps & HiHatProps & SynthDSLProps & SampleProps
+        const curProps  = curDesc.props  as KickProps & SnareProps & HiHatProps & SynthDSLProps & SampleProps
+        if (nextProps.volume !== curProps.volume && nextProps.volume !== undefined) {
+          channel.setVolume(nextProps.volume)
+        }
+      })
+    },
   }
 }

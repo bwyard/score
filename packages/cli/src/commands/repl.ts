@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import type { SongDefinition } from '@score/dsl'
-import { createScoreEngine, type ScoreEngine } from '../engine.js'
+import { createScoreEngine, type ScoreEngine, type PatchProps } from '../engine.js'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -20,12 +20,14 @@ const HELP_TEXT = `
 Score REPL — interactive session
 
 Commands:
-  load <file>    Load a song file (.js / .mjs)
-  play           Start playback
-  stop           Stop playback
-  status         Show current status
-  help           Show this help
-  exit / .exit   Quit the REPL
+  load <file>      Load a song file (.js / .mjs)
+  play             Start playback
+  stop             Stop playback
+  status           Show current status (bpm, bar counter)
+  patch bpm=<n>    Live-patch BPM without reloading
+  patch vol=<n>    Live-patch master volume (0–1)
+  help             Show this help
+  exit / .exit     Quit the REPL
 `.trim()
 
 // ── Song loader ────────────────────────────────────────────────────────────────
@@ -63,7 +65,8 @@ const handleStatus = (state: ReplState): void => {
     return
   }
   const playingStr = state.playing ? 'playing' : 'stopped'
-  console.log(`Score REPL: ${state.loadedFile} — ${String(state.song.bpm)} BPM — ${playingStr}`)
+  const barsStr    = state.engine  ? ` — bar ${String(state.engine.bars)}` : ''
+  console.log(`Score REPL: ${state.loadedFile} — ${String(state.song.bpm)} BPM — ${playingStr}${barsStr}`)
 }
 
 const handleLoad = async (
@@ -117,6 +120,44 @@ const handleStop = (state: ReplState): ReplState => {
   return { ...state, playing: false }
 }
 
+const handlePatch = (args: string, state: ReplState): ReplState => {
+  if (!state.engine || !state.playing) {
+    console.log('Score REPL: Nothing playing — use play first')
+    return state
+  }
+
+  // Parse key=value pairs: bpm=140 vol=0.8
+  const props: PatchProps = {}
+  const patchProps: { bpm?: number; masterVolume?: number } = {}
+  const parts = args.trim().split(/\s+/)
+  for (const part of parts) {
+    const [key, val] = part.split('=')
+    if (!key || val === undefined) continue
+    const num = parseFloat(val)
+    if (isNaN(num)) {
+      console.log(`Score REPL: Invalid value for ${key}: ${val}`)
+      return state
+    }
+    if (key === 'bpm')        patchProps.bpm = num
+    else if (key === 'vol')   patchProps.masterVolume = num
+    else {
+      console.log(`Score REPL: Unknown patch key: ${key}. Supported: bpm, vol`)
+      return state
+    }
+  }
+
+  Object.assign(props, patchProps)
+  if (Object.keys(patchProps).length === 0) {
+    console.log('Score REPL: No patch keys given. Try: patch bpm=140 or patch vol=0.8')
+    return state
+  }
+
+  state.engine.patch(props)
+  const parts2 = Object.entries(patchProps).map(([k, v]) => `${k}=${String(v)}`).join(' ')
+  console.log(`Score REPL: Patched — ${parts2}`)
+  return state
+}
+
 // ── Main dispatch ─────────────────────────────────────────────────────────────
 
 const dispatch = async (
@@ -144,6 +185,9 @@ const dispatch = async (
 
     case 'stop':
       return handleStop(state)
+
+    case 'patch':
+      return handlePatch(rest, state)
 
     case 'help':
       console.log(HELP_TEXT)
