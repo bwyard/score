@@ -83,7 +83,7 @@ export const SplashScreen = ({ onSelect }: Props) => {
                 ...styles.modeCard,
                 ...(selectedMode === m.id ? styles.modeCardActive : {}),
               }}
-              onClick={() => setSelectedMode(m.id)}
+              onClick={() => { setSelectedMode(m.id) }}
             >
               <span aria-hidden="true" style={styles.modeIcon}>{m.icon}</span>
               <span style={styles.modeLabel}>{m.label}</span>
@@ -106,7 +106,7 @@ export const SplashScreen = ({ onSelect }: Props) => {
                 ...styles.hwButton,
                 ...(selectedHardware === h.id ? styles.hwButtonActive : {}),
               }}
-              onClick={() => setSelectedHardware(h.id)}
+              onClick={() => { setSelectedHardware(h.id) }}
             >
               <span style={styles.hwLabel}>{h.label}</span>
               <span id={`hw-desc-${h.id}`} style={styles.hwDesc}>{h.description}</span>
@@ -123,7 +123,7 @@ export const SplashScreen = ({ onSelect }: Props) => {
         }}
         disabled={activeMode === undefined}
         aria-label={activeMode ? `Start ${activeMode.label}` : 'Select a mode to continue'}
-        onClick={() => activeMode && onSelect(activeMode.id, selectedHardware)}
+        onClick={() => { activeMode && onSelect(activeMode.id, selectedHardware) }}
       >
         {activeMode ? `Start ${activeMode.label}` : 'Select a mode'}
       </button>
