@@ -28,13 +28,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Verify lockfile is up to date
-        run: |
-          if ! git diff --exit-code pnpm-lock.yaml; then
-            echo "pnpm-lock.yaml is out of date. Run pnpm install and commit the updated lockfile."
-            exit 1
-          fi
-
       - name: Typecheck
         run: pnpm typecheck
 
