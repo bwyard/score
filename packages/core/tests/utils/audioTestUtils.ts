@@ -298,6 +298,12 @@ export const createMockBackendContext = (): MockBackendContext => {
       return node
     },
 
+    createAnalyser: (_props) => ({
+      ...createMockBackendNode(),
+      frequencyBinCount: 1024,
+      getFloatTimeDomainData: (_array: Float32Array) => { /* no-op in tests */ },
+    }),
+
     suspend: () => Promise.resolve(),
     resume: () => Promise.resolve(),
     close: () => Promise.resolve(),

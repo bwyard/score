@@ -6,6 +6,7 @@ import {
   OfflineAudioContext,
 } from 'node-web-audio-api'
 import type {
+  AnalyserNode as WebAnalyserNode,
   AudioNode as WebAudioNode,
   BaseAudioContext,
   AudioBufferSourceNode as WebBufferSourceNode,
@@ -388,6 +389,17 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
           panner.pan.setValueAtTime(panner.pan.value, t)
           panner.pan.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
+      }
+    },
+
+    createAnalyser: (props) => {
+      const analyser = (ctx as unknown as { createAnalyser: () => WebAnalyserNode }).createAnalyser()
+      if (props?.fftSize !== undefined) analyser.fftSize = props.fftSize
+      const base = wrapNode(analyser as unknown as WebAudioNode)
+      return {
+        ...base,
+        get frequencyBinCount() { return analyser.frequencyBinCount },
+        getFloatTimeDomainData: (array: Float32Array) => { analyser.getFloatTimeDomainData(array as Float32Array<ArrayBuffer>); },
       }
     },
 

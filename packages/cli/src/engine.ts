@@ -13,7 +13,7 @@
 
 import { readFileSync } from 'node:fs'
 import { webAudioBackend, decodeSample, createSamplePlayer } from '@score/core'
-import type { EffectDescriptor, AudioComponent, ScoreAudioContext } from '@score/core'
+import type { EffectDescriptor, AudioComponent, ScoreAudioContext, BackendAnalyserNode } from '@score/core'
 import { Theremin as ThereminComponent, Sax as SaxComponent } from '@score/components'
 import { createMixer } from '@score/mixer'
 import {
@@ -239,12 +239,32 @@ export type ScoreEngine = {
    * `--watch` for full reload on those changes.
    */
   readonly update:  (song: SongDefinition) => void
+  /**
+   * AnalyserNode tapped from the master output — use to read waveform or
+   * frequency data in real time. Connected in parallel with the destination
+   * so analysis does not alter the audible signal path.
+   *
+   * @example
+   * ```ts
+   * const buf = new Float32Array(engine.analyser.frequencyBinCount)
+   * engine.analyser.getFloatTimeDomainData(buf)
+   * ```
+   */
+  readonly analyser: BackendAnalyserNode
 }
 
 export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngine> => {
   const ctx = webAudioBackend.createContext()
   const mixer = createMixer(ctx, { masterVolume: 0.85 })
   const transport = createTransport(ctx, { bpm: song.bpm, ticksPerBeat: 4 })
+
+  // ── AnalyserNode — taps master output for visualisation ─────────────────────
+  // fftSize 2048 → frequencyBinCount 1024 samples; sufficient for ~20fps waveform reads.
+  // Inserted in series: mixer (limiter) → analyser → ctx.destination.
+  // The analyser node is transparent to audio — no coloration of the signal.
+  const analyser = ctx.createAnalyser({ fftSize: 2048 })
+  mixer.connect(analyser)
+  analyser.connect(ctx.destination)
 
   // Resolve track descriptors
   const descriptors = song.tracks
@@ -432,6 +452,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
     get bpm()  { return transport.bpm },
     get bars() { return transport.position.bar },
     onBar: (callback: () => void) => { transport.onBar(callback) },
+    analyser,
 
     patch: (props: PatchProps): void => {
       if (props.bpm !== undefined) transport.setBPM(props.bpm)

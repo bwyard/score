@@ -1,23 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import { TransportBar }                      from '../shared/TransportBar.js'
 import type { HardwareLevel }               from '../../../main/ipc-types.js'
+import { PunchcardGrid }                    from '../visualizer/PunchcardGrid.js'
+import { Scope }                            from '../visualizer/Scope.js'
+import type { PunchcardTrack }              from '../visualizer/PunchcardGrid.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type Props = {
   readonly hardware: HardwareLevel
   readonly onHome:   () => void
-}
-
-/**
- * A single track's punchcard data — name, instrument type, and step pattern.
- * Matches the payload shape of the `song:update` IPC channel.
- * Will be consumed by the Punchcard visualizer in t140.
- */
-type PunchcardTrack = {
-  readonly name:    string
-  readonly type:    string
-  readonly pattern: ReadonlyArray<number | string>
 }
 
 // ── Starter template ───────────────────────────────────────────────────────────
@@ -53,6 +45,9 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [code,   setCode]   = useState(STARTER)
   const [error,  setError]  = useState<string | null>(null)
   const [tracks, setTracks] = useState<ReadonlyArray<PunchcardTrack>>([])
+  const [waveform,    setWaveform]    = useState<readonly number[]>([])
+  const [activeTab,   setActiveTab]   = useState<'punchcard' | 'scope'>('punchcard')
+  const [engineState, setEngineState] = useState<{ playing: boolean; bars: number }>({ playing: false, bars: 0 })
 
   // Subscribe to error reports from the main process
   useEffect(() => {
@@ -69,6 +64,24 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     })
     return unsub
   }, [])
+
+  // Subscribe to waveform data from AnalyserNode
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('engine:analysis', ({ waveform: w }) => {
+      setWaveform(w)
+    })
+    return unsub
+  }, [])
+
+  // Subscribe to engine playing state and bar count
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('engine:state', ({ playing, bars }) => {
+      setEngineState({ playing, bars })
+    })
+    return unsub
+  }, [])
+
+  const currentStep = engineState.bars % 8
 
   const onEval = useCallback((): void => {
     setError(null)
@@ -106,14 +119,38 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
           </button>
         </div>
 
-        {/* Visualizer pane — Phase 11b t140: wire tracks here */}
+        {/* Visualizer pane — Phase 11b t140: tabbed Punchcard + Scope */}
         <div style={styles.visualizer}>
-          <div style={styles.placeholder}>
-            <span style={styles.placeholderIcon}>〰</span>
-            <span>Visualizer — Phase 11b</span>
-            <span style={styles.sub}>Punchcard · Scope</span>
-            {tracks.length > 0 && (
-              <span style={styles.sub}>{`${String(tracks.length)} track${tracks.length === 1 ? '' : 's'} loaded`}</span>
+          {/* Tab bar */}
+          <div style={styles.tabBar}>
+            <button
+              style={activeTab === 'punchcard' ? { ...styles.tab, ...styles.tabActive } : styles.tab}
+              onClick={() => setActiveTab('punchcard')}
+            >
+              Punchcard
+            </button>
+            <button
+              style={activeTab === 'scope' ? { ...styles.tab, ...styles.tabActive } : styles.tab}
+              onClick={() => setActiveTab('scope')}
+            >
+              Scope
+            </button>
+          </div>
+
+          {/* Visualizer content */}
+          <div style={styles.vizContent}>
+            {activeTab === 'punchcard' && (
+              <PunchcardGrid
+                tracks={tracks}
+                currentStep={currentStep}
+                stepCount={8}
+              />
+            )}
+            {activeTab === 'scope' && (
+              <Scope
+                waveform={waveform}
+                playing={engineState.playing}
+              />
             )}
           </div>
         </div>
@@ -169,8 +206,37 @@ const styles = {
     textTransform: 'uppercase' as const,
     cursor:        'pointer',
   },
-  visualizer:      { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0c0c0e' },
-  placeholder:     { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.5rem', color: '#2e2e36' },
-  placeholderIcon: { fontFamily: 'monospace', fontSize: '2rem', color: '#1e2e3e' },
-  sub:             { fontFamily: 'system-ui, sans-serif', fontSize: '0.68rem', color: '#2a2a32', letterSpacing: '0.06em' },
+  visualizer: {
+    flex:          1,
+    display:       'flex',
+    flexDirection: 'column' as const,
+    background:    '#0c0c0e',
+  },
+  tabBar: {
+    display:      'flex',
+    flexShrink:   0,
+    borderBottom: '1px solid #1e1e22',
+    background:   '#0c0c0e',
+  },
+  tab: {
+    padding:       '0.35rem 0.85rem',
+    background:    'none',
+    border:        'none',
+    borderBottom:  '2px solid transparent',
+    color:         '#3a3a46',
+    fontSize:      '0.7rem',
+    fontFamily:    'system-ui, sans-serif',
+    letterSpacing: '0.06em',
+    cursor:        'pointer',
+  },
+  tabActive: {
+    color:        '#6a9fff',
+    borderBottom: '2px solid #6a9fff',
+  },
+  vizContent: {
+    flex:          1,
+    overflow:      'hidden',
+    display:       'flex',
+    flexDirection: 'column' as const,
+  },
 } as const

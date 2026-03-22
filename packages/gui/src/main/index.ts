@@ -40,11 +40,14 @@ type EngineSlot = {
 
 // One engine slot at a time — reinitialised on mode change.
 // Wrapped in const objects so references are never reassigned (no let).
-const slotRef:    { value: EngineSlot | null }        = { value: null }
-const winRef:     { value: BrowserWindow | null }     = { value: null }
+const slotRef:      { value: EngineSlot | null }                          = { value: null }
+const winRef:       { value: BrowserWindow | null }                       = { value: null }
 // Bar-boundary hot-swap: when code is eval'd while playing, the new song queues
 // here and is applied at the next onBar callback for a seamless transition.
-const pendingRef: { value: SongDefinition | null }    = { value: null }
+const pendingRef:   { value: SongDefinition | null }                      = { value: null }
+// Analysis interval — reads waveform from AnalyserNode at ~20fps while playing.
+// Const wrapper prevents let; the interval handle is mutated via .value.
+const intervalRef:  { value: ReturnType<typeof setInterval> | null }      = { value: null }
 
 const send = <K extends keyof MainToRenderer>(channel: K, payload: MainToRenderer[K]): void => {
   const win = winRef.value
@@ -68,7 +71,28 @@ const pushSong = (song: SongDefinition): void => {
   send('song:update', { tracks })
 }
 
+const stopAnalysis = (): void => {
+  if (intervalRef.value !== null) {
+    clearInterval(intervalRef.value)
+    intervalRef.value = null
+  }
+}
+
+const startAnalysis = (): void => {
+  stopAnalysis()
+  const slot = slotRef.value
+  if (!slot) return
+  const buf = new Float32Array(slot.engine.analyser.frequencyBinCount)
+  intervalRef.value = setInterval(() => {
+    const s = slotRef.value
+    if (!s || !s.playing) { stopAnalysis(); return }
+    s.engine.analyser.getFloatTimeDomainData(buf)
+    send('engine:analysis', { waveform: Array.from(buf) })
+  }, 50) // ~20fps
+}
+
 const teardown = (): void => {
+  stopAnalysis()
   const slot = slotRef.value
   if (!slot) return
   slotRef.value = null
@@ -103,6 +127,7 @@ const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
             next.engine.start()
             next.playing = true
             pushState()
+            startAnalysis()
           }
         }
       })
@@ -184,11 +209,13 @@ ipcMain.on('transport:play', () => {
   slot.engine.start()
   slot.playing = true
   pushState()
+  startAnalysis()
 })
 
 ipcMain.on('transport:stop', () => {
   const slot = slotRef.value
   if (!slot || !slot.playing) return
+  stopAnalysis()
   slot.engine.stop()
   slot.playing = false
   slot.bars    = 0
