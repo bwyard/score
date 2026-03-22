@@ -168,8 +168,17 @@ Phase 11   ✅  Hot reload + live coding (3 levels)
                ✅ muteEnvelope(bar, arrangement, trackId) — pure function replaces imperative section state
                ⬜ cursor.x / cursor.y — mouse position as automation source (Phase 13 GUI)
 Phase 11b  ⬜  Live coding visualization — punchcard, piano roll, scope, pattern graph, waveform
-Phase 12   ⬜  MIDI bridge + XDJ profiles + hardware mixer modes
-Phase 12b  ⬜  Jam session — @score/session
+Phase 12   ✅  MIDI bridge + XDJ profiles + hardware mixer modes
+               ✅ createMidiBridge() — routes hardware MIDI to BridgeEngine
+               ✅ XDJ-RX3 and XDJ-XZ profiles (needs-testing — spec-derived, not hardware-verified)
+               ✅ Traktor S and Serato stubs (look-into — model unknown)
+               ✅ Internal WebMIDI types (no @types/webmidi dep)
+Phase 12b  ✅  Jam session — @score/session
+               ✅ createJamSession(engine, config) — coordinates ScoreEngine + MidiBridge
+               ✅ SessionState snapshot (playing, bpm, bars, masterVolume, trackMutes, midiConnected)
+               ✅ connectMidi() / disconnectMidi() — safe with or without bridge
+               ✅ patch() / update() — live parameter changes + hot-swap song definition
+               ✅ 22 tests
 Phase 12c  ⬜  SuperCollider backend — fully embedded
 Phase 12d  ⬜  Advanced synthesis — FM, wavetable, physical modeling, granular, full warping
 Phase 12i  ⬜  Probabilistic / diffusion generation — granular grain scattering, spectral diffusion, stochastic resonance, generative composition via PRIME samplers (builds on Lorenz/logistic/OUProcess already in @score/math)
