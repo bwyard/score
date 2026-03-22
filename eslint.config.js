@@ -23,10 +23,17 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/tests/**/*.ts'],
+    // Test files: relax rules that conflict with test utilities (vitest-axe,
+    // @testing-library, vi.fn(), expect.extend()) which have imperfect types.
+    files: ['**/tests/**/*.ts', '**/tests/**/*.tsx'],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
-      'tsdoc/syntax': 'off',
+      '@typescript-eslint/no-unsafe-call':        'off',
+      '@typescript-eslint/no-unsafe-assignment':  'off',
+      '@typescript-eslint/no-unsafe-argument':    'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return':      'off',
+      'tsdoc/syntax':                             'off',
     },
   },
   {

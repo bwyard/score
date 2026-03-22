@@ -159,6 +159,45 @@ Phase 10   ✅  CLI — all core commands complete
                ✅ --help / -h — standardised across all commands (parseFlags utility)
 Phase 10b  ⬜  score-audio MCP — effect catalog, signal flow, backend nodes, component catalog
 Phase 10b2 ⬜  score-game-tools MCP — song inspector, mixer state, transport state, audio graph
+Phase 10b3 ⬜  score-codebase MCP — full build (currently stub)
+               Backend / framework tools (all phases):
+               ⬜ project_status    — phase completion, what's done vs placeholder
+               ⬜ package_graph     — workspace deps, build order
+               ⬜ api_surface       — every public export + TSDoc signature
+               ⬜ architecture_rules — non-negotiable rules (no let, no class, etc.)
+               ⬜ adr_lookup        — architectural decisions and their rationale
+               GUI development tools (Phase 13+):
+               ⬜ ui_component_catalog — every React component: file path, props
+                                        interface, which mode it belongs to, what
+                                        it renders, placeholder vs implemented
+               ⬜ ui_layout_map     — spatial hierarchy: regions, aria roles,
+                                        aria-labels, nesting depth — primary source
+                                        of truth for Playwright E2E selectors
+               ⬜ ui_design_tokens  — all inline style values extracted and named:
+                                        colors, spacing, border-radius, font sizes —
+                                        enforces visual consistency across phases
+               ⬜ ui_ipc_map        — all typed IPC channels: name, payload type,
+                                        direction (renderer→main / main→renderer),
+                                        which component triggers or listens
+               ⬜ ui_mode_features  — per-mode feature inventory (LiveCode, Produce,
+                                        DJ Set, Jam Session): planned vs implemented
+                                        vs placeholder — for phase planning
+               ⬜ ui_accessibility_map — every interactive element's accessible name,
+                                        role, aria attributes — written once, used
+                                        for every Playwright E2E test so selectors
+                                        are never guessed
+               DSL / Monaco tools (Phase 13f):
+               ⬜ dsl_completions   — Score DSL component APIs for Monaco
+                                        IntelliSense: Kick/Snare/Synth/Sample props,
+                                        defaults, types, valid ranges
+               ⬜ dsl_diagnostics_schema — errors the DSL AST validator can produce,
+                                        for Monaco error markers
+               Automation / plugin tools (Phase 13d + 13e):
+               ⬜ automation_param_map — all automatable BackendAudioParam targets,
+                                        their range, units, and visual label
+               ⬜ plugin_manifest_schema — plugin contract: what a plugin must
+                                        export, how it registers capabilities,
+                                        IPC surface it may access
 Phase 10c  ⬜  Decode — audio analysis + format import (Rekordbox, Serato, FL Studio, MIDI)
 Phase 11   ✅  Hot reload + live coding (3 levels)
                ✅ Level 1: --watch file watcher with ESM cache busting
@@ -183,17 +222,32 @@ Phase 12c  ⬜  SuperCollider backend — fully embedded
 Phase 12d  ⬜  Advanced synthesis — FM, wavetable, physical modeling, granular, full warping
 Phase 12i  ⬜  Probabilistic / diffusion generation — granular grain scattering, spectral diffusion, stochastic resonance, generative composition via PRIME samplers (builds on Lorenz/logistic/OUProcess already in @score/math)
 Phase 12e  ⬜  DJ mode — Set format + deck management
+               ⬜ Auto-BPM detection from audio files
+               ⬜ Musical key detection (harmonic mixing)
+               ⬜ Hot cues + loop points management
+               ⬜ Track library / crate management
+               ⬜ Two-deck sync engine (deck A ↔ B master/slave BPM sync)
+               ⬜ Set/performance recording (capture live output to WAV)
 Phase 12f  ⬜  LiveSet mode — clip launching
 Phase 12g  ⬜  Advanced effects — Convolution reverb, Envelope follower, Ring modulator
 Phase 12h  ⬜  Advanced sampler — Sample slicing, multi-sample instruments (velocity layers, round-robin)
-Phase 13   ⬜  Score Studio GUI
+               ⬜ Stem separation (Spleeter/Demucs WASM — modern DJ workflow)
+Phase 13   🔄  Score Studio GUI — Electron + React desktop app
+               ✅ Electron main process + preload IPC bridge (typed channels)
+               ✅ Vite + electron-forge scaffold
+               ✅ Splash screen — mode + hardware level selector
+               ✅ 4 mode shells: Live Code, Produce, DJ Set, Jam Session
+               ✅ TransportBar — shared play/stop/BPM/bars across all modes
+               ✅ Testing stack: Vitest + jsdom + @testing-library + vitest-axe
+               ✅ Testing Trophy pattern: integration tests + axe accessibility checks
+               ⬜ E2E tests (Playwright with Electron support — Phase 13+)
 Phase 13b  ⬜  GUI jam session interface
 Phase 13c  ⬜  Audio clip editor
 Phase 13d  ⬜  Automation lanes
-Phase 13e  ⬜  Plugin architecture
+Phase 13e  ⬜  Plugin architecture (VST/AU via Phase 13e)
 Phase 13f  ⬜  Monaco IDE integration — live eval, pattern gutter, REPL panel
-Phase 14   ⬜  First real tracks + warehouse show
-Phase 14b  ⬜  Post-warehouse fixes
+Phase 14   ⬜  First real tracks + live performance debut
+Phase 14b  ⬜  Post-show fixes
 Phase 15b  ⬜  Framework MCP (public — for Score users building songs with AI assistance)
 Phase 15   ⬜  Beta audit
 Phase 16   ⬜  Release infrastructure
@@ -942,19 +996,18 @@ Recommended backend: scsynth
 Status: FESTIVAL READY ✅
 ```
 
-### Warehouse Show — Phase 14 Milestone
-The warehouse show is a required milestone, not optional.
+### Live Performance Debut — Phase 14 Milestone
+The live debut is a required milestone, not optional.
 It is the real-world validation that Score works as a live instrument.
 No fixed date — happens when the software is ready, not on a calendar deadline.
 
-Minimum phases needed before warehouse show:
+Minimum phases needed before debut:
 - Phases 1-12 complete
 - Phase 12c scsynth working
 - Phase 12e DJ mode working
 - 4+ hours continuous runtime tested locally
 
 Phase 14b addresses everything discovered at the show.
-The warehouse show IS Phase 14.
 
 ### Live Performance Path
 ```
@@ -1316,6 +1369,7 @@ Format: `YYYY-MM-DD sNNN — What was completed or significantly advanced`
 2026-03-18 s006 — Session housekeeping: signals acknowledged, CLAUDE.md signal docs, handoff updated to reflect actual phase status, planning doc incorporated
 2026-03-18 s007 — Phase 9 roadmap audit: Phase 8b renamed to 9a (modulation primitives), Phase 9f added (chaos/OUProcess/L-systems/RK4/tuning), competitor gap analysis added (Section 11b vs TidalCycles/Strudel/Facet), stack()/beat()/humanize() added to Phase 9c plan, "## 9." section header fixed to "## 9b.", TSDoc standard locked (TypeDoc + eslint-plugin-tsdoc), handoff split to pointed spec files, GETTING_STARTED.md created, 5-agent pre-Phase-10 build plan drafted
 2026-03-18 s008 — Wave 1 complete: Phase 7b (multiband-compressor/saturation/autopan + TSDoc all effects), Phase 9a (@score/modulation: createLFO/createADSR/sources, BackendAudioParam), Phase 9b/9f (@score/math extended: chaos/harmony/stochastic/transforms, 158 tests), Phase 9c (stack/beat added, 45 tests), Phase 9d (@score/musical: describe() vocabulary tokenizer, 37 tests). PR #14 open. 1,074 tests total.
+2026-03-21 s009 — Phase 12 MIDI bridge PRs closed; Phase 9 automation() added (PR #28); Phase 12b @score/session (createJamSession, 22 tests, PR #30); Phase 13 Score Studio scaffold: Electron + React, electron-forge + Vite, splash screen, 4 mode shells, TransportBar, typed IPC bridge, Testing Trophy stack (Vitest + jsdom + @testing-library + vitest-axe), roadmap gaps added to Phase 12e (BPM analysis, key detection, hot cues, crate mgmt, two-deck sync, set recording, stem separation).
 ```
 
 ---
