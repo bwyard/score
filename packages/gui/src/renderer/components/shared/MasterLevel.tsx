@@ -20,7 +20,7 @@ export type MasterLevelProps = {
 const METER_W = 16
 const METER_H = 80
 
-const VU_BG     = '#0a0a0d'
+const VU_BG     = '#141418'
 const VU_GREEN  = '#22cc66'
 const VU_YELLOW = '#ccaa00'
 const VU_RED    = '#cc2244'
@@ -128,6 +128,7 @@ const styles = {
     width:          `${METER_W}px`,
     height:         `${METER_H}px`,
     imageRendering: 'pixelated' as const,
+    border:         '1px solid #1e1e22',
   },
   label: {
     fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",

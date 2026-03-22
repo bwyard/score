@@ -8,6 +8,9 @@ import { PianoRoll }                        from '../visualizer/PianoRoll.js'
 import { MasterLevel }                      from '../shared/MasterLevel.js'
 import { MixerStrip }                       from '../shared/MixerStrip.js'
 import { DraggablePanel }                   from '../shared/DraggablePanel.js'
+import { CodeWaveform }                     from '../shared/CodeWaveform.js'
+import { ConsoleLog }                       from '../shared/ConsoleLog.js'
+import type { LogEntry, LogLevel }          from '../shared/ConsoleLog.js'
 import type { PunchcardTrack }              from '../visualizer/PunchcardGrid.js'
 import { EvalStatus }                       from '../status/index.js'
 import type { EvalStatusKind }             from '../status/EvalStatus.js'
@@ -21,13 +24,13 @@ type Props = {
   readonly onHome:   () => void
 }
 
-// Panel visibility state — each panel can be toggled independently.
 type PanelVisibility = {
   punchcard: boolean
   scope:     boolean
   spectrum:  boolean
   piano:     boolean
   mixer:     boolean
+  console:   boolean
 }
 
 // ── Starter template ───────────────────────────────────────────────────────────
@@ -50,6 +53,15 @@ export default Song({
     })),
   ],
 })`
+
+// ── Log helpers ────────────────────────────────────────────────────────────────
+
+const mkEntry = (level: LogLevel, message: string): LogEntry => ({
+  id:      Date.now() + Math.random(),
+  level,
+  message,
+  time:    Date.now(),
+})
 
 // ── Mixer strip state ──────────────────────────────────────────────────────────
 
@@ -99,8 +111,9 @@ const PanelToggle = ({ label, active, onClick }: PanelToggleProps) => (
 
 /**
  * Live Code mode — editor on the left, floating visualizer panels on the right.
- * Phase 11b t140: status bar, all visualizer panels, floating panel layout.
- * Phase 13f: swap textarea for Monaco editor.
+ * Code waveform rendered behind the textarea (Strudl/TidalCycles aesthetic).
+ * Phase 11b t140-t141: all visualizers, status bar, floating panel layout.
+ * Phase 13f: swap textarea for Monaco editor with beat highlighting.
  */
 export const LiveCode = ({ hardware, onHome }: Props) => {
   const [code,   setCode]   = useState(STARTER)
@@ -117,17 +130,22 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [pendingSwap, setPendingSwap] = useState(false)
   const [stripStates, setStripStates] = useState<ReadonlyArray<StripState>>([])
   const [fftBins,     setFftBins]     = useState<readonly number[]>([])
-  // Panel visibility toggles
+  const [logEntries,  setLogEntries]  = useState<ReadonlyArray<LogEntry>>([])
   const [panels, setPanels] = useState<PanelVisibility>({
     punchcard: true,
-    scope:     false,
+    scope:     true,
     spectrum:  false,
     piano:     false,
     mixer:     false,
+    console:   true,
   })
 
   const togglePanel = useCallback((key: keyof PanelVisibility): void => {
     setPanels(prev => ({ ...prev, [key]: !prev[key] }))
+  }, [])
+
+  const addLog = useCallback((level: LogLevel, message: string): void => {
+    setLogEntries(prev => [...prev.slice(-199), mkEntry(level, message)])
   }, [])
 
   // ── IPC subscriptions ──────────────────────────────────────────────────────
@@ -136,9 +154,10 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     const unsub = window.scoreBridge.on('error:report', ({ message }) => {
       setError(message)
       setEvalStatus('error')
+      addLog('error', message)
     })
     return unsub
-  }, [])
+  }, [addLog])
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('song:update', ({ tracks: t }) => {
@@ -146,9 +165,10 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       setStripStates(prev => t.map((_, i) => prev[i] ?? defaultStripState()))
       setEvalStatus('ok')
       setEvalTimestamp(Date.now())
+      addLog('ok', `Song loaded — ${t.length} track${t.length === 1 ? '' : 's'}`)
     })
     return unsub
-  }, [])
+  }, [addLog])
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('engine:analysis', ({ waveform: w }) => {
@@ -167,10 +187,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('engine:state', ({ playing, bpm, bars }) => {
-      setEngineState({ playing, bpm, bars })
+      setEngineState(prev => {
+        if (prev.playing !== playing) {
+          addLog('info', playing ? '▶ Playing' : '■ Stopped')
+        }
+        return { playing, bpm, bars }
+      })
     })
     return unsub
-  }, [])
+  }, [addLog])
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('engine:step', ({ step, stepCount }) => {
@@ -183,15 +208,17 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   useEffect(() => {
     const unsub = window.scoreBridge.on('engine:pending', ({ pending }) => {
       setPendingSwap(pending)
+      if (pending) addLog('warn', 'Swap queued — applying at next bar boundary')
     })
     return unsub
-  }, [])
+  }, [addLog])
 
   const onEval = useCallback((): void => {
     setError(null)
     setEvalStatus('pending')
+    addLog('info', 'Evaluating…')
     window.scoreBridge.send('engine:eval', { code })
-  }, [code])
+  }, [code, addLog])
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -218,33 +245,54 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
           )}
           <EvalStatus
             status={evalStatus}
-            {...(error !== null    ? { message:   error         } : {})}
+            {...(error !== null          ? { message:   error         } : {})}
             {...(evalTimestamp !== undefined ? { timestamp: evalTimestamp } : {})}
           />
         </div>
       </div>
 
       <div style={styles.body}>
-        {/* Editor pane */}
+        {/* Editor pane — CodeWaveform behind textarea, Strudl aesthetic */}
         <div style={styles.editorPane}>
           {error !== null && (
             <div style={styles.errorBanner} role="alert">
               {error}
             </div>
           )}
-          <textarea
-            style={styles.textarea}
-            value={code}
-            onChange={e => { setCode(e.target.value) }}
-            spellCheck={false}
-            aria-label="Song code editor"
-            onKeyDown={e => {
-              if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                e.preventDefault()
-                onEval()
-              }
-            }}
-          />
+
+          {/* Waveform + textarea stacked — canvas is position: absolute behind textarea */}
+          <div style={styles.editorArea}>
+            <CodeWaveform waveform={waveform} playing={engineState.playing} />
+            <textarea
+              style={styles.textarea}
+              value={code}
+              onChange={e => { setCode(e.target.value) }}
+              spellCheck={false}
+              aria-label="Song code editor"
+              onKeyDown={e => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                  e.preventDefault()
+                  onEval()
+                }
+              }}
+            />
+          </div>
+
+          {/* Console log (below textarea, collapsible) */}
+          {panels.console && (
+            <div style={styles.consolePane}>
+              <div style={styles.consoleHeader}>
+                <span style={styles.consoleLabel}>Console</span>
+                <button
+                  style={styles.consoleClose}
+                  onClick={() => togglePanel('console')}
+                  aria-label="Close console"
+                >×</button>
+              </div>
+              <ConsoleLog entries={logEntries} />
+            </div>
+          )}
+
           <div style={styles.editorFooter}>
             <MasterLevel waveform={waveform} playing={engineState.playing} />
             <button style={styles.evalBtn} onClick={onEval} aria-label="Eval song">
@@ -257,17 +305,18 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
         <div style={styles.canvas}>
           {/* Panel toggle toolbar */}
           <div style={styles.panelToolbar}>
-            <PanelToggle label="Grid"     active={panels.punchcard} onClick={() => togglePanel('punchcard')} />
-            <PanelToggle label="Piano"    active={panels.piano}     onClick={() => togglePanel('piano')}     />
-            <PanelToggle label="Scope"    active={panels.scope}     onClick={() => togglePanel('scope')}     />
-            <PanelToggle label="FFT"      active={panels.spectrum}  onClick={() => togglePanel('spectrum')}  />
-            <PanelToggle label="Mixer"    active={panels.mixer}     onClick={() => togglePanel('mixer')}     />
+            <PanelToggle label="Grid"    active={panels.punchcard} onClick={() => togglePanel('punchcard')} />
+            <PanelToggle label="Scope"   active={panels.scope}     onClick={() => togglePanel('scope')}     />
+            <PanelToggle label="FFT"     active={panels.spectrum}  onClick={() => togglePanel('spectrum')}  />
+            <PanelToggle label="Piano"   active={panels.piano}     onClick={() => togglePanel('piano')}     />
+            <PanelToggle label="Mixer"   active={panels.mixer}     onClick={() => togglePanel('mixer')}     />
+            <PanelToggle label="Console" active={panels.console}   onClick={() => togglePanel('console')}   />
           </div>
 
-          {/* Floating panels — each lives inside the canvas container */}
+          {/* Floating panels */}
           {panels.punchcard && (
             <DraggablePanel
-              title="Punchcard Grid"
+              title="Step Grid"
               defaultX={8}
               defaultY={48}
               defaultWidth={420}
@@ -282,30 +331,13 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
             </DraggablePanel>
           )}
 
-          {panels.piano && (
+          {panels.scope && (
             <DraggablePanel
-              title="Piano Roll"
+              title="Waveform"
               defaultX={8}
               defaultY={240}
               defaultWidth={420}
-              defaultHeight={200}
-              onClose={() => togglePanel('piano')}
-            >
-              <PianoRoll
-                notes={[]}
-                currentStep={currentStep}
-                stepCount={currentStepCount}
-              />
-            </DraggablePanel>
-          )}
-
-          {panels.scope && (
-            <DraggablePanel
-              title="Oscilloscope"
-              defaultX={440}
-              defaultY={48}
-              defaultWidth={280}
-              defaultHeight={180}
+              defaultHeight={160}
               onClose={() => togglePanel('scope')}
             >
               <Scope waveform={waveform} playing={engineState.playing} />
@@ -316,8 +348,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
             <DraggablePanel
               title="Spectrum"
               defaultX={440}
-              defaultY={240}
-              defaultWidth={280}
+              defaultY={48}
+              defaultWidth={260}
               defaultHeight={200}
               onClose={() => togglePanel('spectrum')}
             >
@@ -325,11 +357,28 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
             </DraggablePanel>
           )}
 
+          {panels.piano && (
+            <DraggablePanel
+              title="Piano Roll"
+              defaultX={440}
+              defaultY={260}
+              defaultWidth={260}
+              defaultHeight={180}
+              onClose={() => togglePanel('piano')}
+            >
+              <PianoRoll
+                notes={[]}
+                currentStep={currentStep}
+                stepCount={currentStepCount}
+              />
+            </DraggablePanel>
+          )}
+
           {panels.mixer && (
             <DraggablePanel
               title="Mixer"
               defaultX={8}
-              defaultY={452}
+              defaultY={412}
               defaultWidth={420}
               defaultHeight={220}
               onClose={() => togglePanel('mixer')}
@@ -401,9 +450,15 @@ const styles = {
     flexShrink:   0,
     fontFamily:   "'JetBrains Mono', 'Fira Code', monospace",
   },
+  // Container for waveform + textarea stacked absolutely
+  editorArea: {
+    flex:     1,
+    position: 'relative' as const,
+    display:  'flex',
+  },
   textarea: {
     flex:       1,
-    background: '#080809',
+    background: 'transparent',
     color:      '#c8d8f8',
     border:     'none',
     outline:    'none',
@@ -413,6 +468,42 @@ const styles = {
     lineHeight: 1.65,
     resize:     'none' as const,
     tabSize:    2,
+    position:   'relative' as const,
+    zIndex:     1,
+  },
+  consolePane: {
+    flexShrink:    0,
+    height:        '120px',
+    borderTop:     '1px solid #1e1e22',
+    display:       'flex',
+    flexDirection: 'column' as const,
+    background:    '#080809',
+  },
+  consoleHeader: {
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    padding:        '0 0.5rem',
+    height:         '22px',
+    flexShrink:     0,
+    borderBottom:   '1px solid #141418',
+    background:     '#0a0a0d',
+  },
+  consoleLabel: {
+    fontFamily:    "'JetBrains Mono', monospace",
+    fontSize:      '0.6rem',
+    color:         '#3a3a46',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.1em',
+  },
+  consoleClose: {
+    background: 'none',
+    border:     'none',
+    color:      '#3a3a46',
+    cursor:     'pointer',
+    fontSize:   '1rem',
+    lineHeight: 1,
+    padding:    '0',
   },
   editorFooter: {
     flexShrink:     0,
@@ -436,20 +527,19 @@ const styles = {
     cursor:        'pointer',
     padding:       '0 1rem',
   },
-  // Right half: relative-positioned so DraggablePanels use absolute coords within it
   canvas: {
-    flex:     1,
-    position: 'relative' as const,
-    overflow: 'hidden',
+    flex:       1,
+    position:   'relative' as const,
+    overflow:   'hidden',
     background: '#090909',
   },
   panelToolbar: {
-    position:   'absolute' as const,
-    top:        8,
-    left:       8,
-    zIndex:     200,
-    display:    'flex',
-    gap:        '4px',
+    position: 'absolute' as const,
+    top:      8,
+    left:     8,
+    zIndex:   200,
+    display:  'flex',
+    gap:      '4px',
   },
   mixerInner: {
     display:  'flex',
