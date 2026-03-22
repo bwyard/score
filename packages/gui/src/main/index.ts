@@ -108,6 +108,11 @@ const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
   teardown()
   const engine = await createScoreEngine(song)
   slotRef.value = { engine, playing: false, bpm: song.bpm, bars: barOffset }
+  // Per-step IPC — fires every sequencer step for accurate punchcard cursor sync.
+  // Mirrors TidalCycles cps broadcast: renderer needs sub-bar position, not just bars.
+  engine.onStep((step, stepCount) => {
+    send('engine:step', { step, stepCount })
+  })
   engine.onBar(() => {
     const s = slotRef.value
     if (!s) return

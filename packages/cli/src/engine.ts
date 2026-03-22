@@ -220,13 +220,26 @@ export type PatchProps = {
 // ── Engine ────────────────────────────────────────────────────────────────────
 
 export type ScoreEngine = {
-  readonly start:   () => void
-  readonly stop:    () => void
-  readonly dispose: () => void
-  readonly bpm:     number
+  readonly start:     () => void
+  readonly stop:      () => void
+  readonly dispose:   () => void
+  readonly bpm:       number
   /** Current bar count (absolute, resets on stop). */
-  readonly bars:    number
-  readonly onBar:   (callback: () => void) => void
+  readonly bars:      number
+  readonly onBar:     (callback: () => void) => void
+  /**
+   * Fires on every sequencer step with the zero-based step index and the
+   * total step count for the cursor pattern. Use this for punchcard cursor
+   * and per-step visualiser updates — much finer-grained than `onBar`.
+   *
+   * @example
+   * ```ts
+   * engine.onStep((step, stepCount) => { cursor = step / stepCount })
+   * ```
+   */
+  readonly onStep:    (callback: (step: number, stepCount: number) => void) => void
+  /** Number of steps in the cursor pattern (max pattern length across all tracks). */
+  readonly stepCount: number
   /**
    * Apply surgical parameter updates to the running engine without reload.
    * Supports: `bpm`, `masterVolume`, per-track `volume` and `mute`.
@@ -441,17 +454,37 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
     })
   }
 
+  // ── Cursor step sequencer — fires per step for punchcard + visualiser sync ───
+  // Uses max pattern length across tracks (min 8) so the cursor covers all tracks.
+  // All-ones pattern means every step triggers the callback regardless of track hits.
+  const cursorStepCount = Math.max(
+    ...descriptors.map(d => {
+      const p = (d.props as { pattern?: ReadonlyArray<unknown> }).pattern
+      return p ? p.length : 0
+    }),
+    8,
+  )
+  const cursorPattern = Array.from({ length: cursorStepCount }, () => 1)
+  const stepCallbacks: Array<(step: number, stepCount: number) => void> = []
+  createStepSequencer(transport, { pattern: cursorPattern }, (_val, step, _pos) => {
+    stepCallbacks.forEach(cb => { cb(step, cursorStepCount); })
+  })
+
   return {
-    start:   () => { transport.play() },
-    stop:    () => { transport.stop() },
-    dispose: () => {
+    start:     () => { transport.play() },
+    stop:      () => { transport.stop() },
+    dispose:   () => {
       transport.dispose()
       mixer.dispose()
       ctx.close().catch(() => {})
     },
     get bpm()  { return transport.bpm },
     get bars() { return transport.position.bar },
-    onBar: (callback: () => void) => { transport.onBar(callback) },
+    onBar:  (callback: () => void) => { transport.onBar(callback) },
+    onStep: (callback: (step: number, stepCount: number) => void) => {
+      stepCallbacks.push(callback)
+    },
+    get stepCount() { return cursorStepCount },
     analyser,
 
     patch: (props: PatchProps): void => {

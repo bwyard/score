@@ -48,6 +48,10 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [waveform,    setWaveform]    = useState<readonly number[]>([])
   const [activeTab,   setActiveTab]   = useState<'punchcard' | 'scope'>('punchcard')
   const [engineState, setEngineState] = useState<{ playing: boolean; bars: number }>({ playing: false, bars: 0 })
+  // currentStep tracks the live step index from the sequencer — accurate sub-bar cursor.
+  // Replaces the old `bars % 8` hack which only updated once per bar (8× too slow).
+  const [currentStep,   setCurrentStep]   = useState(0)
+  const [currentStepCount, setCurrentStepCount] = useState(8)
 
   // Subscribe to error reports from the main process
   useEffect(() => {
@@ -81,7 +85,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     return unsub
   }, [])
 
-  const currentStep = engineState.bars % 8
+  // Subscribe to per-step cursor updates — fires every sequencer step (not just bar).
+  // This is the accurate cursor for punchcard + future beat-highlighting features.
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('engine:step', ({ step, stepCount }) => {
+      setCurrentStep(step)
+      setCurrentStepCount(stepCount)
+    })
+    return unsub
+  }, [])
 
   const onEval = useCallback((): void => {
     setError(null)
@@ -143,7 +155,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               <PunchcardGrid
                 tracks={tracks}
                 currentStep={currentStep}
-                stepCount={8}
+                stepCount={currentStepCount}
               />
             )}
             {activeTab === 'scope' && (

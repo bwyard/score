@@ -29,6 +29,8 @@ export type RendererToMain = {
 /** Channels from main → renderer (via ipcRenderer.on). */
 export type MainToRenderer = {
   'engine:state':    { playing: boolean; bpm: number; bars: number }
+  /** Fires every sequencer step — use for punchcard cursor and visualiser sync. */
+  'engine:step':     { step: number; stepCount: number }
   'midi:status':     { connected: boolean }
   'error:report':    { message: string }
   'song:update':     { tracks: ReadonlyArray<{ name: string; type: string; pattern: ReadonlyArray<number | string> }> }
