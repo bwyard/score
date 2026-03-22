@@ -14,7 +14,11 @@ type AppState =
 export const App = () => {
   const [state, setState] = useState<AppState>({ screen: 'splash' })
 
-  const goHome = () => { setState({ screen: 'splash' }) }
+  const goHome = () => {
+    // BOUNDARY — IO: stop audio before returning to splash so engine doesn't play through mode switch
+    window.scoreBridge.send('transport:stop', undefined)
+    setState({ screen: 'splash' })
+  }
 
   if (state.screen === 'splash') {
     return (

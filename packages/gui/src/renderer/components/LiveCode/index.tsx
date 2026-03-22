@@ -1,4 +1,4 @@
-import { useState }    from 'react'
+import { useState, useEffect } from 'react'
 import { TransportBar } from '../shared/TransportBar.js'
 import type { HardwareLevel } from '../../../main/ipc-types.js'
 
@@ -37,10 +37,18 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [code, setCode] = useState(STARTER)
   const [log,  setLog]  = useState<readonly string[]>([])
 
+  // BOUNDARY — IO: receive eval errors from main process
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('error:report', ({ message }) => {
+      setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Error: ${message}`])
+    })
+    return unsub
+  }, [])
+
   const onEval = () => {
     // BOUNDARY — IO: send code to main process for eval + engine update
     window.scoreBridge.send('engine:eval', { code })
-    setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Sent to engine`])
+    setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Evaluating…`])
   }
 
   return (
@@ -65,7 +73,11 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
           />
           {log.length > 0 && (
             <div style={styles.repl} aria-label="Eval output">
-              {log.map((line, i) => <div key={i} style={styles.replLine}>{line}</div>)}
+              {log.map((line, i) => (
+                <div key={i} style={line.includes('Error:') ? styles.replLineError : styles.replLine}>
+                  {line}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -150,6 +162,13 @@ const styles = {
     fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",
     fontSize:      '0.7rem',
     color:         '#4a6a9f',
+    lineHeight:    1.6,
+    letterSpacing: '0.02em',
+  },
+  replLineError: {
+    fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",
+    fontSize:      '0.7rem',
+    color:         '#c05a5a',
     lineHeight:    1.6,
     letterSpacing: '0.02em',
   },

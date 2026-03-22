@@ -84,13 +84,16 @@ export const triggerKick = (ctx: Context, time: number, props: KickProps, dest: 
   const freq = props.synth?.frequency ?? 80
   const drop = props.synth?.pitchDrop ?? 0.1
   const gain = props.volume ?? 0.85
+  const dur  = drop + 0.15
   const osc  = ctx.createOscillator({ type: 'sine', frequency: freq })
-  const vol  = ctx.createGain({ gain })
+  const vol  = ctx.createGain({ gain: 0 })
   osc.connect(vol)
   vol.connect(dest)
+  // 3 ms attack ramp prevents hard-onset click; decay follows the pitch drop
+  vol.scheduleEnvelope({ peak: gain, attack: 0.003, decay: dur - 0.003, sustain: 0, release: 0, startTime: time, duration: dur })
   osc.start(time)
   osc.setFrequency(30, time + drop)
-  osc.stop(time + drop + 0.15)
+  osc.stop(time + dur)
 }
 
 export const triggerSnare = (ctx: Context, time: number, props: SnareProps, dest: GainNode): void => {

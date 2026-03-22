@@ -1,7 +1,7 @@
 import { app, BrowserWindow, globalShortcut, ipcMain, shell } from 'electron'
 import path                                    from 'node:path'
 import { tmpdir }                              from 'node:os'
-import { writeFileSync }                       from 'node:fs'
+import { writeFileSync, unlinkSync }            from 'node:fs'
 import { pathToFileURL }                       from 'node:url'
 import { createScoreEngine }         from '@score/cli/engine'
 import { Kick, Synth, Track, Song }  from '@score/dsl'
@@ -165,6 +165,7 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
   try {
     writeFileSync(tmp, code, 'utf8')
     void import(pathToFileURL(tmp).href).then((mod: { default?: SongDefinition }) => {
+      try { unlinkSync(tmp) } catch { /* ignore cleanup errors */ }
       const song = mod.default
       if (!song || typeof song !== 'object') return
       if (slot) {
@@ -173,6 +174,7 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
         void boot(song)
       }
     }).catch((err: unknown) => {
+      try { unlinkSync(tmp) } catch { /* ignore cleanup errors */ }
       console.error('[score-studio] eval error', err)
       mainWindow?.webContents.send('error:report', {
         message: err instanceof Error ? err.message : String(err),
