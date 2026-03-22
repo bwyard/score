@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@thesis/eslint-config':
+        specifier: file:../claude-resources/tools/eslint-config-thesis
+        version: file:../claude-resources/tools/eslint-config-thesis(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.0.0
         version: 8.57.0(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
@@ -1143,6 +1146,12 @@ packages:
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
+
+  '@thesis/eslint-config@file:../claude-resources/tools/eslint-config-thesis':
+    resolution: {directory: ../claude-resources/tools/eslint-config-thesis, type: directory}
+    peerDependencies:
+      '@typescript-eslint/parser': '>=8.0.0'
+      eslint: '>=9.0.0'
 
   '@tootallnate/once@2.0.0':
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
@@ -4753,6 +4762,11 @@ snapshots:
   '@testing-library/user-event@14.6.1(@testing-library/dom@10.4.1)':
     dependencies:
       '@testing-library/dom': 10.4.1
+
+  '@thesis/eslint-config@file:../claude-resources/tools/eslint-config-thesis(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))':
+    dependencies:
+      '@typescript-eslint/parser': 8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
+      eslint: 9.39.4(jiti@2.6.1)
 
   '@tootallnate/once@2.0.0': {}
 
