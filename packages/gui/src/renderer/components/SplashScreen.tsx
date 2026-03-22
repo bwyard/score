@@ -123,7 +123,7 @@ export const SplashScreen = ({ onSelect }: Props) => {
         }}
         disabled={activeMode === undefined}
         aria-label={activeMode ? `Start ${activeMode.label}` : 'Select a mode to continue'}
-        onClick={() => { activeMode && onSelect(activeMode.id, selectedHardware) }}
+        onClick={() => { if (activeMode) onSelect(activeMode.id, selectedHardware) }}
       >
         {activeMode ? `Start ${activeMode.label}` : 'Select a mode'}
       </button>
