@@ -3,11 +3,23 @@ import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from './types.
 import type { BackendBuffer, BackendBufferSourceNode } from './backend/types.js'
 import { uid } from './uid.js'
 
-// --- Sample decoding ---
-// Accepts raw audio data (ArrayBuffer) and decodes via the backend.
-// File reading is intentionally NOT here — it belongs in @score/cli or user code.
-// This keeps core backend-agnostic (works in Node, browser, scsynth).
-
+/**
+ * Decode raw audio data into a {@link BackendBuffer} using the backend's audio decoder.
+ * File reading is intentionally excluded — pass pre-fetched `ArrayBuffer` data from
+ * `@score/cli` or user code to keep `@score/core` backend-agnostic.
+ *
+ * @param context - The audio context.
+ * @param data    - Raw audio bytes (WAV, MP3, OGG, FLAC). Must be non-empty.
+ * @returns A promise that resolves to a decoded {@link BackendBuffer}.
+ *
+ * @throws `ScoreError` If `data` is an empty `ArrayBuffer`.
+ *
+ * @example
+ * ```ts
+ * const arrayBuffer = await fs.readFile('./kick.wav')
+ * const buffer = await decodeSample(ctx, arrayBuffer.buffer)
+ * ```
+ */
 export const decodeSample = async (
   context: ScoreAudioContext,
   data: ArrayBuffer,
@@ -22,11 +34,26 @@ export const decodeSample = async (
   return context.decodeAudio(data)
 }
 
-// --- Sample player ---
-// Wraps a decoded BackendBuffer as an AudioComponent.
-// Each start() creates a fresh buffer source (Web Audio one-shot pattern).
-// Gain is managed internally for volume control.
-
+/**
+ * Create a sample player backend node.
+ * Wraps a decoded {@link BackendBuffer} as an `AudioComponent`.
+ * Each call to `start` creates a fresh buffer source following the Web Audio one-shot pattern,
+ * stopping and releasing any previously playing source first.
+ *
+ * @param context - The audio context.
+ * @param buffer  - A decoded audio buffer obtained from {@link decodeSample}.
+ * @param props   - Node configuration: optional `loop`, `playbackRate`, and initial `gain`.
+ * @returns An `AudioComponent` with `start`, `stop`, `setPlaybackRate`, `setGain`, and a
+ *   `buffer` reference.
+ *
+ * @example
+ * ```ts
+ * const buffer = await decodeSample(ctx, arrayBuffer)
+ * const player = createSamplePlayer(ctx, buffer, { loop: false, gain: 0.9 })
+ * player.connect(mixerChannel.input)
+ * player.start(ctx.currentTime)
+ * ```
+ */
 export const createSamplePlayer = (
   context: ScoreAudioContext,
   buffer: BackendBuffer,

@@ -20,29 +20,211 @@ const makeDescriptor = (effectType: string, props: Record<string, unknown>): Eff
   props,
 })
 
-/** Feedback delay — echo and rhythmic repetition. */
+/**
+ * Create a Delay descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Sync `time` to your BPM for musical echo — quarter note at 120 BPM = `0.5s`.
+ *
+ * @param props - Effect configuration. See {@link DelayProps} for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const lead = Synth({ effects: [Delay({ time: 0.375, feedback: 0.4, mix: 0.3 })] })
+ * ```
+ *
+ * @see {@link createDelay} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const Delay  = (props?: DelayProps):      EffectDescriptor => makeDescriptor('delay',      (props ?? {}) as Record<string, unknown>)
-/** Reverb — simulated acoustic space. */
+/**
+ * Create a Reverb descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Longer `decay` values simulate larger acoustic spaces — rooms to cathedrals.
+ *
+ * @param props - Effect configuration. See {@link ReverbProps} for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const pad = Synth({ effects: [Reverb({ decay: 4.0, mix: 0.4 })] })
+ * ```
+ *
+ * @see {@link createReverb} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const Reverb = (props?: ReverbProps):     EffectDescriptor => makeDescriptor('reverb',     (props ?? {}) as Record<string, unknown>)
-/** Biquad filter — lowpass, highpass, bandpass, notch. */
+/**
+ * Create a Filter descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Covers lowpass, highpass, bandpass, notch, allpass, peaking, and shelf types.
+ *
+ * @param props - Effect configuration. See {@link FilterProps} for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const bass = Synth({ effects: [Filter({ type: 'lowpass', frequency: 800, Q: 2 })] })
+ * ```
+ *
+ * @see {@link createFilter} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const Filter = (props?: FilterProps):     EffectDescriptor => makeDescriptor('filter',     (props ?? {}) as Record<string, unknown>)
-/** Dynamics compressor — threshold, ratio, attack, release. */
+/**
+ * Create a Compressor descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Controls dynamic range — glue compression at 4:1, aggressive limiting at 20:1+.
+ *
+ * @param props - Effect configuration. See {@link CompressorProps} for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const drums = DrumGroup({ effects: [Compressor({ threshold: -18, ratio: 4, attack: 0.01 })] })
+ * ```
+ *
+ * @see {@link createCompressor} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const Compressor = (props?: CompressorProps): EffectDescriptor => makeDescriptor('compressor', (props ?? {}) as Record<string, unknown>)
-/** 3-band EQ — low shelf, peaking mid, high shelf. */
+/**
+ * Create an EQ descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Three fixed bands: low shelf at 320 Hz, peaking mid at 1 kHz, high shelf at 3.2 kHz.
+ *
+ * @param props - Effect configuration. See {@link EQProps} for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const lead = Synth({ effects: [EQ({ low: 2, mid: -4, high: 3 })] })
+ * ```
+ *
+ * @see {@link createEQ} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const EQ     = (props?: EQProps):         EffectDescriptor => makeDescriptor('eq',         (props ?? {}) as Record<string, unknown>)
-/** Distortion — waveshaper overdrive. */
+/**
+ * Create a Distortion descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Choose `'soft'` for tube warmth, `'hard'` for aggressive clipping, or `'foldback'` for industrial chaos.
+ *
+ * @param props - Effect configuration. See {@link DistortionProps} for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const kick = Kick({ effects: [Distortion({ amount: 0.3, mode: 'soft', mix: 0.4 })] })
+ * ```
+ *
+ * @see {@link createDistortion} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const Distortion = (props?: DistortionProps): EffectDescriptor => makeDescriptor('distortion', (props ?? {}) as Record<string, unknown>)
-/** Brick-wall limiter — ceiling never exceeded. */
+/**
+ * Create a Limiter descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Uses look-ahead gain reduction — no waveform clipping. Place last in the mastering chain.
+ *
+ * @param props - Effect configuration. See {@link LimiterProps} for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const master = Song({ effects: [Limiter({ ceiling: -0.3, lookahead: 0.005 })] })
+ * ```
+ *
+ * @see {@link createLimiter} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const Limiter = (props?: LimiterProps):   EffectDescriptor => makeDescriptor('limiter',    (props ?? {}) as Record<string, unknown>)
-/** Bit crusher — sample rate + bit depth reduction. */
+/**
+ * Create a BitCrusher descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Reduces bit depth for vintage sampler crunch, game console aesthetics, or lo-fi noise.
+ *
+ * @param props - Effect configuration (`bits`, `mix`). See `BitCrusherProps` for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const drums = DrumGroup({ effects: [BitCrusher({ bits: 8, mix: 0.6 })] })
+ * ```
+ *
+ * @see {@link createBitCrusher} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const BitCrusher = (props?: Record<string, unknown>): EffectDescriptor => makeDescriptor('bitcrusher', props ?? {})
-/** Chorus — modulated delay voices for thickness. */
+/**
+ * Create a Chorus descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Thickens a signal by layering multiple slightly-delayed copies — ensemble character.
+ *
+ * @param props - Effect configuration (`voices`, `depth`, `mix`). See `ChorusProps` for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const pad = Synth({ effects: [Chorus({ voices: 3, depth: 0.004, mix: 0.5 })] })
+ * ```
+ *
+ * @see {@link createChorus} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const Chorus = (props?: Record<string, unknown>): EffectDescriptor => makeDescriptor('chorus',     props ?? {})
-/** Phaser — allpass filter chain with LFO. */
+/**
+ * Create a Phaser descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Produces sweeping, whooshing phase notches — from subtle shimmer to dramatic sweeps.
+ *
+ * @param props - Effect configuration (`stages`, `feedback`). See `PhaserProps` for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const chord = Synth({ effects: [Phaser({ stages: 4, feedback: 0.5 })] })
+ * ```
+ *
+ * @see {@link createPhaser} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const Phaser = (props?: Record<string, unknown>): EffectDescriptor => makeDescriptor('phaser',     props ?? {})
-/** Flanger — short modulated delay + feedback. */
+/**
+ * Create a Flanger descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Comb-filter sweeps with metallic character — from subtle jet-plane shimmer to industrial resonance.
+ *
+ * @param props - Effect configuration (`depth`, `feedback`, `mix`). See `FlangerProps` for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const lead = Synth({ effects: [Flanger({ depth: 0.003, feedback: 0.6, mix: 0.4 })] })
+ * ```
+ *
+ * @see {@link createFlanger} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const Flanger = (props?: Record<string, unknown>): EffectDescriptor => makeDescriptor('flanger',    props ?? {})
-/** Stereo widener — mid/side processing. */
+/**
+ * Create a StereoWidener descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Controls stereo width via mid/side gain — `0` = mono, `1` = unity, `2` = extra wide.
+ *
+ * @param props - Effect configuration (`width`). See `StereoWidenerProps` for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const pad = Synth({ effects: [StereoWidener({ width: 1.8 })] })
+ * ```
+ *
+ * @see {@link createStereoWidener} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const StereoWidener = (props?: Record<string, unknown>): EffectDescriptor => makeDescriptor('stereo-widener', props ?? {})
-/** Noise gate — silence signal below threshold. */
+/**
+ * Create a Gate descriptor — pure data, no AudioContext required.
+ * Pass to {@link Song} tracks' `effects` array; the engine hydrates it at play time.
+ * Silences signal below the threshold — essential for noise floors and creative rhythmic gating.
+ *
+ * @param props - Effect configuration (`threshold`, `attack`, `release`). See `GateProps` for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const vox = Vocal({ effects: [Gate({ threshold: -50, attack: 0.002, release: 0.1 })] })
+ * ```
+ *
+ * @see {@link createGate} — runtime factory that instantiates the effect with an AudioContext
+ */
 export const Gate   = (props?: Record<string, unknown>): EffectDescriptor => makeDescriptor('gate',       props ?? {})

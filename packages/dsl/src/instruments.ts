@@ -25,10 +25,91 @@ const makeDescriptor = (
   return desc
 }
 
+/**
+ * Create a Kick instrument descriptor.
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * @param props - Kick configuration: pattern, volume, synth settings, effects chain.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'kick'`.
+ *
+ * @example
+ * ```ts
+ * const kick = Kick({
+ *   pattern: [1, 0, 0, 0,  1, 0, 0, 0],
+ *   volume: 0.85,
+ * })
+ * ```
+ *
+ * @see {@link Song} — add to tracks array
+ * @see {@link Track} — wrap with mix settings (volume, pan, mute, solo)
+ */
 export const Kick   = (props?: KickProps):     InstrumentDescriptor => makeDescriptor('kick',  props ?? {})
+
+/**
+ * Create a Snare instrument descriptor.
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * @param props - Snare configuration: pattern, volume, effects chain.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'snare'`.
+ *
+ * @example
+ * ```ts
+ * const snare = Snare({
+ *   pattern: [0, 0, 1, 0,  0, 0, 1, 0],
+ *   volume: 0.7,
+ * })
+ * ```
+ *
+ * @see {@link Song} — add to tracks array
+ * @see {@link Track} — wrap with mix settings (volume, pan, mute, solo)
+ */
 export const Snare  = (props?: SnareProps):    InstrumentDescriptor => makeDescriptor('snare', props ?? {})
+
+/**
+ * Create a HiHat instrument descriptor.
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * @param props - HiHat configuration: pattern, volume, open (open vs closed hat), effects chain.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'hihat'`.
+ *
+ * @example
+ * ```ts
+ * const hihat = HiHat({
+ *   pattern: [1, 0, 1, 0,  1, 0, 1, 0],
+ *   open: false,
+ *   volume: 0.6,
+ * })
+ * ```
+ *
+ * @see {@link Song} — add to tracks array
+ * @see {@link Track} — wrap with mix settings (volume, pan, mute, solo)
+ */
 export const HiHat  = (props?: HiHatProps):   InstrumentDescriptor => makeDescriptor('hihat', props ?? {})
+
+/**
+ * Create a Synth instrument descriptor.
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * @param props - Synth configuration: wave shape, frequency, gain, pattern, envelope, filter,
+ *   effects chain.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'synth'`.
+ *
+ * @example
+ * ```ts
+ * const bass = Synth({
+ *   wave: 'sawtooth',
+ *   frequency: 110,
+ *   gain: 0.5,
+ *   filter: { type: 'lowpass', frequency: 800 },
+ *   envelope: { attack: 0.01, decay: 0.1, sustain: 0.6, release: 0.05 },
+ * })
+ * ```
+ *
+ * @see {@link Song} — add to tracks array
+ * @see {@link Track} — wrap with mix settings (volume, pan, mute, solo)
+ */
 export const Synth  = (props?: SynthDSLProps): InstrumentDescriptor => makeDescriptor('synth', props ?? {})
+
 /**
  * Sample instrument — plays an audio file triggered by a step pattern.
  *
@@ -46,8 +127,57 @@ export const Synth  = (props?: SynthDSLProps): InstrumentDescriptor => makeDescr
  * ```
  */
 export const Sample   = (props: SampleProps):       InstrumentDescriptor => makeDescriptor('sample',   props)
+/**
+ * Create a Theremin instrument descriptor.
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * Produces a smooth continuous tone with vibrato, modelled on the electromagnetic
+ * theremin. The note drifts organically around a center pitch. No pattern is needed —
+ * the theremin sustains indefinitely until the song ends.
+ *
+ * @param props - Theremin configuration: note, vibratoRate, vibratoDepth, gain, effects chain.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'theremin'`.
+ *
+ * @example
+ * ```ts
+ * const theremin = Theremin({
+ *   note: 'A4',
+ *   vibratoRate: 5,
+ *   vibratoDepth: 8,
+ *   gain: 0.4,
+ * })
+ * ```
+ *
+ * @see {@link Song} — add to tracks array
+ * @see {@link Track} — wrap with mix settings (volume, pan, mute, solo)
+ */
 export const Theremin = (props?: ThereminDSLProps): InstrumentDescriptor => makeDescriptor('theremin', props ?? {})
+
+/**
+ * Create a Sax instrument descriptor.
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * Produces a saxophone-style melodic voice driven by a note pattern. Each active
+ * step plays the note at the corresponding pattern position.
+ *
+ * @param props - Sax configuration: note, gain, pattern (note names or 0 for rest),
+ *   duration, effects chain.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'sax'`.
+ *
+ * @example
+ * ```ts
+ * const sax = Sax({
+ *   pattern: ['A3', 'C4', 'E4', 0, 'A3', 'C4', 0, 0],
+ *   gain: 0.4,
+ *   duration: 0.35,
+ * })
+ * ```
+ *
+ * @see {@link Song} — add to tracks array
+ * @see {@link Track} — wrap with mix settings (volume, pan, mute, solo)
+ */
 export const Sax      = (props?: SaxDSLProps):      InstrumentDescriptor => makeDescriptor('sax',      props ?? {})
+
 /**
  * Arpeggiator instrument — cycles through a chord's notes in sequence on each trigger step.
  *

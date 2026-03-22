@@ -13,8 +13,8 @@ import { ScoreError } from '@score/core'
  * conditions diverge exponentially. A **negative** value indicates stability —
  * trajectories converge to a fixed point or limit cycle.
  *
- * The logistic map transitions from stable (r < 3) to period-doubling
- * (3 < r < 3.57) to fully chaotic (r ≈ 3.57–4) behaviour.
+ * The logistic map transitions from stable (r \< 3) to period-doubling
+ * (3 \< r \< 3.57) to fully chaotic (r ≈ 3.57–4) behaviour.
  *
  * Computed as: `λ = (1/N) * Σ ln|r * (1 - 2x_n)|`
  *
@@ -22,7 +22,7 @@ import { ScoreError } from '@score/core'
  * @param x0 - Initial value in [0, 1]. Default `0.5`.
  * @param iterations - Number of iterations to average over. Default `1000`.
  * @returns Estimated Lyapunov exponent. Positive = chaotic, negative = stable.
- * @throws {ScoreError} if `r ≤ 0` or `r > 4`.
+ * @throws `ScoreError` if `r ≤ 0` or `r > 4`.
  *
  * @example
  * ```ts

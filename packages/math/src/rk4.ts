@@ -4,21 +4,21 @@
 /**
  * A function that computes the derivative of state T at time t.
  *
- * @template T - The state type (e.g. `{ x: number; y: number; z: number }`)
+ * @typeParam T - The state type (e.g. `{ x: number; y: number; z: number }`)
  */
 export type DerivFn<T> = (state: T, t: number) => T
 
 /**
  * A function that adds two states of type T component-wise.
  *
- * @template T - The state type
+ * @typeParam T - The state type
  */
 export type AddFn<T> = (a: T, b: T) => T
 
 /**
  * A function that scales a state of type T by a scalar k.
  *
- * @template T - The state type
+ * @typeParam T - The state type
  */
 export type ScaleFn<T> = (a: T, k: number) => T
 

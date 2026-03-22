@@ -122,7 +122,7 @@ export const createAutoPan = (
      * Set the LFO rate and reschedule pan automation.
      * Affects the speed of left-right movement — lower values = slower sweeps.
      *
-     * @param hz - LFO rate in Hz. Must be > 0.
+     * @param hz - LFO rate in Hz. Must be \> 0.
      */
     setRate: (hz: number) => {
       state.rate = Math.max(0.001, hz)

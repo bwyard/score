@@ -38,7 +38,7 @@ const validateLogistic = (r: number, x0: number) => {
  * @param x0 - Initial value in [0, 1]. Default `0.5`.
  * @param n - Number of iterations to return. Must be ≥ 1.
  * @returns Array of `n` values in [0, 1].
- * @throws {ScoreError} if `r < 0`, `r > 4`, `x0 < 0`, `x0 > 1`, or `n < 1`.
+ * @throws `ScoreError` if `r < 0`, `r > 4`, `x0 < 0`, `x0 > 1`, or `n < 1`.
  *
  * @example
  * ```ts
@@ -77,7 +77,7 @@ export const logisticMap = (r: number, x0: number, n: number): number[] => {
  * @param r - Growth rate in [0, 4]. Values in [3.57, 4] produce chaos.
  * @param x0 - Initial value in [0, 1]. Default `0.5`.
  * @returns A generator function `() => number` where each call returns the next value.
- * @throws {ScoreError} if `r < 0`, `r > 4`, `x0 < 0`, or `x0 > 1`.
+ * @throws `ScoreError` if `r < 0`, `r > 4`, `x0 < 0`, or `x0 > 1`.
  *
  * @example
  * ```ts

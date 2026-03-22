@@ -7,6 +7,9 @@ import { uid } from '@score/core'
 import { createEQ, createEffectsChain } from '@score/effects'
 import type { EQProps } from '@score/effects'
 
+/**
+ * Configuration props for a group bus.
+ */
 export type GroupProps = {
   readonly name?: string
   readonly volume?: number      // 0-1, default 0.8
@@ -14,6 +17,23 @@ export type GroupProps = {
   readonly eq?: EQProps
 }
 
+/**
+ * Create a group bus backend node.
+ * A submix bus that aggregates multiple channels and applies shared EQ and effects
+ * before routing into the master bus.
+ *
+ * @param context - The audio context.
+ * @param props   - Node configuration: optional `name`, `volume`, `effects` chain, and `eq`.
+ * @returns An `AudioComponent` with an `input` tap, `setVolume`, and `setEQ` methods.
+ *
+ * @example
+ * ```ts
+ * const drumBus = createGroup(ctx, { name: 'Drums', volume: 0.9 })
+ * kickChannel.connect(drumBus.input)
+ * snareChannel.connect(drumBus.input)
+ * drumBus.connect(masterGain)
+ * ```
+ */
 export const createGroup = (
   context: ScoreAudioContext,
   props?: GroupProps,

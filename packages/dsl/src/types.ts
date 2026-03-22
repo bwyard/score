@@ -3,6 +3,7 @@ import type { AudioComponent, EffectDescriptor } from '@score/core'
 // ── Instrument descriptors ────────────────────────────────────────────────────
 // Pure data — no AudioContext. The engine hydrates these at play time.
 
+/** Configuration props for the {@link Kick} instrument factory. */
 export type KickProps = {
   readonly pattern?: number[]
   readonly volume?: number
@@ -11,6 +12,7 @@ export type KickProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/** Configuration props for the {@link Snare} instrument factory. */
 export type SnareProps = {
   readonly pattern?: number[]
   readonly volume?: number
@@ -18,6 +20,7 @@ export type SnareProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/** Configuration props for the {@link HiHat} instrument factory. */
 export type HiHatProps = {
   readonly pattern?: number[]
   readonly volume?: number
@@ -26,6 +29,7 @@ export type HiHatProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/** Configuration props for the {@link Synth} instrument factory. */
 export type SynthDSLProps = {
   readonly wave?: 'sine' | 'square' | 'sawtooth' | 'triangle'
   readonly frequency?: number
@@ -47,6 +51,7 @@ export type SynthDSLProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/** Configuration props for the {@link Sample} instrument factory. */
 export type SampleProps = {
   /** Path to the audio file — absolute or relative to the song file. WAV, MP3, OGG, FLAC. */
   readonly path: string
@@ -62,6 +67,7 @@ export type SampleProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/** Configuration props for the {@link Theremin} instrument factory. */
 export type ThereminDSLProps = {
   /** Initial note name (e.g. `'A4'`) or frequency in Hz. Default: `'A4'`. */
   readonly note?: string
@@ -75,6 +81,7 @@ export type ThereminDSLProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/** Configuration props for the {@link Sax} instrument factory. */
 export type SaxDSLProps = {
   /** Initial note name (e.g. `'A4'`). Default: `'A4'`. */
   readonly note?: string
@@ -88,6 +95,7 @@ export type SaxDSLProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/** Configuration props for the {@link Arp} instrument factory. */
 export type ArpDSLProps = {
   /** Note names to arpeggiate in order, e.g. `['C4', 'E4', 'G4', 'B4']`. Required. */
   readonly notes: string[]
@@ -112,6 +120,16 @@ export type ArpDSLProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/**
+ * Pure data descriptor produced by instrument factories (e.g. {@link Kick}, {@link Synth}).
+ *
+ * Carries no audio logic — the engine reads this at play time and hydrates it into
+ * live audio nodes. The `connect`, `disconnect`, and `dispose` methods are no-ops
+ * that satisfy the {@link AudioComponent} interface so `Track()` accepts it directly.
+ *
+ * @see {@link Kick}, {@link Snare}, {@link HiHat}, {@link Synth}, {@link Sample},
+ *   {@link Theremin}, {@link Sax}, {@link Arp} — factories that return this type
+ */
 export type InstrumentDescriptor = {
   readonly _type: 'InstrumentDescriptor'
   readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample' | 'theremin' | 'sax' | 'arp'
@@ -124,6 +142,12 @@ export type InstrumentDescriptor = {
   readonly dispose: AudioComponent['dispose']
 }
 
+/**
+ * Input props for the {@link Song} factory.
+ *
+ * `bpm` and `tracks` are required. All other fields are optional.
+ * `arrangement` defaults to `[]` — the engine loops all tracks indefinitely.
+ */
 export type SongProps = {
   readonly bpm: number
   readonly key?: string
@@ -134,6 +158,14 @@ export type SongProps = {
   readonly xdj?: { mode: 'score-mixer' | 'hardware-mixer' | 'hybrid' }
 }
 
+/**
+ * The validated output of the {@link Song} factory.
+ *
+ * Passed to the engine's `play()` or `render()` entry points.
+ * `arrangement` is always present (empty array if none was provided).
+ *
+ * @see {@link Song} — the factory that creates this type
+ */
 export type SongDefinition = {
   readonly _type: 'SongDefinition'
   readonly bpm: number
@@ -145,8 +177,17 @@ export type SongDefinition = {
   readonly xdj?: { mode: 'score-mixer' | 'hardware-mixer' | 'hybrid' }
 }
 
+/** The recognised section types for EDM arrangement structure. */
 export type SectionType = 'intro' | 'buildup' | 'drop' | 'breakdown' | 'outro'
 
+/**
+ * Pure data descriptor produced by section factories ({@link Intro}, {@link Drop}, etc.).
+ *
+ * Describes one named section of a song: its structural role, duration in bars,
+ * and the set of tracks active during that section. Passed to `Song.arrangement`.
+ *
+ * @see {@link Intro}, {@link Buildup}, {@link Drop}, {@link Breakdown}, {@link Outro}
+ */
 export type SectionDefinition = {
   readonly _type: 'SectionDefinition'
   readonly sectionType: SectionType
@@ -154,6 +195,11 @@ export type SectionDefinition = {
   readonly tracks: TrackComponent[]
 }
 
+/**
+ * Optional mix settings for a track — passed as the second argument to {@link Track}.
+ *
+ * All fields are optional. Omitting them leaves the instrument at its default levels.
+ */
 export type TrackProps = {
   readonly volume?: number
   readonly pan?: number
@@ -161,6 +207,14 @@ export type TrackProps = {
   readonly solo?: boolean
 }
 
+/**
+ * The output of the {@link Track} factory — an instrument with mix settings attached.
+ *
+ * Song authors rarely need to reference this type directly; it is inferred from `Track()`.
+ *
+ * @see {@link Track} — the factory that creates this type
+ * @see {@link SongProps} — `tracks` accepts an array of `TrackComponent`
+ */
 export type TrackComponent = TrackProps & {
   readonly _type: 'TrackComponent'
   readonly component: AudioComponent

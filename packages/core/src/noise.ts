@@ -7,6 +7,25 @@ export type { NoiseType }
 
 const VALID_TYPES: ReadonlyArray<NoiseType> = ['white', 'pink', 'brown']
 
+/**
+ * Create a noise generator backend node.
+ * Produces continuous colored noise that can be started, stopped, and connected
+ * into an audio graph like any other source node.
+ *
+ * @param context - The audio context.
+ * @param props   - Node configuration: optional `type` — `'white'`, `'pink'`, or `'brown'`.
+ *   Defaults to `'white'`.
+ * @returns An `AudioComponent` with `start` and `stop` methods.
+ *
+ * @throws `ScoreError` If `props.type` is not one of the valid noise types.
+ *
+ * @example
+ * ```ts
+ * const noise = createNoise(ctx, { type: 'pink' })
+ * noise.connect(filterNode)
+ * noise.start(ctx.currentTime)
+ * ```
+ */
 export const createNoise = (
   context: ScoreAudioContext,
   props?: { type?: NoiseType },
