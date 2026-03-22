@@ -76,6 +76,7 @@ export const SplashScreen = ({ onSelect }: Props) => {
           {MODES.map(m => (
             <button
               key={m.id}
+              aria-label={m.label}
               aria-pressed={selectedMode === m.id}
               aria-describedby={`mode-desc-${m.id}`}
               style={{
@@ -98,6 +99,7 @@ export const SplashScreen = ({ onSelect }: Props) => {
           {HARDWARE_LEVELS.map(h => (
             <button
               key={h.id}
+              aria-label={h.label}
               aria-pressed={selectedHardware === h.id}
               aria-describedby={`hw-desc-${h.id}`}
               style={{

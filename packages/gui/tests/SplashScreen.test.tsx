@@ -77,8 +77,8 @@ describe('SplashScreen — mode selection', () => {
     const { user } = setup()
     await user.click(screen.getByRole('button', { name: /live code/i }))
     await user.click(screen.getByRole('button', { name: /produce/i }))
-    expect(screen.getByRole('button', { name: /live code/i })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByRole('button', { name: /produce/i })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /^live code$/i })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: /^produce$/i })).toHaveAttribute('aria-pressed', 'true')
   })
 })
 

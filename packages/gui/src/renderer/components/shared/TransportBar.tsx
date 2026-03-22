@@ -30,12 +30,18 @@ export const TransportBar = ({ hardware }: Props) => {
     bars:    0,
   })
 
+  const [localBpm, setLocalBpm] = useState(128)
+
   useEffect(() => {
     const off = window.scoreBridge.on('engine:state', payload => {
       setEngine(payload)
     })
     return off
   }, [])
+
+  useEffect(() => {
+    setLocalBpm(engine.bpm)
+  }, [engine.bpm])
 
   const toggle = (): void => {
     if (engine.playing) {
@@ -67,9 +73,10 @@ export const TransportBar = ({ hardware }: Props) => {
           type="number"
           min={20}
           max={300}
-          value={engine.bpm}
+          value={localBpm}
           onChange={e => {
             const bpm = Number(e.target.value)
+            setLocalBpm(bpm)
             if (bpm >= 20 && bpm <= 300) {
               window.scoreBridge.send('transport:bpm-set', { bpm })
             }

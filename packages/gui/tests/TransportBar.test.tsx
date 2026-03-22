@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen }           from '@testing-library/react'
+import { render, screen, act }      from '@testing-library/react'
 import userEvent                    from '@testing-library/user-event'
 import { axe }                      from './setup.js'
 import { emitBridgeEvent }          from './setup.js'
@@ -46,21 +46,21 @@ describe('TransportBar — rendering', () => {
 describe('TransportBar — IPC', () => {
   it('sends transport:play when play button clicked', async () => {
     const { user } = setup()
-    await user.click(screen.getByRole('button', { name: /▶/i }))
-    expect(window.scoreBridge.send).toHaveBeenCalledWith('transport:play', expect.anything())
+    await user.click(screen.getByRole('button', { name: /play/i }))
+    expect(window.scoreBridge.send).toHaveBeenCalledWith('transport:play', undefined)
   })
 
   it('sends transport:stop when stop button clicked while playing', async () => {
     const { user } = setup()
     // Start playing first
-    emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 0 })
-    await user.click(screen.getByRole('button', { name: /■/i }))
-    expect(window.scoreBridge.send).toHaveBeenCalledWith('transport:stop', expect.anything())
+    act(() => { emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 0 }) })
+    await user.click(screen.getByRole('button', { name: /stop/i }))
+    expect(window.scoreBridge.send).toHaveBeenCalledWith('transport:stop', undefined)
   })
 
   it('updates displayed BPM when engine:state event arrives', () => {
     setup()
-    emitBridgeEvent('engine:state', { playing: false, bpm: 145, bars: 4 })
+    act(() => { emitBridgeEvent('engine:state', { playing: false, bpm: 145, bars: 4 }) })
     expect(screen.getByRole('spinbutton', { name: /bpm/i })).toHaveValue(145)
   })
 
