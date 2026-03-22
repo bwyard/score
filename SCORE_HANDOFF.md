@@ -108,33 +108,33 @@ Phase 7b   ✅  Mastering chain — Multiband Compressor, Saturation/Tape, Auto-
                ✅ createAutoPan — sine/triangle LFO pan automation via StereoPannerNode
                ✅ TSDoc added to all 16 existing effects
 Phase 8    ✅  Sequencer + Transport + TempoMap + Swing/Groove
-Phase 9    ⚠️  Song format + Automation system + Pattern reuse + Arpeggiator
+Phase 9    ✅  Song format + Automation system + Pattern reuse + Arpeggiator
                ✅ Song/Track/Section DSL complete (Song, Kick, Snare, HiHat, Synth, Sequence)
                ✅ Note names: 'A2', 'F#3', 'Bb4' — noteHz() + resolveFreq() in @score/dsl
                ✅ ADSR envelope + filter props on SynthDSLProps + scheduleEnvelope() on BackendGainNode
                ✅ ScoreEngine: hydrates descriptors, schedules audio, master gain node
-               ⬜ Arpeggiator (Arp() DSL component)
-               ⬜ Arrangement execution (sections mute/unmute tracks at section boundaries)
-               ⬜ drift(pattern, rate) — gradual OU-process pattern evolution
-               ⬜ keepFor(bars, pattern) — lock pattern for N bars during live reload
-Phase 9a   ✅  Core modulation primitives — @score/modulation (46 tests)
+               ✅ Arpeggiator (Arp() DSL component + engine case)
+               ✅ Arrangement execution (muteEnvelope — pure fn of time, onBar callback)
+               ✅ drift(center, sigma, theta) — OU-process pitch wander, @score/dsl
+               ✅ keepFor(bars, pattern) — freeze pattern for N bars, @score/dsl
+Phase 9a   ✅  Core modulation primitives — @score/modulation (54 tests)
                ✅ createADSR — standalone envelope, delegates to BackendGainNode.scheduleEnvelope
                ✅ createLFO — connects oscillator to BackendAudioParam (frequencyParam/gainParam)
                ✅ ramp, sine, cosine — pure step-function value sources
                ✅ BackendAudioParam type + frequencyParam/gainParam on BackendFilterNode/GainNode
                ✅ BackendOscillatorNode._connectTo — routes osc → AudioParam
-               ⬜ automation() — connect modulator to component parameter by name
+               ✅ automation(lfo, param) — wire LFO to BackendAudioParam, returns AutomationHandle
 Phase 9b   ✅  @score/math — complete (158 tests)
                ✅ fibonacci, padovan, tribonacci, entropy, polyrhythm, boolean ops
                ✅ transforms: range, normalize, clip, smooth, quantize, interp
                ✅ stochastic: drunk, markov (seeded LCG PRNG)
                ✅ harmony: circleOfFifths, just, pythagorean, meantone, edo19, edo31
-Phase 9c   ✅  @score/pattern — complete (45 tests)
+Phase 9c   ✅  @score/pattern — complete (50 tests)
                ✅ euclidean, fast, slow, rev, every, degrade, shift, scaleNotes, chordNotes
                ✅ 80+ scale library in scales.ts (major, minor, modes, pentatonic, blues)
                ✅ stack(...patterns) — poly-rhythm combinator, returns first non-zero per step
                ✅ beat(...steps) — shorthand array literal helper
-               ⬜ humanize(amount, pattern) — Gaussian timing + velocity variation (Track-level prop)
+               ✅ humanize(amount, pattern) — deterministic velocity jitter, reproducible per step+bar
 Phase 9d   ✅  @score/musical — describe() natural language → InstrumentDescriptor (37 tests)
                ✅ Vocabulary-based tokenizer (not AI): SOUND/PATTERN/SPACE/VOLUME tables
                ✅ buildDescriptor, extractTokens, normalizeText helpers
