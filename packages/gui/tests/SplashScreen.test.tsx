@@ -26,10 +26,11 @@ describe('SplashScreen — rendering', () => {
 
   it('renders all four mode buttons', () => {
     setup()
-    expect(screen.getByRole('button', { name: /live code/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /produce/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /dj set/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /jam session/i })).toBeInTheDocument()
+    // Use exact aria-label to avoid matching the "Start Live Code" button
+    expect(screen.getByRole('button', { name: 'Live Code' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Produce' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'DJ Set' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Jam Session' })).toBeInTheDocument()
   })
 
   it('renders three hardware level buttons', () => {
@@ -43,27 +44,29 @@ describe('SplashScreen — rendering', () => {
 // ── Initial state ─────────────────────────────────────────────────────────────
 
 describe('SplashScreen — initial state', () => {
-  it('start button is disabled until a mode is selected', () => {
+  it('start button is enabled with live-code pre-selected', () => {
     setup()
-    expect(screen.getByRole('button', { name: /select a mode to continue/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /start live code/i })).toBeEnabled()
   })
 
-  it('no mode card has aria-pressed=true initially', () => {
+  it('live-code mode card and pc-only hardware start pressed', () => {
     setup()
     const pressed = screen.queryAllByRole('button', { pressed: true })
-    // hardware 'pc-only' starts pressed — only that one
-    expect(pressed).toHaveLength(1)
-    expect(pressed[0]).toHaveAccessibleName(/pc only/i)
+    // live-code pre-selected + pc-only hardware = 2 pressed buttons
+    expect(pressed).toHaveLength(2)
+    const names = pressed.map(b => b.getAttribute('aria-label'))
+    expect(names).toContain('Live Code')
+    expect(names).toContain('PC Only')
   })
 })
 
 // ── Mode selection ────────────────────────────────────────────────────────────
 
 describe('SplashScreen — mode selection', () => {
-  it('start button enables after selecting a mode', async () => {
+  it('start button shows selected mode label', async () => {
     const { user } = setup()
-    await user.click(screen.getByRole('button', { name: /live code/i }))
-    expect(screen.getByRole('button', { name: /start live code/i })).toBeEnabled()
+    await user.click(screen.getByRole('button', { name: 'Produce' }))
+    expect(screen.getByRole('button', { name: /start produce/i })).toBeEnabled()
   })
 
   it('selected mode card has aria-pressed=true', async () => {
@@ -75,10 +78,9 @@ describe('SplashScreen — mode selection', () => {
 
   it('only one mode card is selected at a time', async () => {
     const { user } = setup()
-    await user.click(screen.getByRole('button', { name: /live code/i }))
-    await user.click(screen.getByRole('button', { name: /produce/i }))
-    expect(screen.getByRole('button', { name: /^live code$/i })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByRole('button', { name: /^produce$/i })).toHaveAttribute('aria-pressed', 'true')
+    await user.click(screen.getByRole('button', { name: 'Produce' }))
+    expect(screen.getByRole('button', { name: 'Live Code' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Produce' })).toHaveAttribute('aria-pressed', 'true')
   })
 })
 
@@ -117,11 +119,11 @@ describe('SplashScreen — onSelect', () => {
     expect(onSelect).toHaveBeenCalledWith('jam-session', 'controller')
   })
 
-  it('does not call onSelect when no mode is selected', async () => {
+  it('calls onSelect immediately with default live-code mode', async () => {
     const { user, onSelect } = setup()
-    const startBtn = screen.getByRole('button', { name: /select a mode to continue/i })
-    await user.click(startBtn)
-    expect(onSelect).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: /start live code/i }))
+    expect(onSelect).toHaveBeenCalledOnce()
+    expect(onSelect).toHaveBeenCalledWith('live-code', 'pc-only')
   })
 })
 
@@ -139,9 +141,8 @@ describe('SplashScreen — accessibility', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
-  it('start button is keyboard-focusable when enabled', async () => {
-    const { user } = setup()
-    await user.click(screen.getByRole('button', { name: /live code/i }))
+  it('start button is keyboard-focusable when enabled', () => {
+    setup()
     const startBtn = screen.getByRole('button', { name: /start live code/i })
     startBtn.focus()
     expect(document.activeElement).toBe(startBtn)
