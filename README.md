@@ -2,7 +2,7 @@
 
 > A production-level, component-based audio framework for creating EDM music in JavaScript.
 
-**Status:** Active development — Phases 1–11 complete. Phase 12 (MIDI + hardware) next.
+**Status:** Active development — Phases 1–12 (scaffold) complete. Phase 12b (jam session) next.
 
 ---
 
@@ -87,7 +87,7 @@ House · Deep House · Techno · Industrial · Hardcore · Grime
 | `@score/sequencer` | Transport, Clock, TempoMap, Swing/Groove                       |
 | `@score/mixer`     | Mixer, Channel, return bus, master chain, hard limiter         |
 | `@score/math`      | Chaos, fractals, stochastic processes, tuning, transforms      |
-| `@score/modulation`| LFO, envelope follower, ADSR, modulation matrix                |
+| `@score/modulation`| LFO, ADSR, ramp/sine/cosine sources, automation wiring         |
 | `@score/pattern`   | Pattern combinators, Euclidean rhythms, permutations           |
 | `@score/musical`   | Natural language instrument description (`describe()`)         |
 | `@score/cli`       | play, repl, list, export, new, doctor commands                 |
