@@ -12,9 +12,11 @@ solely for non-commercial purposes, subject to the following conditions:
   1. The above copyright notice and this permission notice shall be included
      in all copies or substantial portions of the Software.
 
-  2. "Non-commercial" means personal, educational, research, or open-source
-     use where no revenue is directly or indirectly generated from the
-     Software or any product or service that incorporates the Software.
+  2. "Non-commercial" means personal, educational, research, open-source,
+     or artistic use. This explicitly includes artists, musicians, and
+     producers who use the Software to create, perform, distribute, or
+     commercially release music or other creative works — the music you
+     make with Score is yours, and you may profit from it freely.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -28,10 +30,14 @@ THE SOFTWARE.
 COMMERCIAL LICENSE
 ────────────────────────────────────────────────────────────────────────────
 
-Commercial use of this Software — including but not limited to use by record
-labels, music publishers, studios, streaming platforms, or any entity that
-incorporates the Software into a revenue-generating product or service —
-requires a separate commercial license.
+Commercial use of the Software *as software* — meaning embedding, bundling,
+or distributing Score as part of a revenue-generating software product or
+service (including but not limited to DAW plugins, SaaS platforms, streaming
+infrastructure, or tools sold to end users) — requires a separate commercial
+license.
+
+Using Score to create, produce, perform, or release music does not require a
+commercial license, regardless of whether that music generates revenue.
 
 To request a commercial license, contact: bree@breeyard.com
 
