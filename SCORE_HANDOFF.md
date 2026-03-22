@@ -159,6 +159,45 @@ Phase 10   ✅  CLI — all core commands complete
                ✅ --help / -h — standardised across all commands (parseFlags utility)
 Phase 10b  ⬜  score-audio MCP — effect catalog, signal flow, backend nodes, component catalog
 Phase 10b2 ⬜  score-game-tools MCP — song inspector, mixer state, transport state, audio graph
+Phase 10b3 ⬜  score-codebase MCP — full build (currently stub)
+               Backend / framework tools (all phases):
+               ⬜ project_status    — phase completion, what's done vs placeholder
+               ⬜ package_graph     — workspace deps, build order
+               ⬜ api_surface       — every public export + TSDoc signature
+               ⬜ architecture_rules — non-negotiable rules (no let, no class, etc.)
+               ⬜ adr_lookup        — architectural decisions and their rationale
+               GUI development tools (Phase 13+):
+               ⬜ ui_component_catalog — every React component: file path, props
+                                        interface, which mode it belongs to, what
+                                        it renders, placeholder vs implemented
+               ⬜ ui_layout_map     — spatial hierarchy: regions, aria roles,
+                                        aria-labels, nesting depth — primary source
+                                        of truth for Playwright E2E selectors
+               ⬜ ui_design_tokens  — all inline style values extracted and named:
+                                        colors, spacing, border-radius, font sizes —
+                                        enforces visual consistency across phases
+               ⬜ ui_ipc_map        — all typed IPC channels: name, payload type,
+                                        direction (renderer→main / main→renderer),
+                                        which component triggers or listens
+               ⬜ ui_mode_features  — per-mode feature inventory (LiveCode, Produce,
+                                        DJ Set, Jam Session): planned vs implemented
+                                        vs placeholder — for phase planning
+               ⬜ ui_accessibility_map — every interactive element's accessible name,
+                                        role, aria attributes — written once, used
+                                        for every Playwright E2E test so selectors
+                                        are never guessed
+               DSL / Monaco tools (Phase 13f):
+               ⬜ dsl_completions   — Score DSL component APIs for Monaco
+                                        IntelliSense: Kick/Snare/Synth/Sample props,
+                                        defaults, types, valid ranges
+               ⬜ dsl_diagnostics_schema — errors the DSL AST validator can produce,
+                                        for Monaco error markers
+               Automation / plugin tools (Phase 13d + 13e):
+               ⬜ automation_param_map — all automatable BackendAudioParam targets,
+                                        their range, units, and visual label
+               ⬜ plugin_manifest_schema — plugin contract: what a plugin must
+                                        export, how it registers capabilities,
+                                        IPC surface it may access
 Phase 10c  ⬜  Decode — audio analysis + format import (Rekordbox, Serato, FL Studio, MIDI)
 Phase 11   ✅  Hot reload + live coding (3 levels)
                ✅ Level 1: --watch file watcher with ESM cache busting
