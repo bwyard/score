@@ -76,17 +76,28 @@ const drawGrid = (
 
   // Draw each track row
   tracks.forEach((track, rowIndex) => {
-    const rowY = rowIndex * (ROW_HEIGHT + ROW_GAP)
+    const rowY       = rowIndex * (ROW_HEIGHT + ROW_GAP)
+    const trackLen   = track.pattern.length > 0 ? track.pattern.length : stepCount
+    // Per-track cursor: wrap currentStep within this track's pattern length.
+    // Shorter patterns loop — an 8-step kick repeats in a 16-step grid.
+    const localStep  = currentStep % trackLen
 
     // Left strip
     ctx.fillStyle = resolveStripColor(track.type)
     ctx.fillRect(0, rowY, LEFT_STRIP_WIDTH, ROW_HEIGHT)
 
-    // Step cells
+    // Step cells — loop pattern if track is shorter than stepCount
     Array.from({ length: stepCount }, (_, step) => {
-      const cellX     = LEFT_STRIP_WIDTH + step * (cellWidth + CELL_GAP)
-      const isCurrent = step === currentStep
-      const active    = isActive(track.pattern[step] ?? 0)
+      const cellX      = LEFT_STRIP_WIDTH + step * (cellWidth + CELL_GAP)
+      const patternIdx = step % trackLen
+      const isCurrent  = (step % trackLen) === localStep
+      const active     = isActive(track.pattern[patternIdx] ?? 0)
+
+      // Draw loop-boundary marker: subtle divider at pattern repeat points
+      if (step > 0 && step % trackLen === 0) {
+        ctx.fillStyle = '#2a2a36'
+        ctx.fillRect(cellX - CELL_GAP, rowY, CELL_GAP, ROW_HEIGHT)
+      }
 
       const color = isCurrent
         ? (active ? CURSOR_ACTIVE : CURSOR_INACTIVE)
@@ -97,9 +108,11 @@ const drawGrid = (
     })
   })
 
-  // Cursor column overlay — drawn on top across all rows
-  const cursorX     = LEFT_STRIP_WIDTH + currentStep * (cellWidth + CELL_GAP)
-  const totalHeight = tracks.length * (ROW_HEIGHT + ROW_GAP) - ROW_GAP
+  // Cursor column overlay — global cursor at the raw currentStep position,
+  // clipped to stepCount. Shows the transport position across the full grid.
+  const globalCursorStep = currentStep < stepCount ? currentStep : currentStep % stepCount
+  const cursorX          = LEFT_STRIP_WIDTH + globalCursorStep * (cellWidth + CELL_GAP)
+  const totalHeight      = tracks.length * (ROW_HEIGHT + ROW_GAP) - ROW_GAP
 
   ctx.fillStyle = flash ? CURSOR_OVERLAY_FLASH : CURSOR_OVERLAY
   ctx.fillRect(cursorX, 0, cellWidth, totalHeight)

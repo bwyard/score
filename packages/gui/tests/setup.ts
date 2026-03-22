@@ -14,6 +14,32 @@ export const axe = configureAxe({
   },
 })
 
+// ── Canvas stub ───────────────────────────────────────────────────────────────
+// jsdom does not implement canvas. Stub getContext so canvas components mount
+// without throwing "Not implemented: HTMLCanvasElement.prototype.getContext".
+HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
+  clearRect: vi.fn(), fillRect: vi.fn(), fillText: vi.fn(),
+  scale: vi.fn(), setTransform: vi.fn(), transform: vi.fn(),
+  save: vi.fn(), restore: vi.fn(),
+  beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), stroke: vi.fn(),
+  arc: vi.fn(), fill: vi.fn(), measureText: vi.fn(() => ({ width: 0 })),
+  set fillStyle(_: unknown) {}, set strokeStyle(_: unknown) {},
+  set shadowColor(_: unknown) {}, set shadowBlur(_: unknown) {},
+  set font(_: unknown) {}, set textAlign(_: unknown) {},
+  set textBaseline(_: unknown) {}, set lineWidth(_: unknown) {},
+  set lineCap(_: unknown) {}, set lineJoin(_: unknown) {},
+  createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+})) as unknown as typeof HTMLCanvasElement.prototype.getContext
+
+// ── ResizeObserver stub ────────────────────────────────────────────────────────
+// jsdom does not implement ResizeObserver. Provide a no-op stub so canvas
+// components that use it for responsive sizing mount cleanly in tests.
+globalThis.ResizeObserver = class {
+  observe()    {}
+  unobserve()  {}
+  disconnect() {}
+}
+
 // ── Electron IPC bridge mock ───────────────────────────────────────────────────
 // window.scoreBridge is injected by the Electron preload in production.
 // In jsdom tests we provide a mock so components can be tested in isolation.
