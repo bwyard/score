@@ -5,6 +5,8 @@ import { play } from './commands/play.js'
 import { repl } from './commands/repl.js'
 import { newSong } from './commands/new.js'
 import { doctor } from './commands/doctor.js'
+import { list } from './commands/list.js'
+import { exportSong } from './commands/export.js'
 
 const [,, command, ...args] = process.argv
 
@@ -16,6 +18,8 @@ const printGlobalUsage = (): void => {
   console.log('  play <song.js>        Play a song file')
   console.log('  play <song.js> -w     Hot-reload on every file save')
   console.log('  repl                  Interactive live coding REPL')
+  console.log('  list <song.js>        Show song metadata and track info')
+  console.log('  export <song.js>      Render song to WAV')
   console.log('  new song <name>       Create a new song from template')
   console.log('  doctor                Check system requirements\n')
   console.log('Options:')
@@ -37,6 +41,8 @@ if (!command || command === '--help' || command === '-h' || command === 'help') 
 const commands: Record<string, (args: string[]) => Promise<void> | void> = {
   play:   cmdArgs => play(cmdArgs),
   repl:   cmdArgs => repl(cmdArgs),
+  list:   cmdArgs => list(cmdArgs),
+  export: cmdArgs => exportSong(cmdArgs),
   new:    cmdArgs => { newSong(cmdArgs); },
   doctor: cmdArgs => { doctor(cmdArgs); },
 }
