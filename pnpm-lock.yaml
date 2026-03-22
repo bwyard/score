@@ -309,6 +309,25 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@25.5.0)
 
+  packages/session:
+    dependencies:
+      '@score/core':
+        specifier: workspace:*
+        version: link:../core
+      '@score/dsl':
+        specifier: workspace:*
+        version: link:../dsl
+      '@score/midi':
+        specifier: workspace:*
+        version: link:../midi
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: ^2.0.0
+        version: 2.1.9(vitest@2.1.9(@types/node@25.5.0))
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@25.5.0)
+
   songs:
     dependencies:
       '@score/components':
