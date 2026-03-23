@@ -220,6 +220,35 @@ const signalFlow = {
     const content = readFile(found.path)
     if (!content) return { content: [{ type: 'text', text: `Could not read ${found.path}` }] }
 
+    // Special case: effects chain — structural explanation, not static connect() calls
+    if (name === 'chain' || content.includes('createEffectsChain')) {
+      const exampleMatch = content.match(/@example[\s\S]*?```ts\s*([\s\S]*?)```/m)
+      const example = exampleMatch?.[1]?.trim() ?? ''
+      const text = [
+        '# Signal Flow — createEffectsChain (effects)',
+        '',
+        '**Pattern:** Series wiring — each effect feeds the next in array order.',
+        '',
+        '## Routing',
+        '```',
+        'inputGain → effect[0].input → effect[0]',
+        '         → effect[1].input → effect[1]',
+        '         → ...             → effect[n]',
+        '         → outputGain      → destination',
+        '```',
+        '',
+        '**Empty chain:** `inputGain → outputGain` (passthrough)',
+        '',
+        '## Notes',
+        '- Each effect must expose an `input: BackendNode` property so the chain can connect to it',
+        '- `getEffect(index)` retrieves any effect at runtime for parameter changes',
+        '- Routing is established at construction time — effects array is fixed after creation',
+        '',
+        example ? `## Example\n\`\`\`ts\n${example}\n\`\`\`` : '',
+      ].filter(Boolean)
+      return { content: [{ type: 'text', text: text.join('\n') }] }
+    }
+
     const routing = extractRouting(content)
     const backendNodes = extractBackendNodes(content)
 
@@ -582,9 +611,139 @@ const uiIpcMap = {
   },
 }
 
+// ─── Tool: ui_layout_map ──────────────────────────────────────────────
+// Stub — Phase 13f prep — based on wireframes in score/docs/design/wireframes/
+
+const uiLayoutMap = {
+  name: 'ui_layout_map',
+  description: 'Describe the Score Studio screen layout — which panels appear on each screen, their default positions, and the panel system rules. Based on wireframe specs in docs/design/wireframes/.',
+  inputSchema: {
+    screen: z.enum(['all', 'splash', 'live-code', 'step-sequencer', 'mixer', 'arrangement'])
+      .optional().default('all')
+      .describe('Which screen layout to describe.'),
+  },
+  handler: async ({ screen }) => {
+    const wireframeDir = join(SCORE_ROOT, 'docs', 'design', 'wireframes')
+    const note = screen === 'all' ? '' : ''
+
+    // Try to read the wireframe spec files
+    const screenFiles = {
+      splash:          join(wireframeDir, 'screens', '01-splash.md'),
+      'live-code':     join(wireframeDir, 'screens', '02-live-code.md'),
+      'step-sequencer':join(wireframeDir, 'screens', '03-step-sequencer.md'),
+      mixer:           join(wireframeDir, 'screens', '04-mixer.md'),
+      arrangement:     join(wireframeDir, 'screens', '05-arrangement.md'),
+    }
+
+    if (screen !== 'all') {
+      const filePath = screenFiles[screen]
+      const content = filePath ? readFile(filePath) : null
+      if (content) return { content: [{ type: 'text', text: content }] }
+      return { content: [{ type: 'text', text: `Wireframe spec for "${screen}" not found at ${filePath ?? 'unknown path'}.\nCheck docs/design/wireframes/screens/ for available specs.` }] }
+    }
+
+    // All screens — list what exists
+    const results = []
+    const readmeContent = readFile(join(wireframeDir, 'README.md'))
+    if (readmeContent) {
+      results.push(`# Score Studio Layout Map\n\n${readmeContent}`)
+    } else {
+      const available = existsSync(wireframeDir)
+        ? readdirSync(wireframeDir, { withFileTypes: true })
+            .filter((e) => e.isFile() || e.isDirectory())
+            .map((e) => `  - ${e.name}`)
+            .join('\n')
+        : '  (wireframes directory not found)'
+      results.push(`# Score Studio Layout Map\n\n> **Stub** — wireframe specs may be on a different branch.\n\nExpected: \`docs/design/wireframes/\`\n\nFound:\n${available}`)
+    }
+
+    return { content: [{ type: 'text', text: results.join('\n\n') }] }
+  },
+}
+
+// ─── Tool: ui_mode_features ───────────────────────────────────────────
+// Stub — Phase 13f prep
+
+const uiModeFeatures = {
+  name: 'ui_mode_features',
+  description: 'List features, controls, and capabilities available in each Score Studio mode (Live Code, Step Sequencer, Mixer, Arrangement). Shows what is implemented vs planned.',
+  inputSchema: {
+    mode: z.enum(['all', 'live-code', 'step-sequencer', 'mixer', 'arrangement'])
+      .optional().default('all')
+      .describe('Which mode to describe.'),
+  },
+  handler: async ({ mode }) => {
+    const MODES = {
+      'live-code': {
+        label: 'Live Code',
+        status: '⚠️ In progress (Phase 13b)',
+        implemented: [
+          'Monaco/textarea code editor with syntax highlighting',
+          '▶ Run button — eval code + start engine (or hot-swap if playing)',
+          'Transport bar — BPM slider, play/stop, time display',
+          'Punchcard step grid — per-track pattern visualization',
+          'Oscilloscope waveform panel (floating, draggable)',
+          'Spectrum analyser panel (floating, draggable)',
+          'Piano roll panel — shows Synth/Arp note events',
+          'Mixer channel strips — gain/mute/solo per track',
+          'Reference panel — DSL cheatsheet, click-to-insert',
+          'REPL console log — eval results and errors',
+          'BPM slider ↔ code sync (codePatcher)',
+          'Punchcard step toggle ↔ code sync',
+          'Mixer volume ↔ code sync',
+          'Piano roll note click ↔ code sync',
+        ],
+        planned: [
+          'Monaco editor (replace textarea) — Phase 13f',
+          'Beat-position gutter annotations (algorave-style) — t159',
+          'Song file open/save — t143',
+          'Play Around vs DJ Mode variants — t144',
+        ],
+      },
+      'step-sequencer': {
+        label: 'Step Sequencer',
+        status: '⬜ Planned',
+        implemented: [],
+        planned: ['Full step sequencer mode — Phase 13 roadmap item'],
+      },
+      mixer: {
+        label: 'Mixer',
+        status: '⚠️ Partial (channel strips in Live Code)',
+        implemented: ['Channel strips visible in Live Code mixer panel'],
+        planned: ['Dedicated Mixer screen', 'Send/return routing UI', 'Master bus controls'],
+      },
+      arrangement: {
+        label: 'Arrangement',
+        status: '⬜ Planned',
+        implemented: [],
+        planned: ['Arrangement view — Phase 13 roadmap item'],
+      },
+    }
+
+    const renderMode = (key, m) => {
+      const impl = m.implemented.length > 0
+        ? `### Implemented\n${m.implemented.map((f) => `- ✅ ${f}`).join('\n')}`
+        : '### Implemented\n_Nothing yet_'
+      const plan = m.planned.length > 0
+        ? `### Planned\n${m.planned.map((f) => `- ⬜ ${f}`).join('\n')}`
+        : ''
+      return [`## ${m.label} (${m.status})`, impl, plan].filter(Boolean).join('\n\n')
+    }
+
+    if (mode !== 'all') {
+      const m = MODES[mode]
+      if (!m) return { content: [{ type: 'text', text: `Unknown mode: "${mode}"` }] }
+      return { content: [{ type: 'text', text: renderMode(mode, m) }] }
+    }
+
+    const sections = Object.entries(MODES).map(([k, m]) => renderMode(k, m))
+    return { content: [{ type: 'text', text: `# Score Studio Mode Features\n\n${sections.join('\n\n---\n\n')}` }] }
+  },
+}
+
 // ─── Server ──────────────────────────────────────────────────────────
 
-const tools = [effectCatalog, signalFlow, backendNodes, componentCatalog, instrumentSource, uiComponentCatalog, uiIpcMap]
+const tools = [effectCatalog, signalFlow, backendNodes, componentCatalog, instrumentSource, uiComponentCatalog, uiIpcMap, uiLayoutMap, uiModeFeatures]
 
 const createServer = () => {
   const server = new McpServer({
