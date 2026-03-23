@@ -62,6 +62,8 @@ const createMockFilterNode = (shouldThrowOnDisconnect = false): MockNode & Backe
     setFrequency: (_value: number, _time?: number) => {},
     setQ: (_value: number, _time?: number) => {},
     setFilterGain: (_value: number, _time?: number) => {},
+    scheduleFilterEnvelope: (_opts) => {},
+    scheduleFilterRelease: (_opts) => {},
   }
 }
 

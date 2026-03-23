@@ -27,49 +27,86 @@ describe('createSubtractiveSynth', () => {
     expect(synth.type).toBe('subsynth')
   })
 
-  it('creates oscillator, filter, vca, output gain at construction', () => {
+  it('default: creates 2 oscillators (1 unison pair)', () => {
     const ctx = h.mockContext()
     createSubtractiveSynth(ctx)
-    // 1 VCA gain + 1 output gain = 2
-    expect(ctx.createdGains.length).toBe(2)
-    expect(ctx.createdOscillators.length).toBe(1)
+    expect(ctx.createdOscillators.length).toBe(2)
   })
 
-  it('default output gain is 0.8', () => {
+  it('unison=2 creates 4 oscillators', () => {
+    const ctx = h.mockContext()
+    createSubtractiveSynth(ctx, { unison: 2 })
+    expect(ctx.createdOscillators.length).toBe(4)
+  })
+
+  it('unison=4 creates 8 oscillators', () => {
+    const ctx = h.mockContext()
+    createSubtractiveSynth(ctx, { unison: 4 })
+    expect(ctx.createdOscillators.length).toBe(8)
+  })
+
+  it('default: creates 3 gain nodes (unisonMix + vca + output)', () => {
     const ctx = h.mockContext()
     createSubtractiveSynth(ctx)
-    // outputGain is last gain created (index 1)
-    expect(ctx.createdGains[1]?.gain).toBeCloseTo(0.8)
+    // unisonMix + vca + outputGain = 3
+    expect(ctx.createdGains.length).toBe(3)
+  })
+
+  it('default output gain is 0.7', () => {
+    const ctx = h.mockContext()
+    createSubtractiveSynth(ctx)
+    // outputGain is last gain created
+    expect(ctx.createdGains[2]?.gain).toBeCloseTo(0.7)
   })
 
   it('respects custom gain prop', () => {
     const ctx = h.mockContext()
     createSubtractiveSynth(ctx, { gain: 0.5 })
-    expect(ctx.createdGains[1]?.gain).toBeCloseTo(0.5)
+    expect(ctx.createdGains[2]?.gain).toBeCloseTo(0.5)
   })
 
-  it('noteOn starts the oscillator', () => {
+  it('unisonMix gain normalises by oscillator count', () => {
+    const ctx = h.mockContext()
+    createSubtractiveSynth(ctx)
+    // unisonMix = gain[0], 2 oscs → 1/2 = 0.5
+    expect(ctx.createdGains[0]?.gain).toBeCloseTo(0.5)
+  })
+
+  it('noteOn starts all oscillators once', () => {
     const ctx = h.mockContext()
     const synth = createSubtractiveSynth(ctx)
     synth.noteOn(1.0)
-    expect(ctx.createdOscillators[0]?.startCalls.length).toBe(1)
+    expect(ctx.createdOscillators.every(o => o.startCalls.length === 1)).toBe(true)
     expect(ctx.createdOscillators[0]?.startCalls[0]?.time).toBe(1.0)
   })
 
-  it('noteOn called twice does not start oscillator a second time', () => {
+  it('noteOn called twice does not start oscillators a second time', () => {
     const ctx = h.mockContext()
     const synth = createSubtractiveSynth(ctx)
     synth.noteOn(0)
     synth.noteOn(0.5)
-    expect(ctx.createdOscillators[0]?.startCalls.length).toBe(1)
+    expect(ctx.createdOscillators.every(o => o.startCalls.length === 1)).toBe(true)
   })
 
-  it('noteOff schedules oscillator stop', () => {
+  it('noteOff schedules stop on all oscillators', () => {
     const ctx = h.mockContext()
     const synth = createSubtractiveSynth(ctx)
     synth.noteOn(0)
     synth.noteOff(0.5)
-    expect(ctx.createdOscillators[0]?.stopCalls.length).toBe(1)
+    expect(ctx.createdOscillators.every(o => o.stopCalls.length === 1)).toBe(true)
+  })
+
+  it('setFrequency updates all oscillators', () => {
+    const ctx = h.mockContext()
+    const synth = createSubtractiveSynth(ctx)
+    // Should not throw and should reach all oscillators
+    expect(() => { synth.setFrequency(440) }).not.toThrow()
+  })
+
+  it('setFilterFrequency does not throw', () => {
+    const ctx = h.mockContext()
+    const synth = createSubtractiveSynth(ctx)
+    expect(() => { synth.setFilterFrequency(2000) }).not.toThrow()
   })
 
   it('connect returns self for chaining', () => {
@@ -84,7 +121,7 @@ describe('createSubtractiveSynth', () => {
     expect(synth.disconnect()).toBe(synth)
   })
 
-  it('dispose does not throw', () => {
+  it('dispose does not throw after noteOn/noteOff', () => {
     const ctx = h.mockContext()
     const synth = createSubtractiveSynth(ctx)
     synth.noteOn(0)
@@ -92,15 +129,15 @@ describe('createSubtractiveSynth', () => {
     expect(() => { synth.dispose() }).not.toThrow()
   })
 
-  it('setFrequency does not throw', () => {
+  it('dispose does not throw without noteOn', () => {
     const ctx = h.mockContext()
     const synth = createSubtractiveSynth(ctx)
-    expect(() => { synth.setFrequency(440) }).not.toThrow()
+    expect(() => { synth.dispose() }).not.toThrow()
   })
 
-  it('setFilterFrequency does not throw', () => {
+  it('setGain does not throw', () => {
     const ctx = h.mockContext()
     const synth = createSubtractiveSynth(ctx)
-    expect(() => { synth.setFilterFrequency(2000) }).not.toThrow()
+    expect(() => { synth.setGain(0.5) }).not.toThrow()
   })
 })

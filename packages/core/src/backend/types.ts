@@ -99,6 +99,30 @@ export type BackendFilterNode = BackendNode & {
   readonly setFrequency: (value: number, time?: number) => void
   readonly setQ: (value: number, time?: number) => void
   readonly setFilterGain: (value: number, time?: number) => void
+  /**
+   * Schedule a filter cutoff ADSR envelope — avoids anchor-value conflicts.
+   * Sets baseFreq at startTime, ramps to baseFreq+envDepth over attack,
+   * decays to baseFreq+envDepth*sustain over decay, holds at sustain.
+   */
+  readonly scheduleFilterEnvelope: (opts: {
+    readonly baseFreq: number
+    readonly envDepth: number
+    readonly sustain: number  // 0-1 fraction of envDepth
+    readonly attack: number
+    readonly decay: number
+    readonly startTime: number
+  }) => void
+  /**
+   * Schedule the release phase of a filter envelope.
+   * Cancels any pending automation at `time`, anchors at `sustainFreq`,
+   * then ramps to `baseFreq` over `release` seconds.
+   */
+  readonly scheduleFilterRelease: (opts: {
+    readonly sustainFreq: number
+    readonly baseFreq: number
+    readonly release: number
+    readonly time: number
+  }) => void
 }
 
 export type BackendDelayNode = BackendNode & {

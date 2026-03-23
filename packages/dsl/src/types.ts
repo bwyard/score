@@ -157,7 +157,7 @@ export type Snare909DSLProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
-/** Configuration props for the {@link SubSynth} instrument factory. */
+/** Configuration props for the {@link SubSynth} instrument factory — Juno-60/Minimoog model. */
 export type SubSynthDSLProps = {
   readonly pattern?: (number | string)[]
   readonly volume?: number
@@ -165,10 +165,26 @@ export type SubSynthDSLProps = {
   readonly wave?: 'sine' | 'square' | 'sawtooth' | 'triangle'
   /** Oscillator frequency in Hz. Default `220`. */
   readonly frequency?: number
+  /**
+   * Detune spread between oscillators in cents (total spread). Default `8`.
+   */
+  readonly detune?: number
+  /**
+   * Number of oscillator pairs. `1` = 2 oscs, `2` = 4, `4` = 8. Default `1`.
+   */
+  readonly unison?: 1 | 2 | 4
   readonly filter?: {
     readonly type?: 'lowpass' | 'highpass' | 'bandpass'
     readonly frequency?: number
     readonly Q?: number
+    /** Filter envelope depth in Hz. Default `800`. */
+    readonly envDepth?: number
+    readonly adsr?: {
+      readonly attack?: number
+      readonly decay?: number
+      readonly sustain?: number
+      readonly release?: number
+    }
   }
   readonly adsr?: {
     readonly attack?: number
