@@ -137,9 +137,19 @@ Score aims to cover every major electronic genre. Each genre has specific synthe
 **Phase 1 — Scaffold** (in progress)
 See `SCORE_HANDOFF.md` for the full 17-phase build plan.
 
+## Documentation Index
+
+All strategy docs, ADRs, and standards are indexed at **`docs/INDEX.md`** — read it at the start of every session.
+
+Key docs:
+- `docs/THESIS_COMPLIANCE.md` — what pure functional means per layer
+- `docs/TESTING_STRATEGY.md` — per-package testing approach and standards
+- `docs/DEVELOPMENT_STRATEGY.md` — phase ownership, what ships now vs deferred
+
 ## Start-of-Session Checklist
 
 1. Read session file: `../claude-resources/sessions/score/current.md`
-2. Read `AGENTS.md` — check what's in progress
-3. Run `pnpm test` — confirm all tests passing
-4. Check current phase in `SCORE_HANDOFF.md`
+2. Check signals: `node ../claude-resources/session.js signals`
+3. Read `docs/INDEX.md` — find the doc you need
+4. Run `pnpm test` — confirm all tests passing
+5. Check current phase in `SCORE_HANDOFF.md`
