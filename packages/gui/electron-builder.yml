@@ -1,0 +1,68 @@
+appId: com.score.studio
+productName: Score Studio
+copyright: Copyright © 2026 Bree Yard
+
+# Build output — separate from electron-vite's 'out' dir
+directories:
+  output: dist
+  buildResources: build
+
+# Files to include in the app package.
+# electron-vite compiles everything to out/ (main, preload, renderer).
+# Runtime node_modules (node-web-audio-api, @monaco-editor/react) are included
+# by electron-builder's default dependency scanning.
+files:
+  - out/**
+  - '!out/**/*.map'
+  - '!src/**'
+  - '!tests/**'
+  - '!*.config.*'
+  - '!*.tsbuildinfo'
+
+# ── Platform targets ────────────────────────────────────────────────────────
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Score Studio
+  # No code signing for tester builds — will be added before public release
+  artifactName: ScoreStudio-Setup-${version}.exe
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: build/icon.icns
+  category: public.app-category.music
+  # No code signing for tester builds
+  identity: null
+  artifactName: ScoreStudio-${version}-${arch}.dmg
+
+dmg:
+  window:
+    width: 540
+    height: 380
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  icon: build/icon.png
+  category: Audio
+  artifactName: ScoreStudio-${version}.AppImage
+
+# ── Publishing (disabled for tester builds) ─────────────────────────────────
+# Switch to { provider: github } when auto-update is wired in.
+publish: null
