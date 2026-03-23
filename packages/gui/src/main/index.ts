@@ -1,11 +1,23 @@
-import { app, BrowserWindow, globalShortcut, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, shell } from 'electron'
 import path                                          from 'node:path'
-import { writeFileSync, unlinkSync, mkdirSync }      from 'node:fs'
-import { pathToFileURL }                             from 'node:url'
+import { readFileSync, writeFileSync }               from 'node:fs'
+import vm                                            from 'node:vm'
 import { createScoreEngine }                         from '@score/cli/engine'
-import { Kick, Synth, Track, Song }                  from '@score/dsl'
+import type { PatchProps }                           from '@score/cli/engine'
+import {
+  Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp,
+  Track, Song, resolveFreq,
+}                                                    from '@score/dsl'
 import type { SongDefinition, InstrumentDescriptor } from '@score/dsl'
 import type { ScoreEngine }                          from '@score/cli/engine'
+import {
+  Delay, Reverb, Filter, Compressor, EQ, Distortion, Limiter,
+  BitCrusher, Chorus, Phaser, Flanger, StereoWidener, Gate,
+  Saturation, AutoPan,
+}                                                    from '@score/effects'
+import {
+  euclidean, fast, slow, rev, every, degrade, shift, stack, beat, humanize,
+}                                                    from '@score/pattern'
 import type { MainToRenderer, RendererToMain }       from './ipc-types.js'
 
 // ── Default starter song ────────────────────────────────────────────────────
@@ -61,14 +73,60 @@ const pushState = (): void => {
   send('engine:state', { playing: slot.playing, bpm: slot.bpm, bars: slot.bars })
 }
 
+const resolveDesc = (t: { readonly _type: string; readonly component?: unknown }): InstrumentDescriptor =>
+  (t._type === 'InstrumentDescriptor' ? t : t.component) as InstrumentDescriptor
+
+// Returns the effective pattern for a track — falls back to engine defaults so
+// the renderer always has something meaningful to drive CodeHighlight bars.
+const effectivePattern = (desc: InstrumentDescriptor): ReadonlyArray<number | string> => {
+  const props = desc.props as { pattern?: ReadonlyArray<number | string> }
+  if (props.pattern && props.pattern.length > 0) return props.pattern
+  switch (desc.instrumentType) {
+    case 'arp':      return Array.from({ length: 16 }, () => 1)  // engine default: all active
+    case 'theremin': return []  // continuous — no step pattern
+    default:         return []
+  }
+}
+
 const pushSong = (song: SongDefinition): void => {
   const tracks = song.tracks.map(t => {
-    // component is AudioComponent at the type level, but always an InstrumentDescriptor at runtime
-    const desc = t.component as InstrumentDescriptor
-    const pattern = (desc.props as { pattern?: ReadonlyArray<number | string> }).pattern ?? []
+    const desc = resolveDesc(t)
+    const pattern = effectivePattern(desc)
     return { name: desc.instrumentType, type: desc.instrumentType, pattern }
   })
   send('song:update', { tracks })
+
+  // Emit piano roll note data for melodic tracks (Synth, Arp)
+  const pianoNotes: Array<{ pitch: number; step: number; velocity: number; trackIndex: number }> = []
+  song.tracks.forEach((t, trackIndex) => {
+    const desc = resolveDesc(t)
+    const props = desc.props as Record<string, unknown>
+
+    if (desc.instrumentType === 'synth') {
+      const freq = typeof props['frequency'] === 'number' ? props['frequency'] : 440
+      const pitch = Math.round(69 + 12 * Math.log2(freq / 440))
+      const pattern = Array.isArray(props['pattern']) ? props['pattern'] as (number | string)[] : []
+      pattern.forEach((val, step) => {
+        if (val) pianoNotes.push({ pitch, step, velocity: 1, trackIndex })
+      })
+    } else if (desc.instrumentType === 'arp') {
+      const noteNames = Array.isArray(props['notes']) ? props['notes'] as string[] : []
+      const rate = typeof props['rate'] === 'number' ? props['rate'] : 1
+      const pattern = Array.isArray(props['pattern']) ? props['pattern'] as (number | string)[] : Array.from({ length: 16 }, () => 1)
+      pattern.reduce((noteIdx: number, val, step) => {
+        if (!val) return noteIdx
+        const idx = Math.floor(noteIdx / rate) % Math.max(noteNames.length, 1)
+        const noteName = noteNames[idx] ?? 'C4'
+        const freq = resolveFreq(noteName)
+        const pitch = Math.round(69 + 12 * Math.log2(freq / 440))
+        pianoNotes.push({ pitch, step, velocity: 1, trackIndex })
+        return noteIdx + 1
+      }, 0)
+    }
+  })
+  if (pianoNotes.length > 0) {
+    send('engine:notes', { notes: pianoNotes })
+  }
 }
 
 const stopAnalysis = (): void => {
@@ -77,6 +135,13 @@ const stopAnalysis = (): void => {
     intervalRef.value = null
   }
 }
+
+// Pop detector — tracks the previous waveform frame to detect sample-to-sample
+// discontinuities that indicate hard-onset clicks, scheduling jitter, or gain spikes.
+// Threshold 0.25: normal enveloped audio rarely exceeds 0.1 delta between adjacent
+// 50ms frames; 0.25 catches real discontinuities while ignoring ordinary transients.
+const POP_THRESHOLD = 0.25
+const popDetectorRef: { prevMax: number } = { prevMax: 0 }
 
 const startAnalysis = (): void => {
   stopAnalysis()
@@ -88,6 +153,19 @@ const startAnalysis = (): void => {
     if (!s || !s.playing) { stopAnalysis(); return }
     s.engine.analyser.getFloatTimeDomainData(buf)
     send('engine:analysis', { waveform: Array.from(buf) })
+
+    // Detect large inter-frame amplitude jump — symptom of a pop/click
+    // Compare max absolute value in this frame vs previous frame
+    let frameMax = 0
+    for (let i = 0; i < buf.length; i++) {
+      const abs = Math.abs(buf[i] ?? 0)
+      if (abs > frameMax) frameMax = abs
+    }
+    const delta = Math.abs(frameMax - popDetectorRef.prevMax)
+    if (delta > POP_THRESHOLD) {
+      send('debug:pop', { maxDelta: delta, step: s.bars, bars: s.bars })
+    }
+    popDetectorRef.prevMax = frameMax
   }, 50) // ~20fps
 }
 
@@ -236,41 +314,115 @@ ipcMain.on('transport:bpm-set', (_event, { bpm }: RendererToMain['transport:bpm-
   pushState()
 })
 
-// BOUNDARY — IO: eval receives code string, writes temp file, imports it, updates engine
-// Temp file written adjacent to built output so @score/dsl resolves via workspace symlinks.
+// BOUNDARY — IO: eval receives code string, strips imports/exports, runs in vm sandbox
+// with all DSL + effects pre-injected. Avoids CJS→ESM dynamic-import edge cases in
+// Electron's embedded Node.js when loading from pnpm symlink paths.
 ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
-  const evalDir = path.join(__dirname, '..', '..', 'tmp')
-  mkdirSync(evalDir, { recursive: true })
-  const tmp = path.join(evalDir, `score-eval-${String(Date.now())}.mjs`)
+  // Strip import declarations — DSL + effects are injected via vm context.
+  // Replace `export default` with an assignment to __exports__ so we can read the result.
+  const scriptCode = code
+    .split('\n')
+    .map(line => {
+      const t = line.trimStart()
+      if (t.startsWith('import ') && t.includes(' from ')) return ''
+      return line.replace(/^(\s*)export\s+default\s+/, '$1__exports__ = ')
+    })
+    .join('\n')
 
-  try {
-    writeFileSync(tmp, code, 'utf8')
-  } catch (err) {
-    console.error('[score-studio] eval write error', err)
-    send('error:report', { message: 'Failed to write eval temp file.' })
-    return
+  type VmContext = {
+    __exports__: SongDefinition | null
+    [key: string]: unknown
   }
 
-  void import(pathToFileURL(tmp).href).then((mod: { default?: SongDefinition }) => {
-    try { unlinkSync(tmp) } catch { /* ignore cleanup errors */ }
-    const song = mod.default
-    if (!song || typeof song !== 'object') return
+  const context: VmContext = vm.createContext({
+    // DSL — instruments, song builders, utilities
+    Song, Track, Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp, resolveFreq,
+    // Effects — descriptor factories (pure data, no AudioContext)
+    Delay, Reverb, Filter, Compressor, EQ, Distortion, Limiter,
+    BitCrusher, Chorus, Phaser, Flanger, StereoWidener, Gate,
+    Saturation, AutoPan,
+    // Pattern utilities — Euclidean rhythms, transforms
+    euclidean, fast, slow, rev, every, degrade, shift, stack, beat, humanize,
+    // pat — inline space-separated pattern literal helper
+    // e.g. pat('1 0 C4 E4 _') → [1, 0, 'C4', 'E4', 0]
+    pat: (s: string): (number | string)[] =>
+      s.trim().split(/\s+/).map(t => (t === '0' || t === '_' || t === '.') ? 0 : (t === '1' ? 1 : t)),
+    // Standard globals safe to expose in song files
+    Math, console,
+    // Export capture
+    __exports__: null,
+  }) as VmContext
+
+  try {
+    vm.runInContext(scriptCode, context, { timeout: 5000, filename: 'score-live.vm' })
+    const song = context.__exports__
+    if (!song || typeof song !== 'object') {
+      send('error:report', { message: "Code must have 'export default Song(...)'" })
+      return
+    }
     const slot = slotRef.value
     if (slot?.playing) {
-      // Engine is playing — queue song for bar-boundary swap so the change
-      // lands on a clean musical boundary rather than mid-bar.
       pendingRef.value = song
       send('engine:pending', { pending: true })
-      pushSong(song) // update punchcard preview immediately
+      pushSong(song)
     } else {
-      // Engine stopped or not yet booted — apply immediately
       void boot(song)
     }
-  }).catch((err: unknown) => {
-    try { unlinkSync(tmp) } catch { /* ignore cleanup errors */ }
+  } catch (err: unknown) {
     console.error('[score-studio] eval error', err)
     send('error:report', {
       message: err instanceof Error ? err.message : String(err),
     })
+  }
+})
+
+// BOUNDARY — IO: surgical patch — volume/mute/bpm without reloading the song.
+// engine.patch() already handles per-track volume/mute and bpm.
+ipcMain.on('engine:patch', (_event, payload: RendererToMain['engine:patch']) => {
+  const slot = slotRef.value
+  if (!slot) return
+  const props = payload as PatchProps
+  slot.engine.patch(props)
+  if (props.bpm !== undefined) {
+    slot.bpm = props.bpm
+    pushState()
+  }
+})
+
+// BOUNDARY — IO: file save — opens native save dialog, writes song to disk
+ipcMain.on('file:save', (_event, { code }: RendererToMain['file:save']) => {
+  const win = winRef.value
+  if (!win) return
+  void dialog.showSaveDialog(win, {
+    title:       'Save Score Song',
+    defaultPath: 'song.mjs',
+    filters:     [{ name: 'Score Song', extensions: ['mjs', 'js'] }],
+  }).then(({ canceled, filePath }) => {
+    if (canceled || !filePath) return
+    try {
+      writeFileSync(filePath, code, 'utf8')
+    } catch (err) {
+      send('error:report', { message: `Save failed: ${err instanceof Error ? err.message : String(err)}` })
+    }
+  })
+})
+
+// BOUNDARY — IO: file open — opens native open dialog, reads song, sends to renderer
+ipcMain.on('file:open', () => {
+  const win = winRef.value
+  if (!win) return
+  void dialog.showOpenDialog(win, {
+    title:      'Open Score Song',
+    filters:    [{ name: 'Score Song', extensions: ['mjs', 'js'] }],
+    properties: ['openFile'],
+  }).then(({ canceled, filePaths }) => {
+    const filePath = filePaths[0]
+    if (canceled || !filePath) return
+    try {
+      const code = readFileSync(filePath, 'utf8')
+      send('file:opened', { code })
+    } catch (err) {
+      send('error:report', { message: `Open failed: ${err instanceof Error ? err.message : String(err)}` })
+    }
   })
 })
