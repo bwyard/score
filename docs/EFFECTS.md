@@ -64,6 +64,7 @@ Simulates acoustic space by convolving the signal with a room impulse. Adds dept
 |---|---|---|---|---|
 | `decay` | `number` | `2.0` | `0.1–30` | Reverb tail length in seconds. `0.5` = small room. `2.0` = medium hall. `8.0+` = cathedral or plate. |
 | `mix` | `number` | `0.3` | `0–1` | Dry/wet blend. Drums typically `0.1–0.2`. Pads `0.3–0.6`. |
+| `preDelay` | `number` | `0` | `0–0.1` | Delay before the reverb body in seconds. `0.02–0.04` (20–40ms) separates the dry transient from the reverb tail — keeps attack punchy in dense mixes. Omit or set `0` to bypass. |
 
 ### Examples
 
@@ -75,6 +76,11 @@ Reverb({ decay: 0.5, mix: 0.12 })
 **Large hall** — long tail, higher mix, for atmospheric pads:
 ```js
 Reverb({ decay: 6.0, mix: 0.45 })
+```
+
+**Deep house snare reverb** — pre-delay separates hit from tail:
+```js
+Reverb({ decay: 1.2, mix: 0.2, preDelay: 0.03 })
 ```
 
 ### Signal routing note
