@@ -6,7 +6,10 @@ import { createScoreEngine }                         from '@score/cli/engine'
 import type { PatchProps }                           from '@score/cli/engine'
 import {
   Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp,
-  Kick808, Kick909, Snare909, Hihat808, SubSynth,
+  Kick808, Kick909, Snare909, Hihat808, SubSynth, FMSynth,
+  Bass303, Pad, Pluck, Stab, Rhodes, Wurlitzer, Hammond, Clavinet,
+  DX7Lead, WavetableSynth, SuperSaw, KarplusSynth, Guitar,
+  chord, scale, progression, Scale, Progression,
   Track, Song, resolveFreq,
 }                                                    from '@score/dsl'
 import type { SongDefinition, InstrumentDescriptor } from '@score/dsl'
@@ -392,9 +395,14 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
   }
 
   const context: VmContext = vm.createContext({
-    // DSL — instruments, song builders, utilities
+    // DSL — percussion + legacy instruments
     Song, Track, Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp, resolveFreq,
-    Kick808, Kick909, Snare909, Hihat808, SubSynth,
+    Kick808, Kick909, Snare909, Hihat808, SubSynth, FMSynth,
+    // DSL — chain API melodic factories
+    Bass303, Pad, Pluck, Stab, Rhodes, Wurlitzer, Hammond, Clavinet,
+    DX7Lead, WavetableSynth, SuperSaw, KarplusSynth, Guitar,
+    // DSL — music theory helpers
+    chord, scale, progression, Scale, Progression,
     // Effects — descriptor factories (pure data, no AudioContext)
     Delay, Reverb, Filter, Compressor, EQ, Distortion, Limiter,
     BitCrusher, Chorus, Phaser, Flanger, StereoWidener, Gate,
