@@ -88,14 +88,22 @@ export const patchTrackPattern = (
   const { start, end } = region
   const slice = code.slice(start, end)
 
-  const m = /pattern:\s*\[([^\]]*)\]/.exec(slice)
+  // Match both DSL styles:
+  //   - Object prop:  pattern: [1, 0, 0, 0]       (legacy Track/Kick style)
+  //   - Chain method: .pattern([1, 0, 0, 0])        (chain API style)
+  const mProp  = /pattern:\s*\[([^\]]*)\]/.exec(slice)
+  const mChain = /\.pattern\(\[([^\]]*)\]\)/.exec(slice)
+  const m = mProp ?? mChain
   if (!m) return code
 
   const items = (m[1] ?? '').split(',').map(s => s.trim())
   if (stepIndex < 0 || stepIndex >= items.length) return code
   items[stepIndex] = String(value)
 
-  const newChunk = `pattern: [${items.join(', ')}]`
+  const isChain  = !mProp && Boolean(mChain)
+  const newChunk = isChain
+    ? `.pattern([${items.join(', ')}])`
+    : `pattern: [${items.join(', ')}]`
   const newSlice = slice.slice(0, m.index) + newChunk + slice.slice(m.index + m[0].length)
   return code.slice(0, start) + newSlice + code.slice(end)
 }

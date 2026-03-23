@@ -385,7 +385,17 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
   const onBpmChange = useCallback((bpm: number): void => {
     setCode(prev => patchBpm(prev, bpm))
-  }, [])
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null)
+      setEvalStatus('pending')
+      addLog('info', 'Evaluating…')
+      setCode(latest => {
+        window.scoreBridge.send('engine:eval', { code: latest })
+        return latest
+      })
+    }, 300)
+  }, [addLog])
 
   const onStepClick = useCallback((trackIndex: number, stepIndex: number): void => {
     const track = tracks[trackIndex]
@@ -395,7 +405,17 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     const currentVal = track.pattern[stepIndex % len]
     const newVal = currentVal ? 0 : 1
     setCode(prev => patchTrackPattern(prev, trackIndex, stepIndex, newVal))
-  }, [tracks])
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null)
+      setEvalStatus('pending')
+      addLog('info', 'Evaluating…')
+      setCode(latest => {
+        window.scoreBridge.send('engine:eval', { code: latest })
+        return latest
+      })
+    }, 300)
+  }, [tracks, addLog])
 
   const onNoteClick = useCallback((pitch: number, step: number): void => {
     // Find the Arp track (first track with type 'arp') — that's what the piano roll shows
