@@ -674,8 +674,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               {selectedTrack !== null && tracks[selectedTrack] !== undefined && (
                 <InstrumentPanel
                   trackIndex={selectedTrack}
-                  instrumentType={tracks[selectedTrack]!.type}
-                  trackName={tracks[selectedTrack]!.name}
+                  instrumentType={tracks[selectedTrack].type}
+                  trackName={tracks[selectedTrack].name}
                   params={{ volume: stripStates[selectedTrack]?.volume ?? 1 }}
                   muted={stripStates[selectedTrack]?.muted ?? false}
                   onChange={(method: string, value: number | string) => { onInstrumentChange(selectedTrack, method, value) }}
