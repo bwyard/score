@@ -16,6 +16,10 @@
 //   snare909 — createSnare909: 2 triangle oscs + white noise HPF
 //   subsynth — createSubtractiveSynth: saw/sq → resonant LP → ADSR VCA
 //   fmsynth  — createFMSynth: 2-op FM (DX7 Rhodes / metallic leads)
+//   pad      — createPad: SubtractiveSynth with slow attack / long release defaults
+//   rhodes   — createRhodes: FMSynth with DX7 Rhodes defaults
+//   pluck    — createPluck: Karplus-Strong string model
+//   bass-303 — createBass303: TB-303 acid bass (saw/sq → high-Q LP → MEG/VEG)
 
 import { readFileSync } from 'node:fs'
 import { webAudioBackend, decodeSample, createSamplePlayer } from '@score/core'
@@ -29,6 +33,10 @@ import {
   createSnare909,
   createSubtractiveSynth,
   createFMSynth,
+  createPad,
+  createRhodes,
+  createPluck,
+  createBass303,
 } from '@score/components'
 import { createMixer } from '@score/mixer'
 import {
@@ -98,6 +106,7 @@ export const isPartDescriptor = (comp: unknown): comp is PartDescriptor => {
 // Melodic instruments use 'gain' for amplitude; percussion uses 'volume'
 const MELODIC_INSTRUMENT_TYPES = new Set([
   'synth', 'subsynth', 'fmsynth', 'arp', 'theremin', 'sax', 'sample',
+  'pad', 'rhodes', 'pluck', 'bass-303',
 ])
 
 /** Convert a chain-API {@link PartDescriptor} to an {@link InstrumentDescriptor} the engine can hydrate. */
@@ -626,6 +635,108 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
               ...(props.modIndex  !== undefined && { modIndex:  props.modIndex }),
               ...(props.ampAdsr   !== undefined && { ampAdsr:   props.ampAdsr }),
               ...(props.modAdsr   !== undefined && { modAdsr:   props.modAdsr }),
+              gain: props.volume ?? 0.7,
+            })
+            voice.connect(dest)
+            voice.noteOn(pos.time)
+            voice.noteOff(pos.time + noteDur)
+          }
+        })
+        break
+      }
+      case 'pad': {
+        // Pad — SubtractiveSynth with slow attack / long release defaults
+        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; adsr?: { attack?: number; decay?: number; release?: number }; filter?: Record<string, unknown>; volume?: number }
+        const pattern = (props.pattern ?? props.notes ?? DEFAULT_SYNTH_PATTERN) as (number | string)[]
+        const adsr    = props.adsr ?? {}
+        const attack  = adsr.attack  ?? 0.3
+        const decay   = adsr.decay   ?? 0.2
+        const release = adsr.release ?? 1.2
+        const noteDur = attack + decay + release + 0.02
+        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+          const freq = resolveFreq(val)
+          if (freq > 0) {
+            const voice = createPad(ctx, {
+              frequency: freq,
+              ...(props.adsr   !== undefined && { adsr:   props.adsr }),
+              ...(props.filter !== undefined && { filter: props.filter }),
+              gain: props.volume ?? 0.6,
+            })
+            voice.connect(dest)
+            voice.noteOn(pos.time)
+            voice.noteOff(pos.time + noteDur)
+          }
+        })
+        break
+      }
+      case 'rhodes': {
+        // Rhodes — FMSynth with DX7 Rhodes defaults (modRatio 1.273, fast attack, long decay)
+        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; ampAdsr?: { attack?: number; decay?: number; release?: number }; modRatio?: number; modIndex?: number; modAdsr?: Record<string, unknown>; volume?: number }
+        const pattern = (props.pattern ?? props.notes ?? DEFAULT_SYNTH_PATTERN) as (number | string)[]
+        const ampAdsr = props.ampAdsr ?? {}
+        const attack  = ampAdsr.attack  ?? 0.005
+        const decay   = ampAdsr.decay   ?? 0.9
+        const release = ampAdsr.release ?? 0.5
+        const noteDur = attack + decay + release + 0.02
+        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+          const freq = resolveFreq(val)
+          if (freq > 0) {
+            const voice = createRhodes(ctx, {
+              frequency: freq,
+              ...(props.modRatio !== undefined && { modRatio: props.modRatio }),
+              ...(props.modIndex !== undefined && { modIndex: props.modIndex }),
+              ...(props.ampAdsr  !== undefined && { ampAdsr:  props.ampAdsr }),
+              ...(props.modAdsr  !== undefined && { modAdsr:  props.modAdsr }),
+              gain: props.volume ?? 0.65,
+            })
+            voice.connect(dest)
+            voice.noteOn(pos.time)
+            voice.noteOff(pos.time + noteDur)
+          }
+        })
+        break
+      }
+      case 'pluck': {
+        // Pluck — Karplus-Strong: trigger on any non-zero note, natural decay
+        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; feedback?: number; burstDuration?: number; volume?: number }
+        const pattern = (props.pattern ?? props.notes ?? DEFAULT_SYNTH_PATTERN) as (number | string)[]
+        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+          const freq = resolveFreq(val)
+          if (freq > 0) {
+            const voice = createPluck(ctx, {
+              frequency: freq,
+              ...(props.feedback      !== undefined && { feedback:      props.feedback }),
+              ...(props.burstDuration !== undefined && { burstDuration: props.burstDuration }),
+              gain: props.volume ?? 0.7,
+            })
+            voice.connect(dest)
+            voice.noteOn(pos.time)
+            // noteOff is a no-op for Karplus-Strong — decay is natural
+          }
+        })
+        break
+      }
+      case 'bass-303': {
+        // Bass303 — TB-303 acid bass: saw/sq → high-Q LP filter → MEG/VEG envelopes
+        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; wave?: 'sawtooth' | 'square'; cutoff?: number; resonance?: number; envDepth?: number; filterAdsr?: { attack?: number; decay?: number; release?: number }; ampAdsr?: { attack?: number; decay?: number; release?: number }; accentAmount?: number; volume?: number }
+        const pattern = (props.pattern ?? props.notes ?? DEFAULT_SYNTH_PATTERN) as (number | string)[]
+        const ampAdsr = props.ampAdsr ?? {}
+        const attack  = ampAdsr.attack  ?? 0.003
+        const decay   = ampAdsr.decay   ?? 0.2
+        const release = ampAdsr.release ?? 0.1
+        const noteDur = attack + decay + release + 0.02
+        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+          const freq = resolveFreq(val)
+          if (freq > 0) {
+            const voice = createBass303(ctx, {
+              frequency: freq,
+              ...(props.wave        !== undefined && { wave:        props.wave }),
+              ...(props.cutoff      !== undefined && { cutoff:      props.cutoff }),
+              ...(props.resonance   !== undefined && { resonance:   props.resonance }),
+              ...(props.envDepth    !== undefined && { envDepth:    props.envDepth }),
+              ...(props.filterAdsr  !== undefined && { filterAdsr:  props.filterAdsr }),
+              ...(props.ampAdsr     !== undefined && { ampAdsr:     props.ampAdsr }),
+              ...(props.accentAmount !== undefined && { accentAmount: props.accentAmount }),
               gain: props.volume ?? 0.7,
             })
             voice.connect(dest)

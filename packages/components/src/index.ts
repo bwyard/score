@@ -13,3 +13,7 @@ export { createHihat808, type Hihat808Props, type Hihat808Component } from './dr
 export { createSnare909, type Snare909Props, type Snare909Component } from './drums/snare909.js'
 export { createSubtractiveSynth, type SubtractiveSynthProps, type SubtractiveSynthComponent } from './synths/subtractive.js'
 export { createFMSynth, type FMSynthProps, type FMSynthComponent, type FMSynthAmpAdsr, type FMSynthModAdsr } from './synths/fm.js'
+export { createPad, type PadProps, type PadComponent } from './synths/pad.js'
+export { createRhodes, type RhodesProps, type RhodesComponent } from './synths/rhodes.js'
+export { createPluck, type PluckProps, type PluckComponent } from './synths/pluck.js'
+export { createBass303, type Bass303Props, type Bass303Component, type Bass303AdsrProps } from './synths/bass303.js'
