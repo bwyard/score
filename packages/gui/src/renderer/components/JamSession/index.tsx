@@ -6,7 +6,7 @@ type Props = { readonly hardware: HardwareLevel; readonly onHome: () => void }
 
 /**
  * Jam Session mode — live performance with MIDI hardware.
- * Powered by @score/session (createJamSession) in the main process.
+ * Powered by `@score/session` (createJamSession) in the main process.
  * Phase 13b: full jam session GUI, MIDI mapping visualiser, track mutes.
  */
 export const JamSession = ({ hardware, onHome }: Props) => {
