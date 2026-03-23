@@ -2,6 +2,34 @@
 
 Score's `--watch` mode reloads your song every time you save. Use it to hear changes instantly while writing.
 
+## Score Studio — GUI editor
+
+Score Studio is the graphical live coding environment. Launch it with:
+
+```bash
+score studio
+```
+
+### Monaco editor
+
+The code editor uses [Monaco](https://microsoft.github.io/monaco-editor/) (the engine behind VS Code) with Score DSL syntax highlighting, autocomplete, and beat highlighting.
+
+**Keyboard shortcuts:**
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+Enter` / `Cmd+Enter` | Evaluate the current code |
+| `Ctrl+.` / `Cmd+.` | Panic stop — silences audio immediately |
+
+**Beat highlighting:** While playing, the instrument line currently hitting is highlighted with a blue glow. A `STEP/TOTAL` step-badge appears inline at the right edge of each instrument line (e.g. `3/8`).
+
+**Bidirectional editing:** Changes in the visualizer panels write back to the code in real time:
+- Click a step in the **Step Grid** → toggles `pattern[step]` in the code
+- Drag the **Mixer** volume fader → updates `volume:` in the code
+- Change BPM in the transport bar → updates `bpm:` in the code
+
+**Import visibility:** The `Imports` button in the panel toolbar folds/unfolds the import block. The imports are always present in the saved file — the fold is visual only.
+
 ## Start a watch session
 
 ```bash

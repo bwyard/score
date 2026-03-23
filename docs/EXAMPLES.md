@@ -1,6 +1,8 @@
 # Examples
 
-Eight complete runnable songs. All work with `score play <filename>`. Add `--watch` to edit live.
+Ten complete runnable songs. All work with `score play <filename>`. Add `--watch` to edit live.
+
+> **Note — fluent DSL chain API pending:** Import syntax in these examples will be simplified in an upcoming release. The current multi-import style works now; a full rewrite of all examples is planned once the new API lands.
 
 ---
 
@@ -293,4 +295,97 @@ const bass = Synth({
 })
 
 export default Song({ bpm: 128, key: 'Am', tracks: [kick, snare, hihat, bass] })
+```
+
+---
+
+## 9. SubtractiveSynth — Juno acid lead
+
+Reese-style detuned lead through SubSynth with unison oscillators and filter envelope sweep.
+
+```js
+// subtractive-lead.js
+import { Song, Kick909, Snare909, Hihat808, SubSynth } from '@score/dsl'
+import { Reverb, Delay } from '@score/effects'
+import { euclidean } from '@score/pattern'
+
+const kick = Kick909({
+  pattern: euclidean(4, 16),
+  volume: 0.9,
+})
+
+const snare = Snare909({
+  pattern: [0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0],
+  volume: 0.65,
+  toneNoiseRatio: 0.3,
+})
+
+const hihat = Hihat808({
+  pattern: euclidean(8, 16),
+  volume: 0.25,
+})
+
+const lead = SubSynth({
+  wave: 'sawtooth',
+  frequency: 220,
+  unison: 2,
+  detune: 12,
+  filter: {
+    type: 'lowpass',
+    frequency: 300,
+    Q: 4.0,
+    envDepth: 1400,
+    adsr: { attack: 0.01, decay: 0.25, sustain: 0.2, release: 0.12 },
+  },
+  adsr: { attack: 0.005, decay: 0.12, sustain: 0.55, release: 0.08 },
+  pattern: ['A2', 0, 'A2', 0,  0, 'D3', 'E3', 0,  'A2', 0, 0, 'G2',  0, 'E2', 0, 0],
+  volume: 0.5,
+  effects: [
+    Delay({ time: 0.25, feedback: 0.25, mix: 0.2 }),
+    Reverb({ decay: 1.0, mix: 0.15, preDelay: 0.02 }),
+  ],
+})
+
+export default Song({ bpm: 132, key: 'Am', tracks: [kick, snare, hihat, lead] })
+```
+
+---
+
+## 10. FM synthesis — DX7 Rhodes groove
+
+Electric piano timbre via 2-operator FM. Modulator envelope gives the characteristic DX7 pluck-to-sustain timbral evolution.
+
+```js
+// fm-rhodes.js
+import { Song, Kick808, Hihat808, FMSynth } from '@score/dsl'
+import { Reverb, Chorus } from '@score/effects'
+import { euclidean } from '@score/pattern'
+
+const kick = Kick808({
+  pattern: euclidean(4, 16),
+  volume: 0.8,
+  decay: 0.8,
+})
+
+const hihat = Hihat808({
+  pattern: [1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0],
+  volume: 0.2,
+})
+
+const rhodes = FMSynth({
+  frequency: 261.63,
+  modRatio: 1.0,
+  modIndex: 2.8,
+  ampAdsr:  { attack: 0.005, decay: 0.45, sustain: 0.25, release: 0.3  },
+  modAdsr:  { attack: 0.001, decay: 0.22, sustain: 0.0,  release: 0.12 },
+  gain: 0.35,
+  pattern: ['C4', 0, 'E4', 0,  'G4', 0, 'B4', 0,  'C4', 0, 'E4', 0,  'G4', 0, 'C5', 0],
+  volume: 0.6,
+  effects: [
+    Chorus({ rate: 0.4, depth: 0.35, mix: 0.35 }),
+    Reverb({ decay: 2.0, mix: 0.22, preDelay: 0.025 }),
+  ],
+})
+
+export default Song({ bpm: 118, key: 'C', tracks: [kick, hihat, rhodes] })
 ```

@@ -2,6 +2,8 @@
 
 Play your first song in under 5 minutes.
 
+> **Note — fluent DSL chain API pending:** The import syntax used throughout this doc (`import { Kick, Synth } from '@score/dsl'`) will be simplified to a single import in an upcoming release. Examples will be updated once the new API lands. The current syntax continues to work.
+
 ## Install
 
 ```bash
@@ -140,10 +142,19 @@ Every importable symbol across all packages.
 | Import | From | What it does |
 |---|---|---|
 | `Song` | `@score/dsl` | Song container — wraps tracks, bpm, key, arrangement |
-| `Kick` | `@score/dsl` | Synthesized bass drum |
+| `Kick` | `@score/dsl` | Synthesized bass drum (sine + pitch drop) |
 | `Snare` | `@score/dsl` | Synthesized snare drum |
 | `HiHat` | `@score/dsl` | Synthesized hi-hat (closed and open) |
+| `Kick808` | `@score/dsl` | TR-808 bass drum — deep sub, long decay |
+| `Kick909` | `@score/dsl` | TR-909 bass drum — punchy body + transient click |
+| `Snare909` | `@score/dsl` | TR-909 snare — pitched tone + noise body |
+| `Hihat808` | `@score/dsl` | TR-808 hi-hat — metallic six-oscillator noise source |
 | `Synth` | `@score/dsl` | Subtractive synth with ADSR, filter, and effects |
+| `SubSynth` | `@score/dsl` | Full Juno-60/Minimoog model — unison, filter envelope |
+| `FMSynth` | `@score/dsl` | 2-operator FM — DX7 Rhodes, metallic leads, bells |
+| `Arp` | `@score/dsl` | Arpeggiator cycling through a note list |
+| `Theremin` | `@score/dsl` | Smooth pitch-glide melodic voice |
+| `Sax` | `@score/dsl` | Stepped melodic voice with note sequence |
 | `Sample` | `@score/dsl` | Audio file player with rate and pattern control |
 | `Sequence` | `@score/dsl` | Parses space-separated note name strings into arrays |
 | `Intro` | `@score/dsl` | Arrangement section — opening bars |
@@ -219,7 +230,7 @@ Every importable symbol across all packages.
 
 | File | Contents |
 |---|---|
-| [INSTRUMENTS.md](INSTRUMENTS.md) | Kick, Snare, HiHat, Synth, Sample — full props and examples |
+| [INSTRUMENTS.md](INSTRUMENTS.md) | All 14 instruments — Kick, Snare, HiHat, Kick808, Kick909, Snare909, Hihat808, Synth, SubSynth, FMSynth, Arp, Theremin, Sax, Sample |
 | [EFFECTS.md](EFFECTS.md) | All 14 effects — props, examples, and chain recipes |
 | [SCALES.md](SCALES.md) | scaleNotes, chordNotes, tuning systems, circleOfFifths |
 | [ARRANGEMENT.md](ARRANGEMENT.md) | Intro/Buildup/Drop/Breakdown/Outro — section-based arrangement |
