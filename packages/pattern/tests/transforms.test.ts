@@ -59,6 +59,23 @@ describe('degrade', () => {
     expect(degradeFn(0, 0)).toBe(0)
     expect(degradeFn(2, 0)).toBe(0)
   })
+
+  it('same seed produces identical degrade output', () => {
+    const pat = [1, 1, 1, 1, 1, 1, 1, 1]
+    const fn = degrade(0.5, pat)
+    const seed = 42
+    const run1 = Array.from({ length: 8 }, (_, s) => fn(s, 0, seed))
+    const run2 = Array.from({ length: 8 }, (_, s) => fn(s, 0, seed))
+    expect(run1).toEqual(run2)
+  })
+
+  it('different seeds produce different degrade output', () => {
+    const pat = [1, 1, 1, 1, 1, 1, 1, 1]
+    const fn = degrade(0.5, pat)
+    const run1 = Array.from({ length: 8 }, (_, s) => fn(s, 0, 42))
+    const run2 = Array.from({ length: 8 }, (_, s) => fn(s, 0, 99999))
+    expect(run1).not.toEqual(run2)
+  })
 })
 
 describe('shift', () => {
@@ -136,5 +153,22 @@ describe('humanize', () => {
     const fn = humanize(0, [1, 0])
     expect(fn(2, 0)).toBe(1)  // step 2 → index 0 → 1
     expect(fn(3, 0)).toBe(0)  // step 3 → index 1 → 0
+  })
+
+  it('same seed produces identical humanize output', () => {
+    const pat = [1, 1, 1, 1, 1, 1, 1, 1]
+    const fn = humanize(0.3, pat)
+    const seed = 42
+    const run1 = Array.from({ length: 8 }, (_, s) => fn(s, 0, seed))
+    const run2 = Array.from({ length: 8 }, (_, s) => fn(s, 0, seed))
+    expect(run1).toEqual(run2)
+  })
+
+  it('different seeds produce different humanize output', () => {
+    const pat = [1, 1, 1, 1, 1, 1, 1, 1]
+    const fn = humanize(0.3, pat)
+    const run1 = Array.from({ length: 8 }, (_, s) => fn(s, 0, 42))
+    const run2 = Array.from({ length: 8 }, (_, s) => fn(s, 0, 99999))
+    expect(run1).not.toEqual(run2)
   })
 })

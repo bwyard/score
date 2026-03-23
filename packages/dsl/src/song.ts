@@ -44,11 +44,17 @@ export const Song = (props: SongProps): SongDefinition => {
       docs: 'https://score.dev/docs/dsl/song',
     })
   }
+  const seed = props.seed ?? Date.now()
+  if (props.seed === undefined) {
+    // BOUNDARY — IO: log resolved seed so artist can replay exact groove
+    console.log(`Score: Song loaded — seed: ${String(seed)} (add seed: ${String(seed)} to Song props to replay)`)
+  }
   return {
     _type: 'SongDefinition',
     bpm: props.bpm,
     tracks: props.tracks,
     arrangement: props.arrangement ?? [],
+    seed,
     ...(props.key     !== undefined && { key:     props.key }),
     ...(props.genre   !== undefined && { genre:   props.genre }),
     ...(props.backend !== undefined && { backend: props.backend }),

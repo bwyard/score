@@ -11,6 +11,12 @@ export type StepSequencerProps<T = number> = {
   readonly pattern: PatternInput<T>
   /** Total number of steps before wrapping. Defaults to `pattern.length` for arrays, or `16`. */
   readonly steps?: number
+  /**
+   * Song seed — passed to `PatternFn` as the third argument so stochastic transforms
+   * (`degrade`, `humanize`) produce song-specific variation.
+   * Sourced from `Song({ seed })` — defaults to `Date.now()` if omitted.
+   */
+  readonly seed?: number
 }
 
 /**
@@ -75,7 +81,7 @@ export const createStepSequencer = <T = number>(
       // Safe: index is always within bounds due to modulo with non-zero length
       return value as T
     }
-    return state.pattern(currentStep, bar)
+    return state.pattern(currentStep, bar, props.seed)
   }
 
   transport.onTick((position: Position): void => {
