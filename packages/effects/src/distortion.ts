@@ -1,7 +1,7 @@
 // Distortion effect — wave shaping with dry/wet mix
 // Uses WaveShaperNode for nonlinear distortion + gain nodes for mixing
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -120,11 +120,13 @@ export const createDistortion = (
   wetGain.connect(outputGain)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setAmount: (value: number, mode?: DistortionMode) => void
     readonly setMix: (value: number, time?: number) => void
   } = {
     id: uid('distortion'),
     type: 'distortion' as const,
+    input: inputGain,
 
     /**
      * Set the distortion amount and optionally switch the mode.

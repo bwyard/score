@@ -62,7 +62,7 @@ export type Kick909Component = AudioComponent & {
  * @see {@link Kick909Props} — configuration options
  * @see {@link Kick909Component} — returned component shape
  * @see {@link createKick808} — 808-style kick without noise click
- * @throws {ScoreError} Never — invalid props are silently clamped.
+ * @throws \{ScoreError\} Never — invalid props are silently clamped.
  */
 export const createKick909 = (
   context: ScoreAudioContext,

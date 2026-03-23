@@ -112,7 +112,7 @@ export type SubtractiveSynthComponent = AudioComponent & {
  *
  * @see {@link SubtractiveSynthProps} — configuration options
  * @see {@link SubtractiveSynthComponent} — returned component shape
- * @throws {ScoreError} Never — invalid props are silently clamped.
+ * @throws \{ScoreError\} Never — invalid props are silently clamped.
  */
 export const createSubtractiveSynth = (
   context: ScoreAudioContext,

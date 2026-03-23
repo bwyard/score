@@ -195,6 +195,12 @@ const createMockContext = (shouldThrowOnDisconnect = false): ModulationMockConte
       }
     },
 
+    createAnalyser: (_props?: { fftSize?: number }) => ({
+      connect: (_dest: unknown) => {},
+      disconnect: (_dest?: unknown) => {},
+      frequencyBinCount: 1024,
+      getFloatTimeDomainData: (_array: Float32Array) => {},
+    }),
     suspend: () => Promise.resolve(),
     resume: () => Promise.resolve(),
     close: () => Promise.resolve(),

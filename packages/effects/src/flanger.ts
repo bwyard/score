@@ -3,7 +3,7 @@
 // NOTE: Initial implementation uses fixed delay time.
 // Phase 8b (LFO core primitive) will upgrade to true modulated flanger.
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -80,12 +80,14 @@ export const createFlanger = (
   feedbackGain.connect(flangeDelay)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setDepth: (value: number, time?: number) => void
     readonly setFeedback: (value: number, time?: number) => void
     readonly setMix: (value: number, time?: number) => void
   } = {
     id: uid('flanger'),
     type: 'flanger' as const,
+    input: inputGain,
 
     /**
      * Set the flange delay depth. Controls the comb-filter frequency spacing.

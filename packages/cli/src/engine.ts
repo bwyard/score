@@ -13,13 +13,14 @@
 
 import { readFileSync } from 'node:fs'
 import { webAudioBackend, decodeSample, createSamplePlayer } from '@score/core'
-import type { EffectDescriptor, AudioComponent, ScoreAudioContext } from '@score/core'
+import type { EffectDescriptor, AudioComponent, ScoreAudioContext, BackendAnalyserNode } from '@score/core'
 import { Theremin as ThereminComponent, Sax as SaxComponent } from '@score/components'
 import { createMixer } from '@score/mixer'
 import {
   createDelay, createReverb, createFilter, createCompressor, createEQ,
   createDistortion, createLimiter, createBitCrusher, createChorus,
   createPhaser, createFlanger, createStereoWidener, createGate,
+  createSaturation, createAutoPan,
 } from '@score/effects'
 import { createTransport, createStepSequencer } from '@score/sequencer'
 import { resolveFreq } from '@score/dsl'
@@ -49,6 +50,8 @@ const hydrateEffect = (ctx: ScoreAudioContext, desc: EffectDescriptor): AudioCom
     case 'flanger':       return createFlanger(ctx, p as Parameters<typeof createFlanger>[1])
     case 'stereo-widener':return createStereoWidener(ctx, p as Parameters<typeof createStereoWidener>[1])
     case 'gate':          return createGate(ctx, p as Parameters<typeof createGate>[1])
+    case 'saturation':    return createSaturation(ctx, p as Parameters<typeof createSaturation>[1])
+    case 'autopan':       return createAutoPan(ctx, p as Parameters<typeof createAutoPan>[1])
     default:
       // Unknown effect type — pass-through (connect input directly to output)
       return createEQ(ctx)
@@ -97,22 +100,32 @@ export const triggerKick = (ctx: Context, time: number, props: KickProps, dest: 
 }
 
 export const triggerSnare = (ctx: Context, time: number, props: SnareProps, dest: GainNode): void => {
-  const gain = props.volume ?? 0.5
+  const gain  = props.volume ?? 0.5
+  const decay = props.decay  ?? 0.12
+  const tone  = props.tone   ?? 5000
+
+  // Body — short sine transient (the crack/attack)
+  // 2 ms attack prevents the hard-onset click; decays to silence by ~80 ms
   const body  = ctx.createOscillator({ type: 'sine', frequency: 185 })
-  const bGain = ctx.createGain({ gain: gain * 0.7 })
+  const bGain = ctx.createGain({ gain: 0 })
   body.connect(bGain)
   bGain.connect(dest)
+  bGain.scheduleEnvelope({ peak: gain * 0.7, attack: 0.002, decay: 0.06, sustain: 0, release: 0, startTime: time, duration: 0.09 })
   body.start(time)
   body.setFrequency(100, time + 0.05)
-  body.stop(time + 0.08)
+  body.stop(time + 0.09)
+
+  // Noise — filtered burst (the snare wire rattle)
+  // 1 ms attack snaps the rattle in immediately; decay controlled by props.decay
   const noise  = ctx.createNoise({ type: 'white' })
-  const filter = ctx.createFilter({ type: 'bandpass', frequency: 5000, Q: 0.8 })
-  const nGain  = ctx.createGain({ gain: gain * 0.5 })
+  const filter = ctx.createFilter({ type: 'bandpass', frequency: tone, Q: 0.8 })
+  const nGain  = ctx.createGain({ gain: 0 })
   noise.connect(filter)
   filter.connect(nGain)
   nGain.connect(dest)
+  nGain.scheduleEnvelope({ peak: gain * 0.5, attack: 0.001, decay, sustain: 0, release: 0, startTime: time, duration: decay + 0.02 })
   noise.start(time)
-  noise.stop(time + 0.12)
+  noise.stop(time + decay + 0.02)
 }
 
 export const triggerHiHat = (ctx: Context, time: number, props: HiHatProps, dest: GainNode): void => {
@@ -120,10 +133,13 @@ export const triggerHiHat = (ctx: Context, time: number, props: HiHatProps, dest
   const dur  = props.open ? 0.3 : 0.06
   const noise  = ctx.createNoise({ type: 'white' })
   const filter = ctx.createFilter({ type: 'highpass', frequency: 8000 })
-  const vol    = ctx.createGain({ gain })
+  // Start at gain: 0 — 1ms attack ramp prevents hard-onset click (same contract as kick/snare).
+  // Hi-hat is very short so keep attack minimal (1ms) to preserve the crisp transient.
+  const vol    = ctx.createGain({ gain: 0 })
   noise.connect(filter)
   filter.connect(vol)
   vol.connect(dest)
+  vol.scheduleEnvelope({ peak: gain, attack: 0.001, decay: dur - 0.001, sustain: 0, release: 0, startTime: time, duration: dur })
   noise.start(time)
   noise.stop(time + dur)
 }
@@ -220,13 +236,26 @@ export type PatchProps = {
 // ── Engine ────────────────────────────────────────────────────────────────────
 
 export type ScoreEngine = {
-  readonly start:   () => void
-  readonly stop:    () => void
-  readonly dispose: () => void
-  readonly bpm:     number
+  readonly start:     () => void
+  readonly stop:      () => void
+  readonly dispose:   () => void
+  readonly bpm:       number
   /** Current bar count (absolute, resets on stop). */
-  readonly bars:    number
-  readonly onBar:   (callback: () => void) => void
+  readonly bars:      number
+  readonly onBar:     (callback: () => void) => void
+  /**
+   * Fires on every sequencer step with the zero-based step index and the
+   * total step count for the cursor pattern. Use this for punchcard cursor
+   * and per-step visualiser updates — much finer-grained than `onBar`.
+   *
+   * @example
+   * ```ts
+   * engine.onStep((step, stepCount) => { cursor = step / stepCount })
+   * ```
+   */
+  readonly onStep:    (callback: (step: number, stepCount: number) => void) => void
+  /** Number of steps in the cursor pattern (max pattern length across all tracks). */
+  readonly stepCount: number
   /**
    * Apply surgical parameter updates to the running engine without reload.
    * Supports: `bpm`, `masterVolume`, per-track `volume` and `mute`.
@@ -239,12 +268,35 @@ export type ScoreEngine = {
    * `--watch` for full reload on those changes.
    */
   readonly update:  (song: SongDefinition) => void
+  /**
+   * AnalyserNode tapped from the master output — use to read waveform or
+   * frequency data in real time. Connected in parallel with the destination
+   * so analysis does not alter the audible signal path.
+   *
+   * @example
+   * ```ts
+   * const buf = new Float32Array(engine.analyser.frequencyBinCount)
+   * engine.analyser.getFloatTimeDomainData(buf)
+   * ```
+   */
+  readonly analyser: BackendAnalyserNode
 }
 
 export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngine> => {
   const ctx = webAudioBackend.createContext()
-  const mixer = createMixer(ctx, { masterVolume: 0.85 })
+  // masterVolume: 0.72 — leaves headroom so simultaneous hits don't push the
+  // limiter into heavy pumping. limiterCeiling -1.5 dBFS gives the compressor
+  // more range before onset, reducing audible pump artifacts at pattern repeats.
+  const mixer = createMixer(ctx, { masterVolume: 0.72, limiterCeiling: -1.5 })
   const transport = createTransport(ctx, { bpm: song.bpm, ticksPerBeat: 4 })
+
+  // ── AnalyserNode — taps master output for visualisation ─────────────────────
+  // fftSize 2048 → frequencyBinCount 1024 samples; sufficient for ~20fps waveform reads.
+  // Inserted in series: mixer (limiter) → analyser → ctx.destination.
+  // The analyser node is transparent to audio — no coloration of the signal.
+  const analyser = ctx.createAnalyser({ fftSize: 2048 })
+  mixer.connect(analyser)
+  analyser.connect(ctx.destination)
 
   // Resolve track descriptors
   const descriptors = song.tracks
@@ -337,13 +389,22 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       }
       case 'theremin': {
         const props = comp.props as ThereminDSLProps
+        // Fade-in wrapper — starts at 0, ramps to 1.0 over 30ms so the theremin
+        // oscillator's hard start is inaudible. The theremin's own gain prop sets
+        // the final amplitude; this node only prevents the startup click.
+        const fadeIn = ctx.createGain({ gain: 0 })
+        fadeIn.connect(dest)
+        fadeIn.scheduleEnvelope({
+          peak: 1.0, attack: 0.03, decay: 0, sustain: 1,
+          release: 0, startTime: ctx.currentTime, duration: 3600,
+        })
         const t = ThereminComponent(ctx, {
           ...(props.note         !== undefined && { note:         props.note }),
           ...(props.vibratoRate  !== undefined && { vibratoRate:  props.vibratoRate }),
           ...(props.vibratoDepth !== undefined && { vibratoDepth: props.vibratoDepth }),
           ...(props.gain         !== undefined && { gain:         props.gain }),
         })
-        t.connect(dest)
+        t.connect(fadeIn)
         t.start()
         break
       }
@@ -421,17 +482,38 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
     })
   }
 
+  // ── Cursor step sequencer — fires per step for punchcard + visualiser sync ───
+  // Uses max pattern length across tracks (min 8) so the cursor covers all tracks.
+  // All-ones pattern means every step triggers the callback regardless of track hits.
+  const cursorStepCount = Math.max(
+    ...descriptors.map(d => {
+      const p = (d.props as { pattern?: ReadonlyArray<unknown> }).pattern
+      return p ? p.length : 0
+    }),
+    8,
+  )
+  const cursorPattern = Array.from({ length: cursorStepCount }, () => 1)
+  const stepCallbacks: Array<(step: number, stepCount: number) => void> = []
+  createStepSequencer(transport, { pattern: cursorPattern }, (_val, step, _pos) => {
+    stepCallbacks.forEach(cb => { cb(step, cursorStepCount); })
+  })
+
   return {
-    start:   () => { transport.play() },
-    stop:    () => { transport.stop() },
-    dispose: () => {
+    start:     () => { transport.play() },
+    stop:      () => { transport.stop() },
+    dispose:   () => {
       transport.dispose()
       mixer.dispose()
       ctx.close().catch(() => {})
     },
     get bpm()  { return transport.bpm },
     get bars() { return transport.position.bar },
-    onBar: (callback: () => void) => { transport.onBar(callback) },
+    onBar:  (callback: () => void) => { transport.onBar(callback) },
+    onStep: (callback: (step: number, stepCount: number) => void) => {
+      stepCallbacks.push(callback)
+    },
+    get stepCount() { return cursorStepCount },
+    analyser,
 
     patch: (props: PatchProps): void => {
       if (props.bpm !== undefined) transport.setBPM(props.bpm)

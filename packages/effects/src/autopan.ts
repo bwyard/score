@@ -3,7 +3,7 @@
 // NOTE: True LFO modulation requires Phase 9a. This implementation pre-schedules
 // 64 ramp points covering ~8 seconds of sinusoidal or triangular pan movement.
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendStereoPannerNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendStereoPannerNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -111,12 +111,14 @@ export const createAutoPan = (
   }
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setRate: (hz: number) => void
     readonly setDepth: (depth: number) => void
     readonly setShape: (shape: AutoPanShape) => void
   } = {
     id: uid('autopan'),
     type: 'autopan' as const,
+    input: inputGain,
 
     /**
      * Set the LFO rate and reschedule pan automation.

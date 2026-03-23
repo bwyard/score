@@ -40,6 +40,10 @@ export default Song({
 })
 ```
 
+## Deterministic Reproducibility
+
+Score's thesis is that **a song is a pure function of time** — same inputs always produce identical output. Stochastic pattern functions (`degrade`, `humanize`, `drunk`) draw from a seeded PRNG provided by [`@prime/prime-random`](../prime/packages/prime-random), a sibling workspace dependency. Calling `Song({ seed: 42 })` always produces the exact same patterns, timings, and arrangement on every run. If no seed is provided, Score falls back to `Date.now()` and logs the generated seed to the console so any session can be reproduced exactly by passing that value back as `seed`.
+
 ## CLI commands
 
 | Command                              | What it does                                    |

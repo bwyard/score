@@ -1,7 +1,7 @@
 // Reverb effect — simulated reverb using parallel delay taps with exponential decay
 // Uses gain nodes for dry/wet mix control
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import type { BackendGainNode, BackendDelayNode } from '@score/core'
 import { uid } from '@score/core'
 
@@ -84,10 +84,12 @@ export const createReverb = (
   wetGain.connect(outputGain)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setMix: (value: number, time?: number) => void
   } = {
     id: uid('reverb'),
     type: 'reverb' as const,
+    input: inputGain,
 
     /**
      * Set the wet/dry mix. `0` = fully dry, `1` = fully reverberant.

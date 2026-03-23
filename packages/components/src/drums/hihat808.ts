@@ -66,7 +66,7 @@ export type Hihat808Component = AudioComponent & {
  *
  * @see {@link Hihat808Props} — configuration options
  * @see {@link Hihat808Component} — returned component shape
- * @throws {ScoreError} Never — invalid props are silently clamped.
+ * @throws \{ScoreError\} Never — invalid props are silently clamped.
  */
 export const createHihat808 = (
   context: ScoreAudioContext,

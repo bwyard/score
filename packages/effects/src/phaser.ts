@@ -3,7 +3,7 @@
 // NOTE: Initial implementation uses fixed filter frequencies.
 // Phase 8b (LFO core primitive) will upgrade to true modulated phaser.
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid, ScoreError } from '@score/core'
 
 /**
@@ -99,10 +99,12 @@ export const createPhaser = (
   feedbackGain.connect(firstFilter)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setFeedback: (value: number, time?: number) => void
   } = {
     id: uid('phaser'),
     type: 'phaser' as const,
+    input: inputGain,
 
     /**
      * Set the phaser feedback amount. Higher feedback creates sharper, more resonant notches.

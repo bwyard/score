@@ -1,7 +1,7 @@
 // Filter effect — wraps a backend biquad filter node
 // Supports lowpass, highpass, bandpass, notch, allpass, peaking, lowshelf, highshelf
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendFilterNode, FilterType } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendFilterNode, FilterType, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -57,12 +57,14 @@ export const createFilter = (
   })
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setFrequency: (value: number, time?: number) => void
     readonly setQ: (value: number, time?: number) => void
     readonly setGain: (value: number, time?: number) => void
   } = {
     id: uid('filter'),
     type: 'filter' as const,
+    input: filterNode,
 
     /**
      * Set the filter cutoff or center frequency.
