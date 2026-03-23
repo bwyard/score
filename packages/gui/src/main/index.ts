@@ -31,7 +31,6 @@ import type { MainToRenderer, RendererToMain, PanelLayoutMap } from './ipc-types
 const defaultSong = (): SongDefinition => Song({
   bpm:    128,
   tracks: [
-    Track(Kick(4).volume(0.9)),
     Track(Synth({
       wave:      'sawtooth',
       frequency: 65.41,
@@ -438,8 +437,15 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
     }
   } catch (err: unknown) {
     console.error('[score-studio] eval error', err)
-    send('error:report', {
-      message: err instanceof Error ? err.message : String(err),
+    const message = err instanceof Error ? err.message : String(err)
+    const stack   = err instanceof Error ? (err.stack ?? undefined) : undefined
+    const fix     = (err instanceof Error && 'context' in err && err.context !== null && typeof err.context === 'object' && 'fix' in err.context)
+      ? String((err.context as { fix: unknown }).fix)
+      : undefined
+    send('song:error', {
+      message,
+      ...(stack !== undefined ? { stack } : {}),
+      ...(fix   !== undefined ? { fix   } : {}),
     })
   }
 })

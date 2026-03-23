@@ -128,3 +128,41 @@ describe('LiveCode — step click re-eval wiring (12b.2)', () => {
     expect(window.scoreBridge.send).toHaveBeenCalledWith('engine:eval', expect.anything())
   })
 })
+
+// ── t184: song:error IPC — crash resilience ───────────────────────────────────
+
+describe('LiveCode — song:error crash resilience (t184)', () => {
+  it('shows error banner when song:error fires', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    act(() => {
+      emitBridgeEvent('song:error', { message: 'ReferenceError: Kick is not defined' })
+    })
+    expect(screen.getByRole('alert')).toHaveTextContent('ReferenceError: Kick is not defined')
+  })
+
+  it('shows fix hint in console log when song:error has a fix', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    act(() => {
+      emitBridgeEvent('song:error', {
+        message: 'Invalid bpm value',
+        fix:     'bpm must be between 20 and 300',
+      })
+    })
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    // Fix hint logged — visible in console panel
+    expect(screen.getByText(/bpm must be between 20 and 300/i)).toBeInTheDocument()
+  })
+
+  it('does not stop transport when song:error fires', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    // Start engine playing
+    act(() => {
+      emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 0 })
+    })
+    act(() => {
+      emitBridgeEvent('song:error', { message: 'some error' })
+    })
+    // transport:stop must NOT have been sent
+    expect(window.scoreBridge.send).not.toHaveBeenCalledWith('transport:stop', expect.anything())
+  })
+})
