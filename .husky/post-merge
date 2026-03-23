@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# Rebuild library packages after pulling — keeps dist/ in sync with source.
+# Excludes @score/gui (Electron app, not a library — run pnpm dev separately).
+# Turbo only rebuilds what changed (cached), so this is fast on small pulls.
+pnpm turbo build --filter='!@score/gui'
