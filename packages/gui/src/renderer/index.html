@@ -5,11 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Score Studio</title>
     <style>
+      :root {
+        --score-zoom: 1;
+        --score-bg:        #0d0d0f;
+        --score-surface:   #111113;
+        --score-border:    #2a2a30;
+        --score-text:      #e8e8f0;
+        --score-muted:     #888898;
+        --score-dim:       #555560;
+        --score-accent:    #4a8fff;
+        --score-accent-bg: #111825;
+        --score-accent-border: #2a4a8a;
+        --score-accent-text:   #aacfff;
+      }
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+      html {
+        zoom: var(--score-zoom);
+      }
       html, body, #root {
         height: 100%;
-        background: #0d0d0f;
-        color: #e8e8e8;
+        background: var(--score-bg);
+        color: var(--score-text);
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
         -webkit-font-smoothing: antialiased;
       }
