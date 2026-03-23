@@ -32,48 +32,28 @@ export const newSong = (args: string[]): void => {
 // Run with:  score play ${fileName}
 // Live mode: score play ${fileName} --watch
 
-import { Song, Kick, Snare, HiHat, Synth, Intro, Drop, Outro } from '@score/dsl'
+import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
 
 // ── DRUMS ─────────────────────────────────────────────────────────────────────
-// Pattern: 16-step array. 1 = hit, 0 = rest.
 
-const kick = Kick({
-  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.85,
-})
+const kick  = Kick808().hits(0, 4, 8, 12).volume(0.7)
+const snare = Snare909().hits(4, 12).volume(0.55)
+const hihat = Hihat808().euclidean(8, 16).volume(0.25)
 
-const snare = Snare({
-  pattern: [0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.5,
-})
+// ── BASS ──────────────────────────────────────────────────────────────────────
+// Chain API: .filter() .resonance() .pattern() .volume() etc.
+// Use note names ('A2', 'D3', 'E3') or 0 for rest.
 
-const hihat = HiHat({
-  pattern: [1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0],
-  volume: 0.2,
-})
+const bass = Bass303('A2')
+  .filter(600)
+  .resonance(0.4)
+  .pattern(['A2', 0, 0, 0,  'D3', 0, 0, 0,  'A2', 0, 0, 0,  'D3', 0, 0, 0])
+  .volume(0.6)
 
-// ── SYNTHESIS ─────────────────────────────────────────────────────────────────
-// Use note names ('A2', 'D3', 'F#3') or Hz values. 0 = rest.
-
-const bass = Synth({
-  wave: 'sawtooth',
-  gain: 0.25,
-  envelope: { attack: 0.005, decay: 0.1, sustain: 0.6, release: 0.05 },
-  filter: { type: 'lowpass', frequency: 900 },
-  pattern: ['A2', 0, 'A2', 0,  0, 'A2', 0, 'D3',  'E3', 0, 'E3', 0,  0, 'A3', 0, 0],
-})
-
-// ── ARRANGEMENT ───────────────────────────────────────────────────────────────
+// ── SONG ──────────────────────────────────────────────────────────────────────
 export default Song({
   bpm: 128,
-  key: 'Am',
-  genre: 'electronic',
   tracks: [kick, snare, hihat, bass],
-  arrangement: [
-    Intro(4,  [kick, bass]),
-    Drop(16,  [kick, snare, hihat, bass]),
-    Outro(4,  [kick, bass]),
-  ],
 })
 `
 
