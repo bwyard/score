@@ -5,7 +5,7 @@
 //
 // No audio, no IPC — pure props in, callbacks out.
 
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -98,13 +98,13 @@ const styles = {
  * />
  * ```
  */
-export const InstrumentPicker = (props: InstrumentPickerProps): JSX.Element => {
+export const InstrumentPicker = (props: InstrumentPickerProps): React.JSX.Element => {
   const { onPick, onClose } = props
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    return () => { window.removeEventListener('keydown', handler) }
   }, [onClose])
 
   const renderGroup = (entries: readonly InstrumentEntry[]) => (
@@ -114,7 +114,7 @@ export const InstrumentPicker = (props: InstrumentPickerProps): JSX.Element => {
           key={type}
           style={styles.instrBtn}
           aria-label={label}
-          onClick={() => onPick(type)}
+          onClick={() => { onPick(type) }}
         >
           {label}
         </button>

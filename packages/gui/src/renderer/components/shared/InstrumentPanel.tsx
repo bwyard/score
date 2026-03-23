@@ -6,6 +6,8 @@
 //
 // No audio, no IPC — pure props in, callbacks out.
 
+import React from 'react'
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 /** Props for {@link InstrumentPanel}. */
@@ -140,12 +142,12 @@ const styles = {
  * />
  * ```
  */
-export const InstrumentPanel = (props: InstrumentPanelProps): JSX.Element => {
+export const InstrumentPanel = (props: InstrumentPanelProps): React.JSX.Element => {
   const { trackIndex, instrumentType, trackName, params, muted, onChange, onMute } = props
   const controls = CONTROLS[instrumentType] ?? FALLBACK_CONTROLS
 
   return (
-    <div style={styles.panel} data-testid={`instrument-panel-${trackIndex}`}>
+    <div style={styles.panel} data-testid={`instrument-panel-${String(trackIndex)}`}>
 
       {/* Track name + mute */}
       <div style={styles.nameSection}>
@@ -163,7 +165,7 @@ export const InstrumentPanel = (props: InstrumentPanelProps): JSX.Element => {
       {/* Controls */}
       <div style={styles.controlsRow}>
         {controls.map(ctrl => {
-          const inputId = `panel-${trackIndex}-${ctrl.method}`
+          const inputId = `panel-${String(trackIndex)}-${ctrl.method}`
 
           if (ctrl.kind === 'checkbox') {
             const checked = Boolean(params[ctrl.method] ?? 0)
@@ -175,7 +177,7 @@ export const InstrumentPanel = (props: InstrumentPanelProps): JSX.Element => {
                     type="checkbox"
                     aria-label={ctrl.label}
                     checked={checked}
-                    onChange={e => onChange(ctrl.method, e.target.checked ? 1 : 0)}
+                    onChange={e => { onChange(ctrl.method, e.target.checked ? 1 : 0) }}
                   />
                   <label htmlFor={inputId} style={styles.label}>{ctrl.label}</label>
                 </div>
@@ -202,7 +204,7 @@ export const InstrumentPanel = (props: InstrumentPanelProps): JSX.Element => {
                 max={ctrl.max}
                 step={ctrl.step}
                 value={val}
-                onChange={e => onChange(ctrl.method, parseFloat(e.target.value))}
+                onChange={e => { onChange(ctrl.method, parseFloat(e.target.value)) }}
               />
             </div>
           )
