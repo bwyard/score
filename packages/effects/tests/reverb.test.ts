@@ -89,4 +89,29 @@ describe('createReverb', () => {
     const r = createReverb(ctx)
     expect(() => { r.dispose() }).not.toThrow()
   })
+
+  it('accepts preDelay prop without throwing', () => {
+    const ctx = h.mockContext()
+    expect(() => { createReverb(ctx, { preDelay: 0.03 }) }).not.toThrow()
+  })
+
+  it('non-zero preDelay creates an extra delay node before the tap network', () => {
+    const ctx = h.mockContext()
+    createReverb(ctx, { preDelay: 0.03 })
+    // 6 tap delays + 1 pre-delay node = 7
+    expect(ctx.createdDelays.length).toBe(7)
+  })
+
+  it('zero preDelay does not create an extra delay node', () => {
+    const ctx = h.mockContext()
+    createReverb(ctx, { preDelay: 0 })
+    // still just 6 tap delays
+    expect(ctx.createdDelays.length).toBe(6)
+  })
+
+  it('omitted preDelay does not create an extra delay node', () => {
+    const ctx = h.mockContext()
+    createReverb(ctx)
+    expect(ctx.createdDelays.length).toBe(6)
+  })
 })

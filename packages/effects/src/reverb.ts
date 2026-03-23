@@ -16,6 +16,12 @@ export type ReverbProps = {
   readonly decay?: number
   /** Wet/dry mix `0–1`. `0` = dry, `1` = fully wet. Default `0.3`. */
   readonly mix?: number
+  /**
+   * Pre-delay before the reverb tail begins, in seconds. Default `0`.
+   * Adds space between the dry signal and the first reflection — 20–40 ms is
+   * the sweet spot for deep house and ambient. Range: `0–0.1`.
+   */
+  readonly preDelay?: number
 }
 
 /**
@@ -47,6 +53,12 @@ type ReverbTap = {
  * const snareVerb = createReverb(context, { decay: 0.8, mix: 0.2 })
  * ```
  *
+ * @example
+ * ```ts
+ * // 30 ms pre-delay for deep house pad — separates dry signal from wet tail
+ * const verb = createReverb(context, { decay: 3.0, mix: 0.35, preDelay: 0.03 })
+ * ```
+ *
  * @see {@link createDelay} — for tempo-synced echo effects
  */
 export const createReverb = (
@@ -55,6 +67,7 @@ export const createReverb = (
 ) => {
   const decay = props?.decay ?? 2.0
   const mixAmount = props?.mix ?? 0.3
+  const preDelayTime = props?.preDelay ?? 0
 
   // Create dry/wet mix nodes
   const inputGain = context.createGain({ gain: 1.0 })
@@ -62,9 +75,17 @@ export const createReverb = (
   const dryGain = context.createGain({ gain: 1.0 - mixAmount })
   const wetGain = context.createGain({ gain: mixAmount })
 
-  // Route: input -> dry -> output
+  // Route: input -> dry -> output (pre-delay does not affect dry path)
   inputGain.connect(dryGain)
   dryGain.connect(outputGain)
+
+  // Optional pre-delay node — inserted before tap network on wet path only.
+  // A DelayNode is only created when preDelay > 0 to avoid unnecessary nodes.
+  const preDelayNode = preDelayTime > 0
+    ? context.createDelay({ delayTime: preDelayTime, maxDelayTime: 0.1 })
+    : null
+  if (preDelayNode) inputGain.connect(preDelayNode)
+  const tapSource = preDelayNode ?? inputGain
 
   // Create parallel delay taps to simulate reverb reflections — declarative, no push
   const taps = 6
@@ -74,7 +95,7 @@ export const createReverb = (
       maxDelayTime: decay + 1,
     })
     const tapGain = context.createGain({ gain: Math.pow(0.6, i + 1) })
-    inputGain.connect(tapDelay)
+    tapSource.connect(tapDelay)
     tapDelay.connect(tapGain)
     tapGain.connect(wetGain)
     return { tapDelay, tapGain } as const
@@ -121,6 +142,7 @@ export const createReverb = (
         try { tapGain.disconnect() } catch { /* already disconnected */ }
         try { tapDelay.disconnect() } catch { /* already disconnected */ }
       })
+      if (preDelayNode) { try { preDelayNode.disconnect() } catch { /* already disconnected */ } }
       try { inputGain.disconnect() } catch { /* already disconnected */ }
       try { dryGain.disconnect() } catch { /* already disconnected */ }
       try { wetGain.disconnect() } catch { /* already disconnected */ }
