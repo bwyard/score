@@ -164,7 +164,7 @@ export const createMockContext = (): MockBackendContext => {
 
     createFilter: (_props) => {
       const base = createMockNode()
-      return { ...base, frequencyParam: createMockAudioParam(), setFrequency: () => {}, setQ: () => {}, setFilterGain: () => {} }
+      return { ...base, frequencyParam: createMockAudioParam(), setFrequency: () => {}, setQ: () => {}, setFilterGain: () => {}, scheduleFilterEnvelope: () => {}, scheduleFilterRelease: () => {} }
     },
 
     createDelay: (_props) => {

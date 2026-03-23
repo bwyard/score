@@ -3,16 +3,16 @@ import type { OscillatorType, FilterType } from '@score/core'
 import { uid } from '@score/core'
 
 /**
- * ADSR envelope parameters.
+ * ADSR envelope parameters — used for both amp and filter envelopes.
  */
 export type AdsrProps = {
-  /** Attack time in seconds. Default `0.01`. */
+  /** Attack time in seconds. Default varies by envelope target. */
   readonly attack?: number
-  /** Decay time in seconds. Default `0.1`. */
+  /** Decay time in seconds. */
   readonly decay?: number
-  /** Sustain level 0–1. Default `0.7`. */
+  /** Sustain level 0–1. */
   readonly sustain?: number
-  /** Release time in seconds. Default `0.3`. */
+  /** Release time in seconds. */
   readonly release?: number
 }
 
@@ -20,19 +20,23 @@ export type AdsrProps = {
  * Filter configuration for {@link createSubtractiveSynth}.
  */
 export type SubtractiveFilterProps = {
-  /**
-   * Filter type. One of `'lowpass'`, `'highpass'`, `'bandpass'`, etc.
-   * Default `'lowpass'`.
-   */
+  /** Filter type. Default `'lowpass'`. */
   readonly type?: FilterType
-  /** Cutoff frequency in Hz. Default `1200`. */
+  /** Base cutoff frequency in Hz. Default `1200`. */
   readonly frequency?: number
   /** Filter resonance Q. Default `1`. */
   readonly Q?: number
+  /**
+   * Filter envelope depth in Hz — how far above the base cutoff the envelope peaks.
+   * `0` disables filter modulation. Default `800`.
+   */
+  readonly envDepth?: number
+  /** Filter ADSR envelope. Default: attack 0.005, decay 0.3, sustain 0.4, release 0.4. */
+  readonly adsr?: AdsrProps
 }
 
 /**
- * Configuration for {@link createSubtractiveSynth}.
+ * Configuration for {@link createSubtractiveSynth} — the full Juno-60/Minimoog model.
  */
 export type SubtractiveSynthProps = {
   /**
@@ -42,150 +46,207 @@ export type SubtractiveSynthProps = {
   readonly wave?: OscillatorType
   /** Oscillator frequency in Hz. Default `220`. */
   readonly frequency?: number
+  /**
+   * Detune spread between oscillators in cents (total spread, evenly distributed).
+   * At 1 pair: osc A at −detune/2, osc B at +detune/2.
+   * Default `8` cents (Juno fatness).
+   */
+  readonly detune?: number
+  /**
+   * Number of oscillator pairs to stack. `1` = 2 oscillators, `2` = 4, `4` = 8.
+   * Higher values add thickness at the cost of CPU. Default `1`.
+   */
+  readonly unison?: 1 | 2 | 4
   /** Filter configuration. See {@link SubtractiveFilterProps}. */
   readonly filter?: SubtractiveFilterProps
-  /** Amplitude ADSR envelope. See {@link AdsrProps}. */
+  /** Amplitude ADSR envelope. Default: attack 0.005, decay 0.1, sustain 0.7, release 0.3. */
   readonly adsr?: AdsrProps
-  /** Output gain 0–1. Default `0.8`. */
+  /** Output gain 0–1. Default `0.7`. */
   readonly gain?: number
 }
 
 /**
- * A subtractive synthesis instrument component — extends {@link AudioComponent}
- * with note-on/note-off and real-time parameter controls.
+ * A subtractive synthesis instrument component — Juno-60/Minimoog model.
+ *
+ * Signal path: N detuned oscillators → unison mixer → resonant filter (filter ADSR)
+ * → amp VCA (amp ADSR) → output gain.
  */
 export type SubtractiveSynthComponent = AudioComponent & {
   /**
-   * Gate a note on: start oscillator and trigger attack-decay-sustain phase.
+   * Gate a note on: start oscillators, trigger amp + filter attack-decay-sustain.
    * @param time - Schedule time in seconds. Defaults to `context.currentTime`.
    */
   readonly noteOn: (time?: number) => void
   /**
-   * Gate a note off: trigger release phase and schedule oscillator stop.
+   * Gate a note off: trigger amp + filter release, schedule oscillator stop.
    * @param time - Schedule time in seconds. Defaults to `context.currentTime`.
    */
   readonly noteOff: (time?: number) => void
   /**
-   * Set the oscillator frequency in Hz.
+   * Set the oscillator frequency in Hz (all oscillators track together).
    * @param value - Target frequency in Hz.
-   * @param time - Optional schedule time.
+   * @param time  - Optional schedule time.
    */
   readonly setFrequency: (value: number, time?: number) => void
   /**
-   * Set the filter cutoff frequency in Hz.
+   * Set the filter base cutoff frequency in Hz.
    * @param value - Cutoff frequency in Hz.
-   * @param time - Optional schedule time.
+   * @param time  - Optional schedule time.
    */
   readonly setFilterFrequency: (value: number, time?: number) => void
   /**
    * Set the output gain.
    * @param value - Gain 0–1.
-   * @param time - Optional schedule time.
+   * @param time  - Optional schedule time.
    */
   readonly setGain: (value: number, time?: number) => void
 }
 
+// HARDWARE BOUNDARY — oscillator started state: append-only (false → true, never reset).
+// Const-bound mutable object per the no-let rule.
+type OscState = { started: boolean }
+
 /**
- * Create a subtractive synthesis instrument component.
- * Signal path: oscillator → resonant filter → VCA (ADSR gain) → output gain → (caller connects output).
+ * Create a subtractive synthesis instrument — Juno-60/Minimoog model.
  *
- * The VCA uses `noteOn` / `noteOff` for ADSR gating rather than a fire-and-forget `trigger`,
- * making it suitable for melodic parts where note length matters.
+ * Signal path: N detuned sawtooth/square oscillators → unison mixer (gain normalised)
+ * → resonant lowpass filter with filter ADSR → amp VCA with amp ADSR → output gain.
  *
- * @param context - Backend audio context providing the Web Audio graph.
- * @param props - Optional synth configuration. If omitted all defaults apply.
- * @returns A {@link SubtractiveSynthComponent} with `id` prefixed `subsynth` and `type` set to `'subsynth'`.
+ * Supports 2/4/8 oscillators (1/2/4 unison pairs), configurable detune spread,
+ * and independent filter and amplitude ADSR envelopes.
+ *
+ * @param context - Backend audio context.
+ * @param props   - Synth configuration. All fields have defaults.
+ * @returns A {@link SubtractiveSynthComponent} with `id` prefixed `subsynth`.
  *
  * @example
  * ```ts
- * const bass = createSubtractiveSynth(context, {
+ * // Juno-style pad — 2 detuned saws, slow filter sweep
+ * const pad = createSubtractiveSynth(context, {
  *   wave: 'sawtooth',
- *   frequency: 110,
- *   filter: { type: 'lowpass', frequency: 800, Q: 4 },
- *   adsr: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.4 },
+ *   frequency: 220,
+ *   detune: 12,
+ *   filter: { frequency: 600, Q: 3, envDepth: 1200,
+ *             adsr: { attack: 0.4, decay: 0.6, sustain: 0.5, release: 0.8 } },
+ *   adsr: { attack: 0.3, decay: 0.2, sustain: 0.8, release: 0.8 },
  * })
- * bass.connect(context.destination)
- * bass.noteOn(context.currentTime)
- * bass.noteOff(context.currentTime + 0.5)
- * bass.dispose()
+ * pad.connect(context.destination)
+ * pad.noteOn(context.currentTime)
+ * pad.noteOff(context.currentTime + 2.0)
+ * pad.dispose()
  * ```
  *
- * @see {@link SubtractiveSynthProps} — configuration options
- * @see {@link SubtractiveSynthComponent} — returned component shape
- * @throws \{ScoreError\} Never — invalid props are silently clamped.
+ * @see {@link SubtractiveSynthProps}
+ * @see {@link SubtractiveSynthComponent}
+ * @throws {ScoreError} Never — invalid props are silently clamped.
  */
 export const createSubtractiveSynth = (
   context: ScoreAudioContext,
   props?: SubtractiveSynthProps,
 ): SubtractiveSynthComponent => {
-  const adsr = props?.adsr ?? {}
-  const attack  = adsr.attack  ?? 0.01
-  const decay   = adsr.decay   ?? 0.1
-  const sustain = adsr.sustain ?? 0.7
-  const release = adsr.release ?? 0.3
+  // ── Amp envelope ──────────────────────────────────────────────────────────
+  const ampCfg = props?.adsr ?? {}
+  const ampAtk = ampCfg.attack  ?? 0.005
+  const ampDec = ampCfg.decay   ?? 0.1
+  const ampSus = ampCfg.sustain ?? 0.7
+  const ampRel = ampCfg.release ?? 0.3
 
-  const osc = context.createOscillator({
-    type: props?.wave ?? 'sawtooth',
-    frequency: props?.frequency ?? 220,
+  // ── Filter config and envelope ────────────────────────────────────────────
+  const filterCfg  = props?.filter ?? {}
+  const filterBase = filterCfg.frequency ?? 1200
+  const filterQ    = filterCfg.Q         ?? 1
+  const filterType = filterCfg.type      ?? 'lowpass'
+  const envDepth   = filterCfg.envDepth  ?? 800
+  const fCfg       = filterCfg.adsr ?? {}
+  const fAtk       = fCfg.attack  ?? 0.005
+  const fDec       = fCfg.decay   ?? 0.3
+  const fSus       = fCfg.sustain ?? 0.4
+  const fRel       = fCfg.release ?? 0.4
+  // Pre-compute sustain cutoff for release anchor
+  const filterSusFreq = filterBase + envDepth * fSus
+
+  // ── Oscillator bank ───────────────────────────────────────────────────────
+  const unisonPairs = props?.unison ?? 1
+  const oscCount    = unisonPairs * 2
+  const totalDetune = props?.detune ?? 8
+  const freq        = props?.frequency ?? 220
+  const wave        = props?.wave ?? 'sawtooth'
+
+  // Spread N oscillators evenly across [−detune/2, +detune/2] cents
+  const detuneOffsets = Array.from({ length: oscCount }, (_, i) => {
+    if (oscCount === 1) return 0
+    return -totalDetune / 2 + (totalDetune / (oscCount - 1)) * i
   })
 
-  const filter = context.createFilter({
-    type: props?.filter?.type ?? 'lowpass',
-    frequency: props?.filter?.frequency ?? 1200,
-    Q: props?.filter?.Q ?? 1,
-  })
+  const oscs = detuneOffsets.map(detuneOffset =>
+    context.createOscillator({ type: wave, frequency: freq, detune: detuneOffset })
+  )
 
-  const vca = context.createGain({ gain: 0 })
-  const outputGain = context.createGain({ gain: props?.gain ?? 0.8 })
+  // ── Signal chain ──────────────────────────────────────────────────────────
+  // Normalise unison: divides by oscCount so total loudness stays consistent
+  const unisonMix  = context.createGain({ gain: 1 / oscCount })
+  const filter     = context.createFilter({ type: filterType, frequency: filterBase, Q: filterQ })
+  const vca        = context.createGain({ gain: 0 })
+  const outputGain = context.createGain({ gain: props?.gain ?? 0.7 })
 
-  // Wire: osc → filter → vca → output
-  osc.connect(filter)
+  oscs.forEach(osc => { osc.connect(unisonMix); })
+  unisonMix.connect(filter)
   filter.connect(vca)
   vca.connect(outputGain)
 
-  let started = false
+  // HARDWARE BOUNDARY — started flag: one-way transition, const-bound mutable object
+  const oscState: OscState = { started: false }
 
-  const noteOn = (time?: number) => {
+  const noteOn = (time?: number): void => {
     const t = time ?? context.currentTime
-    if (!started) {
-      osc.start(t)
-      started = true
+    if (!oscState.started) {
+      oscs.forEach(osc => { osc.start(t); })
+      oscState.started = true
     }
-    // Attack + decay → hold at sustain
+    // Amp: attack → decay → hold at sustain (release on noteOff)
     vca.scheduleEnvelope({
-      peak: 1.0,
-      attack,
-      decay,
-      sustain,
-      release: 0,         // release triggered separately by noteOff
-      startTime: t,
-      duration: attack + decay + 9999, // effectively infinite until noteOff
+      peak: 1.0, attack: ampAtk, decay: ampDec, sustain: ampSus,
+      release: 0, startTime: t,
+      duration: ampAtk + ampDec + 9999, // holds until noteOff triggers release
+    })
+    // Filter: sweep from base to peak, decay to sustain cutoff
+    filter.scheduleFilterEnvelope({
+      baseFreq: filterBase, envDepth, sustain: fSus,
+      attack: fAtk, decay: fDec, startTime: t,
     })
   }
 
-  const noteOff = (time?: number) => {
+  const noteOff = (time?: number): void => {
     const t = time ?? context.currentTime
-    // Ramp from sustain to 0 over release time
+    // Amp release: ramp from sustain to 0
     vca.scheduleEnvelope({
-      peak: sustain,
-      attack: 0,
-      decay: release,
-      sustain: 0,
-      release: 0,
-      startTime: t,
-      duration: release,
+      peak: ampSus, attack: 0, decay: ampRel, sustain: 0,
+      release: 0, startTime: t, duration: ampRel,
     })
-    osc.stop(t + release + 0.05)
+    // Filter release: ramp from sustain cutoff to base
+    filter.scheduleFilterRelease({ sustainFreq: filterSusFreq, baseFreq: filterBase, release: fRel, time: t })
+    // Stop oscillators after the longer of amp/filter release
+    const stopTime = t + Math.max(ampRel, fRel) + 0.05
+    oscs.forEach(osc => { osc.stop(stopTime); })
   }
 
   const component: SubtractiveSynthComponent = {
-    id: uid('subsynth'),
+    id:   uid('subsynth'),
     type: 'subsynth' as const,
     noteOn,
     noteOff,
-    setFrequency: (value: number, time?: number) => { osc.setFrequency(value, time) },
-    setFilterFrequency: (value: number, time?: number) => { filter.setFrequency(value, time) },
-    setGain: (value: number, time?: number) => { outputGain.setGain(value, time) },
+
+    setFrequency: (value: number, time?: number) => {
+      oscs.forEach(osc => { osc.setFrequency(value, time); })
+    },
+
+    setFilterFrequency: (value: number, time?: number) => {
+      filter.setFrequency(value, time)
+    },
+
+    setGain: (value: number, time?: number) => {
+      outputGain.setGain(value, time)
+    },
 
     connect: (destination: ScoreAudioNode) => {
       outputGain.connect(destination)
@@ -198,10 +259,13 @@ export const createSubtractiveSynth = (
     },
 
     dispose: () => {
-      try { osc.stop() } catch { /* already stopped */ }
-      try { osc.disconnect() } catch { /* already disconnected */ }
-      try { filter.disconnect() } catch { /* already disconnected */ }
-      try { vca.disconnect() } catch { /* already disconnected */ }
+      oscs.forEach(osc => {
+        try { osc.stop() } catch { /* already stopped */ }
+        try { osc.disconnect() } catch { /* already disconnected */ }
+      })
+      try { unisonMix.disconnect() }  catch { /* already disconnected */ }
+      try { filter.disconnect() }     catch { /* already disconnected */ }
+      try { vca.disconnect() }        catch { /* already disconnected */ }
       try { outputGain.disconnect() } catch { /* already disconnected */ }
     },
   }

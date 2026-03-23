@@ -305,6 +305,21 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
           filter.gain.setValueAtTime(filter.gain.value, t)
           filter.gain.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
+        scheduleFilterEnvelope: ({ baseFreq, envDepth, sustain: sustainLevel, attack, decay, startTime }) => {
+          const f = filter.frequency
+          const peakFreq    = baseFreq + envDepth
+          const sustainFreq = baseFreq + envDepth * sustainLevel
+          f.setValueAtTime(baseFreq, startTime)
+          f.linearRampToValueAtTime(peakFreq,    startTime + attack)
+          f.linearRampToValueAtTime(sustainFreq, startTime + attack + decay)
+          // holds at sustainFreq until scheduleFilterRelease is called
+        },
+        scheduleFilterRelease: ({ sustainFreq, baseFreq, release, time }) => {
+          const f = filter.frequency
+          f.cancelScheduledValues(time)
+          f.setValueAtTime(sustainFreq, time)
+          f.linearRampToValueAtTime(baseFreq, time + release)
+        },
       }
     },
 
