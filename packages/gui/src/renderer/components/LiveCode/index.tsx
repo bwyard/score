@@ -392,15 +392,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       const openBracket = prev.indexOf('[', tracksIdx)
       if (openBracket === -1) return prev + '\n' + snippet
 
-      // Bracket-count to find the matching close bracket
-      let depth = 1
-      let i = openBracket + 1
-      while (i < prev.length && depth > 0) {
-        if (prev[i] === '[') depth++
-        else if (prev[i] === ']') depth--
-        i++
-      }
-      const closeBracket = i - 1
+      // Bracket-count to find the matching close bracket (pure fold — no let)
+      const closeBracket = Array.from(prev.slice(openBracket + 1)).reduce(
+        (acc: { depth: number; pos: number }, ch: string, idx: number) =>
+          acc.pos !== -1 ? acc : (() => {
+            const d = acc.depth + (ch === '[' ? 1 : ch === ']' ? -1 : 0)
+            return { depth: d, pos: d === 0 ? openBracket + 1 + idx : -1 }
+          })(),
+        { depth: 1, pos: -1 },
+      ).pos
 
       // Detect indentation of the line before the close bracket
       const beforeClose = prev.slice(0, closeBracket)
