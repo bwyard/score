@@ -4,6 +4,7 @@ import {
   CodeHighlight,
   getActiveLines,
   getTrackLines,
+  getStepBadges,
 } from '../src/renderer/components/shared/CodeHighlight.js'
 
 // ── getActiveLines — Track() style (legacy) ───────────────────────────────────
@@ -92,7 +93,7 @@ describe('getActiveLines — string patterns (melodic)', () => {
 
 // ── getActiveLines — const style (new bare instrument style) ──────────────────
 
-const CONST_CODE = `import { Song, Kick, Snare } from '@score/dsl'
+const BADGE_CODE = `import { Song, Kick, Snare } from '@score/dsl'
 import { euclidean } from '@score/pattern'
 
 const kick  = Kick({  pattern: euclidean(4, 8), volume: 0.9 })
@@ -110,12 +111,12 @@ describe('getActiveLines — const instrument style', () => {
   ]
 
   it('detects kick line in const style', () => {
-    const result = getActiveLines(CONST_CODE, tracks, 0)
+    const result = getActiveLines(BADGE_CODE, tracks, 0)
     expect(result).toContain(3) // = Kick( is on line 3
   })
 
   it('detects snare line in const style', () => {
-    const result = getActiveLines(CONST_CODE, tracks, 2)
+    const result = getActiveLines(BADGE_CODE, tracks, 2)
     expect(result).toContain(4) // = Snare( is on line 4
   })
 })
@@ -143,7 +144,7 @@ describe('getTrackLines', () => {
       { type: 'kick',  pattern: [1, 0] },
       { type: 'snare', pattern: [0, 1] },
     ]
-    const result = getTrackLines(CONST_CODE, tracks)
+    const result = getTrackLines(BADGE_CODE, tracks)
     expect(result).toHaveLength(2)
     expect(result[0]).toEqual({ lineIndex: 3, trackIndex: 0 })
     expect(result[1]).toEqual({ lineIndex: 4, trackIndex: 1 })
@@ -183,5 +184,59 @@ describe('CodeHighlight — rendering', () => {
       <CodeHighlight code={CODE} tracks={tracks} currentStep={0} playing={true} scrollTop={0} />,
     )
     expect(container.firstChild).toHaveAttribute('aria-hidden', 'true')
+  })
+})
+
+// ── getStepBadges (t219) ──────────────────────────────────────────────────────
+
+const STEP_BADGE_CODE = `import { Song, Kick808, Snare, HiHat } from '@score/dsl'
+
+const kick  = Kick808({ pattern: [1, 0, 0, 0, 1, 0, 0, 0], volume: 0.6 })
+const snare = Snare({  pattern: [0, 0, 1, 0, 0, 0, 1, 0], volume: 0.55 })
+const hihat = HiHat({  pattern: [1, 1, 1, 1, 1, 1, 1, 1], volume: 0.25 })
+
+export default Song({ bpm: 120, tracks: [kick, snare, hihat] })`
+
+// Kick808 is line index 2 (0-based) → line 3 (1-based)
+// Snare   is line index 3           → line 4 (1-based)
+// HiHat   is line index 4           → line 5 (1-based)
+
+describe('getStepBadges (t219)', () => {
+  it('returns empty when no tracks', () => {
+    expect(getStepBadges(STEP_BADGE_CODE, [], 0, 8)).toEqual([])
+  })
+
+  it('returns one badge per matched track line', () => {
+    const tracks = [
+      { type: 'kick',  pattern: [1, 0, 0, 0, 1, 0, 0, 0] },
+      { type: 'snare', pattern: [0, 0, 1, 0, 0, 0, 1, 0] },
+      { type: 'hihat', pattern: [1, 1, 1, 1, 1, 1, 1, 1] },
+    ]
+    const result = getStepBadges(STEP_BADGE_CODE, tracks, 0, 8)
+    expect(result).toHaveLength(3)
+  })
+
+  it('reports correct 1-based line numbers', () => {
+    const tracks = [
+      { type: 'kick',  pattern: [1, 0, 0, 0, 1, 0, 0, 0] },
+      { type: 'snare', pattern: [0, 0, 1, 0, 0, 0, 1, 0] },
+    ]
+    const result = getStepBadges(STEP_BADGE_CODE, tracks, 0, 8)
+    expect(result[0]?.line).toBe(3) // Kick808 line
+    expect(result[1]?.line).toBe(4) // Snare line
+  })
+
+  it('wraps step via modulo against pattern length', () => {
+    const tracks = [{ type: 'kick', pattern: [1, 0, 0, 0] }]
+    const result = getStepBadges(STEP_BADGE_CODE, tracks, 6, 8) // step 6 % 4 = 2
+    expect(result[0]?.step).toBe(2)
+    expect(result[0]?.total).toBe(4)
+  })
+
+  it('uses defaultStepCount when pattern is empty', () => {
+    const tracks = [{ type: 'kick', pattern: [] }]
+    const result = getStepBadges(STEP_BADGE_CODE, tracks, 3, 16)
+    expect(result[0]?.step).toBe(3)
+    expect(result[0]?.total).toBe(16)
   })
 })

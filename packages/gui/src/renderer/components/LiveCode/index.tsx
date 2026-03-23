@@ -9,9 +9,9 @@ import { MasterLevel }                      from '../shared/MasterLevel.js'
 import { MixerStrip }                       from '../shared/MixerStrip.js'
 import { DraggablePanel }                   from '../shared/DraggablePanel.js'
 import { CodeWaveform }                     from '../shared/CodeWaveform.js'
-import { getActiveLines }                   from '../shared/CodeHighlight.js'
+import { getActiveLines, getStepBadges }    from '../shared/CodeHighlight.js'
 import { CodeEditorPanel }                  from '../shared/CodeEditorPanel.js'
-import type { EditorDecoration }            from '../shared/CodeEditorPanel.js'
+import type { EditorDecoration, StepBadge } from '../shared/CodeEditorPanel.js'
 import { ReferencePanel }                   from '../shared/ReferencePanel.js'
 import { ConsoleLog }                       from '../shared/ConsoleLog.js'
 import type { LogEntry, LogLevel }          from '../shared/ConsoleLog.js'
@@ -22,6 +22,7 @@ import { BarCounter }                       from '../status/index.js'
 import { PendingSwapBadge }                 from '../status/index.js'
 import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote } from '../../lib/codePatcher.js'
 import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
+import type { PanelLayoutMap }            from '../../../main/ipc-types.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -149,6 +150,13 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   // fire transport:play once the eval succeeds (eval-then-play flow).
   const autoPlayRef   = useRef(false)
 
+  // t218 — panel layout persistence
+  const [savedLayout, setSavedLayout] = useState<PanelLayoutMap>({})
+  // Track layout generation so DraggablePanels remount once when saved layout loads
+  const [layoutGen, setLayoutGen] = useState(0)
+  // Accumulate panel positions for debounced save (ref avoids extra re-renders)
+  const layoutAccRef = useRef<PanelLayoutMap>({})
+
   // Monaco beat-highlight decorations — active track lines while playing
   const editorDecorations = useMemo((): ReadonlyArray<EditorDecoration> => {
     if (!engineState.playing) return []
@@ -160,6 +168,13 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       isWholeLine: true,
     }))
   }, [engineState.playing, code, tracks, currentStep])
+  // t219 — step badges: per-instrument line `STEP/TOTAL` pills during playback
+  const stepBadges = useMemo((): ReadonlyArray<StepBadge> =>
+    engineState.playing
+      ? getStepBadges(code, tracks, currentStep, currentStepCount)
+      : []
+  , [engineState.playing, code, tracks, currentStep, currentStepCount])
+
   const [panels, setPanels] = useState<PanelVisibility>({
     punchcard:  true,
     scope:      true,
@@ -268,6 +283,28 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     return unsub
   }, [addLog])
 
+  // t218 — receive saved panel layout from main on launch
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('layout:load', (layout) => {
+      layoutAccRef.current = layout
+      setSavedLayout(layout)
+      setLayoutGen(g => g + 1)
+    })
+    return unsub
+  }, [])
+
+  // t207 — panic key: Ctrl+. / Cmd+. renderer fallback (globalShortcut handles main process)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === '.' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        window.scoreBridge.send('transport:stop', undefined)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => { document.removeEventListener('keydown', onKeyDown) }
+  }, [])
+
   useEffect(() => {
     const unsub = window.scoreBridge.on('file:opened', ({ code: loadedCode }) => {
       setCode(loadedCode)
@@ -277,6 +314,12 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     })
     return unsub
   }, [addLog])
+
+  // t218 — called by each DraggablePanel after drag/resize ends; debounced save to main
+  const onPanelMoved = useCallback((panelId: string, x: number, y: number, w: number, h: number): void => {
+    layoutAccRef.current = { ...layoutAccRef.current, [panelId]: { x, y, w, h } }
+    window.scoreBridge.send('layout:save', layoutAccRef.current)
+  }, [])
 
   const onEval = useCallback((): void => {
     setError(null)
@@ -456,6 +499,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                 onChange={setCode}
                 onEval={onEval}
                 decorations={editorDecorations}
+                stepBadges={stepBadges}
               />
             </div>
           </div>
@@ -502,12 +546,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
           {/* Floating panels */}
           {panels.punchcard && (
             <DraggablePanel
+              key={`punchcard-${String(layoutGen)}`}
               title="Step Grid"
-              defaultX={8}
-              defaultY={48}
-              defaultWidth={420}
-              defaultHeight={180}
+              defaultX={savedLayout['punchcard']?.x ?? 8}
+              defaultY={savedLayout['punchcard']?.y ?? 48}
+              defaultWidth={savedLayout['punchcard']?.w ?? 420}
+              defaultHeight={savedLayout['punchcard']?.h ?? 180}
               onClose={() => { togglePanel('punchcard') }}
+              panelId="punchcard"
+              onMoved={onPanelMoved}
             >
               <PunchcardGrid
                 tracks={tracks}
@@ -520,12 +567,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
           {panels.scope && (
             <DraggablePanel
+              key={`scope-${String(layoutGen)}`}
               title="Waveform"
-              defaultX={8}
-              defaultY={240}
-              defaultWidth={420}
-              defaultHeight={160}
+              defaultX={savedLayout['scope']?.x ?? 8}
+              defaultY={savedLayout['scope']?.y ?? 240}
+              defaultWidth={savedLayout['scope']?.w ?? 420}
+              defaultHeight={savedLayout['scope']?.h ?? 160}
               onClose={() => { togglePanel('scope') }}
+              panelId="scope"
+              onMoved={onPanelMoved}
             >
               <Scope waveform={waveform} playing={engineState.playing} />
             </DraggablePanel>
@@ -533,12 +583,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
           {panels.spectrum && (
             <DraggablePanel
+              key={`spectrum-${String(layoutGen)}`}
               title="Spectrum"
-              defaultX={440}
-              defaultY={48}
-              defaultWidth={260}
-              defaultHeight={200}
+              defaultX={savedLayout['spectrum']?.x ?? 440}
+              defaultY={savedLayout['spectrum']?.y ?? 48}
+              defaultWidth={savedLayout['spectrum']?.w ?? 260}
+              defaultHeight={savedLayout['spectrum']?.h ?? 200}
               onClose={() => { togglePanel('spectrum') }}
+              panelId="spectrum"
+              onMoved={onPanelMoved}
             >
               <SpectrumAnalyser bins={fftBins} playing={engineState.playing} />
             </DraggablePanel>
@@ -546,12 +599,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
           {panels.piano && (
             <DraggablePanel
+              key={`piano-${String(layoutGen)}`}
               title="Piano Roll"
-              defaultX={440}
-              defaultY={260}
-              defaultWidth={260}
-              defaultHeight={180}
+              defaultX={savedLayout['piano']?.x ?? 440}
+              defaultY={savedLayout['piano']?.y ?? 260}
+              defaultWidth={savedLayout['piano']?.w ?? 260}
+              defaultHeight={savedLayout['piano']?.h ?? 180}
               onClose={() => { togglePanel('piano') }}
+              panelId="piano"
+              onMoved={onPanelMoved}
             >
               <PianoRoll
                 notes={pianoNotes}
@@ -564,12 +620,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
           {panels.mixer && (
             <DraggablePanel
+              key={`mixer-${String(layoutGen)}`}
               title="Mixer"
-              defaultX={8}
-              defaultY={412}
-              defaultWidth={420}
-              defaultHeight={220}
+              defaultX={savedLayout['mixer']?.x ?? 8}
+              defaultY={savedLayout['mixer']?.y ?? 412}
+              defaultWidth={savedLayout['mixer']?.w ?? 420}
+              defaultHeight={savedLayout['mixer']?.h ?? 220}
               onClose={() => { togglePanel('mixer') }}
+              panelId="mixer"
+              onMoved={onPanelMoved}
             >
               <div style={styles.mixerInner}>
                 {tracks.map((track, i) => (
@@ -593,12 +652,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
           {panels.reference && (
             <DraggablePanel
+              key={`reference-${String(layoutGen)}`}
               title="Reference"
-              defaultX={440}
-              defaultY={48}
-              defaultWidth={260}
-              defaultHeight={380}
+              defaultX={savedLayout['reference']?.x ?? 440}
+              defaultY={savedLayout['reference']?.y ?? 48}
+              defaultWidth={savedLayout['reference']?.w ?? 260}
+              defaultHeight={savedLayout['reference']?.h ?? 380}
               onClose={() => { togglePanel('reference') }}
+              panelId="reference"
+              onMoved={onPanelMoved}
             >
               <ReferencePanel onInsert={onInsert} />
             </DraggablePanel>

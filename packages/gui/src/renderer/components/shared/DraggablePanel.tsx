@@ -52,6 +52,16 @@ export type DraggablePanelProps = {
    * If omitted the close button is not rendered.
    */
   readonly onClose?: () => void
+  /**
+   * Unique identifier for layout persistence. When provided, position and size
+   * are reported to `onMoved` after each drag or resize gesture completes.
+   */
+  readonly panelId?: string
+  /**
+   * Called with the final position and size after the user finishes dragging or resizing.
+   * Use to persist panel layout via IPC.
+   */
+  readonly onMoved?: (panelId: string, x: number, y: number, w: number, h: number) => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -86,6 +96,8 @@ export const DraggablePanel = (props: DraggablePanelProps) => {
     defaultWidth  = 320,
     defaultHeight = 240,
     onClose,
+    panelId,
+    onMoved,
   } = props
 
   const [pos,  setPos]  = useState<Position>({ x: defaultX,     y: defaultY      })
@@ -97,6 +109,9 @@ export const DraggablePanel = (props: DraggablePanelProps) => {
   // Refs hold the drag origin so mousemove handlers never capture stale state.
   const dragOrigin   = useRef<DragOrigin | null>(null)
   const resizeOrigin = useRef<DragOrigin | null>(null)
+  // Track current pos/size in refs so onMouseUp closures always see fresh values.
+  const posRef  = useRef<Position>(pos)
+  const sizeRef = useRef<Size>(size)
 
   // ── Drag (title bar) ────────────────────────────────────────────────────────
 
@@ -112,15 +127,22 @@ export const DraggablePanel = (props: DraggablePanelProps) => {
     const onMouseMove = (e: MouseEvent): void => {
       const origin = dragOrigin.current
       if (origin === null) return
-      setPos({
+      const newPos = {
         x: origin.ox + (e.clientX - origin.mx),
         y: origin.oy + (e.clientY - origin.my),
-      })
+      }
+      posRef.current = newPos
+      setPos(newPos)
     }
 
     const onMouseUp = (): void => {
       setDragging(false)
       dragOrigin.current = null
+      if (panelId && onMoved) {
+        const { x, y } = posRef.current
+        const { w, h } = sizeRef.current
+        onMoved(panelId, x, y, w, h)
+      }
     }
 
     document.addEventListener('mousemove', onMouseMove)
@@ -129,7 +151,7 @@ export const DraggablePanel = (props: DraggablePanelProps) => {
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup',   onMouseUp)
     }
-  }, [dragging])
+  }, [dragging, panelId, onMoved])
 
   // ── Resize (bottom-right handle) ────────────────────────────────────────────
 
@@ -146,15 +168,22 @@ export const DraggablePanel = (props: DraggablePanelProps) => {
     const onMouseMove = (e: MouseEvent): void => {
       const origin = resizeOrigin.current
       if (origin === null) return
-      setSize({
+      const newSize = {
         w: Math.max(MIN_W, origin.ox + (e.clientX - origin.mx)),
         h: Math.max(MIN_H, origin.oy + (e.clientY - origin.my)),
-      })
+      }
+      sizeRef.current = newSize
+      setSize(newSize)
     }
 
     const onMouseUp = (): void => {
       setResizing(false)
       resizeOrigin.current = null
+      if (panelId && onMoved) {
+        const { x, y } = posRef.current
+        const { w, h } = sizeRef.current
+        onMoved(panelId, x, y, w, h)
+      }
     }
 
     document.addEventListener('mousemove', onMouseMove)
@@ -163,7 +192,7 @@ export const DraggablePanel = (props: DraggablePanelProps) => {
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup',   onMouseUp)
     }
-  }, [resizing])
+  }, [resizing, panelId, onMoved])
 
   // ── Render ──────────────────────────────────────────────────────────────────
 

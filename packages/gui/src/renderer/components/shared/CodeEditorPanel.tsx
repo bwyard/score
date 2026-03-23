@@ -20,6 +20,16 @@ export type EditorDecoration = {
   readonly isWholeLine?: boolean
 }
 
+/** One step badge to overlay on an instrument line in the editor. */
+export type StepBadge = {
+  /** 1-based line number in the current code. */
+  readonly line:  number
+  /** 0-based current step within this track's pattern. */
+  readonly step:  number
+  /** Total steps in this track's pattern. */
+  readonly total: number
+}
+
 type Props = {
   readonly value:       string
   readonly onChange:    (code: string) => void
@@ -27,6 +37,11 @@ type Props = {
   readonly onEval:      () => void
   /** Called each step tick — provides per-step decorations (beat highlighting). */
   readonly decorations?: ReadonlyArray<EditorDecoration>
+  /**
+   * Per-track step badges — displayed at the end of each instrument line
+   * as a `STEP/TOTAL` pill. Updated on every engine:step tick.
+   */
+  readonly stepBadges?:  ReadonlyArray<StepBadge>
 }
 
 // ── Score DSL Token Provider ───────────────────────────────────────────────────
@@ -183,9 +198,10 @@ const injectDecorationCss = (): void => {
  * />
  * ```
  */
-export const CodeEditorPanel = ({ value, onChange, onEval, decorations }: Props) => {
+export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadges }: Props) => {
   const editorRef       = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
   const decorationsRef  = useRef<string[]>([])
+  const stepBadgesRef   = useRef<string[]>([])
   const monacoRef       = useRef<Monaco | null>(null)
 
   // Apply decorations whenever they change
@@ -209,6 +225,29 @@ export const CodeEditorPanel = ({ value, onChange, onEval, decorations }: Props)
 
     decorationsRef.current = ed.deltaDecorations(decorationsRef.current, newDecorations)
   }, [decorations])
+
+  // t219 — step badges: inline `STEP/TOTAL` pill after each active instrument line
+  useEffect(() => {
+    const ed     = editorRef.current
+    const monaco = monacoRef.current
+    if (!ed || !monaco) return
+
+    const model = ed.getModel()
+    if (!model) return
+
+    const newBadges = (stepBadges ?? []).map(b => ({
+      range: new monaco.Range(b.line, 1, b.line, 1),
+      options: {
+        after: {
+          content:         ` ${String(b.step + 1)}/${String(b.total)}`,
+          inlineClassName: 'score-step-badge',
+        },
+        stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+      },
+    }))
+
+    stepBadgesRef.current = ed.deltaDecorations(stepBadgesRef.current, newBadges)
+  }, [stepBadges])
 
   const handleMount: OnMount = useCallback((editor, monaco) => {
     editorRef.current  = editor

@@ -180,3 +180,51 @@ describe('DraggablePanel — resize behaviour', () => {
     expect(panel).toHaveStyle({ width: '320px', height: '220px' })
   })
 })
+
+// ── Layout persistence — onMoved (t218) ───────────────────────────────────────
+
+describe('DraggablePanel — onMoved callback (t218)', () => {
+  it('calls onMoved with final position after drag ends', () => {
+    const onMoved = vi.fn()
+    const { getByRole } = renderPanel({ panelId: 'test', onMoved })
+    const titleBar = getByRole('heading', { level: 3 })
+
+    fireEvent.mouseDown(titleBar, { clientX: 10, clientY: 10 })
+    fireEvent.mouseMove(document, { clientX: 60, clientY: 40 })
+    fireEvent.mouseUp(document)
+
+    expect(onMoved).toHaveBeenCalledOnce()
+    const [id, x, y] = onMoved.mock.calls[0] as [string, number, number, number, number]
+    expect(id).toBe('test')
+    expect(x).toBe(100) // 50 + (60 - 10)
+    expect(y).toBe(110) // 80 + (40 - 10)
+  })
+
+  it('calls onMoved with final size after resize ends', () => {
+    const onMoved = vi.fn()
+    const { getByRole } = renderPanel({ panelId: 'test', onMoved })
+    const handle = getByRole('separator', { name: /resize panel/i })
+
+    fireEvent.mouseDown(handle, { clientX: 0, clientY: 0 })
+    fireEvent.mouseMove(document, { clientX: 40, clientY: 20 })
+    fireEvent.mouseUp(document)
+
+    expect(onMoved).toHaveBeenCalledOnce()
+    const [id, , , w, h] = onMoved.mock.calls[0] as [string, number, number, number, number]
+    expect(id).toBe('test')
+    expect(w).toBe(340) // 300 + 40
+    expect(h).toBe(220) // 200 + 20
+  })
+
+  it('does not call onMoved when panelId is omitted', () => {
+    const onMoved = vi.fn()
+    const { getByRole } = renderPanel({ onMoved })
+    const titleBar = getByRole('heading', { level: 3 })
+
+    fireEvent.mouseDown(titleBar, { clientX: 0, clientY: 0 })
+    fireEvent.mouseMove(document, { clientX: 30, clientY: 30 })
+    fireEvent.mouseUp(document)
+
+    expect(onMoved).not.toHaveBeenCalled()
+  })
+})
