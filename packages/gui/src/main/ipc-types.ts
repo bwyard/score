@@ -61,6 +61,8 @@ export type MainToRenderer = {
   'engine:step':     { step: number; stepCount: number }
   'midi:status':     { connected: boolean }
   'error:report':    { message: string }
+  /** Fires when song eval throws — message + optional stack + optional fix hint. Transport is NOT stopped. */
+  'song:error':      { message: string; stack?: string; fix?: string }
   'song:update':     { tracks: ReadonlyArray<{ name: string; type: string; pattern: ReadonlyArray<number | string> }>; theme?: string; palette?: string }
   'engine:analysis': { waveform: readonly number[] }
   /** Fires when a bar-boundary swap is queued or cleared. */

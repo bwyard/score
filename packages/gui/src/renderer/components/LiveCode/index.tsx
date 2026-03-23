@@ -199,6 +199,17 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   }, [addLog])
 
   useEffect(() => {
+    const unsub = window.scoreBridge.on('song:error', ({ message, fix }) => {
+      autoPlayRef.current = false
+      setError(message)
+      setEvalStatus('error')
+      addLog('error', message)
+      if (fix) addLog('info', `💡 ${fix}`)
+    })
+    return unsub
+  }, [addLog])
+
+  useEffect(() => {
     const unsub = window.scoreBridge.on('song:update', ({ tracks: t }) => {
       setTracks(t)
       setStripStates(prev => t.map((_, i) => prev[i] ?? defaultStripState()))
