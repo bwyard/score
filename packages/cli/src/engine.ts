@@ -15,6 +15,7 @@
 //   hihat808 — createHihat808: 6 detuned sq oscs → BP/HP filter chain
 //   snare909 — createSnare909: 2 triangle oscs + white noise HPF
 //   subsynth — createSubtractiveSynth: saw/sq → resonant LP → ADSR VCA
+//   fmsynth  — createFMSynth: 2-op FM (DX7 Rhodes / metallic leads)
 
 import { readFileSync } from 'node:fs'
 import { webAudioBackend, decodeSample, createSamplePlayer } from '@score/core'
@@ -27,6 +28,7 @@ import {
   createHihat808,
   createSnare909,
   createSubtractiveSynth,
+  createFMSynth,
 } from '@score/components'
 import { createMixer } from '@score/mixer'
 import {
@@ -41,6 +43,7 @@ import type {
   SongDefinition, InstrumentDescriptor,
   KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps,
   Kick808DSLProps, Kick909DSLProps, Hihat808DSLProps, Snare909DSLProps, SubSynthDSLProps,
+  FMSynthDSLProps,
 } from '@score/dsl'
 
 type Context = ReturnType<typeof webAudioBackend.createContext>
@@ -554,13 +557,39 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
           const freq = resolveFreq(val)
           if (freq > 0) {
-            // Create a fresh instance per hit (same pattern as triggerSynth)
             const voice = createSubtractiveSynth(ctx, {
               ...(props.wave   !== undefined && { wave:   props.wave }),
               ...(props.filter !== undefined && { filter: props.filter }),
               ...(props.adsr   !== undefined && { adsr:   props.adsr }),
               frequency: freq,
               gain:      props.volume ?? 0.7,
+            })
+            voice.connect(dest)
+            voice.noteOn(pos.time)
+            voice.noteOff(pos.time + noteDur)
+          }
+        })
+        break
+      }
+      case 'fmsynth': {
+        const props = comp.props as FMSynthDSLProps
+        const rawPattern = props.pattern ?? DEFAULT_SYNTH_PATTERN
+        const pattern: (number | string)[] = Array.isArray(rawPattern) ? rawPattern : DEFAULT_SYNTH_PATTERN
+        const ampAdsr = props.ampAdsr ?? {}
+        const attack  = ampAdsr.attack  ?? 0.01
+        const decay   = ampAdsr.decay   ?? 0.2
+        const release = ampAdsr.release ?? 0.4
+        const noteDur = attack + decay + release + 0.02
+        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+          const freq = resolveFreq(val)
+          if (freq > 0) {
+            const voice = createFMSynth(ctx, {
+              frequency: freq,
+              ...(props.modRatio  !== undefined && { modRatio:  props.modRatio }),
+              ...(props.modIndex  !== undefined && { modIndex:  props.modIndex }),
+              ...(props.ampAdsr   !== undefined && { ampAdsr:   props.ampAdsr }),
+              ...(props.modAdsr   !== undefined && { modAdsr:   props.modAdsr }),
+              gain: props.volume ?? 0.7,
             })
             voice.connect(dest)
             voice.noteOn(pos.time)

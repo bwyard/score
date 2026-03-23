@@ -6,7 +6,7 @@
 
 import type { BackendNode } from '@score/core'
 import { uid } from '@score/core'
-import type { InstrumentDescriptor, KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps, Kick808DSLProps, Kick909DSLProps, Hihat808DSLProps, Snare909DSLProps, SubSynthDSLProps } from './types.js'
+import type { InstrumentDescriptor, KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps, Kick808DSLProps, Kick909DSLProps, Hihat808DSLProps, Snare909DSLProps, SubSynthDSLProps, FMSynthDSLProps } from './types.js'
 
 const makeDescriptor = (
   instrumentType: InstrumentDescriptor['instrumentType'],
@@ -282,3 +282,23 @@ export const Snare909 = (props?: Snare909DSLProps): InstrumentDescriptor => make
  * ```
  */
 export const SubSynth = (props?: SubSynthDSLProps): InstrumentDescriptor => makeDescriptor('subsynth', props ?? {})
+
+/**
+ * Create a FMSynth instrument descriptor — 2-operator FM synthesis voice.
+ * Carrier: sine at `frequency`. Modulator: sine at `frequency × modRatio` (default 1.273, inharmonic/metallic).
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * @param props - FMSynth configuration: frequency, modRatio, modIndex, ampAdsr, modAdsr, gain, effects.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'fmsynth'`.
+ *
+ * @example
+ * ```ts
+ * const rhodes = FMSynth({
+ *   frequency: 220,
+ *   modRatio: 1.273,
+ *   modIndex: 3,
+ *   ampAdsr: { attack: 0.01, decay: 0.2, sustain: 0.7, release: 0.4 },
+ * })
+ * ```
+ */
+export const FMSynth = (props?: FMSynthDSLProps): InstrumentDescriptor => makeDescriptor('fmsynth', props ?? {})
