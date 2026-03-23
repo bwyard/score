@@ -16,19 +16,21 @@
  * full region regardless of wrapping style.
  */
 const findTrackPositions = (code: string): ReadonlyArray<number> => {
-  const positions: number[] = []
   // Match Track(AnyInstrument( ... or = AnyInstrument( ... (with optional whitespace)
+  // Accepts any PascalCase name so the full chain API instrument set is covered.
+  // Song and Track are excluded to avoid false matches.
   const re = /(?:Track\(|=\s*)([A-Z][A-Za-z0-9]*)\s*\(/g
-  let m
-  while ((m = re.exec(code)) !== null) {
-    const fullMatch = m[0]
-    const instrName = m[1] ?? ''
-    // Skip Song/Track themselves — they are structure, not instrument declarations
-    if (instrName === 'Song' || instrName === 'Track') continue
-    const nameOffset = fullMatch.lastIndexOf(instrName)
-    positions.push(m.index + nameOffset)
-  }
-  return positions
+  return Array.from(code.matchAll(re))
+    .filter(m => {
+      const instrName = m[1] ?? ''
+      return instrName !== 'Song' && instrName !== 'Track'
+    })
+    .map(m => {
+      const fullMatch = m[0]
+      const instrName = m[1] ?? ''
+      const nameOffset = fullMatch.lastIndexOf(instrName)
+      return m.index + nameOffset
+    })
 }
 
 /** Slice the code region belonging to trackIndex (from its instrument call to the next or end). */
