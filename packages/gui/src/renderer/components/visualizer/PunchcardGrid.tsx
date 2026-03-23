@@ -20,7 +20,8 @@ type Props = {
 const BG_COLOR         = '#080809'
 const ROW_HEIGHT       = 28
 const ROW_GAP          = 2
-const LEFT_STRIP_WIDTH = 4
+const LABEL_WIDTH      = 52   // track name text column
+const STRIP_WIDTH      = 4    // colour accent strip inside label area
 const CELL_GAP         = 1
 
 const STRIP_COLOR: Record<string, string> = {
@@ -72,7 +73,7 @@ const drawGrid = (
     return
   }
 
-  const cellAreaWidth = width - LEFT_STRIP_WIDTH
+  const cellAreaWidth = width - LABEL_WIDTH
   const cellWidth     = (cellAreaWidth - (stepCount - 1) * CELL_GAP) / stepCount
 
   // Draw each track row
@@ -83,13 +84,25 @@ const drawGrid = (
     // Shorter patterns loop — an 8-step kick repeats in a 16-step grid.
     const localStep  = currentStep % trackLen
 
-    // Left strip
+    // Label area background
+    ctx.fillStyle = '#0a0a0c'
+    ctx.fillRect(0, rowY, LABEL_WIDTH, ROW_HEIGHT)
+
+    // Colour accent strip
     ctx.fillStyle = resolveStripColor(track.type)
-    ctx.fillRect(0, rowY, LEFT_STRIP_WIDTH, ROW_HEIGHT)
+    ctx.fillRect(0, rowY, STRIP_WIDTH, ROW_HEIGHT)
+
+    // Track name text
+    ctx.fillStyle    = '#5a6a7a'
+    ctx.font         = '9px monospace'
+    ctx.textAlign    = 'left'
+    ctx.textBaseline = 'middle'
+    const label = track.name.length > 5 ? track.name.slice(0, 5) : track.name
+    ctx.fillText(label.toUpperCase(), STRIP_WIDTH + 4, rowY + ROW_HEIGHT / 2)
 
     // Step cells — loop pattern if track is shorter than stepCount
     Array.from({ length: stepCount }, (_, step) => {
-      const cellX      = LEFT_STRIP_WIDTH + step * (cellWidth + CELL_GAP)
+      const cellX      = LABEL_WIDTH + step * (cellWidth + CELL_GAP)
       const patternIdx = step % trackLen
       const isCurrent  = (step % trackLen) === localStep
       const active     = isActive(track.pattern[patternIdx] ?? 0)
@@ -112,7 +125,7 @@ const drawGrid = (
   // Cursor column overlay — global cursor at the raw currentStep position,
   // clipped to stepCount. Shows the transport position across the full grid.
   const globalCursorStep = currentStep < stepCount ? currentStep : currentStep % stepCount
-  const cursorX          = LEFT_STRIP_WIDTH + globalCursorStep * (cellWidth + CELL_GAP)
+  const cursorX          = LABEL_WIDTH + globalCursorStep * (cellWidth + CELL_GAP)
   const totalHeight      = tracks.length * (ROW_HEIGHT + ROW_GAP) - ROW_GAP
 
   ctx.fillStyle = flash ? CURSOR_OVERLAY_FLASH : CURSOR_OVERLAY
@@ -183,11 +196,11 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick }: P
 
     const track = tracks[trackIndex]!
     const trackLen = track.pattern.length > 0 ? track.pattern.length : stepCount
-    const cellAreaWidth = canvas.clientWidth - LEFT_STRIP_WIDTH
+    const cellAreaWidth = canvas.clientWidth - LABEL_WIDTH
     const cellWidth = (cellAreaWidth - (trackLen - 1) * CELL_GAP) / trackLen
 
-    if (x < LEFT_STRIP_WIDTH) return
-    const stepIndex = Math.floor((x - LEFT_STRIP_WIDTH) / (cellWidth + CELL_GAP))
+    if (x < LABEL_WIDTH) return
+    const stepIndex = Math.floor((x - LABEL_WIDTH) / (cellWidth + CELL_GAP))
     if (stepIndex < 0 || stepIndex >= trackLen) return
 
     onStepClick(trackIndex, stepIndex)

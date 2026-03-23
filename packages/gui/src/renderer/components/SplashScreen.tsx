@@ -8,6 +8,7 @@ type ModeCard = {
   readonly label:       string
   readonly description: string
   readonly icon:        string
+  readonly disabled?:   boolean
 }
 
 type HardwareOption = {
@@ -30,18 +31,21 @@ const MODES: readonly ModeCard[] = [
     label:       'Produce',
     description: 'Arrange tracks, automate parameters, export stems.',
     icon:        '▦',
+    disabled:    true,
   },
   {
     id:          'dj-set',
     label:       'DJ Set',
     description: 'Mix decks, manage cues, crossfade. Score is your DJ software.',
     icon:        '⊙',
+    disabled:    true,
   },
   {
     id:          'jam-session',
     label:       'Jam Session',
     description: 'Perform live with MIDI hardware. Patch anything to anything.',
     icon:        '⊕',
+    disabled:    true,
   },
 ]
 
@@ -76,18 +80,23 @@ export const SplashScreen = ({ onSelect }: Props) => {
           {MODES.map(m => (
             <button
               key={m.id}
-              aria-label={m.label}
+              aria-label={m.disabled ? `${m.label} — coming soon` : m.label}
               aria-pressed={selectedMode === m.id}
               aria-describedby={`mode-desc-${m.id}`}
+              aria-disabled={m.disabled}
+              disabled={m.disabled}
               style={{
                 ...styles.modeCard,
                 ...(selectedMode === m.id ? styles.modeCardActive : {}),
+                ...(m.disabled ? styles.modeCardDisabled : {}),
               }}
-              onClick={() => { setSelectedMode(m.id) }}
+              onClick={() => { if (!m.disabled) setSelectedMode(m.id) }}
             >
               <span aria-hidden="true" style={styles.modeIcon}>{m.icon}</span>
               <span style={styles.modeLabel}>{m.label}</span>
-              <span id={`mode-desc-${m.id}`} style={styles.modeDesc}>{m.description}</span>
+              <span id={`mode-desc-${m.id}`} style={styles.modeDesc}>
+                {m.disabled ? 'Coming soon' : m.description}
+              </span>
             </button>
           ))}
         </div>
@@ -191,6 +200,12 @@ const styles = {
     border:      '1px solid #2a4a7a',
     color:       '#c8d8f8',
     boxShadow:   '0 0 16px rgba(74,143,255,0.12)',
+  },
+  modeCardDisabled: {
+    opacity:     0.35,
+    cursor:      'not-allowed',
+    background:  '#0c0c0e',
+    border:      '1px solid #161618',
   },
   modeIcon: {
     fontFamily: 'monospace',
