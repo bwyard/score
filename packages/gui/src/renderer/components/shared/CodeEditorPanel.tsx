@@ -42,6 +42,13 @@ type Props = {
    * as a `STEP/TOTAL` pill. Updated on every engine:step tick.
    */
   readonly stepBadges?:  ReadonlyArray<StepBadge>
+  /**
+   * t220 — Whether import lines are visible in the editor.
+   * When `false`, the leading import block is folded (collapsed) in Monaco.
+   * Defaults to `true` (imports visible).
+   * Auto-inject of real imports on fold is deferred until the DSL chain API lands.
+   */
+  readonly importsVisible?: boolean
 }
 
 // ── Score DSL Token Provider ───────────────────────────────────────────────────
@@ -198,7 +205,7 @@ const injectDecorationCss = (): void => {
  * />
  * ```
  */
-export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadges }: Props) => {
+export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true }: Props) => {
   const editorRef       = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
   const decorationsRef  = useRef<string[]>([])
   const stepBadgesRef   = useRef<string[]>([])
@@ -248,6 +255,19 @@ export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadg
 
     stepBadgesRef.current = ed.deltaDecorations(stepBadgesRef.current, newBadges)
   }, [stepBadges])
+
+  // t220 — fold / unfold the leading import block when importsVisible changes
+  useEffect(() => {
+    const ed = editorRef.current
+    if (!ed) return
+    if (importsVisible) {
+      // Unfold line 1 (import block)
+      ed.trigger('t220', 'editor.unfold', { selectionLines: [1] })
+    } else {
+      // Fold line 1 — collapses the contiguous import block at the top
+      ed.trigger('t220', 'editor.fold', { selectionLines: [1] })
+    }
+  }, [importsVisible])
 
   const handleMount: OnMount = useCallback((editor, monaco) => {
     editorRef.current  = editor
