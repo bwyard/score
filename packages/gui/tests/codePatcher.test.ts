@@ -148,3 +148,41 @@ describe('patchTrackNote', () => {
     expect(patchTrackNote(BASE_CODE, 0, 0, 'D3')).toBe(BASE_CODE)
   })
 })
+
+// ── patchTrackPattern — chain API style (.pattern([...])) ──────────────────
+
+const CHAIN_CODE = `import { Song, Kick808, Snare } from '@score/dsl'
+
+const kick  = Kick808().pattern([1, 0, 0, 0, 1, 0, 0, 0]).volume(0.6)
+const snare = Snare().pattern([0, 0, 1, 0, 0, 0, 1, 0]).volume(0.55)
+
+export default Song({ bpm: 120, tracks: [kick, snare] })`
+
+describe('patchTrackPattern — chain API style', () => {
+  it('toggles a step from 1 to 0 in .pattern([...]) method style', () => {
+    const result = patchTrackPattern(CHAIN_CODE, 0, 0, 0)
+    expect(result).toContain('.pattern([0, 0, 0, 0, 1, 0, 0, 0])')
+  })
+
+  it('toggles a step from 0 to 1 in .pattern([...]) method style', () => {
+    const result = patchTrackPattern(CHAIN_CODE, 0, 1, 1)
+    expect(result).toContain('.pattern([1, 1, 0, 0, 1, 0, 0, 0])')
+  })
+
+  it('targets correct track in chain API code', () => {
+    const result = patchTrackPattern(CHAIN_CODE, 1, 0, 1)
+    expect(result).toContain('.pattern([1, 0, 1, 0, 0, 0, 1, 0])')
+    expect(result).toContain('.pattern([1, 0, 0, 0, 1, 0, 0, 0])')  // kick unchanged
+  })
+
+  it('does not affect other chain methods on the same line', () => {
+    const result = patchTrackPattern(CHAIN_CODE, 0, 0, 0)
+    expect(result).toContain('.volume(0.6)')   // volume unchanged
+  })
+
+  it('returns original if no pattern found in chain API track (no .pattern call)', () => {
+    const noPattern = `const bass = Bass303('C2').volume(0.8)
+export default Song({ bpm: 120, tracks: [bass] })`
+    expect(patchTrackPattern(noPattern, 0, 0, 1)).toBe(noPattern)
+  })
+})
