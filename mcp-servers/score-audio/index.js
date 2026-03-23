@@ -377,7 +377,8 @@ const componentCatalog = {
         const content = readFile(join(dir, file))
         if (!content) continue
 
-        const factoryMatch = content.match(/export const (create\w+)/)
+        // Match both PascalCase instruments (Kick, Synth) and camelCase factories (createDelay)
+        const factoryMatch = content.match(/export const ([A-Z]\w+|create\w+)\s*=/)
         const factory = factoryMatch?.[1]
         if (!factory) continue
 
@@ -412,8 +413,8 @@ const componentCatalog = {
       return `### ${k}\n${lines.join('\n')}`
     })
 
-    const importHint = `Import pattern: \`import { createDelay } from '@score/effects'\`\n`
-      + `Use \`effect_catalog\` for effect details, \`signal_flow\` for routing.`
+    const importHint = `Import pattern: \`import { Kick, Synth } from '@score/components'\` | \`import { createDelay } from '@score/effects'\`\n`
+      + `Use \`effect_catalog\` for effect details, \`signal_flow\` for routing, \`instrument_source\` for full source.`
 
     return { content: [{ type: 'text', text: `# AudioComponent Catalog\n\n${importHint}\n\n${sections.join('\n\n')}` }] }
   },
@@ -490,9 +491,100 @@ const instrumentSource = {
   },
 }
 
+// ─── Tool: ui_component_catalog ───────────────────────────────────────
+// Stub — Phase 13f (Monaco IntelliSense + Playwright E2E prep)
+
+const uiComponentCatalog = {
+  name: 'ui_component_catalog',
+  description: 'List all GUI React components in packages/gui — panels, visualizers, controls, and layouts. Shows component name, props interface, and which screen it appears on. Stub: Phase 13f (Monaco integration) not yet implemented.',
+  inputSchema: {
+    kind: z.enum(['all', 'panel', 'visualizer', 'control', 'layout'])
+      .optional().default('all')
+      .describe('Filter by UI component kind.'),
+  },
+  handler: async ({ kind }) => {
+    const guiSrc = join(SCORE_ROOT, 'packages', 'gui', 'src')
+    const note = '> **Stub** — Phase 13f (Monaco IDE integration) not yet implemented.\n> Run `instrument_source` for audio component source instead.\n\n'
+
+    if (!existsSync(guiSrc)) {
+      return { content: [{ type: 'text', text: `${note}GUI source not found at packages/gui/src. Phase 13 GUI scaffold may not be on this branch.` }] }
+    }
+
+    // Walk src for React component files
+    const findTsx = (dir, acc = []) => {
+      const entries = readdirSync(dir, { withFileTypes: true })
+      for (const entry of entries) {
+        const full = join(dir, entry.name)
+        if (entry.isDirectory()) findTsx(full, acc)
+        else if (entry.name.endsWith('.tsx') || (entry.name.endsWith('.ts') && !entry.name.endsWith('.test.ts'))) acc.push(full)
+      }
+      return acc
+    }
+
+    const files = findTsx(guiSrc)
+    if (files.length === 0) {
+      return { content: [{ type: 'text', text: `${note}No GUI components found yet. Phase 13 work lives on feat/phase-11b-live-code-visualizer and later branches.` }] }
+    }
+
+    const components = files.map((f) => {
+      const rel = f.replace(guiSrc + '/', '').replace(/\\/g, '/')
+      const content = readFile(f) ?? ''
+      const propsMatch = content.match(/(?:type|interface)\s+(\w+Props)\s*[={]/)
+      const defaultExport = content.match(/export default (\w+)/)
+      const namedExport = content.match(/export const (\w+)\s*[=:]/)
+      const name = defaultExport?.[1] ?? namedExport?.[1] ?? rel.split('/').pop()?.replace(/\.(tsx?|jsx?)$/, '')
+      return `  - **${name}** (\`${rel}\`)${propsMatch ? ` — props: \`${propsMatch[1]}\`` : ''}`
+    })
+
+    const header = kind === 'all' ? 'all GUI components' : `GUI components (kind: ${kind})`
+    return { content: [{ type: 'text', text: `# Score Studio GUI Component Catalog — ${header}\n\n${note}${components.join('\n')}` }] }
+  },
+}
+
+// ─── Tool: ui_ipc_map ─────────────────────────────────────────────────
+// Stub — Phase 13f (Monaco IntelliSense + Playwright E2E prep)
+
+const uiIpcMap = {
+  name: 'ui_ipc_map',
+  description: 'List all IPC channels between the Electron main process and the renderer — channel name, direction, payload type, and which GUI component handles it. Stub: Phase 13f not yet implemented.',
+  inputSchema: {
+    direction: z.enum(['all', 'main-to-renderer', 'renderer-to-main'])
+      .optional().default('all')
+      .describe('Filter by IPC message direction.'),
+  },
+  handler: async ({ direction }) => {
+    const note = '> **Stub** — Phase 13f IPC map not yet fully implemented.\n> Known channels extracted from source where available.\n\n'
+
+    // Known IPC channels from current codebase — sourced from packages/gui src
+    const KNOWN_CHANNELS = [
+      { channel: 'transport:play',        dir: 'renderer-to-main', payload: 'void',                      desc: 'Start engine playback' },
+      { channel: 'transport:stop',        dir: 'renderer-to-main', payload: 'void',                      desc: 'Stop engine playback' },
+      { channel: 'transport:bpm-set',     dir: 'renderer-to-main', payload: '{ bpm: number }',           desc: 'Set BPM; also triggers codePatcher' },
+      { channel: 'engine:eval',           dir: 'renderer-to-main', payload: '{ code: string }',          desc: 'Evaluate live code string in engine' },
+      { channel: 'engine:patch',          dir: 'renderer-to-main', payload: 'PatchPayload',               desc: 'Per-track volume/mute without re-eval' },
+      { channel: 'engine:state',          dir: 'main-to-renderer', payload: 'EngineState',                desc: 'Current engine state snapshot' },
+      { channel: 'engine:step',           dir: 'main-to-renderer', payload: '{ step: number, total: number }', desc: 'Sequencer step tick for punchcard cursor' },
+      { channel: 'engine:notes',          dir: 'main-to-renderer', payload: 'NoteEvent[]',                desc: 'MIDI note events for piano roll (eval-time)' },
+      { channel: 'engine:waveform',       dir: 'main-to-renderer', payload: 'Float32Array',               desc: 'Waveform samples for oscilloscope panel' },
+      { channel: 'engine:spectrum',       dir: 'main-to-renderer', payload: 'Float32Array',               desc: 'FFT magnitude data for spectrum panel' },
+      { channel: 'engine:error',          dir: 'main-to-renderer', payload: '{ message: string }',        desc: 'Eval or engine error to show in REPL' },
+    ]
+
+    const filtered = direction === 'all' ? KNOWN_CHANNELS : KNOWN_CHANNELS.filter((c) => c.dir === direction)
+
+    const lines = filtered.map((c) => {
+      const arrow = c.dir === 'renderer-to-main' ? 'renderer → main' : 'main → renderer'
+      return `  - **\`${c.channel}\`** (${arrow})\n    Payload: \`${c.payload}\` — ${c.desc}`
+    })
+
+    const dirLabel = direction === 'all' ? 'all channels' : direction
+    return { content: [{ type: 'text', text: `# Score Studio IPC Map — ${dirLabel}\n\n${note}${lines.join('\n')}` }] }
+  },
+}
+
 // ─── Server ──────────────────────────────────────────────────────────
 
-const tools = [effectCatalog, signalFlow, backendNodes, componentCatalog, instrumentSource]
+const tools = [effectCatalog, signalFlow, backendNodes, componentCatalog, instrumentSource, uiComponentCatalog, uiIpcMap]
 
 const createServer = () => {
   const server = new McpServer({
