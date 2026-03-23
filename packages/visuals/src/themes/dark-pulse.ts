@@ -20,7 +20,8 @@ const RING_BASE_R   = 160  // base radius for first euclidean ring
 const RING_SPACING  = 48   // px between concentric rings
 
 const darkPulseCanvas = (state: AudioVisualState): VisualSceneDescriptor => {
-  const { waveform, rms, step, tracks } = state
+  const { waveform, rms, tick, tracks } = state
+  const { step } = tick
   const theme: AppTheme = darkPulseAppTheme
 
   // Radial glow — master RMS drives pulse ring expansion

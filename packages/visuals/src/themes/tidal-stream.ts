@@ -14,7 +14,7 @@ const tidalStreamCanvas = (state: AudioVisualState): VisualSceneDescriptor => ({
   layers: [
     spectrumLayer(state.bins, tidalStreamAppTheme.accentMuted, 0.5),
     waveformLayer(state.waveform, tidalStreamAppTheme.accent, 0.8),
-    stepBarLayer(state.step, 16, tidalStreamAppTheme.textMuted, 0.3),
+    stepBarLayer(state.tick.step, 16, tidalStreamAppTheme.textMuted, 0.3),
   ],
 })
 

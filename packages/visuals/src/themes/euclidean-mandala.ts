@@ -18,7 +18,7 @@ const euclideanMandalaCanvas = (state: AudioVisualState): VisualSceneDescriptor 
       .slice(0, 5)
       .map((t, i) => euclideanRingLayer(
         t.pattern!,
-        state.step,
+        state.tick.step,
         euclideanAppTheme.tracks[i % euclideanAppTheme.tracks.length] ?? euclideanAppTheme.accent,
         100 + i * 50,
         0.8,

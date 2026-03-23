@@ -18,7 +18,7 @@ const cycleRingsCanvas = (state: AudioVisualState): VisualSceneDescriptor => ({
       .slice(0, 6)
       .map((t, i) => euclideanRingLayer(
         t.pattern!,
-        state.step,
+        state.tick.step,
         cycleRingsAppTheme.tracks[i % cycleRingsAppTheme.tracks.length] ?? cycleRingsAppTheme.accent,
         80 + i * 44,
         t.active ? 1.0 : 0.5,

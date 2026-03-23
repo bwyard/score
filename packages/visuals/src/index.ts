@@ -6,6 +6,7 @@
 
 // ── Type surface ──────────────────────────────────────────────────────────────
 export type {
+  TemporalTick,
   TrackVisualState,
   MathVisualState,
   ErrorVisualState,

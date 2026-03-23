@@ -19,7 +19,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@score/math": "workspace:*"
+    "@score/math":      "workspace:*",
+    "@score/sequencer": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

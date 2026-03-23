@@ -36,12 +36,12 @@ const normalise = (v: number, min: number, max: number): number =>
   Math.max(0, Math.min(1, (v - min) / (max - min)))
 
 const lorenzCanvas = (state: AudioVisualState): VisualSceneDescriptor => {
-  const { rms, waveform, tracks, bpm, math } = state
+  const { rms, waveform, tracks, tick, math } = state
   const theme = lorenzAppTheme
 
   // Advance the attractor — use state.math.lorenz if provided (same math as audio),
   // otherwise advance our local simulator. BPM speeds up the trajectory slightly.
-  const dt = DT_BASE * (1 + (bpm / 128 - 1) * 0.3)
+  const dt = DT_BASE * (1 + (tick.bpm / 128 - 1) * 0.3)
 
   if (math?.lorenz !== undefined) {
     // Use the exact position from the audio engine's Lorenz run
@@ -80,7 +80,7 @@ const lorenzCanvas = (state: AudioVisualState): VisualSceneDescriptor => {
     .slice(0, 3)
     .map((t, i) => euclideanRingLayer(
       t.pattern!,
-      state.step,
+      tick.step,
       theme.tracks[i % theme.tracks.length] ?? theme.accent,
       120 + i * 40,
       t.active ? 0.7 : 0.3,

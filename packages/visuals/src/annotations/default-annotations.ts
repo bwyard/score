@@ -41,7 +41,7 @@ export const defaultAnnotationSource = defineAnnotationSource((
         lineNumber,
         trackIndex:   i,
         pattern:      t.pattern!,
-        step:         state.step,
+        step:         state.tick.step,
         color:        darkPulseAppTheme.tracks[i % darkPulseAppTheme.tracks.length] ?? darkPulseAppTheme.accent,
       }]
     })

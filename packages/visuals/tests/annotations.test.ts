@@ -7,9 +7,7 @@ import type { AudioVisualState } from '../src/types.js'
 const makeState = (tracks: AudioVisualState['tracks'] = [], step = 0): AudioVisualState => ({
   waveform: [],
   bins:     [],
-  step,
-  bar:      0,
-  bpm:      128,
+  tick:     { step, bar: 0, beat: 0, bpm: 128, time: 0, stepCount: 16 },
   rms:      0,
   tracks,
 })

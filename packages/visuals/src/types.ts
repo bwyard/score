@@ -1,6 +1,9 @@
 // types.ts — Complete @score/visuals type surface
 // Single source of truth for all visual types across Score Studio, CLI, and REPL.
 
+import type { TemporalTick } from '@score/sequencer'
+export type { TemporalTick }
+
 // ── Per-track audio state ─────────────────────────────────────────────────────
 
 /** Visual state for a single track, sampled each animation frame. */
@@ -59,7 +62,9 @@ export type ErrorVisualState = {
  * @example
  * ```ts
  * const state: AudioVisualState = {
- *   waveform: [...], bins: [...], step: 4, bar: 1, bpm: 128, rms: 0.6,
+ *   waveform: [...], bins: [...],
+ *   tick: { step: 4, bar: 1, beat: 0, bpm: 128, time: 1.5, stepCount: 16 },
+ *   rms: 0.6,
  *   tracks: [{ name: 'kick', type: 'kick808', active: true, rms: 0.9 }],
  * }
  * ```
@@ -69,12 +74,11 @@ export type AudioVisualState = {
   readonly waveform: readonly number[]
   /** FFT magnitude bins, normalised to 0…1. */
   readonly bins:     readonly number[]
-  /** Current sequencer step index (0-based). */
-  readonly step:     number
-  /** Current bar count (0-based). */
-  readonly bar:      number
-  /** Song BPM. */
-  readonly bpm:      number
+  /**
+   * Canonical temporal snapshot (ADR 027).
+   * Replaces flat step/bar/bpm fields — import TemporalTick from \@score/sequencer.
+   */
+  readonly tick:     TemporalTick
   /** Master RMS amplitude 0–1. */
   readonly rms:      number
   /** Per-track visual states. */

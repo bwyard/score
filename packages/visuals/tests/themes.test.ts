@@ -19,9 +19,7 @@ import type { AudioVisualState } from '../src/types.js'
 const baseState: AudioVisualState = {
   waveform: Array.from({ length: 128 }, (_, i) => Math.sin(i / 10) * 0.5),
   bins:     Array.from({ length: 64  }, (_, i) => i / 64),
-  step:     4,
-  bar:      1,
-  bpm:      128,
+  tick:     { step: 4, bar: 1, beat: 0, bpm: 128, time: 1.0, stepCount: 16 },
   rms:      0.4,
   tracks: [
     { name: 'kick', type: 'kick', active: true,  rms: 0.8, pattern: [1, 0, 0, 0, 1, 0, 0, 0] },
@@ -32,9 +30,7 @@ const baseState: AudioVisualState = {
 const emptyState: AudioVisualState = {
   waveform: [],
   bins:     [],
-  step:     0,
-  bar:      0,
-  bpm:      120,
+  tick:     { step: 0, bar: 0, beat: 0, bpm: 120, time: 0, stepCount: 16 },
   rms:      0,
   tracks:   [],
 }

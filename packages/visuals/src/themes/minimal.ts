@@ -12,7 +12,7 @@ const minimalCanvas = (state: AudioVisualState): VisualSceneDescriptor => ({
   background: minimalAppTheme.background,
   layers: [
     waveformLayer(state.waveform, minimalAppTheme.accent, 0.7),
-    stepBarLayer(state.step, 16, minimalAppTheme.textMuted, 0.4),
+    stepBarLayer(state.tick.step, 16, minimalAppTheme.textMuted, 0.4),
   ],
 })
 

@@ -375,6 +375,9 @@ importers:
       '@score/math':
         specifier: workspace:*
         version: link:../math
+      '@score/sequencer':
+        specifier: workspace:*
+        version: link:../sequencer
     devDependencies:
       '@types/node':
         specifier: ^25.5.0
