@@ -22,6 +22,8 @@
     "@score/core": "workspace:*",
     "@score/dsl": "workspace:*",
     "@score/session": "workspace:*",
+    "@score/sequencer": "workspace:*",
+    "@score/visuals": "workspace:*",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.0",

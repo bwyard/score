@@ -9,6 +9,15 @@ vi.mock('@monaco-editor/react', () => ({
   ),
 }))
 
+// @score/visuals — stub theme registry for jsdom
+vi.mock('@score/visuals', () => ({
+  getTheme: () => ({
+    name:        'dark-pulse',
+    appTheme:    {},
+    canvasTheme: () => ({ _type: 'VisualSceneDescriptor', background: '#000', layers: [] }),
+  }),
+}))
+
 // scoreBridge is injected by the preload script — stub it for tests
 const mockSend = vi.fn()
 Object.defineProperty(window, 'scoreBridge', {
@@ -35,9 +44,9 @@ describe('PerformanceMode — rendering', () => {
     expect(screen.getByText(/performance/i)).toBeInTheDocument()
   })
 
-  it('shows canvas placeholder text', () => {
+  it('renders a canvas element for the visual area', () => {
     render(<PerformanceMode hardware="pc-only" onHome={vi.fn()} />)
-    expect(screen.getByText(/visual scene/i)).toBeInTheDocument()
+    expect(document.querySelector('canvas[data-testid="performance-canvas"]')).not.toBeNull()
   })
 
   it('shows Tab hint text', () => {

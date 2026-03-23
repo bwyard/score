@@ -29,6 +29,8 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   set textBaseline(_: unknown) {}, set lineWidth(_: unknown) {},
   set lineCap(_: unknown) {}, set lineJoin(_: unknown) {},
   createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+  createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+  set globalAlpha(_: unknown) {},
 })) as unknown as typeof HTMLCanvasElement.prototype.getContext
 
 // ── ResizeObserver stub ────────────────────────────────────────────────────────

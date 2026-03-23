@@ -1,6 +1,9 @@
-import { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { CodeEditorPanel }  from '../shared/CodeEditorPanel.js'
 import { PerformanceCanvas } from './PerformanceCanvas.js'
+import { useAudioVisualState } from '../../hooks/useAudioVisualState.js'
+import type { IpcAudioData } from '../../hooks/useAudioVisualState.js'
+import type { TrackVisualState } from '@score/visuals'
 import type { HardwareLevel } from '../../../main/ipc-types.js'
 
 // ── Starter code for Performance Mode ─────────────────────────────────────────
@@ -100,21 +103,60 @@ const styles = {
  * Layout: 30% Monaco editor strip (left) + 70% visual canvas (right).
  * Pressing `Tab` toggles the editor strip visibility for pure-visual performance.
  *
- * The canvas area is a placeholder (`PerformanceCanvas`) until `@score/visuals`
- * lands in Phase 13d and wires the reactive visual themes.
+ * IPC wiring:
+ * - `engine:analysis` → `audioRef` (waveform samples)
+ * - `engine:step`     → `stepRef`  (step + stepCount)
+ * - `engine:state`    → `bpmRef`   (BPM)
+ * - `song:update`     → `tracksRef` + `theme` state
  *
- * @param hardware - Selected hardware tier (passed through to future canvas wiring).
+ * @param hardware - Selected hardware tier (reserved for future channel-to-controller wiring).
  * @param onHome   - Called when the user navigates back to the splash screen.
  */
-export const PerformanceMode = ({ hardware: _hardware, onHome }: Props) => {
+export const PerformanceMode = ({ hardware: _hardware, onHome }: Props): React.JSX.Element => {
   const [code,          setCode]          = useState(PERFORMANCE_STARTER)
   const [editorVisible, setEditorVisible] = useState(true)
+  const [theme,         setTheme]         = useState('dark-pulse')
+
+  // Stable refs updated by IPC handlers — read by the rAF loop in useAudioVisualState
+  const audioRef  = useRef<IpcAudioData>({ waveform: [] })
+  const stepRef   = useRef<{ step: number; stepCount: number }>({ step: 0, stepCount: 16 })
+  const bpmRef    = useRef<number>(120)
+  const tracksRef = useRef<readonly TrackVisualState[]>([])
+
+  // IPC subscriptions — update refs without triggering React renders
+  useEffect(() => {
+    const unsubAnalysis = window.scoreBridge.on('engine:analysis', ({ waveform }) => {
+      audioRef.current = { waveform }
+    })
+    const unsubStep = window.scoreBridge.on('engine:step', ({ step, stepCount }) => {
+      stepRef.current = { step, stepCount }
+    })
+    const unsubState = window.scoreBridge.on('engine:state', ({ bpm }) => {
+      bpmRef.current = bpm
+    })
+    const unsubSong = window.scoreBridge.on('song:update', (payload) => {
+      if (payload.theme !== undefined) setTheme(payload.theme)
+      tracksRef.current = payload.tracks.map(t => ({
+        name:    t.name,
+        type:    t.type,
+        active:  false,
+        rms:     0,
+        pattern: t.pattern.filter((v): v is number => typeof v === 'number'),
+      }))
+    })
+
+    return () => {
+      unsubAnalysis()
+      unsubStep()
+      unsubState()
+      unsubSong()
+    }
+  }, [])
 
   // Tab key toggles editor visibility for pure-visual performance
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
-        // Only toggle if the active element is not a text input inside the editor
         const tag = (e.target as HTMLElement).tagName
         if (tag !== 'TEXTAREA' && tag !== 'INPUT') {
           e.preventDefault()
@@ -129,6 +171,9 @@ export const PerformanceMode = ({ hardware: _hardware, onHome }: Props) => {
   const handleEval = useCallback((): void => {
     window.scoreBridge.send('engine:eval', { code })
   }, [code])
+
+  // Build AudioVisualState at ~60fps
+  const visualState = useAudioVisualState(audioRef, stepRef, bpmRef, tracksRef)
 
   return (
     <div style={styles.root}>
@@ -154,7 +199,11 @@ export const PerformanceMode = ({ hardware: _hardware, onHome }: Props) => {
         )}
 
         <div style={styles.canvasArea}>
-          <PerformanceCanvas editorVisible={editorVisible} />
+          <PerformanceCanvas
+            state={visualState}
+            theme={theme}
+            editorVisible={editorVisible}
+          />
         </div>
 
       </div>
