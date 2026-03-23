@@ -31,21 +31,18 @@ const MODES: readonly ModeCard[] = [
     label:       'Produce',
     description: 'Arrange tracks, automate parameters, export stems.',
     icon:        '▦',
-    disabled:    true,
   },
   {
     id:          'dj-set',
     label:       'DJ Set',
     description: 'Mix decks, manage cues, crossfade. Score is your DJ software.',
     icon:        '⊙',
-    disabled:    true,
   },
   {
     id:          'jam-session',
     label:       'Jam Session',
     description: 'Perform live with MIDI hardware. Patch anything to anything.',
     icon:        '⊕',
-    disabled:    true,
   },
 ]
 
