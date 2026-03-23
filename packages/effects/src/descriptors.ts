@@ -13,6 +13,8 @@ import type { CompressorProps } from './compressor.js'
 import type { EQProps } from './eq.js'
 import type { DistortionProps } from './distortion.js'
 import type { LimiterProps } from './limiter.js'
+import type { SaturationProps } from './saturation.js'
+import type { AutoPanProps } from './autopan.js'
 
 const makeDescriptor = (effectType: string, props: Record<string, unknown>): EffectDescriptor => ({
   _type: 'EffectDescriptor',
@@ -228,3 +230,31 @@ export const StereoWidener = (props?: Record<string, unknown>): EffectDescriptor
  * @see {@link createGate} — runtime factory that instantiates the effect with an AudioContext
  */
 export const Gate   = (props?: Record<string, unknown>): EffectDescriptor => makeDescriptor('gate',       props ?? {})
+/**
+ * Create a Saturation descriptor — pure data, no AudioContext required.
+ * Adds musical harmonic warmth via a tanh soft-clip transfer curve.
+ * Lower `drive` (0.1–0.3) for subtle analog warmth; higher (0.6–0.9) for heavy saturation.
+ *
+ * @param props - Effect configuration. See {@link SaturationProps} for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const bass = Synth({ effects: [Saturation({ drive: 0.3, mix: 0.5 })] })
+ * ```
+ */
+export const Saturation = (props?: SaturationProps): EffectDescriptor => makeDescriptor('saturation', (props ?? {}) as Record<string, unknown>)
+/**
+ * Create an AutoPan descriptor — pure data, no AudioContext required.
+ * LFO-driven stereo panning — creates rhythmic left/right movement.
+ * Sync `rate` to BPM for musical panning: 120 BPM = 2 Hz (1 cycle per bar).
+ *
+ * @param props - Effect configuration. See {@link AutoPanProps} for all options.
+ * @returns An {@link EffectDescriptor} for use in song files.
+ *
+ * @example
+ * ```ts
+ * const lead = Arp({ effects: [AutoPan({ rate: 0.5, depth: 0.7, shape: 'sine' })] })
+ * ```
+ */
+export const AutoPan   = (props?: AutoPanProps): EffectDescriptor => makeDescriptor('autopan', (props ?? {}) as Record<string, unknown>)
