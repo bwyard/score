@@ -73,6 +73,57 @@ export default Song({ bpm: 140, tracks: [kick, bass] })
 10. **All code is functional** — factory functions, `const`, arrow functions, zero classes
 11. **Every public export gets TSDoc** — `/** */` block with `@param`, `@returns`, `@example`, `@throws {ScoreError}`. Standard in `docs/spec/TSDOC_STANDARD.md`. No undocumented public exports.
 
+## Target Genres — Full EDM Library
+
+Score aims to cover every major electronic genre. Each genre has specific synthesis requirements that drive the instrument roadmap.
+
+### Completed / In Progress
+| Genre | Key Instruments | Status |
+|---|---|---|
+| Techno | Kick909, Snare909, Hihat808, acid bass | Drums done, Bass303 pending |
+| Deep House | Kick808, Hihat808, Rhodes pad, sub bass | Drums done, FM Rhodes pending |
+| Acid House | Bass303 (303 squelch) | t166 — pending |
+| Detroit Techno | Kick808, Kick909, FM leads | Drums done |
+| Chicago House | Kick909, piano, organ | Drums done |
+
+### Planned — Synthesis Required
+| Genre | Key Synthesis Gap | Priority |
+|---|---|---|
+| Trance / Progressive | Supersaw (detuned saw stack), arpeggiator | Phase 12d-1 |
+| Hardstyle | Reverse-bass kick (pitch sweeps UP then drops), distortion on body | New — createKickHardstyle |
+| Hardcore / Gabber | Heavily distorted/clipped kick, ~160–200 BPM | New — createKickHardcore |
+| Drum & Bass / Jungle | Reese bass (detuned saws), Amen-style breaks, heavy sub | Phase 12d-2 |
+| Dubstep / Brostep | Wobble bass (LFO on filter), half-time feel | LFO wiring |
+| Neurofunk | Complex FM bass, resampled textures | FM + granular |
+| Ambient / Dark Ambient | Long pads, drone, granular textures, convolution reverb | Phase 12d-4 |
+| IDM / Glitch | Granular, bitcrush, complex polyrhythm, stutter edits | Phase 12d-4 |
+| Synthwave / Retrowave | Supersaw leads, gated reverb drums, arpeggios | Phase 12d-1 |
+| UK Garage / Speed Garage | Shuffled 2-step, pitched vocal chops, sub bass | Sequencer + sampler |
+| Grime | Reese bass, dark pads, MC-ready tempo (140 BPM) | Bass work |
+| Future Bass | Chords + supersaw stab, wobble, 808 sub | Supersaw + 808 |
+| Trap (EDM) | 808 sub bass, hi-hat rolls (16th/32nd), snare | 808 done |
+| Lo-fi Hip Hop | Dusty samples, vinyl noise, lazy swing | Sampler + swing |
+| Electro / Miami Bass | 808 cowbell, clap, robotic voice | Cowbell/clap pending |
+| Footwork / Juke | 160 BPM, rapid percussion patterns, vocal chops | Sampler + pattern |
+| Psytrance | Driving bass (squelchy FM), fast 145 BPM | FM bass |
+| Minimal Techno | Sparse clicks/cuts, subtle acid | Pattern + 303 |
+| Big Room House | Supersaw leads, festival drops, huge reverb | Supersaw |
+| Afrotech | African percussion + techno grid | Percussion library |
+| Breaks / Breakbeat | Breakbeat sampler, pitched break | Sampler |
+
+### Synthesis Building Blocks Needed (drives Phase 12d roadmap)
+- **Supersaw** — N detuned oscillators (Trance, Big Room, Synthwave, Future Bass)
+- **Reese bass** — 2 detuned saws with sub, classic D&B (Phase 12d SubSynth extension)
+- **Wobble bass** — LFO on filter cutoff, rate-synced to BPM (Dubstep)
+- **Reverse kick** — pitch sweeps UP to peak then falls (Hardstyle) — createKickHardstyle
+- **Distorted kick** — waveshaper on sine body (Hardcore/Gabber) — createKickHardcore
+- **Granular engine** — Phase 12d-4 (Ambient, IDM, Glitch)
+- **Convolution reverb** — Phase 12g (large spaces, gated reverb)
+- **808 sub** — already done (createKick808 doubles as sub bass)
+- **Cowbell808 / Clap909** — t204 in progress
+
+---
+
 ## Git Workflow
 
 - **`main`** — production. Protected: PRs only, enforced on admins.
