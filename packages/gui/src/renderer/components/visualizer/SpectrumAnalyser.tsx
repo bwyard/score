@@ -98,9 +98,9 @@ const drawSpectrum = (
  * Renders each FFT bin as a bottom-to-top bar. Applies a glow effect when
  * `playing` is true. Handles panel resize via ResizeObserver. HiDPI-aware.
  *
- * @param props.bins    - Normalised FFT magnitude values in [0, 1]
- * @param props.playing - When true, enables glow and draws live magnitudes
- * @param props.color   - Bar fill color (default `#6a9fff`)
+ * @param bins    - Normalised FFT magnitude values in [0, 1]
+ * @param playing - When true, enables glow and draws live magnitudes
+ * @param color   - Bar fill color (default `#6a9fff`)
  */
 export const SpectrumAnalyser = ({
   bins,

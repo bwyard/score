@@ -101,8 +101,8 @@ const drawScope = (
  * Receives a waveform (float array in [-1, 1]) and a playing flag.
  * Redraws on every prop change; the parent drives updates at ~20fps via IPC.
  *
- * @param props.waveform - PCM float samples, typically 1024–2048 values in [-1, 1]
- * @param props.playing  - When true, draws the live waveform; when false draws an idle line
+ * @param waveform - PCM float samples, typically 1024–2048 values in [-1, 1]
+ * @param playing  - When true, draws the live waveform; when false draws an idle line
  */
 export const Scope = ({ waveform, playing }: Props) => {
   const canvasRef    = useRef<HTMLCanvasElement>(null)

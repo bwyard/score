@@ -79,8 +79,8 @@ const drawMeter = (canvas: HTMLCanvasElement, level: number): void => {
  *
  * The meter renders as silent when `playing` is `false`.
  *
- * @param props.waveform - Float waveform samples from an `AnalyserNode` in [-1, 1].
- * @param props.playing  - Whether the transport is currently playing.
+ * @param waveform - Float waveform samples from an `AnalyserNode` in [-1, 1].
+ * @param playing  - Whether the transport is currently playing.
  *
  * @example
  * ```tsx

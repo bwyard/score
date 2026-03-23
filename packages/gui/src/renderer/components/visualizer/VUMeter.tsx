@@ -122,12 +122,12 @@ const label = (canvas: HTMLCanvasElement): string =>
  * Displays an RMS level bar (colour-coded green/yellow/red zones) with a
  * peak-hold line that falls off at 0.003/frame via requestAnimationFrame.
  *
- * @param props.level  - RMS level in [0, 1]
- * @param props.peak   - Initial peak hold value in [0, 1]
- * @param props.label  - Track name shown below the bar and as aria-label
- * @param props.color  - Bar accent color (default `#6a9fff`)
- * @param props.width  - Canvas CSS width in px (default 24)
- * @param props.height - Canvas CSS height in px (default 120)
+ * @param level  - RMS level in [0, 1]
+ * @param peak   - Initial peak hold value in [0, 1]
+ * @param label  - Track name shown below the bar and as aria-label
+ * @param color  - Bar accent color (default `#6a9fff`)
+ * @param width  - Canvas CSS width in px (default 24)
+ * @param height - Canvas CSS height in px (default 120)
  */
 export const VUMeter = ({
   level,

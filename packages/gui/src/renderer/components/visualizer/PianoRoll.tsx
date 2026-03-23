@@ -178,11 +178,11 @@ const drawRoll = (
  * left edge to indicate pitch. A cursor line and column overlay mark the
  * currently playing step.
  *
- * @param props.notes       - Array of note events to display.
- * @param props.currentStep - Zero-based index of the currently playing step.
- * @param props.stepCount   - Total number of steps in the sequence.
- * @param props.minNote     - Lowest MIDI note displayed (optional, auto-detected).
- * @param props.maxNote     - Highest MIDI note displayed (optional, auto-detected).
+ * @param notes       - Array of note events to display.
+ * @param currentStep - Zero-based index of the currently playing step.
+ * @param stepCount   - Total number of steps in the sequence.
+ * @param minNote     - Lowest MIDI note displayed (optional, auto-detected).
+ * @param maxNote     - Highest MIDI note displayed (optional, auto-detected).
  *
  * @example
  * ```tsx

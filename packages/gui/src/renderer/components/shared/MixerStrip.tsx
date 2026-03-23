@@ -77,13 +77,13 @@ const drawVU = (canvas: HTMLCanvasElement, level: number): void => {
  * the track name, a mute toggle, a vertical volume fader, and a small VU
  * level indicator. The strip is 56 px wide and fills its container height.
  *
- * @param props.name     - Track name shown at the top of the strip.
- * @param props.type     - Track type; controls the accent colour.
- * @param props.volume   - Current volume in [0, 1].
- * @param props.muted    - Whether the track is muted.
- * @param props.level    - Current RMS level in [0, 1] for the VU bar.
- * @param props.onVolume - Called with the new volume when the fader changes.
- * @param props.onMute   - Called when the mute button is clicked.
+ * @param name     - Track name shown at the top of the strip.
+ * @param type     - Track type; controls the accent colour.
+ * @param volume   - Current volume in [0, 1].
+ * @param muted    - Whether the track is muted.
+ * @param level    - Current RMS level in [0, 1] for the VU bar.
+ * @param onVolume - Called with the new volume when the fader changes.
+ * @param onMute   - Called when the mute button is clicked.
  *
  * @example
  * ```tsx

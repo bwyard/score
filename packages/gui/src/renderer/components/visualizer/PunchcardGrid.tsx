@@ -194,7 +194,8 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick }: P
     const trackIndex = Math.floor(y / (ROW_HEIGHT + ROW_GAP))
     if (trackIndex < 0 || trackIndex >= tracks.length) return
 
-    const track = tracks[trackIndex]!
+    const track = tracks[trackIndex]
+    if (!track) return
     const trackLen = track.pattern.length > 0 ? track.pattern.length : stepCount
     const cellAreaWidth = canvas.clientWidth - LABEL_WIDTH
     const cellWidth = (cellAreaWidth - (trackLen - 1) * CELL_GAP) / trackLen

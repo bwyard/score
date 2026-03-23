@@ -23,6 +23,7 @@ import {
   euclidean, fast, slow, rev, every, degrade, shift, stack, beat, humanize,
 }                                                    from '@score/pattern'
 import type { MainToRenderer, RendererToMain, PanelLayoutMap } from './ipc-types.js'
+import { autoUpdater }                               from 'electron-updater'
 
 // ── Default starter song ────────────────────────────────────────────────────
 // Used when entering any mode — mirrors the Live Code textarea starter.
@@ -333,6 +334,17 @@ app.on('ready', () => {
     const layout = readLayout()
     if (layout) send('layout:load', layout)
   })
+
+  // ── Auto-update (packaged builds only) ──────────────────────────────────
+  // In dev/unpackaged mode this is a no-op. publish: null in electron-builder.yml
+  // disables actual downloads until a GitHub release channel is configured.
+  if (app.isPackaged) {
+    autoUpdater.logger = console
+    autoUpdater.on('update-downloaded', () => {
+      autoUpdater.quitAndInstall(false, true)
+    })
+    void autoUpdater.checkForUpdatesAndNotify()
+  }
 })
 
 app.on('window-all-closed', () => {
