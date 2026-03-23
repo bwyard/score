@@ -18,9 +18,11 @@ export type PatternArray<T> = T[]
  * ```ts
  * // Alternates between hit and rest every bar
  * const fn: PatternFn<number> = (step, bar) => bar % 2 === 0 ? 1 : 0
+ * // With song seed for deterministic variation
+ * const fn: PatternFn<number> = (step, bar, seed) => ... // seed from Song({ seed })
  * ```
  */
-export type PatternFn<T> = (step: number, bar: number) => T
+export type PatternFn<T> = (step: number, bar: number, seed?: number) => T
 
 /**
  * A pattern expressed as either a static array or a step function.
@@ -55,7 +57,7 @@ export type PatternInput<T = number> = PatternArray<T> | PatternFn<T>
  * resolvePattern((s, b) => b + s, 3, 2)   // → [2, 3, 4]
  * ```
  */
-export const resolvePattern = <T>(input: PatternInput<T>, length: number, bar = 0): T[] => {
+export const resolvePattern = <T>(input: PatternInput<T>, length: number, bar = 0, seed?: number): T[] => {
   if (Array.isArray(input)) return input
-  return Array.from({ length }, (_, step) => input(step, bar))
+  return Array.from({ length }, (_, step) => input(step, bar, seed))
 }

@@ -9,6 +9,7 @@ const makeSong = (overrides = {}): JamSessionConfig['song'] => ({
   bpm:         128,
   tracks:      [{} as never, {} as never],  // 2 stub tracks
   arrangement: [],
+  seed:        1,
   ...overrides,
 })
 

@@ -240,6 +240,12 @@ export type SongProps = {
   readonly arrangement?: SectionDefinition[]
   readonly backend?: 'web-audio' | 'scsynth' | 'jack'
   readonly xdj?: { mode: 'score-mixer' | 'hardware-mixer' | 'hybrid' }
+  /**
+   * Seed for stochastic pattern transforms (`degrade`, `humanize`).
+   * When omitted, `Date.now()` is used and logged so you can replay the groove.
+   * @example `Song({ bpm: 120, seed: 42, tracks: [...] })`
+   */
+  readonly seed?: number
 }
 
 /**
@@ -259,6 +265,8 @@ export type SongDefinition = {
   readonly arrangement: SectionDefinition[]
   readonly backend?: string
   readonly xdj?: { mode: 'score-mixer' | 'hardware-mixer' | 'hybrid' }
+  /** Resolved seed — always present (defaulted to Date.now() in Song() if not provided). */
+  readonly seed: number
 }
 
 /** The recognised section types for EDM arrangement structure. */

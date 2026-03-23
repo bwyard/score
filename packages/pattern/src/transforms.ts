@@ -1,6 +1,16 @@
 import type { PatternInput, PatternFn } from './types.js'
 import { resolvePattern } from './types.js'
 
+// ── Inline Mulberry32 PRNG — deterministic, seedable, no external dep ─────────
+// Pure step function: (seed: uint32) => [value_in_0_1, nextSeed].
+// Same algorithm as @prime/prime-random prngNext — cross-platform reproducible.
+const prngNext = (seed: number): [number, number] => {
+  const s = (seed + 0x6D2B79F5) >>> 0
+  let t = Math.imul(s ^ (s >>> 15), 1 | s)
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) >>> 0
+  return [((t ^ (t >>> 14)) >>> 0) / 0x100000000, s]
+}
+
 /**
  * Double (or multiply) the playback speed of a pattern.
  * Each step plays `n` times faster — a 4/4 kick becomes a rapid 16th-note fill.
@@ -129,13 +139,14 @@ export const every = <T>(
  * @see {@link stack} — layer patterns together
  */
 export const degrade = (probability: number, pattern: PatternInput): PatternFn<number> =>
-  (step: number, bar: number) => {
-    const arr = resolvePattern(pattern, Array.isArray(pattern) ? pattern.length : 16, bar)
+  (step: number, bar: number, songSeed?: number) => {
+    const arr = resolvePattern(pattern, Array.isArray(pattern) ? pattern.length : 16, bar, songSeed)
     const val = arr[step % arr.length] ?? 0
     if (val === 0) return 0
-    // Simple deterministic "random" based on step + bar
-    const seed = (step * 1237 + bar * 4567) % 9999
-    return (seed / 9999) < probability ? 0 : val
+    // Deterministic per (step, bar, songSeed) — same inputs, same output
+    const prnSeed = ((step * 1237 + bar * 4567) ^ (songSeed ?? 0)) >>> 0
+    const [rand] = prngNext(prnSeed)
+    return rand < probability ? 0 : val
   }
 
 /**
@@ -258,12 +269,13 @@ export const beat = <T>(...steps: T[]): T[] => [...steps]
  * @see {@link every} — apply transforms conditionally per bar
  */
 export const humanize = (amount: number, pattern: PatternInput): PatternFn<number> =>
-  (step: number, bar: number): number => {
-    const arr = resolvePattern(pattern, Array.isArray(pattern) ? pattern.length : 16, bar)
+  (step: number, bar: number, songSeed?: number): number => {
+    const arr = resolvePattern(pattern, Array.isArray(pattern) ? pattern.length : 16, bar, songSeed)
     const val = arr[step % arr.length] ?? 0
     if (val === 0) return 0
-    // Deterministic hash jitter in [-1, 1] — reproducible per step+bar
-    const seed = ((step * 7919 + bar * 3571) ^ (step << 4)) >>> 0
-    const jitter = (seed % 65536) / 32768 - 1
-    return (val) * (1 + amount * jitter)
+    // Deterministic per (step, bar, songSeed) — jitter in [-1, 1]
+    const prnSeed = (((step * 7919 + bar * 3571) ^ (step << 4)) ^ (songSeed ?? 0)) >>> 0
+    const [rand] = prngNext(prnSeed)
+    const jitter = rand * 2 - 1  // map [0,1) → [-1, 1)
+    return val * (1 + amount * jitter)
   }

@@ -6,8 +6,9 @@ export type PatternInput<T = number> = T[] | Pattern<T>
  *
  * @param step - The current step index (0-based, wrapping at the sequencer's `steps` count).
  * @param bar  - The current bar number from the transport position.
+ * @param seed - Optional song seed, passed from `StepSequencerProps.seed` for deterministic stochastic patterns.
  */
-export type Pattern<T> = (step: number, bar: number) => T
+export type Pattern<T> = (step: number, bar: number, seed?: number) => T
 
 /** The playback state of a {@link Transport}. */
 export type TransportState = 'stopped' | 'playing' | 'paused'
