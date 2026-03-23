@@ -5,16 +5,29 @@
 // mutes/unmutes channels at section boundaries.
 //
 // Synthesis models:
-//   kick   — sine sweep (freq→30 Hz over pitchDrop sec)
-//   snare  — band-pass filtered noise burst + sine transient
-//   hihat  — high-pass filtered noise burst (short decay)
-//   synth  — oscillator with ADSR envelope + optional filter
-//   sample — decoded audio file played back on each hit
+//   kick     — sine sweep (freq→30 Hz over pitchDrop sec)
+//   snare    — band-pass filtered noise burst + sine transient
+//   hihat    — high-pass filtered noise burst (short decay)
+//   synth    — oscillator with ADSR envelope + optional filter
+//   sample   — decoded audio file played back on each hit
+//   kick808  — createKick808: pure sine + pitch envelope
+//   kick909  — createKick909: sine body + noise click transient
+//   hihat808 — createHihat808: 6 detuned sq oscs → BP/HP filter chain
+//   snare909 — createSnare909: 2 triangle oscs + white noise HPF
+//   subsynth — createSubtractiveSynth: saw/sq → resonant LP → ADSR VCA
 
 import { readFileSync } from 'node:fs'
 import { webAudioBackend, decodeSample, createSamplePlayer } from '@score/core'
 import type { EffectDescriptor, AudioComponent, ScoreAudioContext, BackendAnalyserNode } from '@score/core'
-import { Theremin as ThereminComponent, Sax as SaxComponent } from '@score/components'
+import {
+  Theremin as ThereminComponent,
+  Sax as SaxComponent,
+  createKick808,
+  createKick909,
+  createHihat808,
+  createSnare909,
+  createSubtractiveSynth,
+} from '@score/components'
 import { createMixer } from '@score/mixer'
 import {
   createDelay, createReverb, createFilter, createCompressor, createEQ,
@@ -27,6 +40,7 @@ import { resolveFreq } from '@score/dsl'
 import type {
   SongDefinition, InstrumentDescriptor,
   KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps,
+  Kick808DSLProps, Kick909DSLProps, Hihat808DSLProps, Snare909DSLProps, SubSynthDSLProps,
 } from '@score/dsl'
 
 type Context = ReturnType<typeof webAudioBackend.createContext>
@@ -461,6 +475,96 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
             // random — deterministic based on noteIndex+time
             const seed = (arpState.noteIndex * 7919) >>> 0
             arpState.noteIndex = seed % notes.length
+          }
+        })
+        break
+      }
+      case 'kick808': {
+        const props = comp.props as Kick808DSLProps
+        const kick = createKick808(ctx, {
+          ...(props.startFreq !== undefined && { startFreq: props.startFreq }),
+          ...(props.endFreq   !== undefined && { endFreq:   props.endFreq }),
+          ...(props.pitchFall !== undefined && { pitchFall: props.pitchFall }),
+          ...(props.decay     !== undefined && { decay:     props.decay }),
+          gain: props.volume ?? 0.85,
+        })
+        kick.connect(dest)
+        const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
+        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+          if (hit) kick.trigger(pos.time)
+        })
+        break
+      }
+      case 'kick909': {
+        const props = comp.props as Kick909DSLProps
+        const kick = createKick909(ctx, {
+          ...(props.startFreq  !== undefined && { startFreq:  props.startFreq }),
+          ...(props.endFreq    !== undefined && { endFreq:    props.endFreq }),
+          ...(props.pitchFall  !== undefined && { pitchFall:  props.pitchFall }),
+          ...(props.decay      !== undefined && { decay:      props.decay }),
+          ...(props.clickLevel !== undefined && { clickLevel: props.clickLevel }),
+          ...(props.clickDecay !== undefined && { clickDecay: props.clickDecay }),
+          gain: props.volume ?? 0.85,
+        })
+        kick.connect(dest)
+        const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
+        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+          if (hit) kick.trigger(pos.time)
+        })
+        break
+      }
+      case 'hihat808': {
+        const props = comp.props as Hihat808DSLProps
+        const hat = createHihat808(ctx, {
+          ...(props.decay !== undefined && { decay: props.decay }),
+          ...(props.open  !== undefined && { open:  props.open }),
+          gain: props.volume ?? 0.65,
+        })
+        hat.connect(dest)
+        const pattern = props.pattern ?? DEFAULT_HIHAT_PATTERN
+        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+          if (hit) hat.trigger(pos.time)
+        })
+        break
+      }
+      case 'snare909': {
+        const props = comp.props as Snare909DSLProps
+        const snare = createSnare909(ctx, {
+          ...(props.toneDecay      !== undefined && { toneDecay:      props.toneDecay }),
+          ...(props.noiseDecay     !== undefined && { noiseDecay:     props.noiseDecay }),
+          ...(props.toneNoiseRatio !== undefined && { toneNoiseRatio: props.toneNoiseRatio }),
+          gain: props.volume ?? 0.8,
+        })
+        snare.connect(dest)
+        const pattern = props.pattern ?? DEFAULT_SNARE_PATTERN
+        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+          if (hit) snare.trigger(pos.time)
+        })
+        break
+      }
+      case 'subsynth': {
+        const props = comp.props as SubSynthDSLProps
+        const rawPattern = props.pattern ?? DEFAULT_SYNTH_PATTERN
+        const pattern: (number | string)[] = Array.isArray(rawPattern) ? rawPattern : DEFAULT_SYNTH_PATTERN
+        const adsr = props.adsr ?? {}
+        const attack  = adsr.attack  ?? 0.01
+        const decay   = adsr.decay   ?? 0.1
+        const release = adsr.release ?? 0.3
+        const noteDur = attack + decay + release + 0.02
+        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+          const freq = resolveFreq(val)
+          if (freq > 0) {
+            // Create a fresh instance per hit (same pattern as triggerSynth)
+            const voice = createSubtractiveSynth(ctx, {
+              ...(props.wave   !== undefined && { wave:   props.wave }),
+              ...(props.filter !== undefined && { filter: props.filter }),
+              ...(props.adsr   !== undefined && { adsr:   props.adsr }),
+              frequency: freq,
+              gain:      props.volume ?? 0.7,
+            })
+            voice.connect(dest)
+            voice.noteOn(pos.time)
+            voice.noteOff(pos.time + noteDur)
           }
         })
         break
