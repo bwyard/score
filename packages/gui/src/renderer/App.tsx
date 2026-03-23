@@ -3,7 +3,8 @@ import { SplashScreen }  from './components/SplashScreen.js'
 import { LiveCode }      from './components/LiveCode/index.js'
 import { Produce }       from './components/Produce/index.js'
 import { DJSet }         from './components/DJSet/index.js'
-import { JamSession }    from './components/JamSession/index.js'
+import { JamSession }       from './components/JamSession/index.js'
+import { PerformanceMode } from './components/PerformanceMode/index.js'
 import type { StudioMode, HardwareLevel } from '../main/ipc-types.js'
 
 type AppState =
@@ -38,7 +39,8 @@ export const App = () => {
       {mode === 'live-code'   && <LiveCode   hardware={hardware} onHome={goHome} />}
       {mode === 'produce'     && <Produce    hardware={hardware} onHome={goHome} />}
       {mode === 'dj-set'      && <DJSet      hardware={hardware} onHome={goHome} />}
-      {mode === 'jam-session' && <JamSession hardware={hardware} onHome={goHome} />}
+      {mode === 'jam-session'  && <JamSession    hardware={hardware} onHome={goHome} />}
+      {mode === 'performance'  && <PerformanceMode hardware={hardware} onHome={goHome} />}
     </>
   )
 }

@@ -3,7 +3,7 @@
 // Every channel has a typed payload — no `any` crossing the bridge.
 
 /** Mode the user selected on the splash screen. */
-export type StudioMode = 'live-code' | 'produce' | 'dj-set' | 'jam-session'
+export type StudioMode = 'live-code' | 'produce' | 'dj-set' | 'jam-session' | 'performance'
 
 /** Hardware level selected on the splash screen. */
 export type HardwareLevel = 'pc-only' | 'controller' | 'aio'
