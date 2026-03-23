@@ -394,7 +394,7 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
     [key: string]: unknown
   }
 
-  const context: VmContext = vm.createContext({
+  const contextObj: Record<string, unknown> = {
     // DSL — percussion + legacy instruments
     Song, Track, Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp, resolveFreq,
     Kick808, Kick909, Snare909, Hihat808, SubSynth, FMSynth,
@@ -417,7 +417,8 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
     Math, console,
     // Export capture
     __exports__: null,
-  }) as VmContext
+  }
+  const context = vm.createContext(contextObj) as VmContext
 
   try {
     vm.runInContext(scriptCode, context, { timeout: 5000, filename: 'score-live.vm' })
