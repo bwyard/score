@@ -32,48 +32,36 @@ export const newSong = (args: string[]): void => {
 // Run with:  score play ${fileName}
 // Live mode: score play ${fileName} --watch
 
-import { Song, Kick, Snare, HiHat, Synth, Intro, Drop, Outro } from '@score/dsl'
+import { Song, Kick808, Snare, HiHat, Bass303, Pad } from '@score/dsl'
 
 // ── DRUMS ─────────────────────────────────────────────────────────────────────
 // Pattern: 16-step array. 1 = hit, 0 = rest.
 
-const kick = Kick({
-  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.85,
-})
+const kick  = Kick808({ pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0], volume: 0.75 })
+const snare = Snare({   pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0], volume: 0.5  })
+const hihat = HiHat({   pattern: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0], volume: 0.2  })
 
-const snare = Snare({
-  pattern: [0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.5,
-})
+// ── BASS ──────────────────────────────────────────────────────────────────────
+// Chain API: Bass303, Pad, Pluck, Synth, FMSynth — .filter() .reverb() .volume() etc.
 
-const hihat = HiHat({
-  pattern: [1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0],
-  volume: 0.2,
-})
+const bass = Bass303('A2')
+  .filter(600)
+  .resonance(0.4)
+  .pattern([1,0,0,0, 0,0,1,0, 1,0,0,0, 0,1,0,0])
+  .volume(0.7)
 
-// ── SYNTHESIS ─────────────────────────────────────────────────────────────────
-// Use note names ('A2', 'D3', 'F#3') or Hz values. 0 = rest.
+// ── PAD ───────────────────────────────────────────────────────────────────────
 
-const bass = Synth({
-  wave: 'sawtooth',
-  gain: 0.25,
-  envelope: { attack: 0.005, decay: 0.1, sustain: 0.6, release: 0.05 },
-  filter: { type: 'lowpass', frequency: 900 },
-  pattern: ['A2', 0, 'A2', 0,  0, 'A2', 0, 'D3',  'E3', 0, 'E3', 0,  0, 'A3', 0, 0],
-})
+const pad = Pad('A3')
+  .attack(0.3)
+  .release(1.2)
+  .reverb(0.3)
+  .volume(0.35)
 
-// ── ARRANGEMENT ───────────────────────────────────────────────────────────────
+// ── SONG ──────────────────────────────────────────────────────────────────────
 export default Song({
   bpm: 128,
-  key: 'Am',
-  genre: 'electronic',
-  tracks: [kick, snare, hihat, bass],
-  arrangement: [
-    Intro(4,  [kick, bass]),
-    Drop(16,  [kick, snare, hihat, bass]),
-    Outro(4,  [kick, bass]),
-  ],
+  tracks: [kick, snare, hihat, bass, pad],
 })
 `
 
