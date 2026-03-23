@@ -2,7 +2,7 @@
 // Uses StereoPannerNode + GainNodes for mid/side balance
 // width: 0 = mono, 1 = normal stereo, 2 = extra wide
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -66,10 +66,12 @@ export const createStereoWidener = (
   panRight.connect(outputGain)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setWidth: (value: number, time?: number) => void
   } = {
     id: uid('stereo-widener'),
     type: 'stereo-widener' as const,
+    input: inputGain,
 
     /**
      * Set the stereo width. `1.0` = unity (no change). `0` = mono. `2.0` = maximum width.
