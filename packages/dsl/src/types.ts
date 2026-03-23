@@ -16,6 +16,10 @@ export type KickProps = {
 export type SnareProps = {
   readonly pattern?: number[]
   readonly volume?: number
+  /** Noise burst length in seconds. Controls how long the snare rattle sustains. Default 0.12. */
+  readonly decay?: number
+  /** Bandpass filter centre frequency in Hz. Higher = brighter snare wire, lower = thuddy. Default 5000. */
+  readonly tone?: number
   /** Effects chain — use descriptor factories from the effects package (e.g. Delay, Reverb). */
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
@@ -152,7 +156,7 @@ export type SongProps = {
   readonly bpm: number
   readonly key?: string
   readonly genre?: string
-  readonly tracks: TrackComponent[]
+  readonly tracks: ReadonlyArray<TrackComponent | InstrumentDescriptor>
   readonly arrangement?: SectionDefinition[]
   readonly backend?: 'web-audio' | 'scsynth' | 'jack'
   readonly xdj?: { mode: 'score-mixer' | 'hardware-mixer' | 'hybrid' }
@@ -171,7 +175,7 @@ export type SongDefinition = {
   readonly bpm: number
   readonly key?: string
   readonly genre?: string
-  readonly tracks: TrackComponent[]
+  readonly tracks: ReadonlyArray<TrackComponent | InstrumentDescriptor>
   readonly arrangement: SectionDefinition[]
   readonly backend?: string
   readonly xdj?: { mode: 'score-mixer' | 'hardware-mixer' | 'hybrid' }
