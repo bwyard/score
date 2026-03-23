@@ -98,7 +98,11 @@ const pushSong = (song: SongDefinition): void => {
     const pattern = effectivePattern(desc)
     return { name: desc.instrumentType, type: desc.instrumentType, pattern }
   })
-  send('song:update', { tracks })
+  send('song:update', {
+    tracks,
+    ...(song.theme   !== undefined && { theme:   song.theme }),
+    ...(song.palette !== undefined && { palette: song.palette }),
+  })
 
   // Emit piano roll note data for melodic tracks (Synth, Arp)
   const pianoNotes: Array<{ pitch: number; step: number; velocity: number; trackIndex: number }> = []
