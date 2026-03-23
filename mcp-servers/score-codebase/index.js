@@ -176,13 +176,30 @@ const apiSurface = {
 
 // ─── Tool: project_status ────────────────────────────────────────────
 
+const getLiveGitState = () => {
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: SCORE_ROOT, encoding: 'utf-8' }).trim()
+    const lastCommit = execSync('git log --oneline -1', { cwd: SCORE_ROOT, encoding: 'utf-8' }).trim()
+    const uncommitted = execSync('git status --short', { cwd: SCORE_ROOT, encoding: 'utf-8' }).trim()
+    const fileCount = uncommitted ? uncommitted.split('\n').length : 0
+    return { branch, lastCommit, fileCount }
+  } catch {
+    return null
+  }
+}
+
+const getSessionState = () => {
+  const sessionPath = join(SCORE_ROOT, '..', 'claude-resources', 'sessions', 'score', 'current.md')
+  return readFile(sessionPath)
+}
+
 const projectStatus = {
   name: 'project_status',
-  description: 'Get current project status: phase roadmap, blockers, and test counts per package.',
+  description: 'Get current project status: live git state, in-progress phases (⚠️), session notes, and test counts. Combines live git data with SCORE_HANDOFF.md and the active session file.',
   inputSchema: {
-    section: z.enum(['all', 'phases', 'blockers', 'tests'])
+    section: z.enum(['all', 'phases', 'live', 'session', 'tests'])
       .optional().default('all')
-      .describe('"phases" shows build status, "blockers" shows blocked items, "tests" runs pnpm test and parses counts, "all" shows phases + blockers.'),
+      .describe('"phases" shows full build status from SCORE_HANDOFF.md, "live" shows git branch/commit/uncommitted files, "session" shows current session notes, "tests" runs pnpm test, "all" shows live + in-progress + session.'),
   },
   handler: async ({ section }) => {
     const handoff = readFile(join(SCORE_ROOT, 'SCORE_HANDOFF.md')) ?? ''
@@ -197,13 +214,42 @@ const projectStatus = {
       }
     }
 
+    if (section === 'session') {
+      const session = getSessionState()
+      return { content: [{ type: 'text', text: session ? `# Session State\n\n${session}` : 'Session file not found' }] }
+    }
+
+    // Live git state
+    const git = getLiveGitState()
+    const liveBlock = git
+      ? `## Live State\n\n- **Branch:** \`${git.branch}\`\n- **Last commit:** ${git.lastCommit}\n- **Uncommitted files:** ${git.fileCount}`
+      : '## Live State\n\n(git unavailable)'
+
+    if (section === 'live') {
+      return { content: [{ type: 'text', text: liveBlock }] }
+    }
+
     const phases = extractSection(handoff, /## .*Build Status/)
-    const blockers = extractSection(handoff, /## .*Blocked/)
 
-    if (section === 'phases') return { content: [{ type: 'text', text: phases ?? 'No phase status found' }] }
-    if (section === 'blockers') return { content: [{ type: 'text', text: blockers ?? 'No blockers found' }] }
+    // Extract in-progress (⚠️) phase lines as a quick summary
+    const inProgressLines = (phases ?? '').split('\n')
+      .filter((l) => l.includes('⚠️'))
+    const inProgress = inProgressLines.length > 0
+      ? `## In Progress (⚠️)\n\n${inProgressLines.join('\n')}`
+      : '## In Progress\n\nNo ⚠️ items in SCORE_HANDOFF.md — check session file for latest.'
 
-    return { content: [{ type: 'text', text: `${phases ?? ''}\n\n---\n\n${blockers ?? 'No blockers'}` }] }
+    if (section === 'phases') {
+      return { content: [{ type: 'text', text: `${liveBlock}\n\n---\n\n${phases ?? 'No phase status found in SCORE_HANDOFF.md'}` }] }
+    }
+
+    // 'all' — live + in-progress + session head
+    const session = getSessionState()
+    const sessionBlock = session
+      ? `## Session Notes\n\n${session.split('\n').slice(0, 40).join('\n')}\n\n_(truncated — use section: "session" for full file)_`
+      : ''
+
+    const parts = [liveBlock, inProgress, sessionBlock].filter(Boolean)
+    return { content: [{ type: 'text', text: parts.join('\n\n---\n\n') }] }
   },
 }
 
