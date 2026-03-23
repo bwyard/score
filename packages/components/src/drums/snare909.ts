@@ -64,7 +64,7 @@ export type Snare909Component = AudioComponent & {
  *
  * @see {@link Snare909Props} — configuration options
  * @see {@link Snare909Component} — returned component shape
- * @throws {ScoreError} Never — invalid props are silently clamped.
+ * @throws \{ScoreError\} Never — invalid props are silently clamped.
  */
 export const createSnare909 = (
   context: ScoreAudioContext,

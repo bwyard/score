@@ -1,7 +1,7 @@
 // Saturation effect — soft-clip using tanh transfer curve
 // Uses WaveShaperNode with hyperbolic tangent for musical harmonic distortion
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendWaveShaperNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendWaveShaperNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -83,11 +83,13 @@ export const createSaturation = (
   wetGain.connect(outputGain)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setDrive: (drive: number, time?: number) => void
     readonly setMix: (mix: number, time?: number) => void
   } = {
     id: uid('saturation'),
     type: 'saturation' as const,
+    input: inputGain,
 
     /**
      * Set the saturation drive amount and regenerate the transfer curve.

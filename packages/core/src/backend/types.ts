@@ -170,6 +170,33 @@ export type BackendContext = {
   readonly suspend: () => Promise<void>
   readonly resume: () => Promise<void>
   readonly close: () => Promise<void>
+  /**
+   * Create a BackendAnalyserNode for reading waveform or frequency data from the audio graph.
+   * The returned node implements BackendNode so it can be inserted into the signal path,
+   * and also exposes `frequencyBinCount` and `getFloatTimeDomainData` for data reads.
+   *
+   * @example
+   * ```ts
+   * const analyser = context.createAnalyser({ fftSize: 2048 })
+   * masterOut.connect(analyser)
+   * analyser.connect(context.destination)
+   * const buf = new Float32Array(analyser.frequencyBinCount)
+   * analyser.getFloatTimeDomainData(buf)
+   * ```
+   */
+  readonly createAnalyser: (props?: { fftSize?: number }) => BackendAnalyserNode
+}
+
+/**
+ * A BackendNode that wraps a Web Audio AnalyserNode.
+ * Implements BackendNode for signal routing and exposes the minimal set of
+ * read methods needed for waveform visualisation — no DOM types required.
+ */
+export type BackendAnalyserNode = BackendNode & {
+  /** Number of data values that `getFloatTimeDomainData` will populate — half of `fftSize`. */
+  readonly frequencyBinCount: number
+  /** Copies the current waveform (time-domain) data into the provided Float32Array. */
+  readonly getFloatTimeDomainData: (array: Float32Array) => void
 }
 
 // --- Backend provider ---

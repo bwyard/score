@@ -1,7 +1,7 @@
 // Delay effect — delay with feedback and dry/wet mix
 // Uses backend delay node + gain nodes for feedback routing
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -73,12 +73,14 @@ export const createDelay = (
   feedbackGain.connect(delayNode)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setTime: (value: number, time?: number) => void
     readonly setFeedback: (value: number, time?: number) => void
     readonly setMix: (value: number, time?: number) => void
   } = {
     id: uid('delay'),
     type: 'delay' as const,
+    input: inputGain,
 
     /**
      * Set the delay time in seconds.

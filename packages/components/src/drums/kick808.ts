@@ -51,7 +51,7 @@ export type PercussionComponent = AudioComponent & {
  *
  * @see {@link PercussionComponent} — returned component shape
  * @see {@link createKick909} — 909-style kick with an added noise click transient
- * @throws {ScoreError} Never — invalid props are silently clamped.
+ * @throws \{ScoreError\} Never — invalid props are silently clamped.
  */
 export const createKick808 = (
   context: ScoreAudioContext,

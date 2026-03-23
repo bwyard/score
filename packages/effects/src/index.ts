@@ -57,4 +57,5 @@ export type { AutoPanProps, AutoPanShape } from './autopan.js'
 export {
   Delay, Reverb, Filter, Compressor, EQ, Distortion, Limiter,
   BitCrusher, Chorus, Phaser, Flanger, StereoWidener, Gate,
+  Saturation, AutoPan,
 } from './descriptors.js'

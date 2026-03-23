@@ -26,11 +26,18 @@ describe('SplashScreen — rendering', () => {
 
   it('renders all four mode buttons', () => {
     setup()
-    // Use exact aria-label to avoid matching the "Start Live Code" button
+    // Live Code is enabled; Produce/DJ Set/Jam Session are disabled (coming soon)
     expect(screen.getByRole('button', { name: 'Live Code' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Produce' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'DJ Set' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Jam Session' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Produce — coming soon' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'DJ Set — coming soon' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Jam Session — coming soon' })).toBeInTheDocument()
+  })
+
+  it('disabled mode buttons are not interactive', () => {
+    setup()
+    expect(screen.getByRole('button', { name: 'Produce — coming soon' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'DJ Set — coming soon' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Jam Session — coming soon' })).toBeDisabled()
   })
 
   it('renders three hardware level buttons', () => {
@@ -63,24 +70,23 @@ describe('SplashScreen — initial state', () => {
 // ── Mode selection ────────────────────────────────────────────────────────────
 
 describe('SplashScreen — mode selection', () => {
-  it('start button shows selected mode label', async () => {
-    const { user } = setup()
-    await user.click(screen.getByRole('button', { name: 'Produce' }))
-    expect(screen.getByRole('button', { name: /start produce/i })).toBeEnabled()
+  it('start button shows Live Code label (only enabled mode)', () => {
+    setup()
+    expect(screen.getByRole('button', { name: /start live code/i })).toBeEnabled()
   })
 
-  it('selected mode card has aria-pressed=true', async () => {
-    const { user } = setup()
-    const djBtn = screen.getByRole('button', { name: /dj set/i })
-    await user.click(djBtn)
-    expect(djBtn).toHaveAttribute('aria-pressed', 'true')
+  it('live-code card has aria-pressed=true', () => {
+    setup()
+    expect(screen.getByRole('button', { name: 'Live Code' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('only one mode card is selected at a time', async () => {
+  it('disabled mode cards stay unselected when clicked', async () => {
     const { user } = setup()
-    await user.click(screen.getByRole('button', { name: 'Produce' }))
-    expect(screen.getByRole('button', { name: 'Live Code' })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByRole('button', { name: 'Produce' })).toHaveAttribute('aria-pressed', 'true')
+    // Disabled buttons can't be clicked via userEvent — live-code remains pressed
+    expect(screen.getByRole('button', { name: 'Live Code' })).toHaveAttribute('aria-pressed', 'true')
+    // Disabled cards report aria-pressed=false (not selected)
+    expect(screen.getByRole('button', { name: 'Produce — coming soon' })).toHaveAttribute('aria-pressed', 'false')
+    void user
   })
 })
 
@@ -103,20 +109,18 @@ describe('SplashScreen — hardware selection', () => {
 // ── onSelect callback ─────────────────────────────────────────────────────────
 
 describe('SplashScreen — onSelect', () => {
-  it('calls onSelect with mode and default hardware', async () => {
+  it('calls onSelect with live-code and default hardware', async () => {
     const { user, onSelect } = setup()
-    await user.click(screen.getByRole('button', { name: /dj set/i }))
-    await user.click(screen.getByRole('button', { name: /start dj set/i }))
+    await user.click(screen.getByRole('button', { name: /start live code/i }))
     expect(onSelect).toHaveBeenCalledOnce()
-    expect(onSelect).toHaveBeenCalledWith('dj-set', 'pc-only')
+    expect(onSelect).toHaveBeenCalledWith('live-code', 'pc-only')
   })
 
   it('calls onSelect with selected hardware level', async () => {
     const { user, onSelect } = setup()
-    await user.click(screen.getByRole('button', { name: /jam session/i }))
     await user.click(screen.getByRole('button', { name: /\+ controller/i }))
-    await user.click(screen.getByRole('button', { name: /start jam session/i }))
-    expect(onSelect).toHaveBeenCalledWith('jam-session', 'controller')
+    await user.click(screen.getByRole('button', { name: /start live code/i }))
+    expect(onSelect).toHaveBeenCalledWith('live-code', 'controller')
   })
 
   it('calls onSelect immediately with default live-code mode', async () => {
@@ -135,9 +139,9 @@ describe('SplashScreen — accessibility', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
-  it('has no axe violations after mode selection', async () => {
+  it('has no axe violations after hardware selection', async () => {
     const { container, user } = setup()
-    await user.click(screen.getByRole('button', { name: /produce/i }))
+    await user.click(screen.getByRole('button', { name: /\+ controller/i }))
     expect(await axe(container)).toHaveNoViolations()
   })
 

@@ -3,7 +3,7 @@
 // NOTE: Initial implementation uses static delay offsets per voice.
 // Phase 8b (LFO core primitive) will upgrade to true modulated chorus.
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -85,11 +85,13 @@ export const createChorus = (
   wetGain.connect(outputGain)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setDepth: (value: number, time?: number) => void
     readonly setMix: (value: number, time?: number) => void
   } = {
     id: uid('chorus'),
     type: 'chorus' as const,
+    input: inputGain,
 
     /**
      * Set the voice delay depth. Controls the spread between chorus voices.
