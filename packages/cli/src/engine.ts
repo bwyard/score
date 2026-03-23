@@ -9,12 +9,13 @@
 //   snare  — band-pass filtered noise burst + sine transient
 //   hihat  — high-pass filtered noise burst (short decay)
 //   synth  — oscillator with ADSR envelope + optional filter
-//   sample — decoded audio file played back on each hit
+//   sample  — decoded audio file played back on each hit
+//   fmsynth — createFMSynth: 2-op FM (DX7 Rhodes / metallic leads)
 
 import { readFileSync } from 'node:fs'
 import { webAudioBackend, decodeSample, createSamplePlayer } from '@score/core'
 import type { EffectDescriptor, AudioComponent, ScoreAudioContext } from '@score/core'
-import { Theremin as ThereminComponent, Sax as SaxComponent } from '@score/components'
+import { Theremin as ThereminComponent, Sax as SaxComponent, createFMSynth } from '@score/components'
 import { createMixer } from '@score/mixer'
 import {
   createDelay, createReverb, createFilter, createCompressor, createEQ,
@@ -26,6 +27,7 @@ import { resolveFreq } from '@score/dsl'
 import type {
   SongDefinition, InstrumentDescriptor,
   KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps,
+  FMSynthDSLProps,
 } from '@score/dsl'
 
 type Context = ReturnType<typeof webAudioBackend.createContext>
@@ -400,6 +402,34 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
             // random — deterministic based on noteIndex+time
             const seed = (arpState.noteIndex * 7919) >>> 0
             arpState.noteIndex = seed % notes.length
+          }
+        })
+        break
+      }
+
+      case 'fmsynth': {
+        const props = comp.props as FMSynthDSLProps
+        const rawPattern = props.pattern ?? DEFAULT_SYNTH_PATTERN
+        const pattern: (number | string)[] = Array.isArray(rawPattern) ? rawPattern : DEFAULT_SYNTH_PATTERN
+        const ampAdsr = props.ampAdsr ?? {}
+        const attack  = ampAdsr.attack  ?? 0.01
+        const decay   = ampAdsr.decay   ?? 0.2
+        const release = ampAdsr.release ?? 0.4
+        const noteDur = attack + decay + release + 0.02
+        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+          const freq = resolveFreq(val)
+          if (freq > 0) {
+            const voice = createFMSynth(ctx, {
+              frequency: freq,
+              ...(props.modRatio  !== undefined && { modRatio:  props.modRatio }),
+              ...(props.modIndex  !== undefined && { modIndex:  props.modIndex }),
+              ...(props.ampAdsr   !== undefined && { ampAdsr:   props.ampAdsr }),
+              ...(props.modAdsr   !== undefined && { modAdsr:   props.modAdsr }),
+              gain: props.volume ?? 0.7,
+            })
+            voice.connect(dest)
+            voice.noteOn(pos.time)
+            voice.noteOff(pos.time + noteDur)
           }
         })
         break
