@@ -40,7 +40,7 @@ import {
 import { createTransport, createStepSequencer } from '@score/sequencer'
 import { resolveFreq } from '@score/dsl'
 import type {
-  SongDefinition, InstrumentDescriptor,
+  SongDefinition, InstrumentDescriptor, PartDescriptor,
   KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps,
   Kick808DSLProps, Kick909DSLProps, Hihat808DSLProps, Snare909DSLProps, SubSynthDSLProps,
   FMSynthDSLProps,
@@ -89,6 +89,43 @@ export const isInstrumentDescriptor = (comp: unknown): comp is InstrumentDescrip
   if (typeof comp !== 'object' || comp === null) return false
   return (comp as { _type?: unknown })._type === 'InstrumentDescriptor'
 }
+
+export const isPartDescriptor = (comp: unknown): comp is PartDescriptor => {
+  if (typeof comp !== 'object' || comp === null) return false
+  return (comp as { _type?: unknown })._type === 'ChainablePart'
+}
+
+// Melodic instruments use 'gain' for amplitude; percussion uses 'volume'
+const MELODIC_INSTRUMENT_TYPES = new Set([
+  'synth', 'subsynth', 'fmsynth', 'arp', 'theremin', 'sax', 'sample',
+])
+
+/** Convert a chain-API {@link PartDescriptor} to an {@link InstrumentDescriptor} the engine can hydrate. */
+const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDescriptor => ({
+  _type: 'InstrumentDescriptor',
+  instrumentType: part.instrumentType as InstrumentDescriptor['instrumentType'],
+  id: part.id,
+  type: part.type,
+  connect: part.connect,
+  disconnect: part.disconnect,
+  dispose: part.dispose,
+  props: {
+    ...(part._volume !== undefined
+      ? MELODIC_INSTRUMENT_TYPES.has(part.instrumentType)
+        ? { gain: part._volume }
+        : { volume: part._volume }
+      : {}),
+    ...(part._pattern  !== undefined ? { pattern:  part._pattern  } : {}),
+    ...(part._notes    !== undefined ? { notes:    part._notes    } : {}),
+    ...(part._adsr     !== undefined ? { envelope: part._adsr     } : {}),
+    ...(part._effects  !== undefined ? { effects:  part._effects  } : {}),
+    ...(part._swing    !== undefined ? { swing:    part._swing    } : {}),
+    ...(part._humanize !== undefined ? { humanize: part._humanize } : {}),
+    ...(part._pan      !== undefined ? { pan:      part._pan      } : {}),
+    ...(part._model    !== undefined ? { model:    part._model    } : {}),
+    ...part.props,
+  },
+})
 
 // ── Default patterns ──────────────────────────────────────────────────────────
 
@@ -227,7 +264,7 @@ export const muteEnvelope = (
 
   const activeIds = new Set(
     active.tracks
-      .map(t => isInstrumentDescriptor(t) ? t : t.component)
+      .map(t => isInstrumentDescriptor(t) ? t : isPartDescriptor(t) ? partToInstrumentDescriptor(t) : t.component)
       .filter(isInstrumentDescriptor)
       .map(d => d.id),
   )
@@ -667,7 +704,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
 
       // Apply per-track volume/mute diffs
       const nextDescriptors = nextSong.tracks
-        .map(t => isInstrumentDescriptor(t) ? t : t.component)
+        .map(t => isInstrumentDescriptor(t) ? t : isPartDescriptor(t) ? partToInstrumentDescriptor(t) : t.component)
         .filter(isInstrumentDescriptor)
 
       nextDescriptors.forEach((nextDesc, i) => {
