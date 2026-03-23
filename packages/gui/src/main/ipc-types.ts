@@ -39,6 +39,19 @@ export type RendererToMain = {
   'file:open':          undefined
   /** Renderer sends current panel positions so main can persist them to disk. */
   'layout:save':        PanelLayoutMap
+  /** Bug report payload — main saves to Downloads as JSON. */
+  'bug:report': {
+    /** User's freetext description of what happened. */
+    readonly description: string
+    /** Current code in the editor at the time of report. */
+    readonly code: string
+    /** Last 20 console log entries (JSON array stringified). */
+    readonly logs: string
+    /** Unix timestamp of the report. */
+    readonly timestamp: number
+    /** Engine state snapshot at the time of report. */
+    readonly engineState: Record<string, unknown>
+  }
 }
 
 /** Channels from main → renderer (via ipcRenderer.on). */

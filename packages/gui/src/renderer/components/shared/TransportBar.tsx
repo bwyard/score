@@ -1,5 +1,6 @@
 import { useState, useEffect, useId } from 'react'
 import type { HardwareLevel }         from '../../../main/ipc-types.js'
+import { BugReportModal }             from './BugReportModal.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -10,13 +11,19 @@ type EngineState = {
 }
 
 type Props = {
-  readonly hardware:     HardwareLevel
-  readonly onHome:       () => void
+  readonly hardware:        HardwareLevel
+  readonly onHome:          () => void
   // Optional overrides — when provided, these fire instead of the default IPC calls.
   // Used by LiveCode to eval code before starting the engine.
-  readonly onPlay?:      () => void
-  readonly onStop?:      () => void
-  readonly onBpmChange?: (bpm: number) => void
+  readonly onPlay?:         () => void
+  readonly onStop?:         () => void
+  readonly onBpmChange?:    (bpm: number) => void
+  /** Returns the current code for bug reports. */
+  readonly getCurrentCode?: () => string
+  /** Returns recent log lines for bug reports. */
+  readonly getRecentLogs?:  () => string[]
+  /** Engine state snapshot for bug reports. */
+  readonly bugEngineState?: Record<string, unknown>
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -26,7 +33,7 @@ type Props = {
  * Subscribes to engine state pushed from the main process.
  * Play/stop/BPM changes are forwarded back via IPC.
  */
-export const TransportBar = ({ hardware, onHome, onPlay, onStop, onBpmChange }: Props) => {
+export const TransportBar = ({ hardware, onHome, onPlay, onStop, onBpmChange, getCurrentCode, getRecentLogs, bugEngineState }: Props) => {
   const bpmId   = useId()
   const barsId  = useId()
 
@@ -36,7 +43,8 @@ export const TransportBar = ({ hardware, onHome, onPlay, onStop, onBpmChange }: 
     bars:    0,
   })
 
-  const [localBpm, setLocalBpm] = useState(128)
+  const [localBpm, setLocalBpm]         = useState(128)
+  const [bugModalOpen, setBugModalOpen] = useState(false)
 
   useEffect(() => {
     const off = window.scoreBridge.on('engine:state', payload => {
@@ -117,6 +125,25 @@ export const TransportBar = ({ hardware, onHome, onPlay, onStop, onBpmChange }: 
         {hardware === 'controller' && <span style={{ ...styles.hw, ...styles.hwActive }}>CTRL</span>}
         {hardware === 'aio'        && <span style={{ ...styles.hw, ...styles.hwActive }}>AIO</span>}
       </div>
+
+      {/* Report Issue — right-aligned */}
+      <button
+        aria-label="Report an issue"
+        style={styles.reportBtn}
+        title="Report a bug"
+        onClick={() => { setBugModalOpen(true) }}
+      >
+        Report Issue
+      </button>
+
+      {/* Bug report modal */}
+      <BugReportModal
+        isOpen={bugModalOpen}
+        onClose={() => { setBugModalOpen(false) }}
+        getCurrentCode={getCurrentCode ?? (() => '')}
+        getRecentLogs={getRecentLogs ?? (() => [])}
+        engineState={bugEngineState ?? {}}
+      />
 
     </div>
   )
@@ -215,7 +242,21 @@ const styles = {
     textAlign:          'right' as const,
   },
   hwBadge: {
-    marginLeft: 'auto',
+    // no marginLeft: auto — reportBtn takes that role now
+  },
+  reportBtn: {
+    marginLeft:    'auto',
+    background:    'none',
+    border:        '1px solid #2a2a35',
+    color:         '#556688',
+    fontFamily:    'system-ui, sans-serif',
+    fontSize:      '0.58rem',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    cursor:        'pointer',
+    padding:       '0.12rem 0.5rem',
+    borderRadius:  2,
+    flexShrink:    0,
   },
   hw: {
     fontFamily:    'system-ui, sans-serif',
