@@ -151,5 +151,8 @@ Key docs:
 1. Read session file: `../claude-resources/sessions/score/current.md`
 2. Check signals: `node ../claude-resources/session.js signals`
 3. Read `docs/INDEX.md` — find the doc you need
-4. Run `pnpm test` — confirm all tests passing
-5. Check current phase in `SCORE_HANDOFF.md`
+4. Run `pnpm turbo build --filter='!@score/gui'` — rebuild all library packages in dependency order (keeps dist/ in sync after pulls/merges). Excludes the Electron app — run `pnpm dev` separately for GUI work.
+5. Run `pnpm test` — confirm all tests passing
+6. Check current phase in `SCORE_HANDOFF.md`
+
+> **Why turbo build:** Packages like `@score/sequencer` and `@score/visuals` resolve via `dist/`. If a PR added new exports and you haven't rebuilt, imports fail at runtime even though source is correct. Turbo is cached — only rebuilds what changed, so this is fast.

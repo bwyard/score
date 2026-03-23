@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# Rebuild library packages after branch switch — dist/ may differ between branches.
+# Excludes @score/gui (Electron app, not a library — run pnpm dev separately).
+# Turbo only rebuilds what changed (cached), so this is fast on small switches.
+pnpm turbo build --filter='!@score/gui'

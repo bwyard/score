@@ -127,6 +127,8 @@ These areas require a dedicated planning session before any window touches them:
 - t258 — Distribution / release candidate
 - t259 — Keyboard shortcuts
 - t260 — Collaboration / Conductor
+- t281 — Instrument panel UX + full channel strip (dockable, expandable, full ADR 014 chain method set — DAW-competitive GUI)
+- t282 — Per-instrument panel layouts (schedule with t281): Kick/Snare/HiHat/Bass303/FMSynth/SubSynth/Pad/Pluck/Rhodes each get purpose-built compact + expanded panel — progressive disclosure, instrument-aware controls
 
 ### Thesis Violations to Fix (tracked debt)
 - `@score/midi` — `let` violations (critical)
