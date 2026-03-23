@@ -318,10 +318,6 @@ importers:
         version: 2.1.9(@types/node@25.5.0)(jsdom@25.0.1)(terser@5.46.1)
 
   packages/pattern:
-    dependencies:
-      '@prime/prime-random':
-        specifier: file:../../../prime/packages/prime-random
-        version: file:../prime/packages/prime-random
     devDependencies:
       '@types/node':
         specifier: ^25.5.0
@@ -907,9 +903,6 @@ packages:
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
-
-  '@prime/prime-random@file:../prime/packages/prime-random':
-    resolution: {directory: ../prime/packages/prime-random, type: directory}
 
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
@@ -3257,8 +3250,6 @@ snapshots:
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
-
-  '@prime/prime-random@file:../prime/packages/prime-random': {}
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 

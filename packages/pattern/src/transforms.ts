@@ -1,6 +1,15 @@
 import type { PatternInput, PatternFn } from './types.js'
 import { resolvePattern } from './types.js'
-import { prngNext } from '@prime/prime-random'
+
+// ── Inline Mulberry32 PRNG — deterministic, seedable, no external dep ─────────
+// Pure step function: (seed: uint32) => [value_in_0_1, nextSeed].
+// Same algorithm as @prime/prime-random prngNext — cross-platform reproducible.
+const prngNext = (seed: number): [number, number] => {
+  const s = (seed + 0x6D2B79F5) >>> 0
+  let t = Math.imul(s ^ (s >>> 15), 1 | s)
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) >>> 0
+  return [((t ^ (t >>> 14)) >>> 0) / 0x100000000, s]
+}
 
 /**
  * Double (or multiply) the playback speed of a pattern.
