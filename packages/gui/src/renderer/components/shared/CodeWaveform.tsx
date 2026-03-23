@@ -3,74 +3,86 @@ import { useRef, useEffect } from 'react'
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type Props = {
-  readonly waveform: readonly number[]
-  readonly playing:  boolean
+  readonly waveform:    readonly number[]
+  readonly playing:     boolean
+  /** Current sequencer step (zero-based). */
+  readonly currentStep: number
+  /** Total steps in the current bar. */
+  readonly stepCount:   number
 }
 
 // ── Drawing ────────────────────────────────────────────────────────────────────
 
-const drawWaveform = (
-  ctx:      CanvasRenderingContext2D,
-  waveform: readonly number[],
-  width:    number,
-  height:   number,
-  playing:  boolean,
+/**
+ * Draw beat-reactive glow and step scrub bar onto the canvas.
+ *
+ * Replaces the oscilloscope trace with two visual elements:
+ *  1. **Beat-reactive background glow** — RMS-derived radial gradient.
+ *  2. **Step scrub bar** — 2px bar at the top sweeping left→right.
+ */
+const drawBeatViz = (
+  ctx:         CanvasRenderingContext2D,
+  waveform:    readonly number[],
+  currentStep: number,
+  stepCount:   number,
+  width:       number,
+  height:      number,
+  playing:     boolean,
 ): void => {
   ctx.clearRect(0, 0, width, height)
+  if (!playing) return
 
-  if (!playing || waveform.length === 0) return
+  // RMS-derived glow
+  const rms = Math.sqrt(
+    waveform.reduce((s, v) => s + v * v, 0) / Math.max(waveform.length, 1)
+  )
+  const intensity = Math.min(rms * 8, 1)
 
-  const mid    = height / 2
-  const scaleY = mid * 0.6
+  if (intensity > 0.01) {
+    const gradient = ctx.createRadialGradient(
+      width / 2, height / 2, 0,
+      width / 2, height / 2, width * 0.7,
+    )
+    gradient.addColorStop(0, `rgba(74, 143, 255, ${intensity * 0.06})`)
+    gradient.addColorStop(1, 'rgba(74, 143, 255, 0)')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, width, height)
+  }
 
-  ctx.strokeStyle = 'rgba(74, 143, 255, 0.15)'
-  ctx.lineWidth   = 1.5
-  ctx.beginPath()
-
-  const step = Math.max(1, Math.floor(waveform.length / width))
-
-  waveform.forEach((sample, i) => {
-    if (i % step !== 0) return
-    const x = (i / waveform.length) * width
-    const y = mid + sample * scaleY
-    if (i === 0) ctx.moveTo(x, y)
-    else         ctx.lineTo(x, y)
-  })
-
-  ctx.stroke()
-
-  // Gradient fill beneath the waveform for depth
-  ctx.fillStyle = 'rgba(74, 143, 255, 0.04)'
-  ctx.lineTo(width, mid)
-  ctx.lineTo(0, mid)
-  ctx.closePath()
-  ctx.fill()
+  // Step scrub bar — 2px at top, sweeps left→right over the current bar
+  if (stepCount > 0) {
+    const progress = currentStep / stepCount
+    ctx.fillStyle = 'rgba(74, 143, 255, 0.5)'
+    ctx.fillRect(0, 0, width * progress, 2)
+  }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 /**
- * Semi-transparent waveform overlay drawn behind the code editor.
+ * Beat-reactive waveform overlay drawn behind the code editor.
  *
- * Renders a live oscilloscope trace at very low opacity so the code remains
- * fully readable while the waveform is visible during playback — the same
- * aesthetic as Strudl and TidalCycles editors.
+ * Shows an RMS-derived radial glow that pulses with the audio energy and a
+ * thin step scrub bar at the top that sweeps left→right through each bar —
+ * the same aesthetic as Strudl and TidalCycles editors.
  *
  * Position this absolutely behind the textarea using `position: relative` on
  * the editor pane container with this canvas positioned `absolute, inset: 0`.
  *
- * @param waveform - Float waveform samples from the AnalyserNode.
- * @param playing  - Whether the transport is rolling. Clears the canvas when false.
+ * @param waveform    - Float waveform samples from the AnalyserNode.
+ * @param playing     - Whether the transport is rolling. Clears the canvas when false.
+ * @param currentStep - Current sequencer step (zero-based).
+ * @param stepCount   - Total steps in the current bar.
  *
  * @example
  * ```tsx
  * <div style={{ position: 'relative' }}>
- *   <CodeWaveform waveform={waveform} playing={playing} />
+ *   <CodeWaveform waveform={waveform} playing={playing} currentStep={step} stepCount={count} />
  *   <textarea style={{ position: 'relative', zIndex: 1 }} />
  * </div>
  * ```
  */
-export const CodeWaveform = ({ waveform, playing }: Props) => {
+export const CodeWaveform = ({ waveform, playing, currentStep, stepCount }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -90,8 +102,8 @@ export const CodeWaveform = ({ waveform, playing }: Props) => {
     if (ctx === null) return
 
     ctx.scale(dpr, dpr)
-    drawWaveform(ctx, waveform, width, height, playing)
-  }, [waveform, playing])
+    drawBeatViz(ctx, waveform, currentStep, stepCount, width, height, playing)
+  }, [waveform, playing, currentStep, stepCount])
 
   return (
     <canvas

@@ -9,9 +9,10 @@ export type PunchcardTrack = {
 }
 
 type Props = {
-  readonly tracks:      ReadonlyArray<PunchcardTrack>
-  readonly currentStep: number
-  readonly stepCount:   number
+  readonly tracks:        ReadonlyArray<PunchcardTrack>
+  readonly currentStep:   number
+  readonly stepCount:     number
+  readonly onStepClick?:  (trackIndex: number, stepIndex: number) => void
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -137,7 +138,7 @@ const drawGrid = (
  * />
  * ```
  */
-export const PunchcardGrid = ({ tracks, currentStep, stepCount }: Props) => {
+export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick }: Props) => {
   const canvasRef         = useRef<HTMLCanvasElement>(null)
   const [flash, setFlash] = useState(false)
 
@@ -168,6 +169,30 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount }: Props) => {
     drawGrid(ctx, tracks, currentStep, stepCount, width, height, flash)
   }, [tracks, currentStep, stepCount, flash])
 
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>): void => {
+    if (!onStepClick) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    const trackIndex = Math.floor(y / (ROW_HEIGHT + ROW_GAP))
+    if (trackIndex < 0 || trackIndex >= tracks.length) return
+
+    const track = tracks[trackIndex]!
+    const trackLen = track.pattern.length > 0 ? track.pattern.length : stepCount
+    const cellAreaWidth = canvas.clientWidth - LEFT_STRIP_WIDTH
+    const cellWidth = (cellAreaWidth - (trackLen - 1) * CELL_GAP) / trackLen
+
+    if (x < LEFT_STRIP_WIDTH) return
+    const stepIndex = Math.floor((x - LEFT_STRIP_WIDTH) / (cellWidth + CELL_GAP))
+    if (stepIndex < 0 || stepIndex >= trackLen) return
+
+    onStepClick(trackIndex, stepIndex)
+  }
+
   const canvasHeight =
     tracks.length === 0
       ? 60
@@ -176,11 +201,13 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount }: Props) => {
   return (
     <canvas
       ref={canvasRef}
+      onClick={onStepClick ? handleClick : undefined}
       style={{
         width:          '100%',
         height:         `${canvasHeight}px`,
         display:        'block',
         imageRendering: 'pixelated',
+        cursor:         onStepClick ? 'pointer' : 'default',
       }}
     />
   )

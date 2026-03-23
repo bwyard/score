@@ -18,15 +18,17 @@ export type PianoRollNote = {
 
 type Props = {
   /** Notes to render in the roll. */
-  readonly notes:       ReadonlyArray<PianoRollNote>
+  readonly notes:        ReadonlyArray<PianoRollNote>
   /** Zero-based index of the currently playing step. */
-  readonly currentStep: number
+  readonly currentStep:  number
   /** Total number of steps in the sequence. */
-  readonly stepCount:   number
+  readonly stepCount:    number
   /** Lowest MIDI note shown. Defaults to auto-detected from notes, or 48 (C3). */
-  readonly minNote?:    number
+  readonly minNote?:     number
   /** Highest MIDI note shown. Defaults to auto-detected from notes, or 72 (C5). */
-  readonly maxNote?:    number
+  readonly maxNote?:     number
+  /** Called when the user clicks a cell — pitch is MIDI note number, step is zero-based. */
+  readonly onNoteClick?: (pitch: number, step: number) => void
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -197,6 +199,7 @@ export const PianoRoll = ({
   stepCount,
   minNote: minNoteProp,
   maxNote: maxNoteProp,
+  onNoteClick,
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -222,16 +225,42 @@ export const PianoRoll = ({
     drawRoll(ctx, notes, currentStep, stepCount, width, height, minNote, maxNote)
   }, [notes, currentStep, stepCount, minNote, maxNote])
 
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>): void => {
+    if (!onNoteClick) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    const gridLeft = PIANO_STRIP_WIDTH
+    if (x < gridLeft) return
+
+    const noteRange = maxNote - minNote + 1
+    const rowIndex = Math.floor(y / ROW_HEIGHT)
+    if (rowIndex < 0 || rowIndex >= noteRange) return
+
+    const pitch = maxNote - rowIndex
+    const colWidth = (canvas.clientWidth - gridLeft) / stepCount
+    const step = Math.floor((x - gridLeft) / colWidth)
+    if (step < 0 || step >= stepCount) return
+
+    onNoteClick(pitch, step)
+  }
+
   return (
     <canvas
       ref={canvasRef}
       aria-label="Piano roll"
       role="img"
+      onClick={onNoteClick ? handleClick : undefined}
       style={{
         width:          '100%',
         height:         `${canvasHeight}px`,
         display:        'block',
         imageRendering: 'pixelated',
+        cursor:         onNoteClick ? 'pointer' : 'default',
       }}
     />
   )
