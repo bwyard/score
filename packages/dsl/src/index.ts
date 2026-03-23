@@ -4,6 +4,7 @@ export { Track } from './track.js'
 export { Sequence } from './sequence.js'
 export { Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp, Kick808, Kick909, Hihat808, Snare909, SubSynth, FMSynth } from './instruments.js'
 export type { PartDescriptor, ChainablePart } from './chain.js'
+export { createPart } from './chain.js'
 export { noteHz, resolveFreq } from './notes.js'
 export { drift, keepFor } from './modifiers.js'
 export type {
