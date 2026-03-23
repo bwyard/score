@@ -44,10 +44,19 @@ export type SidechainDescriptor = {
 }
 
 // ── PartDescriptor — pure data shape carrying all chain state ─────────────────
-//
-// The engine reads these fields at play time and hydrates them into live audio.
-// Every field is optional except _type, _version, instrumentType, and id.
 
+/**
+ * Pure data record carrying all chain method state for a single instrument part.
+ *
+ * The engine reads these `_`-prefixed fields at play time and hydrates them into live audio.
+ * Every field is optional except `_type`, `_version`, `instrumentType`, `type`, and `id`.
+ *
+ * Song authors never construct this directly — use the instrument factories
+ * (`Kick`, `Synth`, `Arp`, etc.) which return a {@link ChainablePart} with all methods attached.
+ *
+ * @see {@link ChainablePart} — adds fluent chain methods on top of this descriptor
+ * @see {@link createPart} — factory that produces a `ChainablePart` from a partial descriptor
+ */
 export type PartDescriptor = {
   readonly _type: 'ChainablePart'
   readonly _version: 1
@@ -123,10 +132,24 @@ export type PartDescriptor = {
 }
 
 // ── ChainablePart — PartDescriptor + all chain methods ───────────────────────
-//
-// Song authors work entirely with this type. The _ fields are data; the named
-// methods are sugar that produce new ChainablePart via createPart().
 
+/**
+ * Immutable fluent builder for a single instrument part.
+ *
+ * Every chain method returns a **new** `ChainablePart` — the original is never mutated.
+ * The `_` prefixed fields are data from {@link PartDescriptor}; the named methods
+ * are fluent sugar that produce new instances via `createPart`.
+ *
+ * @example
+ * ```ts
+ * const kick = Kick().volume(0.9).reverb(0.15).swing(0.1)
+ * const bass = Bass303('C2').cutoff(600).resonance(0.8).pattern([1,0,1,0])
+ * export default Song({ bpm: 128, tracks: [kick, bass] })
+ * ```
+ *
+ * @see {@link PartDescriptor} — the underlying data shape read by the engine
+ * @see {@link createPart} — factory used internally by all chain methods
+ */
 export type ChainablePart = PartDescriptor & {
   // ── Pattern ──────────────────────────────────────────────────────────────
   /** Speed multiplier. `n > 1` = fast, `n < 1` = slow, `n < 0` = reverse. */
