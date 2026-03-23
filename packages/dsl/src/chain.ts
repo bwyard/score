@@ -123,6 +123,18 @@ export type PartDescriptor = {
     readonly param: string
     readonly source: ModulationDescriptor
   }>
+  // ── Visual — per-track visual override (no @score/visuals dep — plain object) ──
+  // @score/visuals reads this from TrackVisualState and merges over InstrumentVisualMap defaults.
+  readonly _visual?: {
+    /** CSS hex color override for Monaco arcs, PunchcardGrid, and PerformanceCanvas. */
+    readonly color?:   string
+    /** Inline glyph kind for the Monaco editor. */
+    readonly glyph?:   string
+    /** Human-readable label override (defaults to track variable name). */
+    readonly label?:   string
+    /** Opacity override 0–1. */
+    readonly opacity?: number
+  }
   // ── Props — for engine backwards compat during transition ────────────────
   readonly props: Record<string, unknown>
   // ── AudioComponent stubs — satisfied by createPart(), replaced by engine ─
@@ -307,6 +319,18 @@ export type ChainablePart = PartDescriptor & {
   readonly name: (label: string) => ChainablePart
   /** Model variant (percussion only): '808' | '909' | 'hard'. */
   readonly model: (variant: string) => ChainablePart
+  // ── Visual chain methods ──────────────────────────────────────────────────
+  /**
+   * Set all visual override fields at once.
+   * Merges with any existing `_visual` — fields not provided are preserved.
+   */
+  readonly visual: (override: NonNullable<PartDescriptor['_visual']>) => ChainablePart
+  /** Shorthand: set the track color (CSS hex). Fast to type mid-set. */
+  readonly color:  (hex: string) => ChainablePart
+  /** Shorthand: set the inline glyph kind. Fast to type mid-set. */
+  readonly glyph:  (kind: string) => ChainablePart
+  /** Shorthand: set the display label. Fast to type mid-set. */
+  readonly label:  (text: string) => ChainablePart
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -522,6 +546,12 @@ export const createPart = (init: Partial<PartDescriptor> & { readonly instrument
     seed: (n) => createPart({ ...desc, _seed: n }),
     name: (label) => createPart({ ...desc, _name: label }),
     model: (variant) => createPart({ ...desc, _model: variant }),
+
+    // ── Visual ────────────────────────────────────────────────────────────
+    visual: (override) => createPart({ ...desc, _visual: { ...desc._visual, ...override } }),
+    color:  (hex)  => createPart({ ...desc, _visual: { ...desc._visual, color: hex } }),
+    glyph:  (kind) => createPart({ ...desc, _visual: { ...desc._visual, glyph: kind } }),
+    label:  (text) => createPart({ ...desc, _visual: { ...desc._visual, label: text } }),
   }
 
   return part
