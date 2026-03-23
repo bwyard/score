@@ -146,6 +146,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [fftBins,     setFftBins]     = useState<readonly number[]>([])
   const [logEntries,  setLogEntries]  = useState<ReadonlyArray<LogEntry>>([])
   const [pianoNotes,  setPianoNotes]  = useState<ReadonlyArray<PianoRollNote>>([])
+  // t220 — import visibility toggle (stub: fold/unfold in Monaco; auto-inject deferred for DSL chain API)
+  const [importsVisible, setImportsVisible] = useState(true)
   // Set to true when the user clicks play before eval — song:update handler will
   // fire transport:play once the eval succeeds (eval-then-play flow).
   const autoPlayRef   = useRef(false)
@@ -500,6 +502,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                 onEval={onEval}
                 decorations={editorDecorations}
                 stepBadges={stepBadges}
+                importsVisible={importsVisible}
               />
             </div>
           </div>
@@ -541,6 +544,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
             <PanelToggle label="Mixer"   active={panels.mixer}      onClick={() => { togglePanel('mixer') }}      />
             <PanelToggle label="Console" active={panels.console}    onClick={() => { togglePanel('console') }}    />
             <PanelToggle label="Ref"     active={panels.reference}  onClick={() => { togglePanel('reference') }}  />
+            {/* t220 — import visibility toggle */}
+            <PanelToggle label="Imports" active={importsVisible}    onClick={() => { setImportsVisible(v => !v) }} />
           </div>
 
           {/* Floating panels */}

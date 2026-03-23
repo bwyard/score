@@ -64,3 +64,26 @@ describe('CodeEditorPanel — EditorDecoration type', () => {
     )).not.toThrow()
   })
 })
+
+// ── t220 — importsVisible prop ─────────────────────────────────────────────────
+
+describe('CodeEditorPanel — importsVisible (t220)', () => {
+  it('renders without throwing when importsVisible is true', () => {
+    expect(() => render(
+      <CodeEditorPanel value="import { Song } from '@score/dsl'\nexport default Song({ bpm: 128, tracks: [] })" onChange={vi.fn()} onEval={vi.fn()} importsVisible={true} />,
+    )).not.toThrow()
+  })
+
+  it('renders without throwing when importsVisible is false', () => {
+    expect(() => render(
+      <CodeEditorPanel value="import { Song } from '@score/dsl'\nexport default Song({ bpm: 128, tracks: [] })" onChange={vi.fn()} onEval={vi.fn()} importsVisible={false} />,
+    )).not.toThrow()
+  })
+
+  it('defaults importsVisible to true (no prop = imports shown)', () => {
+    // No importsVisible prop — should render normally without throwing
+    expect(() => render(
+      <CodeEditorPanel value="import { Song } from '@score/dsl'\nexport default Song({ bpm: 128, tracks: [] })" onChange={vi.fn()} onEval={vi.fn()} />,
+    )).not.toThrow()
+  })
+})
