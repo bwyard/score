@@ -308,6 +308,13 @@ export type SongProps = {
    * @example `Song({ bpm: 128, tracks: [...], theme: 'lorenz' })`
    */
   readonly theme?: string
+  /**
+   * Named colour palette applied as the base `InstrumentVisualMap`.
+   * Per-instrument `.color()` overrides on top.
+   * Built-in: `'acid'` | `'neon'` | `'void'` | `'fire'`
+   * @example `Song({ bpm: 128, tracks: [...], palette: 'neon' })`
+   */
+  readonly palette?: string
 }
 
 /**
@@ -331,6 +338,8 @@ export type SongDefinition = {
   readonly seed: number
   /** Visual theme name — passed through from {@link SongProps}. */
   readonly theme?: string
+  /** Named colour palette — passed through from {@link SongProps}. */
+  readonly palette?: string
 }
 
 /** The recognised section types for EDM arrangement structure. */

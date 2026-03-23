@@ -60,5 +60,6 @@ export const Song = (props: SongProps): SongDefinition => {
     ...(props.backend !== undefined && { backend: props.backend }),
     ...(props.xdj     !== undefined && { xdj:     props.xdj }),
     ...(props.theme   !== undefined && { theme:   props.theme }),
+    ...(props.palette !== undefined && { palette: props.palette }),
   }
 }
