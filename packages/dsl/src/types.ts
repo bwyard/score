@@ -302,6 +302,12 @@ export type SongProps = {
    * @example `Song({ bpm: 120, seed: 42, tracks: [...] })`
    */
   readonly seed?: number
+  /**
+   * Visual theme name for Performance Mode. Resolved by `@score/visuals`
+   * `getTheme(name)` — defaults to `'dark-pulse'` when omitted.
+   * @example `Song({ bpm: 128, tracks: [...], theme: 'lorenz' })`
+   */
+  readonly theme?: string
 }
 
 /**
@@ -323,6 +329,8 @@ export type SongDefinition = {
   readonly xdj?: { mode: 'score-mixer' | 'hardware-mixer' | 'hybrid' }
   /** Resolved seed — always present (defaulted to Date.now() in Song() if not provided). */
   readonly seed: number
+  /** Visual theme name — passed through from {@link SongProps}. */
+  readonly theme?: string
 }
 
 /** The recognised section types for EDM arrangement structure. */

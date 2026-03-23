@@ -59,5 +59,6 @@ export const Song = (props: SongProps): SongDefinition => {
     ...(props.genre   !== undefined && { genre:   props.genre }),
     ...(props.backend !== undefined && { backend: props.backend }),
     ...(props.xdj     !== undefined && { xdj:     props.xdj }),
+    ...(props.theme   !== undefined && { theme:   props.theme }),
   }
 }
