@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { TransportBar }                      from '../shared/TransportBar.js'
 import type { HardwareLevel }               from '../../../main/ipc-types.js'
 import { PunchcardGrid }                    from '../visualizer/PunchcardGrid.js'
@@ -9,7 +9,9 @@ import { MasterLevel }                      from '../shared/MasterLevel.js'
 import { MixerStrip }                       from '../shared/MixerStrip.js'
 import { DraggablePanel }                   from '../shared/DraggablePanel.js'
 import { CodeWaveform }                     from '../shared/CodeWaveform.js'
-import { CodeHighlight }                    from '../shared/CodeHighlight.js'
+import { getActiveLines }                   from '../shared/CodeHighlight.js'
+import { CodeEditorPanel }                  from '../shared/CodeEditorPanel.js'
+import type { EditorDecoration }            from '../shared/CodeEditorPanel.js'
 import { ReferencePanel }                   from '../shared/ReferencePanel.js'
 import { ConsoleLog }                       from '../shared/ConsoleLog.js'
 import type { LogEntry, LogLevel }          from '../shared/ConsoleLog.js'
@@ -145,9 +147,19 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [pianoNotes,  setPianoNotes]  = useState<ReadonlyArray<PianoRollNote>>([])
   // Set to true when the user clicks play before eval — song:update handler will
   // fire transport:play once the eval succeeds (eval-then-play flow).
-  const [editorScrollTop, setEditorScrollTop] = useState(0)
   const autoPlayRef   = useRef(false)
-  const textareaRef   = useRef<HTMLTextAreaElement>(null)
+
+  // Monaco beat-highlight decorations — active track lines while playing
+  const editorDecorations = useMemo((): ReadonlyArray<EditorDecoration> => {
+    if (!engineState.playing) return []
+    const activeLines = getActiveLines(code, tracks, currentStep)
+    return activeLines.map(zeroIdx => ({
+      startLine:   zeroIdx + 1,  // Monaco is 1-based
+      endLine:     zeroIdx + 1,
+      className:   'score-beat-active',
+      isWholeLine: true,
+    }))
+  }, [engineState.playing, code, tracks, currentStep])
   const [panels, setPanels] = useState<PanelVisibility>({
     punchcard:  true,
     scope:      true,
@@ -429,8 +441,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
             </div>
           )}
 
-          {/* Waveform + highlight overlay + textarea stacked */}
-          {/* z-index 0: CodeWaveform  1: CodeHighlight  2: textarea */}
+          {/* Monaco editor + waveform overlay stacked */}
+          {/* z-index 0: CodeWaveform (canvas behind)  1: Monaco editor */}
           <div style={styles.editorArea}>
             <CodeWaveform
               waveform={waveform}
@@ -438,28 +450,14 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               currentStep={currentStep}
               stepCount={currentStepCount}
             />
-            <CodeHighlight
-              code={code}
-              tracks={tracks}
-              currentStep={currentStep}
-              playing={engineState.playing}
-              scrollTop={editorScrollTop}
-            />
-            <textarea
-              ref={textareaRef}
-              style={styles.textarea}
-              value={code}
-              onChange={e => { setCode(e.target.value) }}
-              onScroll={e => { setEditorScrollTop((e.target as HTMLTextAreaElement).scrollTop) }}
-              spellCheck={false}
-              aria-label="Song code editor"
-              onKeyDown={e => {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                  e.preventDefault()
-                  onEval()
-                }
-              }}
-            />
+            <div style={styles.monacoWrapper} aria-label="Song code editor">
+              <CodeEditorPanel
+                value={code}
+                onChange={setCode}
+                onEval={onEval}
+                decorations={editorDecorations}
+              />
+            </div>
           </div>
 
           {/* Console log (below textarea, collapsible) */}
@@ -653,20 +651,12 @@ const styles = {
     position: 'relative' as const,
     display:  'flex',
   },
-  textarea: {
-    flex:       1,
-    background: 'transparent',
-    color:      '#c8d8f8',
-    border:     'none',
-    outline:    'none',
-    padding:    '0.75rem',
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-    fontSize:   '0.8rem',
-    lineHeight: 1.65,
-    resize:     'none' as const,
-    tabSize:    2,
-    position:   'relative' as const,
-    zIndex:     2,
+  monacoWrapper: {
+    flex:     1,
+    position: 'relative' as const,
+    zIndex:   1,
+    // Monaco needs an explicit height to fill flex container
+    minHeight: 0,
   },
   consolePane: {
     flexShrink:    0,
