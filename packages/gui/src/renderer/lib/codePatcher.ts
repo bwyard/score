@@ -229,23 +229,16 @@ export const patchChainMethod = (
   // Method not present — append it to the last non-empty line of the region
   // that belongs to this track's chain (before next const/export default).
   const lines = slice.split('\n')
-  // Find the last line that contains a chain call (starts with whitespace + dot,
-  // or is the instrument declaration line itself)
-  let insertLineIdx = 0
-  for (let i = 0; i < lines.length; i++) {
-    const ln = lines[i] ?? ''
-    if (ln.trim().length > 0 && !ln.trim().startsWith('const ') && !ln.trim().startsWith('export ')) {
-      insertLineIdx = i
-    } else if (ln.trim().startsWith('const ') || ln.trim().startsWith('export ')) {
-      break
-    }
-    if (i === 0) insertLineIdx = 0  // always accept the first line
-  }
+  // Slice up to the first next-track or export boundary, then find last non-empty line.
+  const stopIdx = lines.findIndex(ln =>
+    ln.trim().startsWith('const ') || ln.trim().startsWith('export '))
+  const regionLines = stopIdx === -1 ? lines : lines.slice(0, stopIdx)
+  const insertLineIdx = regionLines.reduce((acc, ln, i) =>
+    ln.trim().length > 0 ? i : acc, 0)
 
-  const targetLine = lines[insertLineIdx] ?? ''
-  lines[insertLineIdx] = targetLine + `.${method}(${formatted})`
-  const newSlice = lines.join('\n')
-  return code.slice(0, start) + newSlice + code.slice(end)
+  const patched = lines.map((ln, i) =>
+    i === insertLineIdx ? ln + `.${method}(${formatted})` : ln)
+  return code.slice(0, start) + patched.join('\n') + code.slice(end)
 }
 
 /**
