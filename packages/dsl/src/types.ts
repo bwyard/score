@@ -175,6 +175,46 @@ export type SubSynthDSLProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/**
+ * Configuration props for the {@link FMSynth} instrument factory.
+ *
+ * 2-operator FM synthesis voice — DX7 Rhodes / techno leads.
+ * Carrier and modulator are both sine oscillators.
+ */
+export type FMSynthDSLProps = {
+  readonly pattern?: (number | string)[]
+  readonly volume?: number
+  /** Carrier frequency in Hz. Default `220`. */
+  readonly frequency?: number
+  /**
+   * Modulator-to-carrier frequency ratio. Non-integer = inharmonic/metallic.
+   * Default `1.273`.
+   */
+  readonly modRatio?: number
+  /**
+   * Modulation index — peak deviation multiplier of carrier frequency.
+   * Default `3`.
+   */
+  readonly modIndex?: number
+  /** Amplitude VCA ADSR envelope. */
+  readonly ampAdsr?: {
+    readonly attack?: number
+    readonly decay?: number
+    readonly sustain?: number
+    readonly release?: number
+  }
+  /** Modulation depth ADSR envelope. */
+  readonly modAdsr?: {
+    readonly attack?: number
+    readonly decay?: number
+    readonly sustain?: number
+    readonly release?: number
+  }
+  /** Output gain 0–1. Default `0.7`. */
+  readonly gain?: number
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
 /** Configuration props for the {@link Arp} instrument factory. */
 export type ArpDSLProps = {
   /** Note names to arpeggiate in order, e.g. `['C4', 'E4', 'G4', 'B4']`. Required. */
@@ -212,8 +252,8 @@ export type ArpDSLProps = {
  */
 export type InstrumentDescriptor = {
   readonly _type: 'InstrumentDescriptor'
-  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample' | 'theremin' | 'sax' | 'arp' | 'kick808' | 'kick909' | 'hihat808' | 'snare909' | 'subsynth'
-  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps | ThereminDSLProps | SaxDSLProps | ArpDSLProps | Kick808DSLProps | Kick909DSLProps | Hihat808DSLProps | Snare909DSLProps | SubSynthDSLProps
+  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample' | 'theremin' | 'sax' | 'arp' | 'kick808' | 'kick909' | 'hihat808' | 'snare909' | 'subsynth' | 'fmsynth'
+  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps | ThereminDSLProps | SaxDSLProps | ArpDSLProps | Kick808DSLProps | Kick909DSLProps | Hihat808DSLProps | Snare909DSLProps | SubSynthDSLProps | FMSynthDSLProps
   // Minimal AudioComponent shape so Track() accepts it
   readonly id: string
   readonly type: string
