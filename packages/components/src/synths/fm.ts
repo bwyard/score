@@ -123,7 +123,7 @@ export type FMSynthComponent = AudioComponent & {
  *
  * @see {@link FMSynthProps} — configuration options
  * @see {@link FMSynthComponent} — returned component shape
- * @throws {ScoreError} Never — invalid props are silently clamped.
+ * @throws ScoreError Never — invalid props are silently clamped.
  */
 export const createFMSynth = (
   context: ScoreAudioContext,
@@ -168,14 +168,14 @@ export const createFMSynth = (
   carrier.connect(ampVca)
   ampVca.connect(outputGain)
 
-  let started = false
+  const startRef = { value: false }
 
   const noteOn = (time?: number): void => {
     const t = time ?? context.currentTime
-    if (!started) {
+    if (!startRef.value) {
       modulator.start(t)
       carrier.start(t)
-      started = true
+      startRef.value = true
     }
     // Modulation index ADSR — peak = noteFreq × modIndex
     modGain.scheduleEnvelope({

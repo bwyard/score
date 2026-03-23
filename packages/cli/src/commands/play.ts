@@ -3,7 +3,7 @@ import { existsSync, watch as fsWatch } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { ScoreError } from '@score/core'
 import type { SongDefinition } from '@score/dsl'
-import { createScoreEngine, isInstrumentDescriptor, type ScoreEngine } from '../engine.js'
+import { createScoreEngine, isInstrumentDescriptor } from '../engine.js'
 import { validateSongFile } from '../validator/SongValidator.js'
 import { validateSongExport } from '../validator/SongExportValidator.js'
 import { parseFlags } from '../flags.js'
@@ -102,29 +102,30 @@ export const play = async (args: string[]): Promise<void> => {
   const song = await loadSong(resolved, 0, trust)
   logSong(song)
 
-  let currentEngine: ScoreEngine = await createScoreEngine(song)
-  let currentSong: SongDefinition = song
-  currentEngine.start()
-  log(`Audio running — ${CYAN}${String(currentEngine.bpm)} BPM${RESET} — Press Ctrl+C to stop${watch ? ` ${YELLOW}(watch mode)${RESET}` : ''}`)
+  const state = {
+    engine: await createScoreEngine(song),
+    song,
+  }
+  state.engine.start()
+  log(`Audio running — ${CYAN}${String(state.engine.bpm)} BPM${RESET} — Press Ctrl+C to stop${watch ? ` ${YELLOW}(watch mode)${RESET}` : ''}`)
 
   const keepAlive = setInterval(() => {}, 1000)
 
   const cleanup = (): void => {
     clearInterval(keepAlive)
-    currentEngine.dispose()
+    state.engine.dispose()
     log('Stopped')
     process.exit(0)
   }
 
   if (watch) {
-    let pendingReload = false
-    let reloadVersion = 1
+    const reload = { pending: false, version: 1 }
 
     // Mark that a reload is needed — actual swap happens at the next bar boundary
     // to prevent mid-beat glitches.
     fsWatch(resolved, () => {
-      if (!pendingReload) {
-        pendingReload = true
+      if (!reload.pending) {
+        reload.pending = true
         warn('File changed — will reload at next bar boundary...')
       }
     })
@@ -146,24 +147,24 @@ export const play = async (args: string[]): Promise<void> => {
 
     // On each bar: apply file changes at a bar boundary to avoid mid-beat glitches.
     // Prefer live update() when structure is unchanged; fall back to full engine swap.
-    currentEngine.onBar(() => {
-      if (!pendingReload) return
-      pendingReload = false
+    state.engine.onBar(() => {
+      if (!reload.pending) return
+      reload.pending = false
 
       void (async () => {
         try {
-          const freshSong = await loadSong(resolved, reloadVersion++, trust)
+          const freshSong = await loadSong(resolved, reload.version++, trust)
 
-          if (isLivePatchable(currentSong, freshSong)) {
-            currentEngine.update(freshSong)
-            currentSong = freshSong
-            log(`Updated — ${CYAN}${String(freshSong.bpm)} BPM${RESET} (bar ${String(currentEngine.bars)})`)
+          if (isLivePatchable(state.song, freshSong)) {
+            state.engine.update(freshSong)
+            state.song = freshSong
+            log(`Updated — ${CYAN}${String(freshSong.bpm)} BPM${RESET} (bar ${String(state.engine.bars)})`)
           } else {
             const freshEngine = await createScoreEngine(freshSong)
             freshEngine.start()
-            const oldEngine = currentEngine
-            currentEngine = freshEngine
-            currentSong = freshSong
+            const oldEngine = state.engine
+            state.engine = freshEngine
+            state.song = freshSong
             oldEngine.dispose()
             log(`Reloaded — ${CYAN}${String(freshEngine.bpm)} BPM${RESET}`)
           }

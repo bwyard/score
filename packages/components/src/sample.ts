@@ -96,8 +96,8 @@ export const Sample = (
   buffer: BackendBuffer,
   props?: SampleProps,
 ): SampleComponent => {
-  const gainNode = context.createGain({ gain: props?.gain ?? 1.0 })
-  let activeSource: BackendBufferSourceNode | null = null
+  const gainNode   = context.createGain({ gain: props?.gain ?? 1.0 })
+  const sourceRef  = { value: null as BackendBufferSourceNode | null }
 
   const component: SampleComponent = {
     id: uid('sample'),
@@ -106,32 +106,32 @@ export const Sample = (
 
     start: (time?: number, offset?: number, duration?: number) => {
       // Clean up previous source (Web Audio sources are one-shot)
-      if (activeSource) {
-        try { activeSource.stop() } catch { /* already stopped */ }
-        try { activeSource.disconnect() } catch { /* already disconnected */ }
+      if (sourceRef.value) {
+        try { sourceRef.value.stop() } catch { /* already stopped */ }
+        try { sourceRef.value.disconnect() } catch { /* already disconnected */ }
       }
-      activeSource = context.createBufferSource(buffer, {
+      sourceRef.value = context.createBufferSource(buffer, {
         loop: props?.loop ?? false,
         playbackRate: props?.playbackRate ?? 1.0,
       })
-      activeSource.connect(gainNode)
-      activeSource.start(time, offset, duration)
+      sourceRef.value.connect(gainNode)
+      sourceRef.value.start(time, offset, duration)
     },
 
     stop: (time?: number) => {
-      if (activeSource) {
+      if (sourceRef.value) {
         try {
-          activeSource.stop(time)
+          sourceRef.value.stop(time)
         } catch {
           // Already stopped
         }
-        activeSource = null
+        sourceRef.value = null
       }
     },
 
     setPlaybackRate: (rate: number, time?: number) => {
-      if (activeSource) {
-        activeSource.setPlaybackRate(rate, time)
+      if (sourceRef.value) {
+        sourceRef.value.setPlaybackRate(rate, time)
       }
     },
 
@@ -154,10 +154,10 @@ export const Sample = (
     },
 
     dispose: () => {
-      if (activeSource) {
-        try { activeSource.stop() } catch { /* already stopped */ }
-        try { activeSource.disconnect() } catch { /* already disconnected */ }
-        activeSource = null
+      if (sourceRef.value) {
+        try { sourceRef.value.stop() } catch { /* already stopped */ }
+        try { sourceRef.value.disconnect() } catch { /* already disconnected */ }
+        sourceRef.value = null
       }
       try {
         gainNode.disconnect()

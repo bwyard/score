@@ -138,9 +138,11 @@ const getWebMidi = (): WebMidiNavigator | null => {
 }
 
 export const createMidiBridge = (config: MidiBridgeConfig): MidiBridge => {
-  let midiAccess: WebMidiAccess | null = null
-  let activeInput: WebMidiInput | null = null
-  let isConnected = false
+  const state = {
+    midiAccess:  null as WebMidiAccess | null,
+    activeInput: null as WebMidiInput | null,
+    isConnected: false,
+  }
 
   const onMidiMessage = (event: { data: Uint8Array }): void => {
     const decoded = decodeMessage(event.data)
@@ -151,7 +153,7 @@ export const createMidiBridge = (config: MidiBridgeConfig): MidiBridge => {
   }
 
   return {
-    get connected() { return isConnected },
+    get connected() { return state.isConnected },
 
     connect: async (): Promise<void> => {
       const webMidi = getWebMidi()
@@ -163,17 +165,17 @@ export const createMidiBridge = (config: MidiBridgeConfig): MidiBridge => {
         })
       }
 
-      midiAccess = await webMidi.requestMIDIAccess({ sysex: false })
+      state.midiAccess = await webMidi.requestMIDIAccess({ sysex: false })
 
-      const inputs  = Array.from(midiAccess.inputs.values())
+      const inputs  = Array.from(state.midiAccess.inputs.values())
       const idLower = config.profile.id.toLowerCase()
 
-      activeInput =
+      state.activeInput =
         inputs.find(i => i.name?.toLowerCase().includes(idLower)) ??
         inputs[0] ??
         null
 
-      if (!activeInput) {
+      if (!state.activeInput) {
         throw ScoreError('No MIDI input devices found', {
           received: inputs.length,
           fix:      'Connect a MIDI controller and try again',
@@ -181,17 +183,17 @@ export const createMidiBridge = (config: MidiBridgeConfig): MidiBridge => {
         })
       }
 
-      activeInput.addEventListener('midimessage', onMidiMessage)
-      isConnected = true
+      state.activeInput.addEventListener('midimessage', onMidiMessage)
+      state.isConnected = true
     },
 
     disconnect: (): void => {
-      if (activeInput) {
-        activeInput.removeEventListener('midimessage', onMidiMessage)
-        activeInput = null
+      if (state.activeInput) {
+        state.activeInput.removeEventListener('midimessage', onMidiMessage)
+        state.activeInput = null
       }
-      midiAccess = null
-      isConnected = false
+      state.midiAccess = null
+      state.isConnected = false
     },
   }
 }
