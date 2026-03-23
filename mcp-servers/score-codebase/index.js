@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 // score-codebase MCP — Code intelligence for Claude Code sessions working on Score
-// Tools: architecture_rules, package_graph, api_surface, project_status, adr_lookup
+// Tools: architecture_rules, package_graph, api_surface, project_status, adr_lookup,
+//        dsl_diagnostics_schema, ui_ipc_map, ui_component_catalog
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -298,9 +299,255 @@ const adrLookup = {
   },
 }
 
+// ─── Tool: dsl_diagnostics_schema ────────────────────────────────────
+
+const dslDiagnosticsSchema = {
+  name: 'dsl_diagnostics_schema',
+  description: 'Returns all DSL validation error codes, message templates, fix hints, and severity levels. Used by Monaco to show squiggles on invalid Song code. Covers both AST-level (blocked imports, eval, process) and structural (SongDefinition shape) errors.',
+  inputSchema: {
+    filter: z.enum(['all', 'ast', 'structural']).optional().default('all')
+      .describe('"ast" = pre-execution validator errors, "structural" = post-execution schema errors, "all" = both'),
+  },
+  handler: async ({ filter }) => {
+    const validatorPath = join(SCORE_ROOT, 'packages', 'cli', 'src', 'validator', 'SongValidator.ts')
+    const exportValidatorPath = join(SCORE_ROOT, 'packages', 'cli', 'src', 'validator', 'SongExportValidator.ts')
+
+    const astSource = readFile(validatorPath) ?? ''
+    const structSource = readFile(exportValidatorPath) ?? ''
+
+    // Extract blocked modules list from AST validator
+    const blockedMatch = astSource.match(/const BLOCKED_MODULES = new Set\(\[([\s\S]*?)\]\)/)
+    const blockedModules = blockedMatch
+      ? blockedMatch[1].match(/'([^']+)'/g)?.map(s => s.replace(/'/g, '')) ?? []
+      : []
+
+    const astErrors = [
+      {
+        code: 'syntax-error',
+        severity: 'error',
+        message: 'Song file has a syntax error',
+        fix: 'Fix the JavaScript syntax error before playing',
+        source: 'SongValidator (parse phase)',
+      },
+      {
+        code: 'blocked-import',
+        severity: 'error',
+        message: 'Blocked import "{module}" — not allowed in Score songs',
+        fix: 'Remove this import. Score songs only use @score/* packages',
+        blockedModules,
+        source: 'SongValidator (ImportDeclaration)',
+      },
+      {
+        code: 'eval-call',
+        severity: 'error',
+        message: 'eval() is not allowed in Score songs',
+        fix: 'Remove eval() — use standard JavaScript instead',
+        source: 'SongValidator (CallExpression)',
+      },
+      {
+        code: 'new-function',
+        severity: 'error',
+        message: 'new Function() is not allowed in Score songs',
+        fix: 'Remove new Function() — use a regular arrow function instead',
+        source: 'SongValidator (NewExpression)',
+      },
+      {
+        code: 'process-access',
+        severity: 'error',
+        message: '"process" is not available in Score songs',
+        fix: 'Remove process.* access — Score songs do not have Node.js process control',
+        source: 'SongValidator (MemberExpression)',
+      },
+    ]
+
+    // Extract Zod schema fields from structural validator
+    const zodFields = [...structSource.matchAll(/(\w+):\s*z\.([\w.()'"]+)/g)]
+      .map(m => ({ field: m[1], schema: m[2] }))
+
+    const structErrors = [
+      {
+        code: 'invalid-song-export',
+        severity: 'error',
+        message: 'Song export is not a valid Song definition',
+        fix: 'Make sure your file ends with: export default Song({ bpm, tracks: [...] })',
+        requiredShape: {
+          _type: '"SongDefinition"',
+          bpm: 'number (20–400)',
+          tracks: 'array (min 1)',
+          arrangement: 'array of SectionDefinition',
+          key: 'string (optional)',
+          genre: 'string (optional)',
+        },
+        zodFields,
+        source: 'SongExportValidator (Zod schema)',
+      },
+    ]
+
+    const result = {
+      ast: filter === 'structural' ? [] : astErrors,
+      structural: filter === 'ast' ? [] : structErrors,
+      total: (filter === 'structural' ? 0 : astErrors.length) + (filter === 'ast' ? 0 : structErrors.length),
+    }
+
+    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+  },
+}
+
+// ─── Tool: ui_ipc_map ────────────────────────────────────────────────
+
+const uiIpcMap = {
+  name: 'ui_ipc_map',
+  description: 'Returns all typed IPC channels between Electron main process and renderer, with direction, payload type shape, and usage notes. Sourced from packages/gui/src/main/ipc-types.ts.',
+  inputSchema: {
+    direction: z.enum(['all', 'renderer-to-main', 'main-to-renderer']).optional().default('all')
+      .describe('Filter by channel direction'),
+  },
+  handler: async ({ direction }) => {
+    const ipcTypesPath = join(SCORE_ROOT, 'packages', 'gui', 'src', 'main', 'ipc-types.ts')
+    const source = readFile(ipcTypesPath)
+    if (!source) return { content: [{ type: 'text', text: 'ipc-types.ts not found at packages/gui/src/main/ipc-types.ts' }] }
+
+    // Extract RendererToMain channels
+    const r2mMatch = source.match(/export type RendererToMain = \{([\s\S]*?)\n\}/)
+    const m2rMatch = source.match(/export type MainToRenderer = \{([\s\S]*?)\n\}/)
+
+    const parseChannels = (block, dir) => {
+      if (!block) return []
+      return [...block.matchAll(/['"]([^'"]+)['"]\s*:\s*([^\n]+)/g)].map(m => {
+        const channel = m[1]
+        const payloadRaw = m[2].trim().replace(/,$/, '')
+        // Extract preceding comment if any
+        const commentMatch = block.match(new RegExp(`/\\*\\*([^*]|\\*(?!/))*\\*/\\s*['"]${channel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`))
+        const comment = commentMatch
+          ? commentMatch[0].replace(/\/\*\*|\*\//g, '').replace(/\s*\*\s*/g, ' ').trim()
+          : null
+        return { channel, direction: dir, payload: payloadRaw, description: comment }
+      })
+    }
+
+    const r2m = parseChannels(r2mMatch?.[1], 'renderer→main')
+    const m2r = parseChannels(m2rMatch?.[1], 'main→renderer')
+
+    const channels = [
+      ...(direction === 'main-to-renderer' ? [] : r2m),
+      ...(direction === 'renderer-to-main' ? [] : m2r),
+    ]
+
+    const lines = channels.map(c => {
+      const desc = c.description ? `\n    // ${c.description}` : ''
+      return `${c.direction}  '${c.channel}': ${c.payload}${desc}`
+    })
+
+    const summary = `# IPC Channel Map\n\nSource: packages/gui/src/main/ipc-types.ts\nTotal channels: ${channels.length} (${r2m.length} renderer→main, ${m2r.length} main→renderer)\n\n${lines.join('\n\n')}`
+
+    return { content: [{ type: 'text', text: summary }] }
+  },
+}
+
+// ─── Tool: ui_component_catalog ──────────────────────────────────────
+
+const MODE_MAP = {
+  'LiveCode': 'live-code',
+  'Produce': 'produce',
+  'DJSet': 'dj-set',
+  'JamSession': 'jam-session',
+  'shared': 'shared',
+  'status': 'shared',
+  'visualizer': 'shared',
+  'SplashScreen': 'shared',
+}
+
+const inferMode = (filePath) => {
+  for (const [segment, mode] of Object.entries(MODE_MAP)) {
+    if (filePath.includes(`/${segment}/`) || filePath.includes(`\\${segment}\\`) || filePath.endsWith(`/${segment}.tsx`) || filePath.endsWith(`\\${segment}.tsx`)) {
+      return mode
+    }
+  }
+  return 'unknown'
+}
+
+const extractPropsInterface = (source, componentName) => {
+  // Try to find Props type alias or interface
+  const patterns = [
+    new RegExp(`type ${componentName}Props\\s*=\\s*\\{([^}]+)\\}`, 's'),
+    new RegExp(`interface ${componentName}Props\\s*\\{([^}]+)\\}`, 's'),
+    /type Props\s*=\s*\{([^}]+)\}/s,
+    /interface Props\s*\{([^}]+)\}/s,
+  ]
+  for (const pattern of patterns) {
+    const match = source.match(pattern)
+    if (match) {
+      return match[1].trim().split('\n').map(l => l.trim()).filter(Boolean).join('; ')
+    }
+  }
+  // Fallback: find destructured props in component function
+  const funcMatch = source.match(/(?:const|function)\s+\w+\s*=?\s*\(\s*\{([^}]+)\}/)
+  if (funcMatch) return `{ ${funcMatch[1].trim()} } (inferred from destructuring)`
+  return null
+}
+
+const uiComponentCatalog = {
+  name: 'ui_component_catalog',
+  description: 'Lists all React components in the Score GUI renderer, with file path, props interface, and which GUI mode it belongs to (live-code/produce/dj-set/jam-session/shared). Useful for understanding the full GUI component surface.',
+  inputSchema: {
+    mode: z.enum(['all', 'live-code', 'produce', 'dj-set', 'jam-session', 'shared']).optional().default('all')
+      .describe('Filter by GUI mode'),
+  },
+  handler: async ({ mode }) => {
+    const componentsDir = join(SCORE_ROOT, 'packages', 'gui', 'src', 'renderer', 'components')
+    if (!existsSync(componentsDir)) {
+      return { content: [{ type: 'text', text: 'GUI components directory not found at packages/gui/src/renderer/components/' }] }
+    }
+
+    const walkDir = (dir) => {
+      const entries = readdirSync(dir, { withFileTypes: true })
+      return entries.flatMap(entry => {
+        const full = join(dir, entry.name)
+        if (entry.isDirectory()) return walkDir(full)
+        if (entry.name.endsWith('.tsx')) return [full]
+        return []
+      })
+    }
+
+    const files = walkDir(componentsDir)
+    const components = files.map(filePath => {
+      const source = readFile(filePath) ?? ''
+      const relativePath = filePath.replace(SCORE_ROOT + '\\', '').replace(SCORE_ROOT + '/', '').replace(/\\/g, '/')
+
+      // Derive component name from file
+      const fileName = filePath.split(/[/\\]/).pop()?.replace('.tsx', '') ?? ''
+      const componentName = fileName === 'index'
+        ? filePath.split(/[/\\]/).slice(-2)[0] ?? fileName
+        : fileName
+
+      const componentMode = inferMode(filePath)
+      const props = extractPropsInterface(source, componentName)
+
+      // Check if it exports a default component
+      const hasDefault = /export default/.test(source)
+      const namedExports = [...source.matchAll(/export (?:const|function) (\w+)/g)].map(m => m[1])
+
+      return {
+        name: componentName,
+        file: relativePath,
+        mode: componentMode,
+        props: props ?? '(no props type found)',
+        exports: hasDefault ? ['default', ...namedExports] : namedExports,
+      }
+    }).filter(c => mode === 'all' || c.mode === mode)
+
+    const lines = components.map(c =>
+      `## ${c.name}\n- **File:** ${c.file}\n- **Mode:** ${c.mode}\n- **Exports:** ${c.exports.join(', ') || 'none'}\n- **Props:** ${c.props}`
+    )
+
+    const summary = `# GUI Component Catalog\n\n${components.length} component${components.length !== 1 ? 's' : ''} (mode: ${mode})\n\n${lines.join('\n\n')}`
+    return { content: [{ type: 'text', text: summary }] }
+  },
+}
+
 // ─── Server ──────────────────────────────────────────────────────────
 
-const tools = [architectureRules, packageGraph, apiSurface, projectStatus, adrLookup]
+const tools = [architectureRules, packageGraph, apiSurface, projectStatus, adrLookup, dslDiagnosticsSchema, uiIpcMap, uiComponentCatalog]
 
 const createServer = () => {
   const server = new McpServer({
