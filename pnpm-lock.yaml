@@ -181,9 +181,15 @@ importers:
       '@score/dsl':
         specifier: workspace:*
         version: link:../dsl
+      '@score/sequencer':
+        specifier: workspace:*
+        version: link:../sequencer
       '@score/session':
         specifier: workspace:*
         version: link:../session
+      '@score/visuals':
+        specifier: workspace:*
+        version: link:../visuals
       '@testing-library/jest-dom':
         specifier: ^6.4.0
         version: 6.9.1
