@@ -32,36 +32,28 @@ export const newSong = (args: string[]): void => {
 // Run with:  score play ${fileName}
 // Live mode: score play ${fileName} --watch
 
-import { Song, Kick808, Snare, HiHat, Bass303, Pad } from '@score/dsl'
+import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
 
 // ── DRUMS ─────────────────────────────────────────────────────────────────────
-// Pattern: 16-step array. 1 = hit, 0 = rest.
 
-const kick  = Kick808({ pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0], volume: 0.75 })
-const snare = Snare({   pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0], volume: 0.5  })
-const hihat = HiHat({   pattern: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0], volume: 0.2  })
+const kick  = Kick808().hits(0, 4, 8, 12).volume(0.7)
+const snare = Snare909().hits(4, 12).volume(0.55)
+const hihat = Hihat808().euclidean(8, 16).volume(0.25)
 
 // ── BASS ──────────────────────────────────────────────────────────────────────
-// Chain API: Bass303, Pad, Pluck, Synth, FMSynth — .filter() .reverb() .volume() etc.
+// Chain API: .filter() .resonance() .pattern() .volume() etc.
+// Use note names ('A2', 'D3', 'E3') or 0 for rest.
 
 const bass = Bass303('A2')
   .filter(600)
   .resonance(0.4)
-  .pattern([1,0,0,0, 0,0,1,0, 1,0,0,0, 0,1,0,0])
-  .volume(0.7)
-
-// ── PAD ───────────────────────────────────────────────────────────────────────
-
-const pad = Pad('A3')
-  .attack(0.3)
-  .release(1.2)
-  .reverb(0.3)
-  .volume(0.35)
+  .pattern(['A2', 0, 0, 0,  'D3', 0, 0, 0,  'A2', 0, 0, 0,  'D3', 0, 0, 0])
+  .volume(0.6)
 
 // ── SONG ──────────────────────────────────────────────────────────────────────
 export default Song({
   bpm: 128,
-  tracks: [kick, snare, hihat, bass, pad],
+  tracks: [kick, snare, hihat, bass],
 })
 `
 

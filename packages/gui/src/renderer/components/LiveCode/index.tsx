@@ -44,13 +44,16 @@ type PanelVisibility = {
 
 // ── Starter template ───────────────────────────────────────────────────────────
 
-const STARTER = `import { Song, Kick808, Snare909, Hihat808 } from '@score/dsl'
+const STARTER = `import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
 
-const kick  = Kick808().hits(0, 4, 8, 12).volume(0.6)
+const kick  = Kick808().hits(0, 4, 8, 12).volume(0.7)
 const snare = Snare909().hits(4, 12).volume(0.55)
 const hihat = Hihat808().euclidean(8, 16).volume(0.25)
+const bass  = Bass303('A2').filter(600).resonance(0.4)
+  .pattern(['A2', 0, 0, 0,  'D3', 0, 0, 0,  'A2', 0, 0, 0,  'D3', 0, 0, 0])
+  .volume(0.6)
 
-export default Song({ bpm: 128, tracks: [kick, snare, hihat] })`
+export default Song({ bpm: 128, tracks: [kick, snare, hihat, bass] })`
 
 // ── Log helpers ────────────────────────────────────────────────────────────────
 
