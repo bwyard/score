@@ -26,18 +26,17 @@ describe('SplashScreen — rendering', () => {
 
   it('renders all four mode buttons', () => {
     setup()
-    // Live Code is enabled; Produce/DJ Set/Jam Session are disabled (coming soon)
     expect(screen.getByRole('button', { name: 'Live Code' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Produce — coming soon' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'DJ Set — coming soon' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Jam Session — coming soon' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Produce' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'DJ Set' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Jam Session' })).toBeInTheDocument()
   })
 
-  it('disabled mode buttons are not interactive', () => {
+  it('all mode buttons are enabled', () => {
     setup()
-    expect(screen.getByRole('button', { name: 'Produce — coming soon' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'DJ Set — coming soon' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Jam Session — coming soon' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Produce' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'DJ Set' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Jam Session' })).toBeEnabled()
   })
 
   it('renders three hardware level buttons', () => {
@@ -70,7 +69,7 @@ describe('SplashScreen — initial state', () => {
 // ── Mode selection ────────────────────────────────────────────────────────────
 
 describe('SplashScreen — mode selection', () => {
-  it('start button shows Live Code label (only enabled mode)', () => {
+  it('start button shows Live Code label (pre-selected mode)', () => {
     setup()
     expect(screen.getByRole('button', { name: /start live code/i })).toBeEnabled()
   })
@@ -80,13 +79,11 @@ describe('SplashScreen — mode selection', () => {
     expect(screen.getByRole('button', { name: 'Live Code' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('disabled mode cards stay unselected when clicked', async () => {
+  it('clicking another mode card selects it', async () => {
     const { user } = setup()
-    // Disabled buttons can't be clicked via userEvent — live-code remains pressed
-    expect(screen.getByRole('button', { name: 'Live Code' })).toHaveAttribute('aria-pressed', 'true')
-    // Disabled cards report aria-pressed=false (not selected)
-    expect(screen.getByRole('button', { name: 'Produce — coming soon' })).toHaveAttribute('aria-pressed', 'false')
-    void user
+    await user.click(screen.getByRole('button', { name: 'Produce' }))
+    expect(screen.getByRole('button', { name: 'Produce' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Live Code' })).toHaveAttribute('aria-pressed', 'false')
   })
 })
 
