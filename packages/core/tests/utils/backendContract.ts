@@ -75,6 +75,7 @@ export const runBackendContractTests = (provider: BackendProvider) => {
       expect(typeof osc.stop).toBe('function')
       expect(typeof osc.setFrequency).toBe('function')
       expect(typeof osc.setDetune).toBe('function')
+      expect(typeof osc.schedulePitchEnvelope).toBe('function')
     })
 
     it('createOscillator start/stop do not throw', () => {

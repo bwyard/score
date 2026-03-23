@@ -95,6 +95,86 @@ export type SaxDSLProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/** Configuration props for the {@link Kick808} instrument factory. */
+export type Kick808DSLProps = {
+  readonly pattern?: number[]
+  readonly volume?: number
+  /** Initial pitch of the sine body in Hz. Default `60`. */
+  readonly startFreq?: number
+  /** Final pitch after fall in Hz. Default `45`. */
+  readonly endFreq?: number
+  /** Duration of pitch fall in seconds. Default `0.15`. */
+  readonly pitchFall?: number
+  /** Amplitude decay in seconds. Default `0.7`. */
+  readonly decay?: number
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
+/** Configuration props for the {@link Kick909} instrument factory. */
+export type Kick909DSLProps = {
+  readonly pattern?: number[]
+  readonly volume?: number
+  /** Initial pitch of the sine body in Hz. Default `65`. */
+  readonly startFreq?: number
+  /** Final pitch after fall in Hz. Default `48`. */
+  readonly endFreq?: number
+  /** Duration of pitch fall in seconds. Default `0.12`. */
+  readonly pitchFall?: number
+  /** Sine body decay in seconds. Default `0.65`. */
+  readonly decay?: number
+  /** Noise click level relative to body (0–1). Default `0.25` (≈ −12 dB). */
+  readonly clickLevel?: number
+  /** Noise click decay in seconds. Default `0.03`. */
+  readonly clickDecay?: number
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
+/** Configuration props for the {@link Hihat808} instrument factory. */
+export type Hihat808DSLProps = {
+  readonly pattern?: number[]
+  readonly volume?: number
+  /** Amplitude decay in seconds. Default `0.06` (closed) or `0.3` (open). */
+  readonly decay?: number
+  /** When true, uses longer open hi-hat decay. Default `false`. */
+  readonly open?: boolean
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
+/** Configuration props for the {@link Snare909} instrument factory. */
+export type Snare909DSLProps = {
+  readonly pattern?: number[]
+  readonly volume?: number
+  /** Triangle oscillator decay in seconds. Default `0.2`. */
+  readonly toneDecay?: number
+  /** Noise component decay in seconds. Default `0.3`. */
+  readonly noiseDecay?: number
+  /** Tone-to-noise ratio (0–1). Default `0.4`. */
+  readonly toneNoiseRatio?: number
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
+/** Configuration props for the {@link SubSynth} instrument factory. */
+export type SubSynthDSLProps = {
+  readonly pattern?: (number | string)[]
+  readonly volume?: number
+  /** Oscillator waveform. Default `'sawtooth'`. */
+  readonly wave?: 'sine' | 'square' | 'sawtooth' | 'triangle'
+  /** Oscillator frequency in Hz. Default `220`. */
+  readonly frequency?: number
+  readonly filter?: {
+    readonly type?: 'lowpass' | 'highpass' | 'bandpass'
+    readonly frequency?: number
+    readonly Q?: number
+  }
+  readonly adsr?: {
+    readonly attack?: number
+    readonly decay?: number
+    readonly sustain?: number
+    readonly release?: number
+  }
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
 /** Configuration props for the {@link Arp} instrument factory. */
 export type ArpDSLProps = {
   /** Note names to arpeggiate in order, e.g. `['C4', 'E4', 'G4', 'B4']`. Required. */
@@ -132,8 +212,8 @@ export type ArpDSLProps = {
  */
 export type InstrumentDescriptor = {
   readonly _type: 'InstrumentDescriptor'
-  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample' | 'theremin' | 'sax' | 'arp'
-  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps | ThereminDSLProps | SaxDSLProps | ArpDSLProps
+  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample' | 'theremin' | 'sax' | 'arp' | 'kick808' | 'kick909' | 'hihat808' | 'snare909' | 'subsynth'
+  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps | ThereminDSLProps | SaxDSLProps | ArpDSLProps | Kick808DSLProps | Kick909DSLProps | Hihat808DSLProps | Snare909DSLProps | SubSynthDSLProps
   // Minimal AudioComponent shape so Track() accepts it
   readonly id: string
   readonly type: string

@@ -41,6 +41,17 @@ export type BackendOscillatorNode = BackendNode & {
   readonly stop: (time?: number) => void
   readonly setFrequency: (value: number, time?: number) => void
   readonly setDetune: (value: number, time?: number) => void
+  /**
+   * Schedule an exponential-style pitch envelope — sets startFreq at startTime,
+   * ramps linearly to endFreq by startTime + fallTime.
+   * Use for kick drum pitch falls and other pitch sweeps.
+   */
+  readonly schedulePitchEnvelope: (opts: {
+    readonly startFreq: number
+    readonly endFreq: number
+    readonly startTime: number
+    readonly fallTime: number
+  }) => void
 }
 
 export type BackendGainNode = BackendNode & {

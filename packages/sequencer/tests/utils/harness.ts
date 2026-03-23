@@ -35,6 +35,7 @@ export const mockContext = (): MockContext => {
       stop: (_time?: number) => {},
       setFrequency: (_value: number, _time?: number) => {},
       setDetune: (_value: number, _time?: number) => {},
+        schedulePitchEnvelope: (_opts: { startFreq: number; endFreq: number; startTime: number; fallTime: number }) => {},
     }),
     createGain: (_props?: { gain?: number }) => ({
       ...createMockNode(),

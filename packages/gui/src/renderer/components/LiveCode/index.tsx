@@ -4,23 +4,23 @@ import type { HardwareLevel } from '../../../main/ipc-types.js'
 
 // ── Default starter song ───────────────────────────────────────────────────────
 
-const STARTER = `import { Song, Kick, Synth, Pattern } from '@score/core'
+const STARTER = `import { Song, Kick808, Synth } from '@score/dsl'
 
-const kick = Kick({
-  pattern: Pattern.steps([1, 0, 0, 0, 1, 0, 0, 0]),
-  volume:  0.9,
+const kick = Kick808({
+  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
+  volume:  0.85,
 })
 
 const bass = Synth({
   wave:    'sawtooth',
-  note:    'C2',
-  pattern: Pattern.steps([1, 0, 1, 0, 0, 1, 0, 0]),
-  filter:  { type: 'lowpass', frequency: 400 },
-  volume:  0.7,
+  frequency: 110,
+  pattern: [1, 0, 1, 0,  0, 1, 0, 0,  1, 0, 1, 0,  0, 1, 0, 0],
+  filter:  { type: 'lowpass', frequency: 600, Q: 2 },
+  volume:  0.6,
 })
 
 export default Song({
-  bpm:    140,
+  bpm:    120,
   tracks: [kick, bass],
 })`
 

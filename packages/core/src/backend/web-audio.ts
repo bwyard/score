@@ -143,6 +143,10 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
           osc.detune.setValueAtTime(osc.detune.value, t)
           osc.detune.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
+        schedulePitchEnvelope: ({ startFreq, endFreq, startTime, fallTime }) => {
+          osc.frequency.setValueAtTime(startFreq, startTime)
+          osc.frequency.linearRampToValueAtTime(endFreq, startTime + fallTime)
+        },
       }
     },
 
