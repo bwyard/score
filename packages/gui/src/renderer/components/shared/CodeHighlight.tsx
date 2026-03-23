@@ -41,9 +41,9 @@ const TRACK_COLOR_DEFAULT = '#404040'
 /**
  * Regex that matches instrument block lines in both styles:
  *   - Legacy:  lines containing `Track(`
- *   - Const:   lines containing `= Kick(` / `= Snare(` / `= HiHat(` etc.
+ *   - Const:   lines containing `= Kick(` / `= Kick808(` / `= Snare(` etc.
  */
-const TRACK_LINE_RE = /(?:Track\(|=\s*(?:Kick|Snare|HiHat|Synth|Sample|Theremin|Sax|Arp)\s*\()/
+const TRACK_LINE_RE = /(?:Track\(|=\s*(?:Kick(?:808|909)?|Snare(?:909)?|HiHat(?:808)?|Synth|Sample|Theremin|Sax|Arp|SubSynth|FMSynth)\s*\()/
 
 /**
  * Returns `{ lineIndex, trackIndex }` pairs for each instrument line found in
@@ -128,6 +128,37 @@ export const getActiveLines = (
   })
 
   return result.sort((a, b) => a - b)
+}
+
+/**
+ * Returns step badge data for each instrument line — used to render `STEP/TOTAL`
+ * pills in the Monaco editor via `after` inline decorations (t219).
+ *
+ * @param code             - Raw code string from the editor.
+ * @param tracks           - Track descriptors from the last eval.
+ * @param currentStep      - Current sequencer step (zero-based).
+ * @param defaultStepCount - Fallback step count when a track has no pattern.
+ * @returns Array of `{ line, step, total }` — `line` is 1-based (Monaco convention).
+ *
+ * @example
+ * ```ts
+ * getStepBadges(code, tracks, 3, 8) // → [{ line: 5, step: 3, total: 4 }, ...]
+ * ```
+ */
+export const getStepBadges = (
+  code:             string,
+  tracks:           ReadonlyArray<TrackInfo>,
+  currentStep:      number,
+  defaultStepCount: number,
+): ReadonlyArray<{ line: number; step: number; total: number }> => {
+  if (tracks.length === 0) return []
+  const trackLines = getTrackLines(code, tracks)
+  return trackLines.map(({ lineIndex, trackIndex }) => {
+    const track = tracks[trackIndex]
+    if (!track) return null
+    const total = track.pattern.length > 0 ? track.pattern.length : defaultStepCount
+    return { line: lineIndex + 1, step: currentStep % total, total }
+  }).filter((b): b is { line: number; step: number; total: number } => b !== null)
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────

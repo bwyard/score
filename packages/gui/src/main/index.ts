@@ -19,7 +19,7 @@ import {
 import {
   euclidean, fast, slow, rev, every, degrade, shift, stack, beat, humanize,
 }                                                    from '@score/pattern'
-import type { MainToRenderer, RendererToMain }       from './ipc-types.js'
+import type { MainToRenderer, RendererToMain, PanelLayoutMap } from './ipc-types.js'
 
 // ── Default starter song ────────────────────────────────────────────────────
 // Used when entering any mode — mirrors the Live Code textarea starter.
@@ -183,6 +183,20 @@ const teardown = (): void => {
   }, 300)
 }
 
+// Panic stop — immediate all-stop without bar-boundary wait.
+// Called by Cmd/Ctrl+. global shortcut and transport:stop IPC.
+const panicStop = (): void => {
+  const slot = slotRef.value
+  if (!slot || !slot.playing) return
+  stopAnalysis()
+  pendingRef.value = null
+  try { slot.engine.stop() } catch { /* ignore */ }
+  slot.playing = false
+  slot.bars    = 0
+  pushState()
+  send('engine:pending', { pending: false })
+}
+
 const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
   teardown()
   const engine = await createScoreEngine(song)
@@ -258,14 +272,62 @@ const createWindow = (): BrowserWindow => {
   return win
 }
 
+// ── Panel layout persistence (t218) ────────────────────────────────────────────
+
+const layoutPath = (): string =>
+  path.join(app.getPath('userData'), 'panel-layout.json')
+
+const readLayout = (): PanelLayoutMap | null => {
+  try {
+    const raw = readFileSync(layoutPath(), 'utf8')
+    return JSON.parse(raw) as PanelLayoutMap
+  } catch {
+    return null
+  }
+}
+
+const writeLayout = (layout: PanelLayoutMap): void => {
+  try {
+    writeFileSync(layoutPath(), JSON.stringify(layout), 'utf8')
+  } catch (err) {
+    console.error('[score-studio] layout save failed', err)
+  }
+}
+
+// ── Process-level error handlers (t133) ────────────────────────────────────────
+// Catch unhandled exceptions and rejections in the main process — send them to
+// the renderer's console log via error:report so the native Windows crash dialog
+// never appears for script/eval errors.
+
+process.on('uncaughtException', (err: Error) => {
+  console.error('[score-studio] uncaughtException', err)
+  send('error:report', { message: `Uncaught: ${err.message}` })
+})
+
+process.on('unhandledRejection', (reason: unknown) => {
+  const message = reason instanceof Error ? reason.message : String(reason)
+  console.error('[score-studio] unhandledRejection', reason)
+  send('error:report', { message: `Unhandled rejection: ${message}` })
+})
+
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
 
 app.on('ready', () => {
-  winRef.value = createWindow()
+  const win = createWindow()
+  winRef.value = win
   // F12 toggles devtools — off by default, no auto-open
   globalShortcut.register('F12', () => {
-    const win = BrowserWindow.getFocusedWindow()
-    if (win) win.webContents.toggleDevTools()
+    const focused = BrowserWindow.getFocusedWindow()
+    if (focused) focused.webContents.toggleDevTools()
+  })
+  // t207 — panic key: Cmd/Ctrl+. = instant all-stop (no bar-boundary wait)
+  globalShortcut.register('CommandOrControl+.', () => {
+    panicStop()
+  })
+  // t218 — send saved panel layout once renderer is ready
+  win.webContents.once('did-finish-load', () => {
+    const layout = readLayout()
+    if (layout) send('layout:load', layout)
   })
 })
 
@@ -298,13 +360,7 @@ ipcMain.on('transport:play', () => {
 })
 
 ipcMain.on('transport:stop', () => {
-  const slot = slotRef.value
-  if (!slot || !slot.playing) return
-  stopAnalysis()
-  slot.engine.stop()
-  slot.playing = false
-  slot.bars    = 0
-  pushState()
+  panicStop()
 })
 
 ipcMain.on('transport:bpm-set', (_event, { bpm }: RendererToMain['transport:bpm-set']) => {
@@ -407,6 +463,11 @@ ipcMain.on('file:save', (_event, { code }: RendererToMain['file:save']) => {
       send('error:report', { message: `Save failed: ${err instanceof Error ? err.message : String(err)}` })
     }
   })
+})
+
+// BOUNDARY — IO: panel layout persistence (t218) — renderer sends positions on each panel move
+ipcMain.on('layout:save', (_event, layout: RendererToMain['layout:save']) => {
+  writeLayout(layout)
 })
 
 // BOUNDARY — IO: file open — opens native open dialog, reads song, sends to renderer

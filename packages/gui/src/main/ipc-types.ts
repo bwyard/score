@@ -14,6 +14,17 @@ export type ModeSelectedPayload = {
   readonly hardware: HardwareLevel
 }
 
+/** Persisted position and size for a single draggable panel. */
+export type PanelLayout = {
+  readonly x: number
+  readonly y: number
+  readonly w: number
+  readonly h: number
+}
+
+/** Saved layout map — keyed by panel id. */
+export type PanelLayoutMap = Record<string, PanelLayout>
+
 /** Channels from renderer → main. */
 export type RendererToMain = {
   'mode:selected':      ModeSelectedPayload
@@ -26,6 +37,8 @@ export type RendererToMain = {
   'engine:patch':       Record<string, unknown>
   'file:save':          { code: string }
   'file:open':          undefined
+  /** Renderer sends current panel positions so main can persist them to disk. */
+  'layout:save':        PanelLayoutMap
 }
 
 /** Channels from main → renderer (via ipcRenderer.on). */
@@ -49,4 +62,6 @@ export type MainToRenderer = {
    * Helps diagnose hard-onset pops, gain staging issues, and scheduling jitter.
    */
   'debug:pop':       { maxDelta: number; step: number; bars: number }
+  /** Sent by main on launch with the previously saved panel layout (if any). */
+  'layout:load':     PanelLayoutMap
 }
