@@ -274,51 +274,99 @@ export const Sax = (pitch?: string): ChainablePart =>
 // Engine falls back to Synth('sine') for all unknown instrumentType values.
 // These stubs are named anchors for the engine registry and future components.
 
-/** Soft pad voice — long attack, sustained, gentle filter. @stub */
+/**
+ * Soft pad voice — long attack, sustained, gentle filter. @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'pad'`.
+ */
 export const Pad = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'pad', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** Plucked string envelope — fast attack, fast decay. @stub */
+/**
+ * Plucked string envelope — fast attack, fast decay. @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'pluck'`.
+ */
 export const Pluck = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'pluck', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** Short stab voice — percussive attack, no sustain. @stub */
+/**
+ * Short stab voice — percussive attack, no sustain. @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'stab'`.
+ */
 export const Stab = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'stab', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** Fender Rhodes electric piano — FM voice with tine character. @stub */
+/**
+ * Fender Rhodes electric piano — FM voice with tine character. @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'rhodes'`.
+ */
 export const Rhodes = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'rhodes', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** Wurlitzer electric piano — reedy, slightly overdriven. @stub */
+/**
+ * Wurlitzer electric piano — reedy, slightly overdriven. @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'wurlitzer'`.
+ */
 export const Wurlitzer = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'wurlitzer', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** Hammond B3-style tonewheel organ. @stub */
+/**
+ * Hammond B3-style tonewheel organ. @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'hammond'`.
+ */
 export const Hammond = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'hammond', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** Hohner Clavinet — percussive clavichord, used in funk. @stub */
+/**
+ * Hohner Clavinet — percussive clavichord, used in funk. @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'clavinet'`.
+ */
 export const Clavinet = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'clavinet', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** DX7-style FM lead — bright, cutting, metallic. @stub */
+/**
+ * DX7-style FM lead — bright, cutting, metallic. @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'dx7-lead'`.
+ */
 export const DX7Lead = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'dx7-lead', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** Wavetable synth — cycle through waveform tables. @stub */
+/**
+ * Wavetable synth — cycles through waveform tables. @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'wavetable'`.
+ */
 export const WavetableSynth = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'wavetable', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** Supersaw — N detuned sawtooth oscillators (trance, big room, synthwave). @stub */
+/**
+ * Supersaw — N detuned sawtooth oscillators (trance, big room, synthwave). @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'supersaw'`.
+ */
 export const SuperSaw = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'supersaw', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** Karplus-Strong plucked string synthesis. @stub */
+/**
+ * Karplus-Strong plucked string synthesis. @stub
+ * @param pitch - Optional starting pitch, e.g. `'C4'`.
+ * @returns A `ChainablePart` for `'karplus'`.
+ */
 export const KarplusSynth = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'karplus', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
-/** Electric guitar — Karplus with pick model. @stub */
+/**
+ * Electric guitar — Karplus-Strong with pick model. @stub
+ * @param pitch - Optional starting pitch, e.g. `'E2'`.
+ * @returns A `ChainablePart` for `'guitar'`.
+ */
 export const Guitar = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'guitar', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 

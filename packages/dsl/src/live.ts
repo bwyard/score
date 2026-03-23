@@ -27,6 +27,9 @@ const dispatch = (command: string, payload: unknown): void => {
 /**
  * Set global tempo — all slots follow at next bar boundary.
  *
+ * @param n - Target BPM (positive number).
+ * @returns `void` — side-effecting dispatch to engine global state.
+ *
  * @example
  * ```ts
  * bpm(140)   // all slots change to 140 BPM
@@ -39,6 +42,9 @@ export const bpm = (n: number): void => {
 /**
  * Set global key — scale-aware parts follow at next bar boundary.
  *
+ * @param k - Key string, e.g. `'C'`, `'Am'`, `'F#m'`.
+ * @returns `void` — side-effecting dispatch to engine global state.
+ *
  * @example
  * ```ts
  * key('Am')  // all scale-aware parts shift to A minor
@@ -49,7 +55,10 @@ export const key = (k: string): void => {
 }
 
 /**
- * Set global time signature — e.g. `'4/4'`, `'7/8'`, `'3/4'`.
+ * Set global time signature.
+ *
+ * @param sig - Time signature string, e.g. `'4/4'`, `'7/8'`, `'3/4'`.
+ * @returns `void` — side-effecting dispatch to engine global state.
  *
  * @example
  * ```ts
@@ -78,7 +87,10 @@ export const groove = (g: Record<string, unknown> | string): void => {
 }
 
 /**
- * Set global swing (0–1) applied to all off-beats.
+ * Set global swing applied to all off-beats.
+ *
+ * @param amount - Swing amount 0–1. `0` = straight, `0.5` = heavy swing.
+ * @returns `void` — side-effecting dispatch to engine global state.
  *
  * @example
  * ```ts
@@ -95,6 +107,9 @@ export const swing = (amount: number): void => {
 /**
  * Set global loop length in bars.
  *
+ * @param n - Loop length in bars.
+ * @returns `void` — side-effecting dispatch to engine global state.
+ *
  * @example
  * ```ts
  * bars(32)  // loop every 32 bars
@@ -109,10 +124,13 @@ export const bars = (n: number): void => {
 /**
  * Set global stochastic seed — all stochastic parts use this seed.
  *
+ * @param n - Seed value. Any integer. Use `Date.now()` for a random seed.
+ * @returns `void` — side-effecting dispatch to engine global state.
+ *
  * @example
  * ```ts
- * seed(42)     // deterministic seed
- * seed(seed()) // new random seed (logged for replay)
+ * seed(42)          // deterministic seed
+ * seed(Date.now())  // new random seed (logged for replay)
  * ```
  */
 export const seed = (n: number): void => {
@@ -123,6 +141,9 @@ export const seed = (n: number): void => {
 
 /**
  * Set master effects chain on the main output.
+ *
+ * @param effects - Array of `EffectDescriptor` objects from `@score/effects`.
+ * @returns `void` — side-effecting dispatch to engine global state.
  *
  * @example
  * ```ts
@@ -137,15 +158,19 @@ export const master = (effects: EffectDescriptor[]): void => {
 // ── Monitoring ────────────────────────────────────────────────────────────────
 
 /**
- * Toggle metronome click.
+ * Toggle metronome click on/off.
+ *
+ * @returns `void` — side-effecting dispatch to engine global state.
  */
 export const click = (): void => {
   dispatch('click', true)
 }
 
 /**
- * Enable session seed logging — all seeds stored with timestamps.
+ * Enable session seed logging — all seeds stored with timestamps for replay.
  * Session file: `.score/sessions/YYYY-MM-DDTHH-MM.seeds.json`.
+ *
+ * @returns `void` — side-effecting dispatch to engine global state.
  */
 export const logSeeds = (): void => {
   dispatch('logSeeds', true)
