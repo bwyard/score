@@ -1,49 +1,120 @@
 import { describe, it, expect } from 'vitest'
-import { Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp } from '../src/instruments.js'
+import { Kick, Snare, HiHat } from '../src/instruments.js'
+import { Synth, SubSynth, FMSynth, Bass303, Arp, Sample, Theremin, Sax } from '../src/melodic.js'
 
 describe('Arp', () => {
-  it('returns an InstrumentDescriptor with instrumentType arp', () => {
-    const arp = Arp({ notes: ['C4', 'E4', 'G4'] })
-    expect(arp._type).toBe('InstrumentDescriptor')
+  it('returns a ChainablePart with instrumentType arp', () => {
+    const arp = Arp(['C4', 'E4', 'G4'])
+    expect(arp._type).toBe('ChainablePart')
     expect(arp.instrumentType).toBe('arp')
   })
 
-  it('stores notes in props', () => {
-    const arp = Arp({ notes: ['A3', 'C4', 'E4'] })
+  it('stores notes in _notes and props', () => {
+    const arp = Arp(['A3', 'C4', 'E4'])
+    expect(arp._notes).toEqual(['A3', 'C4', 'E4'])
     const props = arp.props as { notes: string[] }
     expect(props.notes).toEqual(['A3', 'C4', 'E4'])
   })
 
-  it('stores optional mode, wave, gain in props', () => {
-    const arp = Arp({ notes: ['C4'], mode: 'down', wave: 'sawtooth', gain: 0.5 })
-    const props = arp.props as { mode: string; wave: string; gain: number }
-    expect(props.mode).toBe('down')
-    expect(props.wave).toBe('sawtooth')
-    expect(props.gain).toBe(0.5)
-  })
-
   it('has a unique id per instance', () => {
-    const a = Arp({ notes: ['C4'] })
-    const b = Arp({ notes: ['C4'] })
+    const a = Arp(['C4'])
+    const b = Arp(['C4'])
     expect(a.id).not.toBe(b.id)
   })
 
   it('has no-op connect/disconnect/dispose', () => {
-    const arp = Arp({ notes: ['C4'] })
+    const arp = Arp(['C4'])
     expect(() => { arp.connect({} as never) }).not.toThrow()
     expect(() => { arp.disconnect() }).not.toThrow()
     expect(() => { arp.dispose() }).not.toThrow()
   })
 
-  it('stores envelope in props', () => {
-    const env = { attack: 0.01, decay: 0.1, sustain: 0.6, release: 0.05 }
-    const arp = Arp({ notes: ['C4'], envelope: env })
-    const props = arp.props as { envelope: typeof env }
-    expect(props.envelope).toEqual(env)
+  it('chain methods work — notes via .notes()', () => {
+    const arp = Arp(['C4']).notes(['C4', 'E4', 'G4']).volume(0.5)
+    expect(arp._notes).toEqual(['C4', 'E4', 'G4'])
+    expect(arp._volume).toBe(0.5)
   })
 })
 
-describe('existing instrument factories still work after type extension', () => {
+describe('melodic factories return ChainablePart', () => {
+  it('Synth returns synth descriptor', () => {
+    const s = Synth()
+    expect(s._type).toBe('ChainablePart')
+    expect(s.instrumentType).toBe('synth')
+  })
+
+  it('Synth accepts wave and pitch', () => {
+    const s = Synth('square', 'C3')
+    expect(s.props).toMatchObject({ wave: 'square' })
+    expect(s._notes).toEqual(['C3'])
+  })
+
+  it('SubSynth returns sub-synth descriptor with unison/detune extras', () => {
+    const s = SubSynth('C2')
+    expect(s.instrumentType).toBe('sub-synth')
+    expect(s._notes).toEqual(['C2'])
+    expect(typeof s.unison).toBe('function')
+    expect(typeof s.detune).toBe('function')
+  })
+
+  it('SubSynth.unison() and .detune() store in props', () => {
+    const s = SubSynth().unison(2).detune(12)
+    expect((s.props).unison).toBe(2)
+    expect((s.props).detune).toBe(12)
+  })
+
+  it('FMSynth returns fm-synth descriptor with ratio/modIndex/feedback extras', () => {
+    const s = FMSynth('A3')
+    expect(s.instrumentType).toBe('fm-synth')
+    expect(typeof s.ratio).toBe('function')
+    expect(typeof s.modIndex).toBe('function')
+    expect(typeof s.feedback).toBe('function')
+  })
+
+  it('FMSynth.ratio().modIndex() chain stores in props', () => {
+    const s = FMSynth().ratio(1.273).modIndex(3).feedback(0.2)
+    expect((s.props).modRatio).toBe(1.273)
+    expect((s.props).modIndex).toBe(3)
+    expect((s.props).feedback).toBe(0.2)
+  })
+
+  it('Bass303 returns bass-303 descriptor with cutoff/resonance/accent/slide extras', () => {
+    const b = Bass303('C2')
+    expect(b.instrumentType).toBe('bass-303')
+    expect(typeof b.cutoff).toBe('function')
+    expect(typeof b.resonance).toBe('function')
+    expect(typeof b.accent).toBe('function')
+    expect(typeof b.slide).toBe('function')
+  })
+
+  it('Bass303 chain stores in props', () => {
+    const b = Bass303().cutoff(600).resonance(2.0).accent([0, 4]).slide([1])
+    const p = b.props
+    expect(p.cutoff).toBe(600)
+    expect(p.resonance).toBe(2.0)
+    expect(p.accentSteps).toEqual([0, 4])
+    expect(p.slideSteps).toEqual([1])
+  })
+
+  it('Sample returns sample descriptor', () => {
+    const s = Sample('./kick.wav')
+    expect(s._type).toBe('ChainablePart')
+    expect(s.instrumentType).toBe('sample')
+    expect((s.props).path).toBe('./kick.wav')
+  })
+
+  it('Theremin returns theremin descriptor', () => {
+    expect(Theremin().instrumentType).toBe('theremin')
+    expect(Theremin('A4')._notes).toEqual(['A4'])
+  })
+
+  it('Sax returns sax descriptor', () => {
+    expect(Sax().instrumentType).toBe('sax')
+    expect(Sax('A4')._notes).toEqual(['A4'])
+  })
+})
+
+describe('percussion factories return InstrumentDescriptor', () => {
   it('Kick returns kick descriptor', () => {
     expect(Kick().instrumentType).toBe('kick')
   })
@@ -54,21 +125,5 @@ describe('existing instrument factories still work after type extension', () => 
 
   it('HiHat returns hihat descriptor', () => {
     expect(HiHat().instrumentType).toBe('hihat')
-  })
-
-  it('Synth returns synth descriptor', () => {
-    expect(Synth().instrumentType).toBe('synth')
-  })
-
-  it('Sample returns sample descriptor', () => {
-    expect(Sample({ path: './kick.wav' }).instrumentType).toBe('sample')
-  })
-
-  it('Theremin returns theremin descriptor', () => {
-    expect(Theremin().instrumentType).toBe('theremin')
-  })
-
-  it('Sax returns sax descriptor', () => {
-    expect(Sax().instrumentType).toBe('sax')
   })
 })
