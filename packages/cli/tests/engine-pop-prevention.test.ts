@@ -20,9 +20,10 @@ import type { KickProps, SnareProps, HiHatProps, SynthDSLProps } from '@score/ds
 type Ctx     = ReturnType<typeof webAudioBackend.createContext>
 type GainN   = ReturnType<Ctx['createGain']>
 
-/** Create a real audio context and intercept createGain to record init values. */
+/** Create an offline audio context and intercept createGain to record init values.
+ *  Uses offline mode so no real audio hardware is required in CI environments. */
 const withGainSpy = (fn: (ctx: Ctx, dest: GainN, initGains: () => number[]) => void): void => {
-  const ctx  = webAudioBackend.createContext()
+  const ctx  = webAudioBackend.createContext({ offline: { length: 44100 } })
   const log: number[] = []
 
   const original = ctx.createGain.bind(ctx)

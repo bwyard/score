@@ -1,12 +1,22 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import { createScoreEngine } from '../src/engine.js'
+import { webAudioBackend } from '@score/core'
 import { Song, Track, Kick, Synth, Arp } from '@score/dsl'
 import { Reverb, Delay } from '@score/effects'
 
 // This test verifies that the engine boots without throwing when effects are
-// present in the song. It exercises the real node-web-audio-api audio graph
-// — specifically the fix for the createEffectsChain BackendNode cast bug.
-// Run at the CLI level (not jsdom) so the real WebAudio path executes.
+// present in the song. It uses an offline AudioContext so no audio hardware
+// is required — safe to run in CI environments without ALSA/JACK.
+
+// Redirect createContext to offline mode so node-web-audio-api does not try
+// to open ALSA/JACK device drivers (unavailable on GitHub Actions runners).
+const _realCreateContext = webAudioBackend.createContext.bind(webAudioBackend)
+beforeAll(() => {
+  vi.spyOn(webAudioBackend, 'createContext').mockImplementation(
+    () => _realCreateContext({ offline: { length: 44100 } }),
+  )
+})
+afterAll(() => { vi.restoreAllMocks() })
 
 describe('engine — effects chain integration', () => {
   it('boots without error when Synth has Reverb effect', async () => {
