@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import { createScoreEngine } from '../src/engine.js'
 import { webAudioBackend } from '@score/core'
-import { Song, Track, Kick, Snare, HiHat, createPart } from '@score/dsl'
+import { Song, Track, createPart } from '@score/dsl'
 
 // Verify that the engine correctly hydrates PartDescriptor (chain API) tracks.
 // Chain API instruments return PartDescriptor (_type: 'ChainablePart').
@@ -62,13 +62,13 @@ describe('engine — chain API hydration', () => {
     await expect(createScoreEngine(song)).resolves.toBeDefined()
   })
 
-  it('boots with a mixed song — InstrumentDescriptor + PartDescriptor tracks', async () => {
+  it('boots with multiple PartDescriptor tracks', async () => {
     const song = Song({
       bpm: 128,
       tracks: [
-        Track(Kick({ pattern: [1, 0, 0, 0, 1, 0, 0, 0], volume: 0.9 })), // InstrumentDescriptor
-        Track(chainSynth),                                                   // PartDescriptor
-        Track(chainSnare),                                                   // PartDescriptor
+        Track(chainKick),
+        Track(chainSynth),
+        Track(chainSnare),
       ],
     })
     await expect(createScoreEngine(song)).resolves.toBeDefined()
@@ -84,12 +84,13 @@ describe('engine — chain API hydration', () => {
   })
 
   it('update() does not throw with PartDescriptor tracks', async () => {
+    const chainHiHat = createPart({ instrumentType: 'hihat', _pattern: [1, 1, 1, 1], _volume: 0.4, props: {} })
     const song = Song({
       bpm: 120,
       tracks: [
-        Track(Kick({ pattern: [1, 0, 0, 0], volume: 0.8 })),
-        Track(Snare({ pattern: [0, 0, 1, 0], volume: 0.7 })),
-        Track(HiHat({ pattern: [1, 1, 1, 1], volume: 0.4 })),
+        Track(chainKick),
+        Track(chainSnare),
+        Track(chainHiHat),
         Track(chainSynth),
       ],
     })
@@ -97,9 +98,9 @@ describe('engine — chain API hydration', () => {
     const nextSong = Song({
       bpm: 130,
       tracks: [
-        Track(Kick({ pattern: [1, 0, 0, 0], volume: 0.8 })),
-        Track(Snare({ pattern: [0, 0, 1, 0], volume: 0.7 })),
-        Track(HiHat({ pattern: [1, 1, 1, 1], volume: 0.4 })),
+        Track(chainKick),
+        Track(chainSnare),
+        Track(chainHiHat),
         Track(chainSynth),
       ],
     })

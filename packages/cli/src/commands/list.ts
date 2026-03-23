@@ -6,10 +6,20 @@ import { resolve } from 'node:path'
 import { existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { ScoreError } from '@score/core'
-import type { SongDefinition, InstrumentDescriptor } from '@score/dsl'
+import type { SongDefinition, InstrumentDescriptor, PartDescriptor } from '@score/dsl'
 import { validateSongFile } from '../validator/SongValidator.js'
 import { validateSongExport } from '../validator/SongExportValidator.js'
-import { isInstrumentDescriptor } from '../engine.js'
+import { isInstrumentDescriptor, isPartDescriptor } from '../engine.js'
+
+/** Normalize a track component to something with instrumentType + props, or null. */
+const resolveDescriptor = (track: unknown): (InstrumentDescriptor | PartDescriptor) | null => {
+  if (isInstrumentDescriptor(track)) return track
+  if (isPartDescriptor(track)) return track
+  const comp = (track as Record<string, unknown>)['component']
+  if (isInstrumentDescriptor(comp)) return comp
+  if (isPartDescriptor(comp)) return comp
+  return null
+}
 import { parseFlags } from '../flags.js'
 
 const CYAN  = '\x1b[36m'
@@ -104,9 +114,9 @@ export const list = async (args: string[]): Promise<void> => {
     header('Arrangement')
     song.arrangement.forEach(section => {
       const trackNames = section.tracks
-        .map(t => isInstrumentDescriptor(t) ? t : t.component)
-        .filter(isInstrumentDescriptor)
-        .map((d: InstrumentDescriptor) => d.instrumentType)
+        .map(resolveDescriptor)
+        .filter((d): d is InstrumentDescriptor | PartDescriptor => d !== null)
+        .map(d => d.instrumentType)
         .join(', ')
       console.log(`  ${DIM}${section.sectionType.padEnd(10)}${RESET}${String(section.bars).padEnd(4)} bars  ${DIM}[${trackNames}]${RESET}`)
     })
@@ -115,9 +125,7 @@ export const list = async (args: string[]): Promise<void> => {
   // ── Tracks ────────────────────────────────────────────────────────────────
   header('Tracks')
   song.tracks.forEach((track, i) => {
-    const desc: InstrumentDescriptor | null = isInstrumentDescriptor(track)
-      ? track
-      : (isInstrumentDescriptor(track.component) ? track.component : null)
+    const desc = resolveDescriptor(track)
     if (!desc) return
 
     const props = desc.props as Record<string, unknown>
