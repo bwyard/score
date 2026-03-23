@@ -289,10 +289,15 @@ export const patchAddInstrument = (
     ? trimmed.slice(lastCommaOrBracket + 1).match(/^\s*/)?.[0] ?? '  '
     : ' '
 
-  // Build the replacement: append varName with matching style
-  const hasNewlines = inner.includes('\n')
+  // Build the replacement: append varName with matching style.
+  // If existing entries already use trailing commas (e.g. `bass,\n`) avoid
+  // adding a second comma; also add a trailing comma to varName for consistency.
+  const hasNewlines    = inner.includes('\n')
+  const trailingComma  = trimmed.endsWith(',')
   const newInner = hasNewlines
-    ? `${trimmed},\n${indent}${varName}\n`
+    ? trailingComma
+      ? `${trimmed}\n${indent}${varName},\n`
+      : `${trimmed},\n${indent}${varName}\n`
     : `${trimmed}, ${varName}`
 
   const matchStart = tracksMatch.index + tracksMatch[0].indexOf('[') + 1
