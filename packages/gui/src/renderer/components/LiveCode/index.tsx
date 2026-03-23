@@ -20,7 +20,8 @@ import { EvalStatus }                       from '../status/index.js'
 import type { EvalStatusKind }             from '../status/EvalStatus.js'
 import { BarCounter }                       from '../status/index.js'
 import { PendingSwapBadge }                 from '../status/index.js'
-import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote } from '../../lib/codePatcher.js'
+import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod } from '../../lib/codePatcher.js'
+import { InstrumentPanel } from '../shared/InstrumentPanel.js'
 import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
 import type { PanelLayoutMap }            from '../../../main/ipc-types.js'
 
@@ -133,9 +134,13 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [pianoNotes,  setPianoNotes]  = useState<ReadonlyArray<PianoRollNote>>([])
   // t220 — import visibility toggle (stub: fold/unfold in Monaco; auto-inject deferred for DSL chain API)
   const [importsVisible, setImportsVisible] = useState(true)
+  // Instrument panel — which track is currently selected (null = none)
+  const [selectedTrack, setSelectedTrack] = useState<number | null>(null)
   // Set to true when the user clicks play before eval — song:update handler will
   // fire transport:play once the eval succeeds (eval-then-play flow).
-  const autoPlayRef   = useRef(false)
+  const autoPlayRef      = useRef(false)
+  // Debounce timer for re-eval after instrument param changes
+  const evalDebounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // t218 — panel layout persistence
   const [savedLayout, setSavedLayout] = useState<PanelLayoutMap>({})
@@ -354,6 +359,29 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     setStripStates(prev => updateStrip(prev, index, { muted: mute }))
     window.scoreBridge.send('engine:patch', { tracks: [{ index, mute }] })
   }, [stripStates])
+
+  /**
+   * Optimistic UI: patch code immediately, then re-eval after 300ms idle.
+   * Prevents 60fps re-evals during slider drag while keeping the editor in sync.
+   */
+  const onInstrumentChange = useCallback((trackIndex: number, method: string, value: number | string): void => {
+    setCode(prev => patchChainMethod(prev, trackIndex, method, value))
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null)
+      setEvalStatus('pending')
+      addLog('info', 'Evaluating…')
+      // Read latest code via functional setCode to avoid stale closure
+      setCode(latest => {
+        window.scoreBridge.send('engine:eval', { code: latest })
+        return latest
+      })
+    }, 300)
+  }, [addLog])
+
+  const onInstrumentMute = useCallback((trackIndex: number): void => {
+    onMixerMute(trackIndex)
+  }, [onMixerMute])
 
   const onBpmChange = useCallback((bpm: number): void => {
     setCode(prev => patchBpm(prev, bpm))
@@ -622,21 +650,38 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
             >
               <div style={styles.mixerInner}>
                 {tracks.map((track, i) => (
-                  <MixerStrip
+                  <div
                     key={`${track.name}-${String(i)}`}
-                    name={track.name}
-                    type={track.type}
-                    volume={stripStates[i]?.volume ?? 1}
-                    muted={stripStates[i]?.muted ?? false}
-                    level={0}
-                    onVolume={v => { onMixerVolume(i, v) }}
-                    onMute={() => { onMixerMute(i) }}
-                  />
+                    style={{ outline: selectedTrack === i ? '1px solid #4a8fff' : 'none', cursor: 'pointer' }}
+                    onClick={() => { setSelectedTrack(prev => prev === i ? null : i) }}
+                    aria-label={`Select ${track.name} track`}
+                  >
+                    <MixerStrip
+                      name={track.name}
+                      type={track.type}
+                      volume={stripStates[i]?.volume ?? 1}
+                      muted={stripStates[i]?.muted ?? false}
+                      level={0}
+                      onVolume={v => { onMixerVolume(i, v) }}
+                      onMute={() => { onMixerMute(i) }}
+                    />
+                  </div>
                 ))}
                 {tracks.length === 0 && (
                   <span style={styles.mixerEmpty}>No tracks — eval a song first</span>
                 )}
               </div>
+              {selectedTrack !== null && tracks[selectedTrack] !== undefined && (
+                <InstrumentPanel
+                  trackIndex={selectedTrack}
+                  instrumentType={tracks[selectedTrack]!.type}
+                  trackName={tracks[selectedTrack]!.name}
+                  params={{ volume: stripStates[selectedTrack]?.volume ?? 1 }}
+                  muted={stripStates[selectedTrack]?.muted ?? false}
+                  onChange={(method: string, value: number | string) => { onInstrumentChange(selectedTrack, method, value) }}
+                  onMute={() => { onInstrumentMute(selectedTrack) }}
+                />
+              )}
             </DraggablePanel>
           )}
 
