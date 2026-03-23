@@ -40,11 +40,11 @@ type PanelVisibility = {
 
 // ── Starter template ───────────────────────────────────────────────────────────
 
-const STARTER = `import { Song, Kick, Snare, HiHat, Synth, Arp } from '@score/dsl'
+const STARTER = `import { Song, Kick808, Snare, HiHat, Synth, Arp } from '@score/dsl'
 import { Reverb, Delay, Saturation, AutoPan } from '@score/effects'
 import { euclidean } from '@score/pattern'
 
-const kick  = Kick({  pattern: euclidean(4, 8), volume: 0.6 })
+const kick  = Kick808({  pattern: euclidean(4, 8), volume: 0.6 })
 const snare = Snare({ pattern: euclidean(2, 8, 4), volume: 0.55 })
 const hihat = HiHat({ pattern: euclidean(8, 8), volume: 0.25 })
 

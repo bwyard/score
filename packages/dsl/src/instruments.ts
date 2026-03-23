@@ -6,7 +6,7 @@
 
 import type { BackendNode } from '@score/core'
 import { uid } from '@score/core'
-import type { InstrumentDescriptor, KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps } from './types.js'
+import type { InstrumentDescriptor, KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps, Kick808DSLProps, Kick909DSLProps, Hihat808DSLProps, Snare909DSLProps, SubSynthDSLProps } from './types.js'
 
 const makeDescriptor = (
   instrumentType: InstrumentDescriptor['instrumentType'],
@@ -201,3 +201,84 @@ export const Sax      = (props?: SaxDSLProps):      InstrumentDescriptor => make
  * ```
  */
 export const Arp = (props: ArpDSLProps): InstrumentDescriptor => makeDescriptor('arp', props)
+
+/**
+ * Create a Kick808 instrument descriptor — synthesized 808-style kick drum.
+ * Pure sine oscillator with pitch envelope and amplitude decay. No samples needed.
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * @param props - Kick808 configuration: pattern, volume, startFreq, endFreq, pitchFall, decay, effects.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'kick808'`.
+ *
+ * @example
+ * ```ts
+ * const kick = Kick808({ pattern: [1,0,0,0, 1,0,0,0], decay: 0.7 })
+ * ```
+ */
+export const Kick808 = (props?: Kick808DSLProps): InstrumentDescriptor => makeDescriptor('kick808', props ?? {})
+
+/**
+ * Create a Kick909 instrument descriptor — synthesized 909-style kick drum.
+ * Extends Kick808 with a short noise click transient for added punch.
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * @param props - Kick909 configuration: all Kick808 props plus clickLevel, clickDecay.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'kick909'`.
+ *
+ * @example
+ * ```ts
+ * const kick = Kick909({ pattern: [1,0,0,0, 1,0,0,0], clickLevel: 0.25 })
+ * ```
+ */
+export const Kick909 = (props?: Kick909DSLProps): InstrumentDescriptor => makeDescriptor('kick909', props ?? {})
+
+/**
+ * Create a Hihat808 instrument descriptor — synthesized 808-style hi-hat.
+ * Six detuned square oscillators through bandpass + HPF filtering.
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * @param props - Hihat808 configuration: pattern, volume, decay, open, effects.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'hihat808'`.
+ *
+ * @example
+ * ```ts
+ * const hat = Hihat808({ pattern: [1,0,1,0, 1,0,1,0], open: false })
+ * const openHat = Hihat808({ pattern: [0,0,0,0, 0,0,0,1], open: true, decay: 0.4 })
+ * ```
+ */
+export const Hihat808 = (props?: Hihat808DSLProps): InstrumentDescriptor => makeDescriptor('hihat808', props ?? {})
+
+/**
+ * Create a Snare909 instrument descriptor — synthesized 909-style snare.
+ * Two triangle oscillators (tone body) mixed with filtered white noise (snap/sizzle).
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * @param props - Snare909 configuration: pattern, volume, toneDecay, noiseDecay, toneNoiseRatio, effects.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'snare909'`.
+ *
+ * @example
+ * ```ts
+ * const snare = Snare909({ pattern: [0,0,1,0, 0,0,1,0], toneDecay: 0.2 })
+ * ```
+ */
+export const Snare909 = (props?: Snare909DSLProps): InstrumentDescriptor => makeDescriptor('snare909', props ?? {})
+
+/**
+ * Create a SubSynth instrument descriptor — subtractive synthesis voice.
+ * Oscillator (saw/square) → resonant filter → ADSR VCA.
+ * Returns pure data — the engine hydrates it into audio at play time.
+ *
+ * @param props - SubSynth configuration: wave, frequency, filter, adsr, pattern, volume, effects.
+ * @returns An {@link InstrumentDescriptor} with `instrumentType: 'subsynth'`.
+ *
+ * @example
+ * ```ts
+ * const bass = SubSynth({
+ *   wave: 'sawtooth',
+ *   frequency: 110,
+ *   filter: { type: 'lowpass', frequency: 800, Q: 4 },
+ *   adsr: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.4 },
+ * })
+ * ```
+ */
+export const SubSynth = (props?: SubSynthDSLProps): InstrumentDescriptor => makeDescriptor('subsynth', props ?? {})
