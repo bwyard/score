@@ -24,6 +24,12 @@ Intended for sketching in Excalidraw before implementation.
 | Spectrum | [components/spectrum.md](components/spectrum.md) |
 | Piano Roll | [components/piano-roll.md](components/piano-roll.md) |
 
+## Design Principles
+
+| Doc | Summary |
+|---|---|
+| [design-principles.md](design-principles.md) | Core principles governing all four modes |
+
 ## Layout Principles
 
 - All panels are draggable and resizable (t146)
