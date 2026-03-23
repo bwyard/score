@@ -96,6 +96,7 @@ export const createMockOscillatorNode = (): MockBackendOscillatorNode => {
     stop: (time?: number) => { stopCalls.push({ time }) },
     setFrequency: (_value: number, _time?: number) => {},
     setDetune: (_value: number, _time?: number) => {},
+    schedulePitchEnvelope: (_opts: { startFreq: number; endFreq: number; startTime: number; fallTime: number }) => {},
   }
 }
 
