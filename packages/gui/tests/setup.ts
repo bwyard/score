@@ -40,6 +40,11 @@ globalThis.ResizeObserver = class {
   disconnect() {}
 }
 
+// ── scrollIntoView stub ───────────────────────────────────────────────────────
+// jsdom does not implement scrollIntoView. Stub it so ConsoleLog auto-scroll
+// does not throw "scrollIntoView is not a function" in tests.
+window.HTMLElement.prototype.scrollIntoView = vi.fn()
+
 // ── Electron IPC bridge mock ───────────────────────────────────────────────────
 // window.scoreBridge is injected by the Electron preload in production.
 // In jsdom tests we provide a mock so components can be tested in isolation.
