@@ -6,6 +6,7 @@
 
 | Doc | What it answers |
 |-----|-----------------|
+| [ROADMAP.md](./ROADMAP.md) | Current milestones, ecosystem architecture, all key decisions, release model |
 | [THESIS_COMPLIANCE.md](./THESIS_COMPLIANCE.md) | What "pure functional" means per layer, what is exempt, what is never allowed |
 | [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) | Per-package testing approach, pyramid, E2E roadmap |
 | [DEVELOPMENT_STRATEGY.md](./DEVELOPMENT_STRATEGY.md) | Phase ownership, what ships now, what is stubbed, what is post-Friday |
