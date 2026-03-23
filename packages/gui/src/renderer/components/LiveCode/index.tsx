@@ -44,27 +44,12 @@ type PanelVisibility = {
 // ── Starter template ───────────────────────────────────────────────────────────
 
 const STARTER = `import { Song, Kick808, Snare, HiHat, Synth, Arp } from '@score/dsl'
-import { Reverb, Delay, Saturation, AutoPan } from '@score/effects'
-import { euclidean } from '@score/pattern'
 
-const kick  = Kick808({  pattern: euclidean(4, 8), volume: 0.6 })
-const snare = Snare({ pattern: euclidean(2, 8, 4), volume: 0.55 })
-const hihat = HiHat({ pattern: euclidean(8, 8), volume: 0.25 })
-
-const bass = Synth({
-  wave: 'sawtooth', frequency: 65.41,
-  pattern: [1, 0, 1, 0, 0, 1, 0, 0],
-  filter:  { type: 'lowpass', frequency: 400 },
-  effects: [Saturation({ drive: 0.3, mix: 0.5 }), Reverb({ decay: 1.5, mix: 0.2 })],
-  gain: 0.45,
-})
-
-const lead = Arp({
-  notes: ['C3', 'E3', 'G3', 'B3'],
-  mode: 'up', rate: 2, wave: 'triangle', gain: 0.3,
-  envelope: { attack: 0.005, decay: 0.06, sustain: 0.3, release: 0.03 },
-  effects: [Delay({ time: 0.25, feedback: 0.35, mix: 0.3 }), AutoPan({ rate: 0.5, depth: 0.6 })],
-})
+const kick  = Kick808().pattern([1,0,0,0,1,0,0,0]).volume(0.6)
+const snare = Snare().pattern([0,0,0,0,1,0,0,0]).volume(0.55)
+const hihat = HiHat().pattern([1,1,1,1,1,1,1,1]).volume(0.25)
+const bass  = Synth().wave('sawtooth').note('C2').pattern([1,0,1,0,0,1,0,0]).reverb(0.2).volume(0.45)
+const lead  = Arp(['C3','E3','G3','B3']).rate(2).delay('1/8', 0.35).volume(0.3)
 
 export default Song({ bpm: 120, tracks: [kick, snare, hihat, bass, lead] })`
 
