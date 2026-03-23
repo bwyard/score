@@ -31,10 +31,7 @@ import type { MainToRenderer, RendererToMain, PanelLayoutMap } from './ipc-types
 const defaultSong = (): SongDefinition => Song({
   bpm:    128,
   tracks: [
-    Track(Kick({
-      pattern: [1, 0, 0, 0, 1, 0, 0, 0],
-      volume:  0.9,
-    })),
+    Track(Kick(4).volume(0.9)),
     Track(Synth({
       wave:      'sawtooth',
       frequency: 65.41,

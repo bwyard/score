@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import { createScoreEngine } from '../src/engine.js'
 import { webAudioBackend } from '@score/core'
-import { Song, Track, Kick, Synth, Arp } from '@score/dsl'
+import { Song, Track, Synth, Arp, createPart } from '@score/dsl'
 import { Reverb, Delay } from '@score/effects'
 
 // This test verifies that the engine boots without throwing when effects are
@@ -52,7 +52,7 @@ describe('engine — effects chain integration', () => {
     const song = Song({
       bpm: 128,
       tracks: [
-        Track(Kick({ pattern: [1, 0, 0, 0, 1, 0, 0, 0], volume: 0.9 })),
+        Track(createPart({ instrumentType: 'kick', _pattern: [1, 0, 0, 0, 1, 0, 0, 0], _volume: 0.9, props: {} })),
         Track(Synth({
           wave: 'sawtooth', frequency: 65.41,
           pattern: [1, 0, 1, 0, 0, 1, 0, 0],
