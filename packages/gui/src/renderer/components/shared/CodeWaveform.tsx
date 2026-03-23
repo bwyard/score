@@ -43,7 +43,7 @@ const drawBeatViz = (
       width / 2, height / 2, 0,
       width / 2, height / 2, width * 0.7,
     )
-    gradient.addColorStop(0, `rgba(74, 143, 255, ${intensity * 0.06})`)
+    gradient.addColorStop(0, `rgba(74, 143, 255, ${String(intensity * 0.06)})`)
     gradient.addColorStop(1, 'rgba(74, 143, 255, 0)')
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, width, height)
@@ -89,7 +89,7 @@ export const CodeWaveform = ({ waveform, playing, currentStep, stepCount }: Prop
     const canvas = canvasRef.current
     if (canvas === null) return
 
-    const dpr    = window.devicePixelRatio ?? 1
+    const dpr    = window.devicePixelRatio
     const width  = canvas.clientWidth
     const height = canvas.clientHeight
 

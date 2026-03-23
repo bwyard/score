@@ -14,10 +14,10 @@ type Props = {
 
 const relativeTime = (timestamp: number): string => {
   const secs = Math.floor((Date.now() - timestamp) / 1000)
-  if (secs < 60)   return `${secs}s ago`
+  if (secs < 60)   return `${String(secs)}s ago`
   const mins = Math.floor(secs / 60)
-  if (mins < 60)   return `${mins}m ago`
-  return `${Math.floor(mins / 60)}h ago`
+  if (mins < 60)   return `${String(mins)}m ago`
+  return `${String(Math.floor(mins / 60))}h ago`
 }
 
 // ── Dot colors per status ──────────────────────────────────────────────────────

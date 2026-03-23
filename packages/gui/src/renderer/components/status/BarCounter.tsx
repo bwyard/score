@@ -19,7 +19,7 @@ const BeatClock = ({ step, stepCount }: { step: number; stepCount: number }) => 
   const currentSixteenth = step % 4                     // 0-based 16th within beat
 
   return (
-    <span style={styles.beatClock} aria-label={`Beat ${currentBeat + 1} of ${beatsInPattern}`}>
+    <span style={styles.beatClock} aria-label={`Beat ${String(currentBeat + 1)} of ${String(beatsInPattern)}`}>
       {Array.from({ length: beatsInPattern }, (_, b) => {
         const isBeat = b === currentBeat
         return (
@@ -70,7 +70,7 @@ export const BarCounter = ({ bars, step, stepCount, bpm, playing }: Props) => {
       <span style={styles.segment}>
         <span style={styles.dimLabel}>BEAT</span>
         <span style={styles.bigNum}>
-          {playing ? `${beatNum}/${beatsTotal}` : '—'}
+          {playing ? `${String(beatNum)}/${String(beatsTotal)}` : '—'}
         </span>
       </span>
       <span style={styles.separator} aria-hidden="true">·</span>

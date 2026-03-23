@@ -211,7 +211,7 @@ export const PianoRoll = ({
     const canvas = canvasRef.current
     if (canvas === null) return
 
-    const dpr    = window.devicePixelRatio ?? 1
+    const dpr    = window.devicePixelRatio
     const width  = canvas.clientWidth
     const height = canvas.clientHeight
 
@@ -257,7 +257,7 @@ export const PianoRoll = ({
       onClick={onNoteClick ? handleClick : undefined}
       style={{
         width:          '100%',
-        height:         `${canvasHeight}px`,
+        height:         `${String(canvasHeight)}px`,
         display:        'block',
         imageRendering: 'pixelated',
         cursor:         onNoteClick ? 'pointer' : 'default',

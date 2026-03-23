@@ -14,7 +14,7 @@ const drawScope = (
   waveform: readonly number[],
   playing:  boolean,
 ): void => {
-  const dpr = window.devicePixelRatio ?? 1
+  const dpr = window.devicePixelRatio
   const rect = canvas.getBoundingClientRect()
   const w    = rect.width
   const h    = rect.height
@@ -129,7 +129,6 @@ export const Scope = ({ waveform, playing }: Props) => {
     return () => { observer.disconnect() }
   // waveform and playing are intentionally excluded — the waveform effect handles those.
   // The ResizeObserver only needs to redraw with whatever the current values are.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

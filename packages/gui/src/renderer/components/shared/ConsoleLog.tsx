@@ -62,7 +62,7 @@ export const ConsoleLog = ({ entries }: Props) => {
 
   // Auto-scroll to bottom on new entries
   useEffect(() => {
-    bottomRef.current?.scrollIntoView?.({ behavior: 'smooth' })
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [entries])
 
   return (

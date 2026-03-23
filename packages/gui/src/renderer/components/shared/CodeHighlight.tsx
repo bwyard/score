@@ -176,7 +176,7 @@ export const CodeHighlight = ({ code, tracks, currentStep, playing, scrollTop }:
   return (
     <div aria-hidden="true" style={styles.overlay}>
       {/* Translate inner content by -scrollTop to stay glued to code lines */}
-      <div style={{ transform: `translateY(-${scrollTop}px)` }}>
+      <div style={{ transform: `translateY(-${String(scrollTop)}px)` }}>
       {lines.map((_, idx) => {
         const isActive = activeLines.includes(idx)
         const trackIdx = lineToTrack.get(idx)
@@ -186,13 +186,11 @@ export const CodeHighlight = ({ code, tracks, currentStep, playing, scrollTop }:
           return <div key={idx} style={styles.line} />
         }
 
-        const track    = hasBar ? tracks[trackIdx!] : undefined
+        const track    = trackIdx !== undefined ? tracks[trackIdx] : undefined
         const patLen   = track ? Math.max(track.pattern.length, 1) : 1
-        const progress = hasBar
-          ? (currentStep % patLen) / patLen
-          : 0
+        const progress = hasBar ? (currentStep % patLen) / patLen : 0
         const color    = hasBar
-          ? (TRACK_COLORS[tracks[trackIdx!]!.type] ?? TRACK_COLOR_DEFAULT)
+          ? (TRACK_COLORS[track?.type ?? ''] ?? TRACK_COLOR_DEFAULT)
           : TRACK_COLOR_DEFAULT
 
         return (
@@ -206,7 +204,7 @@ export const CodeHighlight = ({ code, tracks, currentStep, playing, scrollTop }:
                 <div style={{
                   position:   'absolute',
                   top: 0, left: 0, bottom: 0,
-                  width:      `${progress * 100}%`,
+                  width:      `${String(progress * 100)}%`,
                   background: color,
                   opacity:    isActive ? 0.22 : 0.07,
                   transition: 'width 0.05s linear, opacity 0.05s',
@@ -216,7 +214,7 @@ export const CodeHighlight = ({ code, tracks, currentStep, playing, scrollTop }:
                 <div style={{
                   position:   'absolute',
                   top: 0, bottom: 0,
-                  left:       `${progress * 100}%`,
+                  left:       `${String(progress * 100)}%`,
                   width:      '2px',
                   background: color,
                   opacity:    isActive ? 0.9 : 0.45,
@@ -237,7 +235,7 @@ export const CodeHighlight = ({ code, tracks, currentStep, playing, scrollTop }:
                   pointerEvents: 'none',
                   userSelect: 'none',
                 }}>
-                  {`${(currentStep % patLen) + 1}/${patLen}`}
+                  {`${String((currentStep % patLen) + 1)}/${String(patLen)}`}
                 </div>
               </>
             )}

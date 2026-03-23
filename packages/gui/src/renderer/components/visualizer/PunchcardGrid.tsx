@@ -146,8 +146,8 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick }: P
   useEffect(() => {
     if (currentStep !== 0) return
     setFlash(true)
-    const id = setTimeout(() => setFlash(false), FLASH_DURATION_MS)
-    return () => clearTimeout(id)
+    const id = setTimeout(() => { setFlash(false); }, FLASH_DURATION_MS)
+    return () => { clearTimeout(id); }
   }, [currentStep])
 
   // Canvas redraw
@@ -155,7 +155,7 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick }: P
     const canvas = canvasRef.current
     if (canvas === null) return
 
-    const dpr    = window.devicePixelRatio ?? 1
+    const dpr    = window.devicePixelRatio
     const width  = canvas.clientWidth
     const height = canvas.clientHeight
 
@@ -204,7 +204,7 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick }: P
       onClick={onStepClick ? handleClick : undefined}
       style={{
         width:          '100%',
-        height:         `${canvasHeight}px`,
+        height:         `${String(canvasHeight)}px`,
         display:        'block',
         imageRendering: 'pixelated',
         cursor:         onStepClick ? 'pointer' : 'default',

@@ -23,7 +23,7 @@ export const PendingSwapBadge = ({ pending, step, stepCount }: Props) => {
     <div style={styles.pill} aria-label="Pending bar-boundary swap">
       <span style={styles.icon} aria-hidden="true">⟳</span>
       <span style={styles.label}>swap on next bar</span>
-      <span style={styles.progress} aria-label={`Step ${step} of ${stepCount}`}>
+      <span style={styles.progress} aria-label={`Step ${String(step)} of ${String(stepCount)}`}>
         {step}/{stepCount}
       </span>
     </div>

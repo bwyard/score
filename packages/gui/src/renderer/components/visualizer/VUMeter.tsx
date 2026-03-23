@@ -37,7 +37,7 @@ const drawVUMeter = (
   w:        number,
   h:        number,
 ): void => {
-  const dpr = window.devicePixelRatio ?? 1
+  const dpr = window.devicePixelRatio
 
   if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
     canvas.width  = Math.round(w * dpr)
@@ -166,7 +166,6 @@ export const VUMeter = ({
     rafRef.current.id = requestAnimationFrame(tick)
     return () => { cancelAnimationFrame(rafRef.current.id) }
   // We deliberately only depend on level/color/width/height — peak is read via peakRef
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level, color, width, height])
 
   return (
@@ -176,8 +175,8 @@ export const VUMeter = ({
       role="img"
       data-color={color}
       style={{
-        width:   `${width}px`,
-        height:  `${height}px`,
+        width:   `${String(width)}px`,
+        height:  `${String(height)}px`,
         display: 'block',
       }}
     />

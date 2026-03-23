@@ -125,8 +125,8 @@ const styles = {
   },
   canvas: {
     display:        'block',
-    width:          `${METER_W}px`,
-    height:         `${METER_H}px`,
+    width:          `${String(METER_W)}px`,
+    height:         `${String(METER_H)}px`,
     imageRendering: 'pixelated' as const,
     border:         '1px solid #1e1e22',
   },

@@ -24,7 +24,7 @@ const drawSpectrum = (
   playing: boolean,
   color:   string,
 ): void => {
-  const dpr  = window.devicePixelRatio ?? 1
+  const dpr  = window.devicePixelRatio
   const rect = canvas.getBoundingClientRect()
   const w    = rect.width  || canvas.clientWidth  || 300
   const h    = rect.height || canvas.clientHeight || 120
@@ -130,7 +130,6 @@ export const SpectrumAnalyser = ({
     observer.observe(container)
     return () => { observer.disconnect() }
   // bins/playing/color are intentionally excluded — the effect above handles those.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

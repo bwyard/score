@@ -184,7 +184,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       setStripStates(prev => t.map((_, i) => prev[i] ?? defaultStripState()))
       setEvalStatus('ok')
       setEvalTimestamp(Date.now())
-      addLog('ok', `Song loaded — ${t.length} track${t.length === 1 ? '' : 's'}`)
+      addLog('ok', `Song loaded — ${String(t.length)} track${t.length === 1 ? '' : 's'}`)
       // Auto-play after eval when the user clicked play (not standalone Eval btn)
       if (autoPlayRef.current) {
         autoPlayRef.current = false
@@ -251,7 +251,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('debug:pop', ({ maxDelta, bars }) => {
-      addLog('warn', `POP detected at bar ${bars} — max delta ${maxDelta.toFixed(3)} (threshold 0.25). Likely gain staging or scheduling jitter.`)
+      addLog('warn', `POP detected at bar ${String(bars)} — max delta ${maxDelta.toFixed(3)} (threshold 0.25). Likely gain staging or scheduling jitter.`)
     })
     return unsub
   }, [addLog])
@@ -335,7 +335,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     // Convert MIDI pitch to note name for patching
     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
     const octave = Math.floor(pitch / 12) - 1
-    const noteName = `${noteNames[pitch % 12] ?? 'C'}${octave}`
+    const noteName = `${noteNames[pitch % 12] ?? 'C'}${String(octave)}`
 
     setCode(prev => patchTrackNote(prev, arpIndex, step, noteName))
   }, [tracks])
@@ -469,7 +469,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                 <span style={styles.consoleLabel}>Console</span>
                 <button
                   style={styles.consoleClose}
-                  onClick={() => togglePanel('console')}
+                  onClick={() => { togglePanel('console') }}
                   aria-label="Close console"
                 >×</button>
               </div>
@@ -492,13 +492,13 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
         <div style={styles.canvas}>
           {/* Panel toggle toolbar */}
           <div style={styles.panelToolbar}>
-            <PanelToggle label="Grid"    active={panels.punchcard}  onClick={() => togglePanel('punchcard')}  />
-            <PanelToggle label="Scope"   active={panels.scope}      onClick={() => togglePanel('scope')}      />
-            <PanelToggle label="FFT"     active={panels.spectrum}   onClick={() => togglePanel('spectrum')}   />
-            <PanelToggle label="Piano"   active={panels.piano}      onClick={() => togglePanel('piano')}      />
-            <PanelToggle label="Mixer"   active={panels.mixer}      onClick={() => togglePanel('mixer')}      />
-            <PanelToggle label="Console" active={panels.console}    onClick={() => togglePanel('console')}    />
-            <PanelToggle label="Ref"     active={panels.reference}  onClick={() => togglePanel('reference')}  />
+            <PanelToggle label="Grid"    active={panels.punchcard}  onClick={() => { togglePanel('punchcard') }}  />
+            <PanelToggle label="Scope"   active={panels.scope}      onClick={() => { togglePanel('scope') }}      />
+            <PanelToggle label="FFT"     active={panels.spectrum}   onClick={() => { togglePanel('spectrum') }}   />
+            <PanelToggle label="Piano"   active={panels.piano}      onClick={() => { togglePanel('piano') }}      />
+            <PanelToggle label="Mixer"   active={panels.mixer}      onClick={() => { togglePanel('mixer') }}      />
+            <PanelToggle label="Console" active={panels.console}    onClick={() => { togglePanel('console') }}    />
+            <PanelToggle label="Ref"     active={panels.reference}  onClick={() => { togglePanel('reference') }}  />
           </div>
 
           {/* Floating panels */}
@@ -509,7 +509,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               defaultY={48}
               defaultWidth={420}
               defaultHeight={180}
-              onClose={() => togglePanel('punchcard')}
+              onClose={() => { togglePanel('punchcard') }}
             >
               <PunchcardGrid
                 tracks={tracks}
@@ -527,7 +527,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               defaultY={240}
               defaultWidth={420}
               defaultHeight={160}
-              onClose={() => togglePanel('scope')}
+              onClose={() => { togglePanel('scope') }}
             >
               <Scope waveform={waveform} playing={engineState.playing} />
             </DraggablePanel>
@@ -540,7 +540,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               defaultY={48}
               defaultWidth={260}
               defaultHeight={200}
-              onClose={() => togglePanel('spectrum')}
+              onClose={() => { togglePanel('spectrum') }}
             >
               <SpectrumAnalyser bins={fftBins} playing={engineState.playing} />
             </DraggablePanel>
@@ -553,7 +553,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               defaultY={260}
               defaultWidth={260}
               defaultHeight={180}
-              onClose={() => togglePanel('piano')}
+              onClose={() => { togglePanel('piano') }}
             >
               <PianoRoll
                 notes={pianoNotes}
@@ -571,12 +571,12 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               defaultY={412}
               defaultWidth={420}
               defaultHeight={220}
-              onClose={() => togglePanel('mixer')}
+              onClose={() => { togglePanel('mixer') }}
             >
               <div style={styles.mixerInner}>
                 {tracks.map((track, i) => (
                   <MixerStrip
-                    key={`${track.name}-${i}`}
+                    key={`${track.name}-${String(i)}`}
                     name={track.name}
                     type={track.type}
                     volume={stripStates[i]?.volume ?? 1}
@@ -600,7 +600,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               defaultY={48}
               defaultWidth={260}
               defaultHeight={380}
-              onClose={() => togglePanel('reference')}
+              onClose={() => { togglePanel('reference') }}
             >
               <ReferencePanel onInsert={onInsert} />
             </DraggablePanel>
