@@ -743,7 +743,58 @@ const uiModeFeatures = {
 
 // ─── Server ──────────────────────────────────────────────────────────
 
-const tools = [effectCatalog, signalFlow, backendNodes, componentCatalog, instrumentSource, uiComponentCatalog, uiIpcMap, uiLayoutMap, uiModeFeatures]
+// ─── Tool: ui_accessibility_map ───────────────────────────────────────
+// Stub — Phase 13f prep
+
+const uiAccessibilityMap = {
+  name: 'ui_accessibility_map',
+  description: 'List keyboard shortcuts, ARIA roles, and accessibility features in Score Studio. Useful for Playwright E2E test selectors and keyboard navigation testing.',
+  inputSchema: {
+    category: z.enum(['all', 'shortcuts', 'aria', 'focus'])
+      .optional().default('all')
+      .describe('Filter by category.'),
+  },
+  handler: async ({ category }) => {
+    const SHORTCUTS = [
+      { key: 'Ctrl+Enter',       action: 'Eval code + start engine (or hot-swap)',     scope: 'Live Code editor' },
+      { key: 'Ctrl+.',           action: 'Stop engine',                                scope: 'Global' },
+      { key: 'Ctrl+S',           action: 'Save song file (planned)',                   scope: 'Live Code editor' },
+      { key: 'Ctrl+Z',           action: 'Undo (editor)',                              scope: 'Live Code editor' },
+      { key: 'Space',            action: 'Play/stop toggle (outside editor)',           scope: 'Transport' },
+    ]
+
+    const ARIA = [
+      { role: 'button',          label: '▶ Run',        element: 'Run/eval button' },
+      { role: 'button',          label: 'Stop',         element: 'Transport stop button' },
+      { role: 'slider',          label: 'BPM',          element: 'BPM range input' },
+      { role: 'textbox',         label: 'Score code',   element: 'Code editor textarea' },
+      { role: 'log',             label: 'Console',      element: 'REPL console panel' },
+    ]
+
+    const note = '> **Stub** — Phase 13f (Monaco + Playwright E2E) not yet complete. Known shortcuts/ARIA from current implementation.\n\n'
+
+    if (category === 'shortcuts' || category === 'all') {
+      const rows = SHORTCUTS.map((s) => `  - **${s.key}** — ${s.action} _(${s.scope})_`)
+      if (category === 'shortcuts') {
+        return { content: [{ type: 'text', text: `# Keyboard Shortcuts\n\n${note}${rows.join('\n')}` }] }
+      }
+    }
+
+    if (category === 'aria' || category === 'all') {
+      const rows = ARIA.map((a) => `  - role=\`${a.role}\` label=\`"${a.label}"\` — ${a.element}`)
+      if (category === 'aria') {
+        return { content: [{ type: 'text', text: `# ARIA Map\n\n${note}${rows.join('\n')}` }] }
+      }
+    }
+
+    const shortcutRows = SHORTCUTS.map((s) => `  - **${s.key}** — ${s.action} _(${s.scope})_`)
+    const ariaRows = ARIA.map((a) => `  - role=\`${a.role}\` label=\`"${a.label}"\` — ${a.element}`)
+
+    return { content: [{ type: 'text', text: `# Score Studio Accessibility Map\n\n${note}## Keyboard Shortcuts\n${shortcutRows.join('\n')}\n\n## ARIA Roles\n${ariaRows.join('\n')}` }] }
+  },
+}
+
+const tools = [effectCatalog, signalFlow, backendNodes, componentCatalog, instrumentSource, uiComponentCatalog, uiIpcMap, uiLayoutMap, uiModeFeatures, uiAccessibilityMap]
 
 const createServer = () => {
   const server = new McpServer({
