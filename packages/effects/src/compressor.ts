@@ -1,6 +1,6 @@
 // Compressor effect — wraps a backend dynamics compressor node
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendCompressorNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendCompressorNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -61,11 +61,13 @@ export const createCompressor = (
   })
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setThreshold: (value: number, time?: number) => void
     readonly setRatio: (value: number, time?: number) => void
   } = {
     id: uid('compressor'),
     type: 'compressor' as const,
+    input: compNode,
 
     /**
      * Set the compression threshold in dBFS. Signals above this level are compressed.

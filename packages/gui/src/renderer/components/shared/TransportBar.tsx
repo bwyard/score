@@ -10,8 +10,13 @@ type EngineState = {
 }
 
 type Props = {
-  readonly hardware: HardwareLevel
-  readonly onHome:   () => void
+  readonly hardware:     HardwareLevel
+  readonly onHome:       () => void
+  // Optional overrides — when provided, these fire instead of the default IPC calls.
+  // Used by LiveCode to eval code before starting the engine.
+  readonly onPlay?:      () => void
+  readonly onStop?:      () => void
+  readonly onBpmChange?: (bpm: number) => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -21,7 +26,7 @@ type Props = {
  * Subscribes to engine state pushed from the main process.
  * Play/stop/BPM changes are forwarded back via IPC.
  */
-export const TransportBar = ({ hardware, onHome }: Props) => {
+export const TransportBar = ({ hardware, onHome, onPlay, onStop, onBpmChange }: Props) => {
   const bpmId   = useId()
   const barsId  = useId()
 
@@ -46,9 +51,11 @@ export const TransportBar = ({ hardware, onHome }: Props) => {
 
   const toggle = (): void => {
     if (engine.playing) {
-      window.scoreBridge.send('transport:stop', undefined)
+      if (onStop) onStop()
+      else window.scoreBridge.send('transport:stop', undefined)
     } else {
-      window.scoreBridge.send('transport:play', undefined)
+      if (onPlay) onPlay()
+      else window.scoreBridge.send('transport:play', undefined)
     }
   }
 
@@ -92,6 +99,7 @@ export const TransportBar = ({ hardware, onHome }: Props) => {
             setLocalBpm(bpm)
             if (bpm >= 20 && bpm <= 300) {
               window.scoreBridge.send('transport:bpm-set', { bpm })
+              onBpmChange?.(bpm)
             }
           }}
         />

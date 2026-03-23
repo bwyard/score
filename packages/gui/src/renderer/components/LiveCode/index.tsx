@@ -1,94 +1,608 @@
-import { useState, useEffect } from 'react'
-import { TransportBar } from '../shared/TransportBar.js'
-import type { HardwareLevel } from '../../../main/ipc-types.js'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { TransportBar }                      from '../shared/TransportBar.js'
+import type { HardwareLevel }               from '../../../main/ipc-types.js'
+import { PunchcardGrid }                    from '../visualizer/PunchcardGrid.js'
+import { Scope }                            from '../visualizer/Scope.js'
+import { SpectrumAnalyser }                 from '../visualizer/SpectrumAnalyser.js'
+import { PianoRoll }                        from '../visualizer/PianoRoll.js'
+import { MasterLevel }                      from '../shared/MasterLevel.js'
+import { MixerStrip }                       from '../shared/MixerStrip.js'
+import { DraggablePanel }                   from '../shared/DraggablePanel.js'
+import { CodeWaveform }                     from '../shared/CodeWaveform.js'
+import { getActiveLines }                   from '../shared/CodeHighlight.js'
+import { CodeEditorPanel }                  from '../shared/CodeEditorPanel.js'
+import type { EditorDecoration }            from '../shared/CodeEditorPanel.js'
+import { ReferencePanel }                   from '../shared/ReferencePanel.js'
+import { ConsoleLog }                       from '../shared/ConsoleLog.js'
+import type { LogEntry, LogLevel }          from '../shared/ConsoleLog.js'
+import type { PunchcardTrack }              from '../visualizer/PunchcardGrid.js'
+import { EvalStatus }                       from '../status/index.js'
+import type { EvalStatusKind }             from '../status/EvalStatus.js'
+import { BarCounter }                       from '../status/index.js'
+import { PendingSwapBadge }                 from '../status/index.js'
+import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote } from '../../lib/codePatcher.js'
+import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
 
-// ── Default starter song ───────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
-const STARTER = `import { Song, Kick808, Synth } from '@score/dsl'
+type Props = {
+  readonly hardware: HardwareLevel
+  readonly onHome:   () => void
+}
 
-const kick = Kick808({
-  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
-  volume:  0.85,
-})
+type PanelVisibility = {
+  punchcard:  boolean
+  scope:      boolean
+  spectrum:   boolean
+  piano:      boolean
+  mixer:      boolean
+  console:    boolean
+  reference:  boolean
+}
+
+// ── Starter template ───────────────────────────────────────────────────────────
+
+const STARTER = `import { Song, Kick808, Snare, HiHat, Synth, Arp } from '@score/dsl'
+import { Reverb, Delay, Saturation, AutoPan } from '@score/effects'
+import { euclidean } from '@score/pattern'
+
+const kick  = Kick808({  pattern: euclidean(4, 8), volume: 0.6 })
+const snare = Snare({ pattern: euclidean(2, 8, 4), volume: 0.55 })
+const hihat = HiHat({ pattern: euclidean(8, 8), volume: 0.25 })
 
 const bass = Synth({
-  wave:    'sawtooth',
-  frequency: 110,
-  pattern: [1, 0, 1, 0,  0, 1, 0, 0,  1, 0, 1, 0,  0, 1, 0, 0],
-  filter:  { type: 'lowpass', frequency: 600, Q: 2 },
-  volume:  0.6,
+  wave: 'sawtooth', frequency: 65.41,
+  pattern: [1, 0, 1, 0, 0, 1, 0, 0],
+  filter:  { type: 'lowpass', frequency: 400 },
+  effects: [Saturation({ drive: 0.3, mix: 0.5 }), Reverb({ decay: 1.5, mix: 0.2 })],
+  gain: 0.45,
 })
 
-export default Song({
-  bpm:    120,
-  tracks: [kick, bass],
-})`
+const lead = Arp({
+  notes: ['C3', 'E3', 'G3', 'B3'],
+  mode: 'up', rate: 2, wave: 'triangle', gain: 0.3,
+  envelope: { attack: 0.005, decay: 0.06, sustain: 0.3, release: 0.03 },
+  effects: [Delay({ time: 0.25, feedback: 0.35, mix: 0.3 }), AutoPan({ rate: 0.5, depth: 0.6 })],
+})
 
-// ── Component ──────────────────────────────────────────────────────────────────
+export default Song({ bpm: 120, tracks: [kick, snare, hihat, bass, lead] })`
 
-type Props = { readonly hardware: HardwareLevel; readonly onHome: () => void }
+// ── Log helpers ────────────────────────────────────────────────────────────────
+
+const mkEntry = (level: LogLevel, message: string): LogEntry => ({
+  id:      Date.now() + Math.random(),
+  level,
+  message,
+  time:    Date.now(),
+})
+
+// ── Mixer strip state ──────────────────────────────────────────────────────────
+
+type StripState = {
+  readonly volume: number
+  readonly muted:  boolean
+}
+
+const defaultStripState = (): StripState => ({ volume: 1, muted: false })
+
+const updateStrip = (
+  prev: ReadonlyArray<StripState>,
+  index: number,
+  patch: Partial<StripState>,
+): ReadonlyArray<StripState> =>
+  prev.map((s, i) => (i === index ? { ...s, ...patch } : s))
+
+// ── Panel toggle button ─────────────────────────────────────────────────────────
+
+type PanelToggleProps = {
+  readonly label:   string
+  readonly active:  boolean
+  readonly onClick: () => void
+}
+
+const PanelToggle = ({ label, active, onClick }: PanelToggleProps) => (
+  <button
+    aria-pressed={active}
+    onClick={onClick}
+    style={{
+      padding:       '0.2rem 0.5rem',
+      background:    active ? '#152035' : 'none',
+      border:        active ? '1px solid #2a4a7a' : '1px solid #1e1e22',
+      borderRadius:  '2px',
+      color:         active ? '#6a9fff' : '#3a3a46',
+      fontSize:      '0.65rem',
+      fontFamily:    'system-ui, sans-serif',
+      letterSpacing: '0.06em',
+      cursor:        'pointer',
+    }}
+  >
+    {label}
+  </button>
+)
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 /**
- * Live Code mode — code editor left, visualizer right.
- * Phase 13f: swap textarea for Monaco editor.
- * Phase 11b: add waveform / piano roll / scope visualizer.
+ * Live Code mode — editor on the left, floating visualizer panels on the right.
+ * Code waveform rendered behind the textarea (Strudl/TidalCycles aesthetic).
+ * Phase 11b t140-t141: all visualizers, status bar, floating panel layout.
+ * Phase 13f: swap textarea for Monaco editor with beat highlighting.
  */
 export const LiveCode = ({ hardware, onHome }: Props) => {
-  const [code, setCode] = useState(STARTER)
-  const [log,  setLog]  = useState<readonly string[]>([])
+  const [code,   setCode]   = useState(STARTER)
+  const [error,  setError]  = useState<string | null>(null)
+  const [tracks, setTracks] = useState<ReadonlyArray<PunchcardTrack>>([])
+  const [waveform,    setWaveform]    = useState<readonly number[]>([])
+  const [engineState, setEngineState] = useState<{ playing: boolean; bpm: number; bars: number }>({
+    playing: false, bpm: 128, bars: 0,
+  })
+  const [currentStep,      setCurrentStep]      = useState(0)
+  const [currentStepCount, setCurrentStepCount] = useState(8)
+  const [evalStatus,    setEvalStatus]    = useState<EvalStatusKind>('idle')
+  const [evalTimestamp, setEvalTimestamp] = useState<number | undefined>(undefined)
+  const [pendingSwap, setPendingSwap] = useState(false)
+  const [stripStates, setStripStates] = useState<ReadonlyArray<StripState>>([])
+  const [fftBins,     setFftBins]     = useState<readonly number[]>([])
+  const [logEntries,  setLogEntries]  = useState<ReadonlyArray<LogEntry>>([])
+  const [pianoNotes,  setPianoNotes]  = useState<ReadonlyArray<PianoRollNote>>([])
+  // Set to true when the user clicks play before eval — song:update handler will
+  // fire transport:play once the eval succeeds (eval-then-play flow).
+  const autoPlayRef   = useRef(false)
 
-  // BOUNDARY — IO: receive eval errors from main process
+  // Monaco beat-highlight decorations — active track lines while playing
+  const editorDecorations = useMemo((): ReadonlyArray<EditorDecoration> => {
+    if (!engineState.playing) return []
+    const activeLines = getActiveLines(code, tracks, currentStep)
+    return activeLines.map(zeroIdx => ({
+      startLine:   zeroIdx + 1,  // Monaco is 1-based
+      endLine:     zeroIdx + 1,
+      className:   'score-beat-active',
+      isWholeLine: true,
+    }))
+  }, [engineState.playing, code, tracks, currentStep])
+  const [panels, setPanels] = useState<PanelVisibility>({
+    punchcard:  true,
+    scope:      true,
+    spectrum:   false,
+    piano:      false,
+    mixer:      false,
+    console:    true,
+    reference:  true,
+  })
+
+  const togglePanel = useCallback((key: keyof PanelVisibility): void => {
+    setPanels(prev => ({ ...prev, [key]: !prev[key] }))
+  }, [])
+
+  const addLog = useCallback((level: LogLevel, message: string): void => {
+    setLogEntries(prev => [...prev.slice(-199), mkEntry(level, message)])
+  }, [])
+
+  // ── IPC subscriptions ──────────────────────────────────────────────────────
+
   useEffect(() => {
     const unsub = window.scoreBridge.on('error:report', ({ message }) => {
-      setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Error: ${message}`])
+      autoPlayRef.current = false
+      setError(message)
+      setEvalStatus('error')
+      addLog('error', message)
+    })
+    return unsub
+  }, [addLog])
+
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('song:update', ({ tracks: t }) => {
+      setTracks(t)
+      setStripStates(prev => t.map((_, i) => prev[i] ?? defaultStripState()))
+      setEvalStatus('ok')
+      setEvalTimestamp(Date.now())
+      addLog('ok', `Song loaded — ${String(t.length)} track${t.length === 1 ? '' : 's'}`)
+      // Auto-play after eval when the user clicked play (not standalone Eval btn)
+      if (autoPlayRef.current) {
+        autoPlayRef.current = false
+        window.scoreBridge.send('transport:play', undefined)
+      }
+    })
+    return unsub
+  }, [addLog])
+
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('engine:analysis', ({ waveform: w }) => {
+      setWaveform(w)
+      const binCount  = 32
+      const chunkSize = Math.floor(w.length / binCount)
+      const bins = Array.from({ length: binCount }, (_, b) => {
+        const start = b * chunkSize
+        const chunk = w.slice(start, start + chunkSize)
+        return Math.sqrt(chunk.reduce((s, v) => s + v * v, 0) / Math.max(chunk.length, 1))
+      })
+      setFftBins(bins)
     })
     return unsub
   }, [])
 
-  const onEval = () => {
-    // BOUNDARY — IO: send code to main process for eval + engine update
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('engine:state', ({ playing, bpm, bars }) => {
+      setEngineState(prev => {
+        if (prev.playing !== playing) {
+          addLog('info', playing ? '▶ Playing' : '■ Stopped')
+        }
+        return { playing, bpm, bars }
+      })
+    })
+    return unsub
+  }, [addLog])
+
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('engine:step', ({ step, stepCount }) => {
+      setCurrentStep(step)
+      setCurrentStepCount(stepCount)
+    })
+    return unsub
+  }, [])
+
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('engine:pending', ({ pending }) => {
+      setPendingSwap(pending)
+      if (pending) addLog('warn', 'Swap queued — applying at next bar boundary')
+    })
+    return unsub
+  }, [addLog])
+
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('engine:notes', ({ notes }) => {
+      setPianoNotes(notes.map(n => ({
+        pitch:    n.pitch,
+        step:     n.step,
+        velocity: n.velocity,
+        duration: 1,
+      })))
+    })
+    return unsub
+  }, [])
+
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('debug:pop', ({ maxDelta, bars }) => {
+      addLog('warn', `POP detected at bar ${String(bars)} — max delta ${maxDelta.toFixed(3)} (threshold 0.25). Likely gain staging or scheduling jitter.`)
+    })
+    return unsub
+  }, [addLog])
+
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('file:opened', ({ code: loadedCode }) => {
+      setCode(loadedCode)
+      setError(null)
+      setEvalStatus('idle')
+      addLog('info', 'File opened')
+    })
+    return unsub
+  }, [addLog])
+
+  const onEval = useCallback((): void => {
+    setError(null)
+    setEvalStatus('pending')
+    addLog('info', 'Evaluating…')
     window.scoreBridge.send('engine:eval', { code })
-    setLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Evaluating…`])
-  }
+  }, [code, addLog])
+
+  // Play: always eval the current code first, then auto-start once song:update fires.
+  // This mirrors TidalCycles / Strudl — pressing play runs the code.
+  const onPlay = useCallback((): void => {
+    autoPlayRef.current = true
+    setError(null)
+    setEvalStatus('pending')
+    addLog('info', 'Evaluating…')
+    window.scoreBridge.send('engine:eval', { code })
+  }, [code, addLog])
+
+  const onStop = useCallback((): void => {
+    autoPlayRef.current = false
+    setPianoNotes([])
+    window.scoreBridge.send('transport:stop', undefined)
+  }, [])
+
+  // Run: eval+play when stopped, eval-only (hot-swap) when playing.
+  const onRun = useCallback((): void => {
+    setError(null)
+    setEvalStatus('pending')
+    addLog('info', 'Evaluating…')
+    if (!engineState.playing) {
+      autoPlayRef.current = true
+    }
+    window.scoreBridge.send('engine:eval', { code })
+  }, [code, addLog, engineState.playing])
+
+  const onMixerVolume = useCallback((index: number, volume: number): void => {
+    setStripStates(prev => updateStrip(prev, index, { volume }))
+    window.scoreBridge.send('engine:patch', { tracks: [{ index, volume }] })
+    setCode(prev => patchTrackVolume(prev, index, volume))
+  }, [])
+
+  const onMixerMute = useCallback((index: number): void => {
+    // Read current muted state synchronously (user event — closure is fresh)
+    const mute = !(stripStates[index]?.muted ?? false)
+    setStripStates(prev => updateStrip(prev, index, { muted: mute }))
+    window.scoreBridge.send('engine:patch', { tracks: [{ index, mute }] })
+  }, [stripStates])
+
+  const onBpmChange = useCallback((bpm: number): void => {
+    setCode(prev => patchBpm(prev, bpm))
+  }, [])
+
+  const onStepClick = useCallback((trackIndex: number, stepIndex: number): void => {
+    const track = tracks[trackIndex]
+    if (!track) return
+    const len = track.pattern.length
+    if (len === 0) return
+    const currentVal = track.pattern[stepIndex % len]
+    const newVal = currentVal ? 0 : 1
+    setCode(prev => patchTrackPattern(prev, trackIndex, stepIndex, newVal))
+  }, [tracks])
+
+  const onNoteClick = useCallback((pitch: number, step: number): void => {
+    // Find the Arp track (first track with type 'arp') — that's what the piano roll shows
+    const arpIndex = tracks.findIndex(t => t.type === 'arp')
+    if (arpIndex === -1) return
+
+    // Convert MIDI pitch to note name for patching
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+    const octave = Math.floor(pitch / 12) - 1
+    const noteName = `${noteNames[pitch % 12] ?? 'C'}${String(octave)}`
+
+    setCode(prev => patchTrackNote(prev, arpIndex, step, noteName))
+  }, [tracks])
+
+  // Smart insert — appends snippet inside the tracks: [...] array rather than at cursor.
+  // Falls back to end-of-file append if no tracks array is found.
+  const onInsert = useCallback((snippet: string): void => {
+    setCode(prev => {
+      const tracksIdx = prev.indexOf('tracks:')
+      if (tracksIdx === -1) return prev + '\n' + snippet
+
+      const openBracket = prev.indexOf('[', tracksIdx)
+      if (openBracket === -1) return prev + '\n' + snippet
+
+      // Bracket-count to find the matching close bracket
+      let depth = 1
+      let i = openBracket + 1
+      while (i < prev.length && depth > 0) {
+        if (prev[i] === '[') depth++
+        else if (prev[i] === ']') depth--
+        i++
+      }
+      const closeBracket = i - 1
+
+      // Detect indentation of the line before the close bracket
+      const beforeClose = prev.slice(0, closeBracket)
+      const lastNewline  = beforeClose.lastIndexOf('\n')
+      const lineContent  = lastNewline !== -1 ? beforeClose.slice(lastNewline + 1) : ''
+      const indentMatch  = lineContent.match(/^(\s+)/)
+      const indent       = indentMatch?.[1] ?? '    '
+
+      return `${prev.slice(0, closeBracket)},\n${indent}${snippet}${prev.slice(closeBracket)}`
+    })
+  }, [])
+
+  const onNew = useCallback((): void => {
+    setCode(STARTER)
+    setError(null)
+    setEvalStatus('idle')
+    setTracks([])
+    setPianoNotes([])
+    setStripStates([])
+    setLogEntries([])
+  }, [])
+
+  const onSave = useCallback((): void => {
+    window.scoreBridge.send('file:save', { code })
+  }, [code])
+
+  const onOpen = useCallback((): void => {
+    window.scoreBridge.send('file:open', undefined)
+  }, [])
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div style={styles.root}>
-      <TransportBar hardware={hardware} onHome={onHome} />
+      <TransportBar hardware={hardware} onHome={onHome} onPlay={onPlay} onStop={onStop} onBpmChange={onBpmChange} />
+
+      {/* Status bar */}
+      <div style={styles.statusBar}>
+        <BarCounter
+          bars={engineState.bars}
+          step={currentStep}
+          stepCount={currentStepCount}
+          bpm={engineState.bpm}
+          playing={engineState.playing}
+        />
+        <div style={styles.statusRight}>
+          {pendingSwap && (
+            <PendingSwapBadge
+              pending={pendingSwap}
+              step={currentStep}
+              stepCount={currentStepCount}
+            />
+          )}
+          <EvalStatus
+            status={evalStatus}
+            {...(error !== null          ? { message:   error         } : {})}
+            {...(evalTimestamp !== undefined ? { timestamp: evalTimestamp } : {})}
+          />
+        </div>
+      </div>
 
       <div style={styles.body}>
-        {/* Editor pane */}
+        {/* Editor pane — CodeWaveform behind textarea, Strudl aesthetic */}
         <div style={styles.editorPane}>
-          <div style={styles.editorToolbar}>
-            <span style={styles.filename}>song.ts</span>
-            <button style={styles.evalBtn} onClick={onEval} aria-label="Evaluate song">
-              ▶ Eval
-            </button>
-          </div>
-          <textarea
-            style={styles.editor}
-            value={code}
-            onChange={e => { setCode(e.target.value) }}
-            spellCheck={false}
-            aria-label="Song code editor"
-          />
-          {log.length > 0 && (
-            <div style={styles.repl} aria-label="Eval output">
-              {log.map((line, i) => (
-                <div key={i} style={line.includes('Error:') ? styles.replLineError : styles.replLine}>
-                  {line}
-                </div>
-              ))}
+          {error !== null && (
+            <div style={styles.errorBanner} role="alert">
+              {error}
             </div>
           )}
+
+          {/* Monaco editor + waveform overlay stacked */}
+          {/* z-index 0: CodeWaveform (canvas behind)  1: Monaco editor */}
+          <div style={styles.editorArea}>
+            <CodeWaveform
+              waveform={waveform}
+              playing={engineState.playing}
+              currentStep={currentStep}
+              stepCount={currentStepCount}
+            />
+            <div style={styles.monacoWrapper} aria-label="Song code editor">
+              <CodeEditorPanel
+                value={code}
+                onChange={setCode}
+                onEval={onEval}
+                decorations={editorDecorations}
+              />
+            </div>
+          </div>
+
+          {/* Console log (below textarea, collapsible) */}
+          {panels.console && (
+            <div style={styles.consolePane}>
+              <div style={styles.consoleHeader}>
+                <span style={styles.consoleLabel}>Console</span>
+                <button
+                  style={styles.consoleClose}
+                  onClick={() => { togglePanel('console') }}
+                  aria-label="Close console"
+                >×</button>
+              </div>
+              <ConsoleLog entries={logEntries} />
+            </div>
+          )}
+
+          <div style={styles.editorFooter}>
+            <MasterLevel waveform={waveform} playing={engineState.playing} />
+            <div style={styles.footerBtns}>
+              <button style={styles.fileBtn} onClick={onNew}  aria-label="New song">New</button>
+              <button style={styles.fileBtn} onClick={onOpen} aria-label="Open song">Open</button>
+              <button style={styles.fileBtn} onClick={onSave} aria-label="Save song">Save</button>
+              <button style={styles.evalBtn} onClick={onRun}  aria-label="Run song">▶ Run</button>
+            </div>
+          </div>
         </div>
 
-        {/* Visualizer pane */}
-        <div style={styles.visualizerPane}>
-          <div style={styles.placeholder}>
-            <span style={styles.placeholderIcon}>〰</span>
-            <span>Visualizer — Phase 11b</span>
-            <span style={styles.sub}>Waveform · Piano roll · Punchcard · Scope</span>
+        {/* Floating panel canvas */}
+        <div style={styles.canvas}>
+          {/* Panel toggle toolbar */}
+          <div style={styles.panelToolbar}>
+            <PanelToggle label="Grid"    active={panels.punchcard}  onClick={() => { togglePanel('punchcard') }}  />
+            <PanelToggle label="Scope"   active={panels.scope}      onClick={() => { togglePanel('scope') }}      />
+            <PanelToggle label="FFT"     active={panels.spectrum}   onClick={() => { togglePanel('spectrum') }}   />
+            <PanelToggle label="Piano"   active={panels.piano}      onClick={() => { togglePanel('piano') }}      />
+            <PanelToggle label="Mixer"   active={panels.mixer}      onClick={() => { togglePanel('mixer') }}      />
+            <PanelToggle label="Console" active={panels.console}    onClick={() => { togglePanel('console') }}    />
+            <PanelToggle label="Ref"     active={panels.reference}  onClick={() => { togglePanel('reference') }}  />
           </div>
+
+          {/* Floating panels */}
+          {panels.punchcard && (
+            <DraggablePanel
+              title="Step Grid"
+              defaultX={8}
+              defaultY={48}
+              defaultWidth={420}
+              defaultHeight={180}
+              onClose={() => { togglePanel('punchcard') }}
+            >
+              <PunchcardGrid
+                tracks={tracks}
+                currentStep={currentStep}
+                stepCount={currentStepCount}
+                onStepClick={onStepClick}
+              />
+            </DraggablePanel>
+          )}
+
+          {panels.scope && (
+            <DraggablePanel
+              title="Waveform"
+              defaultX={8}
+              defaultY={240}
+              defaultWidth={420}
+              defaultHeight={160}
+              onClose={() => { togglePanel('scope') }}
+            >
+              <Scope waveform={waveform} playing={engineState.playing} />
+            </DraggablePanel>
+          )}
+
+          {panels.spectrum && (
+            <DraggablePanel
+              title="Spectrum"
+              defaultX={440}
+              defaultY={48}
+              defaultWidth={260}
+              defaultHeight={200}
+              onClose={() => { togglePanel('spectrum') }}
+            >
+              <SpectrumAnalyser bins={fftBins} playing={engineState.playing} />
+            </DraggablePanel>
+          )}
+
+          {panels.piano && (
+            <DraggablePanel
+              title="Piano Roll"
+              defaultX={440}
+              defaultY={260}
+              defaultWidth={260}
+              defaultHeight={180}
+              onClose={() => { togglePanel('piano') }}
+            >
+              <PianoRoll
+                notes={pianoNotes}
+                currentStep={currentStep}
+                stepCount={currentStepCount}
+                onNoteClick={onNoteClick}
+              />
+            </DraggablePanel>
+          )}
+
+          {panels.mixer && (
+            <DraggablePanel
+              title="Mixer"
+              defaultX={8}
+              defaultY={412}
+              defaultWidth={420}
+              defaultHeight={220}
+              onClose={() => { togglePanel('mixer') }}
+            >
+              <div style={styles.mixerInner}>
+                {tracks.map((track, i) => (
+                  <MixerStrip
+                    key={`${track.name}-${String(i)}`}
+                    name={track.name}
+                    type={track.type}
+                    volume={stripStates[i]?.volume ?? 1}
+                    muted={stripStates[i]?.muted ?? false}
+                    level={0}
+                    onVolume={v => { onMixerVolume(i, v) }}
+                    onMute={() => { onMixerMute(i) }}
+                  />
+                ))}
+                {tracks.length === 0 && (
+                  <span style={styles.mixerEmpty}>No tracks — eval a song first</span>
+                )}
+              </div>
+            </DraggablePanel>
+          )}
+
+          {panels.reference && (
+            <DraggablePanel
+              title="Reference"
+              defaultX={440}
+              defaultY={48}
+              defaultWidth={260}
+              defaultHeight={380}
+              onClose={() => { togglePanel('reference') }}
+            >
+              <ReferencePanel onInsert={onInsert} />
+            </DraggablePanel>
+          )}
         </div>
       </div>
     </div>
@@ -99,89 +613,147 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
 const styles = {
   root:       { display: 'flex', flexDirection: 'column' as const, height: '100vh', background: '#0c0c0e' },
-  body:       { display: 'flex', flex: 1, overflow: 'hidden' },
-
+  statusBar: {
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    padding:        '0 0.75rem',
+    height:         '36px',
+    flexShrink:     0,
+    borderBottom:   '1px solid #1e1e22',
+    background:     '#0a0a0d',
+  },
+  statusRight: {
+    display:    'flex',
+    alignItems: 'center',
+    gap:        '0.5rem',
+  },
+  body: { display: 'flex', flex: 1, overflow: 'hidden' },
   editorPane: {
-    flex:          '0 0 60%',
+    flex:          '0 0 50%',
     borderRight:   '1px solid #1e1e22',
     display:       'flex',
     flexDirection: 'column' as const,
     background:    '#0d0d10',
   },
-  editorToolbar: {
-    display:         'flex',
-    alignItems:      'center',
-    justifyContent:  'space-between',
-    padding:         '0.3rem 0.6rem',
-    background:      '#111113',
-    borderBottom:    '1px solid #1e1e22',
-    flexShrink:      0,
+  errorBanner: {
+    background:   '#3a1a1a',
+    color:        '#ff6b6b',
+    padding:      '0.4rem 0.75rem',
+    fontSize:     '0.75rem',
+    borderBottom: '1px solid #5a2a2a',
+    flexShrink:   0,
+    fontFamily:   "'JetBrains Mono', 'Fira Code', monospace",
   },
-  filename: {
-    fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",
-    fontSize:      '0.7rem',
-    color:         '#3e3e46',
-    letterSpacing: '0.04em',
+  // Container for waveform + textarea stacked absolutely
+  editorArea: {
+    flex:     1,
+    position: 'relative' as const,
+    display:  'flex',
+  },
+  monacoWrapper: {
+    flex:     1,
+    position: 'relative' as const,
+    zIndex:   1,
+    // Monaco needs an explicit height to fill flex container
+    minHeight: 0,
+  },
+  consolePane: {
+    flexShrink:    0,
+    height:        '120px',
+    borderTop:     '1px solid #1e1e22',
+    display:       'flex',
+    flexDirection: 'column' as const,
+    background:    '#080809',
+  },
+  consoleHeader: {
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    padding:        '0 0.5rem',
+    height:         '22px',
+    flexShrink:     0,
+    borderBottom:   '1px solid #141418',
+    background:     '#0a0a0d',
+  },
+  consoleLabel: {
+    fontFamily:    "'JetBrains Mono', monospace",
+    fontSize:      '0.6rem',
+    color:         '#3a3a46',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.1em',
+  },
+  consoleClose: {
+    background: 'none',
+    border:     'none',
+    color:      '#3a3a46',
+    cursor:     'pointer',
+    fontSize:   '1rem',
+    lineHeight: 1,
+    padding:    '0',
+  },
+  editorFooter: {
+    flexShrink:     0,
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    padding:        '4px 8px',
+    borderTop:      '1px solid #1e1e22',
+    background:     '#0a0a0d',
+  },
+  footerBtns: {
+    display:    'flex',
+    gap:        '6px',
+    alignItems: 'center',
+  },
+  fileBtn: {
+    height:        '28px',
+    background:    'none',
+    border:        '1px solid #1e1e28',
+    borderRadius:  '2px',
+    color:         '#3a3a50',
+    fontSize:      '0.68rem',
+    letterSpacing: '0.06em',
+    cursor:        'pointer',
+    padding:       '0 0.6rem',
   },
   evalBtn: {
-    fontFamily:    'system-ui, sans-serif',
-    fontSize:      '0.7rem',
+    height:        '28px',
+    background:    '#152035',
+    border:        '1px solid #2a4a7a',
+    borderRadius:  '2px',
+    color:         '#6a9fff',
+    fontSize:      '0.75rem',
     fontWeight:    600,
     letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
-    padding:       '0.2rem 0.65rem',
-    background:    '#152035',
-    color:         '#6a9fff',
-    border:        '1px solid #2a4a7a',
-    borderRadius:  '2px',
     cursor:        'pointer',
+    padding:       '0 1rem',
   },
-  editor: {
+  canvas: {
     flex:       1,
-    width:      '100%',
-    background: '#080809',
-    color:      '#c8d8f8',
-    border:     'none',
-    outline:    'none',
-    padding:    '0.75rem',
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-    fontSize:   '0.8rem',
-    lineHeight: 1.65,
-    resize:     'none' as const,
-    tabSize:    2,
+    position:   'relative' as const,
+    overflow:   'hidden',
+    background: '#090909',
   },
-  repl: {
-    borderTop:  '1px solid #1e1e22',
-    background: '#060607',
-    padding:    '0.4rem 0.65rem',
-    maxHeight:  '100px',
-    overflowY:  'auto' as const,
-    flexShrink: 0,
+  panelToolbar: {
+    position: 'absolute' as const,
+    top:      8,
+    left:     8,
+    zIndex:   200,
+    display:  'flex',
+    gap:      '4px',
   },
-  replLine: {
-    fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",
-    fontSize:      '0.7rem',
-    color:         '#4a6a9f',
-    lineHeight:    1.6,
-    letterSpacing: '0.02em',
+  mixerInner: {
+    display:  'flex',
+    flexWrap: 'wrap' as const,
+    gap:      '4px',
+    padding:  '6px',
   },
-  replLineError: {
-    fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",
-    fontSize:      '0.7rem',
-    color:         '#c05a5a',
-    lineHeight:    1.6,
-    letterSpacing: '0.02em',
+  mixerEmpty: {
+    color:      '#3a3a46',
+    fontSize:   '0.75rem',
+    fontFamily: "'JetBrains Mono', monospace",
+    padding:    '8px',
   },
-
-  visualizerPane: {
-    flex:            1,
-    display:         'flex',
-    flexDirection:   'column' as const,
-    alignItems:      'center',
-    justifyContent:  'center',
-    background:      '#0c0c0e',
-  },
-  placeholder:     { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '0.5rem', color: '#2e2e36' },
-  placeholderIcon: { fontFamily: 'monospace', fontSize: '2rem', color: '#1e2e3e' },
-  sub:             { fontFamily: 'system-ui, sans-serif', fontSize: '0.68rem', color: '#2a2a32', letterSpacing: '0.06em' },
 } as const

@@ -3,7 +3,7 @@
 // NOTE: True sample-rate reduction requires AudioWorklet (Phase 12g).
 // This initial version performs bit-depth reduction only.
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -79,11 +79,13 @@ export const createBitCrusher = (
   wetGain.connect(outputGain)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setBits: (value: number) => void
     readonly setMix: (value: number, time?: number) => void
   } = {
     id: uid('bitcrusher'),
     type: 'bitcrusher' as const,
+    input: inputGain,
 
     /**
      * Set the bit depth. Lower values = more quantization noise and aliasing.

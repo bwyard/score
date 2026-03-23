@@ -1,7 +1,7 @@
 // Noise Gate effect — gates audio below threshold using extreme compression
 // Uses CompressorNode with extreme ratio as a gate + GainNode for output level
 
-import type { AudioComponent, ScoreAudioContext, ScoreAudioNode } from '@score/core'
+import type { AudioComponent, ScoreAudioContext, ScoreAudioNode, BackendNode } from '@score/core'
 import { uid } from '@score/core'
 
 /**
@@ -65,12 +65,14 @@ export const createGate = (
   gateComp.connect(outputGain)
 
   const component: AudioComponent & {
+    readonly input: BackendNode
     readonly setThreshold: (value: number, time?: number) => void
     readonly setAttack: (value: number, time?: number) => void
     readonly setRelease: (value: number, time?: number) => void
   } = {
     id: uid('gate'),
     type: 'gate' as const,
+    input: inputGain,
 
     /**
      * Set the gate threshold in dBFS. Signal below this level is silenced.

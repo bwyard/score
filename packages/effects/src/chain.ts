@@ -46,17 +46,19 @@ export const createEffectsChain = (
   const outputGain = context.createGain({ gain: 1.0 })
 
   // Wire effects in series: input -> effect[0] -> effect[1] -> ... -> output
+  type EffectNode = AudioComponent & { readonly input: BackendNode }
+
   const first = effects[0]
   const last = effects[effects.length - 1]
   if (!first || !last) {
     inputGain.connect(outputGain)
   } else {
-    inputGain.connect(first as unknown as BackendNode)
+    inputGain.connect((first as EffectNode).input)
     for (let i = 0; i < effects.length - 1; i++) {
       const current = effects[i]
       const next = effects[i + 1]
       if (current && next) {
-        current.connect(next as unknown as BackendNode)
+        current.connect((next as EffectNode).input)
       }
     }
     last.connect(outputGain)
