@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { Kick, Snare, HiHat } from '../src/instruments.js'
 import { Synth, SubSynth, FMSynth, Bass303, Arp, Sample, Theremin, Sax } from '../src/melodic.js'
-import type { Bass303Part, FMSynthPart, SubSynthPart } from '../src/melodic.js'
 
 describe('Arp', () => {
   it('returns a ChainablePart with instrumentType arp', () => {
@@ -121,12 +120,12 @@ describe('melodic factories return ChainablePart', () => {
 
 describe('Bass303 — sub-type methods survive base chain calls', () => {
   it('cutoff() survives after volume()', () => {
-    const b = Bass303('C2').volume(0.8) as Bass303Part
+    const b = Bass303('C2').volume(0.8)
     expect(typeof b.cutoff).toBe('function')
   })
 
   it('resonance() survives after volume()', () => {
-    const b = Bass303().volume(0.5) as Bass303Part
+    const b = Bass303().volume(0.5)
     expect(typeof b.resonance).toBe('function')
   })
 
@@ -139,7 +138,7 @@ describe('Bass303 — sub-type methods survive base chain calls', () => {
   })
 
   it('slide() survives after full chain', () => {
-    const b = Bass303('C2').cutoff(600).resonance(2.0).volume(0.8) as Bass303Part
+    const b = Bass303('C2').cutoff(600).resonance(2.0).volume(0.8)
     expect(typeof b.slide).toBe('function')
   })
 
@@ -148,7 +147,7 @@ describe('Bass303 — sub-type methods survive base chain calls', () => {
   })
 
   it('props accumulate correctly through chain', () => {
-    const b = Bass303('C2').cutoff(700).resonance(1.5).volume(0.6) as Bass303Part
+    const b = Bass303('C2').cutoff(700).resonance(1.5).volume(0.6)
     expect((b.props).cutoff).toBe(700)
     expect((b.props).resonance).toBe(1.5)
     expect(b._volume).toBe(0.6)
@@ -158,7 +157,7 @@ describe('Bass303 — sub-type methods survive base chain calls', () => {
 
 describe('FMSynth — sub-type methods survive base chain calls', () => {
   it('ratio() survives after volume()', () => {
-    const s = FMSynth('A3').volume(0.7) as FMSynthPart
+    const s = FMSynth('A3').volume(0.7)
     expect(typeof s.ratio).toBe('function')
   })
 
@@ -171,7 +170,7 @@ describe('FMSynth — sub-type methods survive base chain calls', () => {
   })
 
   it('props accumulate correctly through full chain', () => {
-    const s = FMSynth().ratio(1.273).modIndex(3).feedback(0.2).volume(0.7) as FMSynthPart
+    const s = FMSynth().ratio(1.273).modIndex(3).feedback(0.2).volume(0.7)
     expect((s.props).modRatio).toBe(1.273)
     expect((s.props).modIndex).toBe(3)
     expect((s.props).feedback).toBe(0.2)
@@ -181,7 +180,7 @@ describe('FMSynth — sub-type methods survive base chain calls', () => {
 
 describe('SubSynth — sub-type methods survive base chain calls', () => {
   it('unison() survives after volume()', () => {
-    const s = SubSynth('C2').volume(0.8) as SubSynthPart
+    const s = SubSynth('C2').volume(0.8)
     expect(typeof s.unison).toBe('function')
   })
 
@@ -190,7 +189,7 @@ describe('SubSynth — sub-type methods survive base chain calls', () => {
   })
 
   it('props accumulate through chain', () => {
-    const s = SubSynth().unison(2).detune(15).volume(0.5) as SubSynthPart
+    const s = SubSynth().unison(2).detune(15).volume(0.5)
     expect((s.props).unison).toBe(2)
     expect((s.props).detune).toBe(15)
     expect(s._volume).toBe(0.5)
