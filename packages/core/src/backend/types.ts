@@ -39,6 +39,8 @@ export type BackendOscillatorNode = BackendNode & {
   readonly frequencyParam: BackendAudioParam
   readonly start: (time?: number) => void
   readonly stop: (time?: number) => void
+  /** Fires once after the oscillator has fully stopped. Use to disconnect nodes and prevent leaks. */
+  onended: ((event: Event) => void) | null
   readonly setFrequency: (value: number, time?: number) => void
   readonly setDetune: (value: number, time?: number) => void
   /**
@@ -73,6 +75,8 @@ export type BackendGainNode = BackendNode & {
 export type BackendNoiseNode = BackendNode & {
   readonly start: (time?: number) => void
   readonly stop: (time?: number) => void
+  /** Fires once after the noise source has fully stopped. Use to disconnect nodes and prevent leaks. */
+  onended: ((event: Event) => void) | null
 }
 
 // Decoded audio buffer — holds sample data

@@ -46,9 +46,9 @@ type PanelVisibility = {
 
 const STARTER = `import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
 
-const kick  = Kick808().hits(0, 4, 8, 12).volume(0.7)
-const snare = Snare909().hits(4, 12).volume(0.55)
-const hihat = Hihat808().euclidean(8, 16).volume(0.25)
+const kick  = Kick808(4).volume(0.8)
+const snare = Snare909(2).volume(0.55)
+const hihat = Hihat808(8).volume(0.25)
 const bass  = Bass303('A2').cutoff(600).resonance(0.4)
   .pattern(['A2', 0, 0, 0,  'D3', 0, 0, 0,  'A2', 0, 0, 0,  'D3', 0, 0, 0])
   .volume(0.6)
@@ -132,7 +132,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [logEntries,  setLogEntries]  = useState<ReadonlyArray<LogEntry>>([])
   const [pianoNotes,  setPianoNotes]  = useState<ReadonlyArray<PianoRollNote>>([])
   // t220 — import visibility toggle (stub: fold/unfold in Monaco; auto-inject deferred for DSL chain API)
-  const [importsVisible, setImportsVisible] = useState(true)
+  const [importsVisible, setImportsVisible] = useState(false)
   // Instrument panel — which track is currently selected (null = none)
   const [selectedTrack, setSelectedTrack] = useState<number | null>(null)
   // Set to true when the user clicks play before eval — song:update handler will

@@ -99,6 +99,10 @@ export const createKick909 = (
 
     osc.start(t)
     osc.stop(t + decay + 0.05)
+    osc.onended = () => {
+      try { osc.disconnect()     } catch { /* ok */ }
+      try { bodyEnv.disconnect() } catch { /* ok */ }
+    }
 
     // --- Click: noise → HPF → short amp decay ---
     const noise = context.createNoise({ type: 'white' })
@@ -121,6 +125,11 @@ export const createKick909 = (
 
     noise.start(t)
     noise.stop(t + clickDecay + 0.01)
+    noise.onended = () => {
+      try { noise.disconnect()       } catch { /* ok */ }
+      try { clickFilter.disconnect() } catch { /* ok */ }
+      try { clickEnv.disconnect()    } catch { /* ok */ }
+    }
   }
 
   const component: Kick909Component = {

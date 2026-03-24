@@ -91,12 +91,20 @@ export const createHihat808 = (
     hpf.connect(ampEnv)
     ampEnv.connect(outputGain)
 
-    // Spawn all 6 oscillators
-    for (const freq of HIHAT_FREQS) {
+    // Spawn all 6 oscillators — all share the same stop time, clean up shared nodes on first ended
+    const oscs = HIHAT_FREQS.map(freq => {
       const osc = context.createOscillator({ type: 'square', frequency: freq })
       osc.connect(mixGain)
       osc.start(t)
       osc.stop(t + decay + 0.05)
+      return osc
+    })
+    if (oscs[0]) oscs[0].onended = () => {
+      for (const osc of oscs) { try { osc.disconnect() } catch { /* ok */ } }
+      try { mixGain.disconnect()  } catch { /* ok */ }
+      try { bandpass.disconnect() } catch { /* ok */ }
+      try { hpf.disconnect()      } catch { /* ok */ }
+      try { ampEnv.disconnect()   } catch { /* ok */ }
     }
 
     ampEnv.scheduleEnvelope({

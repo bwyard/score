@@ -84,6 +84,10 @@ export const createKick808 = (
 
     osc.start(t)
     osc.stop(t + decay + 0.05)
+    osc.onended = () => {
+      try { osc.disconnect()    } catch { /* ok */ }
+      try { ampEnv.disconnect() } catch { /* ok */ }
+    }
   }
 
   const component: PercussionComponent = {

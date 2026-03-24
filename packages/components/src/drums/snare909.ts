@@ -109,6 +109,13 @@ export const createSnare909 = (
     oscB.start(t)
     oscA.stop(t + toneDecay + 0.05)
     oscB.stop(t + toneDecay + 0.05)
+    oscA.onended = () => {
+      try { oscA.disconnect()   } catch { /* ok */ }
+      try { oscB.disconnect()   } catch { /* ok */ }
+      try { gainA.disconnect()  } catch { /* ok */ }
+      try { gainB.disconnect()  } catch { /* ok */ }
+      try { toneEnv.disconnect() } catch { /* ok */ }
+    }
 
     // --- Noise arm: white noise → HPF → amp env ---
     const noise = context.createNoise({ type: 'white' })
@@ -133,6 +140,12 @@ export const createSnare909 = (
 
     noise.start(t)
     noise.stop(t + noiseDecay + 0.05)
+    noise.onended = () => {
+      try { noise.disconnect()    } catch { /* ok */ }
+      try { noiseHpf.disconnect() } catch { /* ok */ }
+      try { noiseEnv.disconnect() } catch { /* ok */ }
+      try { noiseScale.disconnect() } catch { /* ok */ }
+    }
   }
 
   const component: Snare909Component = {
