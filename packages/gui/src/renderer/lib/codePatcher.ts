@@ -42,6 +42,43 @@ const trackSlice = (code: string, trackIndex: number): { start: number; end: num
   return { start, end }
 }
 
+/**
+ * Return the instrument model name (PascalCase identifier) at the given track position.
+ * e.g. `'Kick808'`, `'Snare909'`, `'Bass303'`.
+ *
+ * @example
+ * ```ts
+ * // code: const kick = Kick808(4).volume(0.8)
+ * parseTrackModel(code, 0)  // → 'Kick808'
+ * ```
+ */
+export const parseTrackModel = (code: string, trackIndex: number): string => {
+  const positions = findTrackPositions(code)
+  const start = positions[trackIndex]
+  if (start === undefined) return ''
+  const m = /^([A-Z][A-Za-z0-9]*)/.exec(code.slice(start))
+  return m?.[1] ?? ''
+}
+
+/**
+ * Replace the instrument model name at the given track position with `newModel`.
+ * e.g. replaces `Kick808(4)` with `Kick909(4)`.
+ *
+ * @example
+ * ```ts
+ * patchInstrumentModel(code, 0, 'Kick909')
+ * // const kick = Kick808(4).volume(0.8) → const kick = Kick909(4).volume(0.8)
+ * ```
+ */
+export const patchInstrumentModel = (code: string, trackIndex: number, newModel: string): string => {
+  const positions = findTrackPositions(code)
+  const start = positions[trackIndex]
+  if (start === undefined) return code
+  const m = /^([A-Z][A-Za-z0-9]*)/.exec(code.slice(start))
+  if (!m) return code
+  return code.slice(0, start) + newModel + code.slice(start + m[0].length)
+}
+
 // ── Exported pure patch functions ─────────────────────────────────────────────
 
 /**

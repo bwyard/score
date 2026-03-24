@@ -20,7 +20,7 @@ import { EvalStatus }                       from '../status/index.js'
 import type { EvalStatusKind }             from '../status/EvalStatus.js'
 import { BarCounter }                       from '../status/index.js'
 import { PendingSwapBadge }                 from '../status/index.js'
-import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams } from '../../lib/codePatcher.js'
+import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams, parseTrackModel, patchInstrumentModel } from '../../lib/codePatcher.js'
 import { InstrumentPanel } from '../shared/InstrumentPanel.js'
 import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
 import type { PanelLayoutMap }            from '../../../main/ipc-types.js'
@@ -407,7 +407,11 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
    * Prevents 60fps re-evals during slider drag while keeping the editor in sync.
    */
   const onInstrumentChange = useCallback((trackIndex: number, method: string, value: number | string): void => {
-    setCode(prev => patchChainMethod(prev, trackIndex, method, value))
+    if (method === '_model' && typeof value === 'string') {
+      setCode(prev => patchInstrumentModel(prev, trackIndex, value))
+    } else {
+      setCode(prev => patchChainMethod(prev, trackIndex, method, value))
+    }
     if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
     evalDebounceRef.current = setTimeout(() => {
       setError(null)
@@ -747,7 +751,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                   trackIndex={selectedTrack}
                   instrumentType={tracks[selectedTrack].type}
                   trackName={tracks[selectedTrack].name}
-                  params={{ ...parseTrackChainParams(code, selectedTrack), volume: stripStates[selectedTrack]?.volume ?? 1 }}
+                  params={{ ...parseTrackChainParams(code, selectedTrack), _model: parseTrackModel(code, selectedTrack), volume: stripStates[selectedTrack]?.volume ?? 1 }}
                   muted={stripStates[selectedTrack]?.muted ?? false}
                   onChange={(method: string, value: number | string) => { onInstrumentChange(selectedTrack, method, value) }}
                   onMute={() => { onInstrumentMute(selectedTrack) }}

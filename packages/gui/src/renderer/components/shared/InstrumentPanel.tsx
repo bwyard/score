@@ -50,7 +50,14 @@ type CheckboxControl = {
   readonly method: string
 }
 
-type Control = SliderControl | CheckboxControl
+type SelectControl = {
+  readonly kind:    'select'
+  readonly label:   string
+  readonly method:  string
+  readonly options: readonly { readonly value: string; readonly label: string }[]
+}
+
+type Control = SliderControl | CheckboxControl | SelectControl
 
 const slider = (
   label: string, method: string, min: number, max: number, step: number, def: number,
@@ -59,6 +66,10 @@ const slider = (
 const checkbox = (label: string, method: string): CheckboxControl =>
   ({ kind: 'checkbox', label, method })
 
+const select = (
+  label: string, method: string, options: readonly { readonly value: string; readonly label: string }[],
+): SelectControl => ({ kind: 'select', label, method, options })
+
 // ── Control definitions per instrument type ───────────────────────────────────
 
 const FALLBACK_CONTROLS: readonly Control[] = [
@@ -66,15 +77,19 @@ const FALLBACK_CONTROLS: readonly Control[] = [
   slider('Reverb', 'reverb', 0, 1, 0.01, 0),
 ]
 
+const KICK_MODELS   = [{ value: 'Kick808', label: '808' }, { value: 'Kick909', label: '909' }, { value: 'Kick', label: 'Generic' }]
+const SNARE_MODELS  = [{ value: 'Snare909', label: '909' }, { value: 'Snare', label: 'Generic' }]
+const HIHAT_MODELS  = [{ value: 'Hihat808', label: '808' }, { value: 'HiHat', label: 'Generic' }]
+
 const CONTROLS: Record<string, readonly Control[]> = {
-  kick:    [slider('Volume', 'volume', 0, 1, 0.01, 0.85), slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Decay', 'decay', 0.1, 2, 0.01, 0.5),  slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
-  kick808: [slider('Volume', 'volume', 0, 1, 0.01, 0.85), slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Decay', 'decay', 0.1, 2, 0.01, 0.5),  slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
-  kick909: [slider('Volume', 'volume', 0, 1, 0.01, 0.85), slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Decay', 'decay', 0.1, 2, 0.01, 0.5),  slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
-  snare:   [slider('Volume', 'volume', 0, 1, 0.01, 0.7),  slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Snappy', 'sustain', 0, 1, 0.01, 0.5), slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
-  snare909:[slider('Volume', 'volume', 0, 1, 0.01, 0.7),  slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Snappy', 'sustain', 0, 1, 0.01, 0.5), slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
-  hihat:   [slider('Volume', 'volume', 0, 1, 0.01, 0.4),  slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Decay', 'decay', 0.1, 2, 0.01, 0.1),  checkbox('Open', 'open')],
-  hihat808:[slider('Volume', 'volume', 0, 1, 0.01, 0.4),  slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Decay', 'decay', 0.1, 2, 0.01, 0.1),  checkbox('Open', 'open')],
-  bass303: [slider('Volume', 'volume', 0, 1, 0.01, 0.8),  slider('Filter', 'filter', 100, 8000, 10, 800), slider('Resonance', 'resonance', 0, 30, 0.1, 0.5), slider('Wobble', 'wobble', 0, 1, 0.01, 0)],
+  kick:    [select('Model', '_model', KICK_MODELS),  slider('Volume', 'volume', 0, 1, 0.01, 0.85), slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Decay', 'decay', 0.1, 2, 0.01, 0.5),  slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
+  kick808: [select('Model', '_model', KICK_MODELS),  slider('Volume', 'volume', 0, 1, 0.01, 0.85), slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Decay', 'decay', 0.1, 2, 0.01, 0.5),  slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
+  kick909: [select('Model', '_model', KICK_MODELS),  slider('Volume', 'volume', 0, 1, 0.01, 0.85), slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Decay', 'decay', 0.1, 2, 0.01, 0.5),  slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
+  snare:   [select('Model', '_model', SNARE_MODELS), slider('Volume', 'volume', 0, 1, 0.01, 0.7),  slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Snappy', 'sustain', 0, 1, 0.01, 0.5), slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
+  snare909:[select('Model', '_model', SNARE_MODELS), slider('Volume', 'volume', 0, 1, 0.01, 0.7),  slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Snappy', 'sustain', 0, 1, 0.01, 0.5), slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
+  hihat:   [select('Model', '_model', HIHAT_MODELS), slider('Volume', 'volume', 0, 1, 0.01, 0.4),  slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Decay', 'decay', 0.05, 2, 0.01, 0.1), slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
+  hihat808:[select('Model', '_model', HIHAT_MODELS), slider('Volume', 'volume', 0, 1, 0.01, 0.4),  slider('Tune', 'pitch', -24, 24, 1, 0),    slider('Decay', 'decay', 0.05, 2, 0.01, 0.1), slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
+  bass303: [slider('Volume', 'volume', 0, 1, 0.01, 0.8),  slider('Cutoff', 'cutoff', 100, 8000, 10, 600), slider('Resonance', 'resonance', 0, 30, 0.1, 0.5), slider('Wobble', 'wobble', 0, 1, 0.01, 0)],
   synth:   [slider('Volume', 'volume', 0, 1, 0.01, 0.6),  slider('Filter', 'filter', 100, 8000, 10, 2000), slider('Attack', 'attack', 0.01, 2, 0.01, 0.01), slider('Release', 'release', 0.1, 4, 0.01, 0.3), slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
   subsynth:[slider('Volume', 'volume', 0, 1, 0.01, 0.6),  slider('Filter', 'filter', 100, 8000, 10, 2000), slider('Attack', 'attack', 0.01, 2, 0.01, 0.01), slider('Release', 'release', 0.1, 4, 0.01, 0.3), slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
   fmsynth: [slider('Volume', 'volume', 0, 1, 0.01, 0.6),  slider('Filter', 'filter', 100, 8000, 10, 2000), slider('Attack', 'attack', 0.01, 2, 0.01, 0.01), slider('Release', 'release', 0.1, 4, 0.01, 0.3), slider('Reverb', 'reverb', 0, 1, 0.01, 0)],
@@ -117,6 +132,10 @@ const styles = {
   },
   checkboxRow: {
     display: 'flex', flexDirection: 'row' as const, alignItems: 'center', gap: 4,
+  },
+  select: {
+    fontSize: 9, fontFamily: 'monospace', background: '#181818', color: '#aaa',
+    border: '1px solid #333', borderRadius: 2, padding: '1px 2px', cursor: 'pointer',
   },
 } as const
 
@@ -166,6 +185,26 @@ export const InstrumentPanel = (props: InstrumentPanelProps): React.JSX.Element 
       <div style={styles.controlsRow}>
         {controls.map(ctrl => {
           const inputId = `panel-${String(trackIndex)}-${ctrl.method}`
+
+          if (ctrl.kind === 'select') {
+            const current = typeof params[ctrl.method] === 'string' ? params[ctrl.method] as string : (ctrl.options[0]?.value ?? '')
+            return (
+              <div key={ctrl.method} style={styles.control}>
+                <label htmlFor={inputId} style={styles.label}>{ctrl.label}</label>
+                <select
+                  id={inputId}
+                  aria-label={ctrl.label}
+                  style={styles.select}
+                  value={current}
+                  onChange={e => { onChange(ctrl.method, e.target.value) }}
+                >
+                  {ctrl.options.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            )
+          }
 
           if (ctrl.kind === 'checkbox') {
             const checked = Boolean(params[ctrl.method] ?? 0)
