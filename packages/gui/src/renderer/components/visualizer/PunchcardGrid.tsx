@@ -13,6 +13,10 @@ type Props = {
   readonly currentStep:   number
   readonly stepCount:     number
   readonly onStepClick?:  (trackIndex: number, stepIndex: number) => void
+  /** Called when a track label (left column) is clicked — opens the instrument editor for that track. */
+  readonly onLabelClick?: (trackIndex: number) => void
+  /** Which track index is currently selected (shows edit highlight on label). */
+  readonly selectedTrack?: number | null
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -25,12 +29,21 @@ const STRIP_WIDTH      = 4    // colour accent strip inside label area
 const CELL_GAP         = 1
 
 const STRIP_COLOR: Record<string, string> = {
-  kick:   '#c05a20',
-  snare:  '#c02040',
-  hihat:  '#208060',
-  synth:  '#2060a0',
-  arp:    '#6040a0',
-  sample: '#606060',
+  kick:    '#c05a20',
+  kick808: '#c05a20',
+  kick909: '#d04010',
+  snare:   '#c02040',
+  snare909:'#c02040',
+  hihat:   '#208060',
+  hihat808:'#208060',
+  bass303: '#9040c0',
+  synth:   '#2060a0',
+  subsynth:'#2060a0',
+  fmsynth: '#1a50c0',
+  pad:     '#206080',
+  pluck:   '#208060',
+  arp:     '#6040a0',
+  sample:  '#606060',
 }
 const STRIP_DEFAULT = '#404040'
 
@@ -52,13 +65,14 @@ const isActive = (value: number | string): boolean =>
   value !== 0 && value !== ''
 
 const drawGrid = (
-  ctx:         CanvasRenderingContext2D,
-  tracks:      ReadonlyArray<PunchcardTrack>,
-  currentStep: number,
-  stepCount:   number,
-  width:       number,
-  height:      number,
-  flash:       boolean,
+  ctx:           CanvasRenderingContext2D,
+  tracks:        ReadonlyArray<PunchcardTrack>,
+  currentStep:   number,
+  stepCount:     number,
+  width:         number,
+  height:        number,
+  flash:         boolean,
+  selectedTrack: number | null | undefined,
 ): void => {
   // Background
   ctx.fillStyle = BG_COLOR
@@ -84,16 +98,25 @@ const drawGrid = (
     // Shorter patterns loop — an 8-step kick repeats in a 16-step grid.
     const localStep  = currentStep % trackLen
 
-    // Label area background
-    ctx.fillStyle = '#0a0a0c'
+    // Label area background — highlighted blue tint when this track is selected
+    const isSelected = selectedTrack === rowIndex
+    ctx.fillStyle = isSelected ? '#0e1a2e' : '#0a0a0c'
     ctx.fillRect(0, rowY, LABEL_WIDTH, ROW_HEIGHT)
 
     // Colour accent strip
     ctx.fillStyle = resolveStripColor(track.type)
     ctx.fillRect(0, rowY, STRIP_WIDTH, ROW_HEIGHT)
 
+    // Edit affordance arrow on selected row
+    if (isSelected) {
+      ctx.fillStyle = '#4a8fff'
+      ctx.font      = '8px monospace'
+      ctx.textAlign = 'right'
+      ctx.fillText('▸', LABEL_WIDTH - 2, rowY + ROW_HEIGHT / 2)
+    }
+
     // Track name text
-    ctx.fillStyle    = '#5a6a7a'
+    ctx.fillStyle    = isSelected ? '#8ab8ff' : '#5a6a7a'
     ctx.font         = '9px monospace'
     ctx.textAlign    = 'left'
     ctx.textBaseline = 'middle'
@@ -151,7 +174,7 @@ const drawGrid = (
  * />
  * ```
  */
-export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick }: Props) => {
+export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick, onLabelClick, selectedTrack }: Props) => {
   const canvasRef         = useRef<HTMLCanvasElement>(null)
   const [flash, setFlash] = useState(false)
 
@@ -179,11 +202,10 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick }: P
     if (ctx === null) return
 
     ctx.scale(dpr, dpr)
-    drawGrid(ctx, tracks, currentStep, stepCount, width, height, flash)
-  }, [tracks, currentStep, stepCount, flash])
+    drawGrid(ctx, tracks, currentStep, stepCount, width, height, flash, selectedTrack)
+  }, [tracks, currentStep, stepCount, flash, selectedTrack])
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>): void => {
-    if (!onStepClick) return
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -194,13 +216,18 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick }: P
     const trackIndex = Math.floor(y / (ROW_HEIGHT + ROW_GAP))
     if (trackIndex < 0 || trackIndex >= tracks.length) return
 
+    if (x < LABEL_WIDTH) {
+      onLabelClick?.(trackIndex)
+      return
+    }
+
+    if (!onStepClick) return
     const track = tracks[trackIndex]
     if (!track) return
     const trackLen = track.pattern.length > 0 ? track.pattern.length : stepCount
     const cellAreaWidth = canvas.clientWidth - LABEL_WIDTH
     const cellWidth = (cellAreaWidth - (trackLen - 1) * CELL_GAP) / trackLen
 
-    if (x < LABEL_WIDTH) return
     const stepIndex = Math.floor((x - LABEL_WIDTH) / (cellWidth + CELL_GAP))
     if (stepIndex < 0 || stepIndex >= trackLen) return
 
@@ -215,7 +242,7 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick }: P
   return (
     <canvas
       ref={canvasRef}
-      onClick={onStepClick ? handleClick : undefined}
+      onClick={onStepClick ?? onLabelClick ? handleClick : undefined}
       style={{
         width:          '100%',
         height:         `${String(canvasHeight)}px`,

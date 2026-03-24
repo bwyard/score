@@ -175,7 +175,7 @@ export const MixerStrip = ({
         aria-label={`${name} level`}
         role="img"
         width={4}
-        height={60}
+        height={44}
         style={styles.vuCanvas}
       />
     </div>
@@ -190,12 +190,11 @@ const styles = {
     flexDirection:   'column' as const,
     alignItems:      'center',
     width:           '56px',
-    minHeight:       '180px',
     background:      '#0d0d10',
     border:          '1px solid #1e1e22',
     boxSizing:       'border-box' as const,
-    padding:         '0 0 6px',
-    gap:             '4px',
+    padding:         '0 0 4px',
+    gap:             '3px',
     userSelect:      'none' as const,
     flexShrink:      0,
   },
@@ -246,7 +245,7 @@ const styles = {
     direction:          'rtl' as const,
     WebkitAppearance:   'slider-vertical' as const,
     width:              '28px',
-    height:             '80px',
+    height:             '60px',
     cursor:             'pointer',
     accentColor:        '#4a8fff',
     flexShrink:         0,
@@ -254,7 +253,7 @@ const styles = {
   vuCanvas: {
     display:        'block',
     width:          '4px',
-    height:         '60px',
+    height:         '44px',
     imageRendering: 'pixelated' as const,
     flexShrink:     0,
   },

@@ -383,3 +383,49 @@ export const patchAddInstrument = (
   const matchEnd   = matchStart + inner.length
   return withConst.slice(0, matchStart) + newInner + withConst.slice(matchEnd)
 }
+
+/**
+ * Returns true if the given track's chain includes a `.mute()` call.
+ *
+ * @param code       - Full DSL code string.
+ * @param trackIndex - Zero-based track index.
+ */
+export const parseMuteState = (code: string, trackIndex: number): boolean => {
+  const region = trackSlice(code, trackIndex)
+  if (!region) return false
+  return /\.mute\(\)/.test(code.slice(region.start, region.end))
+}
+
+/**
+ * Add or remove `.mute()` from a track's chain to persist mute state to code.
+ *
+ * @param code       - Full DSL code string.
+ * @param trackIndex - Zero-based track index.
+ * @param muted      - `true` to add `.mute()`, `false` to remove it.
+ */
+export const patchMute = (code: string, trackIndex: number, muted: boolean): string => {
+  const region = trackSlice(code, trackIndex)
+  if (!region) return code
+  const { start, end } = region
+  const slice = code.slice(start, end)
+
+  if (!muted) {
+    // Remove .mute() from chain
+    const cleaned = slice.replace(/\.mute\(\)/g, '')
+    return code.slice(0, start) + cleaned + code.slice(end)
+  }
+
+  // Already muted — no-op
+  if (/\.mute\(\)/.test(slice)) return code
+
+  // Append .mute() to last non-empty line of region
+  const lines = slice.split('\n')
+  const stopIdx = lines.findIndex(ln =>
+    ln.trim().startsWith('const ') || ln.trim().startsWith('export '))
+  const regionLines = stopIdx === -1 ? lines : lines.slice(0, stopIdx)
+  const insertLineIdx = regionLines.reduce((acc, ln, i) =>
+    ln.trim().length > 0 ? i : acc, 0)
+
+  const patched = lines.map((ln, i) => i === insertLineIdx ? ln + '.mute()' : ln)
+  return code.slice(0, start) + patched.join('\n') + code.slice(end)
+}
