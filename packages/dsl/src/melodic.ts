@@ -8,7 +8,7 @@
 // Real @score/components implementations for stubs come in a follow-up PR.
 
 import { createPart } from './chain.js'
-import type { ChainablePart } from './chain.js'
+import type { ChainablePart, ChainMethods, PartDescriptor } from './chain.js'
 
 // ── Synth ─────────────────────────────────────────────────────────────────────
 
@@ -40,8 +40,11 @@ export const Synth = (
 
 // ── SubSynth ──────────────────────────────────────────────────────────────────
 
-/** Extended ChainablePart with SubSynth-specific chain methods. */
-export type SubSynthPart = ChainablePart & {
+/**
+ * Extended ChainablePart with SubSynth-specific chain methods.
+ * Declared as interface so TypeScript resolves the self-referential ChainMethods<SubSynthPart>.
+ */
+export interface SubSynthPart extends PartDescriptor, ChainMethods<SubSynthPart> {
   /** Number of detuned oscillators (unison stack). `1` = mono, `2` = dual, `4` = quad. Default `1`. */
   readonly unison: (n: 1 | 2 | 4) => SubSynthPart
   /** Detune spread in cents across unison oscillators. Default `8`. */
@@ -49,9 +52,9 @@ export type SubSynthPart = ChainablePart & {
 }
 
 const makeSubSynth = (base: ChainablePart): SubSynthPart => ({
-  ...base,
-  unison: (n) => makeSubSynth(createPart({ ...base, props: { ...base.props, unison: n } })),
-  detune: (cents) => makeSubSynth(createPart({ ...base, props: { ...base.props, detune: cents } })),
+  ...(base as unknown as SubSynthPart),  // chain methods produce SubSynthPart via wrap threading
+  unison: (n) => makeSubSynth(createPart({ ...base, props: { ...base.props, unison: n } }, makeSubSynth)),
+  detune: (cents) => makeSubSynth(createPart({ ...base, props: { ...base.props, detune: cents } }, makeSubSynth)),
 })
 
 /**
@@ -76,13 +79,16 @@ export const SubSynth = (pitch?: string): SubSynthPart =>
       instrumentType: 'sub-synth',
       props: {},
       ...( pitch !== undefined ? { _notes: [pitch] } : {}),
-    }),
+    }, makeSubSynth),
   )
 
 // ── FMSynth ───────────────────────────────────────────────────────────────────
 
-/** Extended ChainablePart with FMSynth-specific chain methods. */
-export type FMSynthPart = ChainablePart & {
+/**
+ * Extended ChainablePart with FMSynth-specific chain methods.
+ * Declared as interface so TypeScript resolves the self-referential ChainMethods<FMSynthPart>.
+ */
+export interface FMSynthPart extends PartDescriptor, ChainMethods<FMSynthPart> {
   /** Modulator-to-carrier frequency ratio. Non-integer = inharmonic/metallic. Default `1.273`. */
   readonly ratio: (n: number) => FMSynthPart
   /** Modulation index — peak deviation multiplier of carrier frequency. Default `3`. */
@@ -92,10 +98,10 @@ export type FMSynthPart = ChainablePart & {
 }
 
 const makeFMSynth = (base: ChainablePart): FMSynthPart => ({
-  ...base,
-  ratio: (n) => makeFMSynth(createPart({ ...base, props: { ...base.props, modRatio: n } })),
-  modIndex: (n) => makeFMSynth(createPart({ ...base, props: { ...base.props, modIndex: n } })),
-  feedback: (n) => makeFMSynth(createPart({ ...base, props: { ...base.props, feedback: n } })),
+  ...(base as unknown as FMSynthPart),  // chain methods produce FMSynthPart via wrap threading
+  ratio: (n) => makeFMSynth(createPart({ ...base, props: { ...base.props, modRatio: n } }, makeFMSynth)),
+  modIndex: (n) => makeFMSynth(createPart({ ...base, props: { ...base.props, modIndex: n } }, makeFMSynth)),
+  feedback: (n) => makeFMSynth(createPart({ ...base, props: { ...base.props, feedback: n } }, makeFMSynth)),
 })
 
 /**
@@ -126,15 +132,20 @@ export const FMSynth = (pitch?: string): FMSynthPart =>
       instrumentType: 'fm-synth',
       props: {},
       ...( pitch !== undefined ? { _notes: [pitch] } : {}),
-    }),
+    }, makeFMSynth),
   )
 
 // ── Bass303 ───────────────────────────────────────────────────────────────────
 
-/** Extended ChainablePart with Bass303-specific chain methods. */
-export type Bass303Part = ChainablePart & {
+/**
+ * Extended ChainablePart with Bass303-specific chain methods.
+ * Declared as interface so TypeScript resolves the self-referential ChainMethods<Bass303Part>.
+ */
+export interface Bass303Part extends PartDescriptor, ChainMethods<Bass303Part> {
   /** Filter cutoff frequency in Hz. Default `400`. */
   readonly cutoff: (freq: number) => Bass303Part
+  /** Filter cutoff + optional resonance Q — overrides base filter() to map into props. */
+  readonly filter: (freq: number, q?: number) => Bass303Part
   /** Filter resonance Q. Default `0.8`. Increases to self-oscillation at high values. */
   readonly resonance: (q: number) => Bass303Part
   /** Accent steps — step indices where velocity is boosted and filter opens fully. */
@@ -144,11 +155,14 @@ export type Bass303Part = ChainablePart & {
 }
 
 const makeBass303 = (base: ChainablePart): Bass303Part => ({
-  ...base,
-  cutoff: (freq) => makeBass303(createPart({ ...base, props: { ...base.props, cutoff: freq } })),
-  resonance: (q) => makeBass303(createPart({ ...base, props: { ...base.props, resonance: q } })),
-  accent: (steps) => makeBass303(createPart({ ...base, props: { ...base.props, accentSteps: steps } })),
-  slide: (steps) => makeBass303(createPart({ ...base, props: { ...base.props, slideSteps: steps } })),
+  ...(base as unknown as Bass303Part),  // chain methods produce Bass303Part via wrap threading
+  // Override ChainablePart.filter() to map freq→cutoff and q→resonance in props
+  // so it stays consistent with .cutoff()/.resonance() when authors use the generic method.
+  filter: (freq, q) => makeBass303(createPart({ ...base, props: { ...base.props, cutoff: freq, ...(q !== undefined ? { resonance: q } : {}) } }, makeBass303)),
+  cutoff: (freq) => makeBass303(createPart({ ...base, props: { ...base.props, cutoff: freq } }, makeBass303)),
+  resonance: (q) => makeBass303(createPart({ ...base, props: { ...base.props, resonance: q } }, makeBass303)),
+  accent: (steps) => makeBass303(createPart({ ...base, props: { ...base.props, accentSteps: steps } }, makeBass303)),
+  slide: (steps) => makeBass303(createPart({ ...base, props: { ...base.props, slideSteps: steps } }, makeBass303)),
 })
 
 /**
@@ -178,7 +192,7 @@ export const Bass303 = (pitch?: string): Bass303Part =>
       instrumentType: 'bass-303',
       props: {},
       ...( pitch !== undefined ? { _notes: [pitch] } : {}),
-    }),
+    }, makeBass303),
   )
 
 // ── Arp ───────────────────────────────────────────────────────────────────────

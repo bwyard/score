@@ -15,7 +15,7 @@ const isChainablePart = (part: unknown): boolean => {
     typeof p.id === 'string' &&
     typeof p.instrumentType === 'string' &&
     typeof p.volume === 'function' &&
-    typeof p.pattern === 'undefined' // _pattern, not pattern
+    typeof p.pattern === 'function'  // chain method, _pattern holds the value
   )
 }
 

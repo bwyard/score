@@ -149,6 +149,52 @@ describe('patchTrackNote', () => {
   })
 })
 
+// ── patchTrackVolume — chain API style (.volume(n)) ───────────────────────────
+
+const CHAIN_VOLUME_CODE = `import { Song, Kick808, Bass303, Pad } from '@score/dsl'
+
+const kick = Kick808().pattern([1, 0, 0, 0]).volume(0.9)
+const bass = Bass303('C2').cutoff(600).volume(0.8)
+const pad  = Pad('Am').reverb(0.5).volume(0.6)
+
+export default Song({ bpm: 128, tracks: [kick, bass, pad] })`
+
+describe('patchTrackVolume — chain API style', () => {
+  it('updates .volume() on track 0 (kick)', () => {
+    const result = patchTrackVolume(CHAIN_VOLUME_CODE, 0, 0.5)
+    expect(result).toContain('.volume(0.5)')
+    expect(result).not.toContain('.volume(0.9)')
+  })
+
+  it('updates .volume() on track 1 (bass) without touching track 0', () => {
+    const result = patchTrackVolume(CHAIN_VOLUME_CODE, 1, 0.3)
+    expect(result).toContain('.volume(0.3)')
+    expect(result).toContain('.volume(0.9)')  // kick unchanged
+    expect(result).not.toContain('.volume(0.8)')
+  })
+
+  it('updates .volume() on track 2 (pad)', () => {
+    const result = patchTrackVolume(CHAIN_VOLUME_CODE, 2, 1.0)
+    expect(result).toContain('.volume(1)')
+    expect(result).not.toContain('.volume(0.6)')
+  })
+
+  it('does not mutate other chain methods on the same track', () => {
+    const result = patchTrackVolume(CHAIN_VOLUME_CODE, 1, 0.4)
+    expect(result).toContain('.cutoff(600)')  // bass cutoff unchanged
+  })
+
+  it('handles volume with more than 2 decimal places by rounding', () => {
+    const result = patchTrackVolume(CHAIN_VOLUME_CODE, 0, 0.333)
+    // rounds to 2dp: 0.33
+    expect(result).toContain('.volume(0.33)')
+  })
+
+  it('returns original if trackIndex out of range', () => {
+    expect(patchTrackVolume(CHAIN_VOLUME_CODE, 99, 0.5)).toBe(CHAIN_VOLUME_CODE)
+  })
+})
+
 // ── patchTrackPattern — chain API style (.pattern([...])) ──────────────────
 
 const CHAIN_CODE = `import { Song, Kick808, Snare } from '@score/dsl'

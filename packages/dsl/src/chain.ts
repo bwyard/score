@@ -143,6 +143,200 @@ export type PartDescriptor = {
   readonly dispose: () => void
 }
 
+// ── ChainMethods<T> — all fluent chain methods, generic over return type ──────
+
+/**
+ * All fluent chain methods for a part — generic over `T`, the return type of every method.
+ *
+ * `ChainablePart` uses `ChainMethods<ChainablePart>`.
+ * Sub-types declare `PartDescriptor & ChainMethods<Self> & Extras`
+ * so every chain method preserves the sub-type through composition.
+ *
+ * Thesis: functional composition preserves identity.
+ * A `Bass303Part` through `.volume()` is still a `Bass303Part`.
+ */
+export type ChainMethods<T> = {
+  // ── Pattern ──────────────────────────────────────────────────────────────
+  /** Speed multiplier. `n > 1` = fast, `n < 1` = slow, `n < 0` = reverse. */
+  readonly speed: (n: number) => T
+  /** Sugar: `speed(1/n)` — play n times slower. */
+  readonly slow: (n: number) => T
+  /** Sugar: `speed(n)` — play n times faster. */
+  readonly fast: (n: number) => T
+  /** Sugar: reverse the pattern. */
+  readonly rev: () => T
+  /** Sugar: half-time feel. */
+  readonly halfTime: () => T
+  /** Sugar: double-time feel. */
+  readonly doubleTime: () => T
+  /** Sugar: triplet feel (3 against 2). */
+  readonly tripletTime: () => T
+  /** Classical term: reverse. Alias for `.rev()`. */
+  readonly retrograde: () => T
+  /** Classical: lengthen by factor n. Sugar for `slow(n)`. */
+  readonly augment: (n?: number) => T
+  /** Classical: shorten by factor n. Sugar for `fast(n)`. */
+  readonly diminish: (n?: number) => T
+  /** Replace pattern with euclidean(hits, steps). Default steps = 16. */
+  readonly euclidean: (hits: number, steps?: number) => T
+  /** Rotate pattern n steps. Negative = shift left. */
+  readonly shift: (n: number) => T
+  /** Flip 1s and 0s. */
+  readonly invert: () => T
+  /** Mute steps where mask = 0. */
+  readonly mask: (pattern: PatternInput) => T
+  /** Stutter — repeat last hit n times. n = 0 is a no-op. */
+  readonly stutter: (n: number) => T
+  /** Palindrome — pattern + reversed pattern (exclusive center). */
+  readonly palindrome: () => T
+  /** Drop hits at probability p (0 = never, 1 = always silence). */
+  readonly degrade: (p: number) => T
+  /** Timing jitter in seconds. */
+  readonly humanize: (amt: number) => T
+  /** Swing offset on off-beats (0–1). */
+  readonly swing: (amount: number) => T
+  /** Apply fn every n cycles. fn receives current pattern. */
+  readonly every: (n: number, fn: (p: number[]) => number[]) => T
+  /** Custom pattern transform: `(pattern, ctx) => pattern`. */
+  readonly apply: (fn: (p: number[], ctx: PatternCtx) => number[]) => T
+  /** Play pattern n times per cycle. */
+  readonly repeat: (n: number) => T
+  /** Hit on specific step indices. `.hits(0, 4, 8)` or `.hits(0, 4, { of: 14 })`. */
+  readonly hits: (...args: (number | { of: number })[]) => T
+  /**
+   * Set a combined pitch+rhythm pattern directly.
+   * String values are note names; `0` = rest. Equivalent to calling `.notes()` for
+   * pitch and providing a matching hit pattern.
+   *
+   * @example
+   * ```ts
+   * Bass303('A2').cutoff(600).pattern(['A2', 0, 0, 0, 'D3', 0, 0, 0])
+   * ```
+   */
+  readonly pattern: (pat: (string | number)[]) => T
+  /** Per-step fire probability array. Engine applies with seeded PRNG. */
+  readonly stepProb: (probs: number[]) => T
+  /** Fit pattern into exactly n bars. */
+  readonly stretch: (bars: number) => T
+  /** 0-1 offset through pattern (`.phase(0.5)` starts halfway). */
+  readonly phase: (amount: number) => T
+  /** Start playing at bar n. */
+  readonly fromBar: (n: number) => T
+  /** Stop playing at bar n. */
+  readonly untilBar: (n: number) => T
+  /** Fade in over n bars. */
+  readonly fadeIn: (bars: number) => T
+  /** Fade out over n bars. */
+  readonly fadeOut: (bars: number) => T
+  // ── Pitch / notes ────────────────────────────────────────────────────────
+  /** Set a single pitch, e.g. `'C3'`. */
+  readonly note: (pitch: string) => T
+  /** Set a note/chord sequence. `'R'` = rest. */
+  readonly notes: (arr: (string | number)[]) => T
+  /** Constrain notes to scale. */
+  readonly scale: (name: string, root: string) => T
+  /** Transpose ±n semitones. */
+  readonly pitch: (semitones: number) => T
+  /** Shift octave by n (n = 1 → one octave up). */
+  readonly octave: (n: number) => T
+  /** Portamento / glide time in seconds. */
+  readonly glide: (time: number) => T
+  /** Note duration in seconds. */
+  readonly dur: (time: number) => T
+  /** Custom note sequence transform: `(notes, ctx) => notes`. */
+  readonly mapNotes: (fn: (notes: (string | number)[], ctx: PatternCtx) => (string | number)[]) => T
+  // ── Amplitude ────────────────────────────────────────────────────────────
+  /** Output gain 0–1. */
+  readonly volume: (v: number) => T
+  /** ADSR attack in seconds. */
+  readonly attack: (s: number) => T
+  /** ADSR decay in seconds. */
+  readonly decay: (s: number) => T
+  /** ADSR sustain level 0–1. */
+  readonly sustain: (v: number) => T
+  /** ADSR release in seconds. */
+  readonly release: (s: number) => T
+  /** Duck gain when source part hits. */
+  readonly duckWith: (source: string | ChainablePart, opts?: { amount?: number; attack?: number; release?: number }) => T
+  /** EDM pump effect — alias for `.duckWith()`. */
+  readonly pumpWith: (source: string | ChainablePart, release?: number) => T
+  /** Rise on trigger — reverse sidechain. */
+  readonly swellWith: (source: string | ChainablePart) => T
+  /** Full sidechain control — escape hatch. */
+  readonly sidechain: (source: string | ChainablePart, opts?: Partial<Omit<SidechainDescriptor, 'source'>>) => T
+  // ── Tone ─────────────────────────────────────────────────────────────────
+  /** Lowpass filter: cutoff freq (Hz) + optional resonance Q. */
+  readonly filter: (freq: number, q?: number) => T
+  /** 3-band EQ: low, mid, high in dB. */
+  readonly eq: (low: number, mid: number, high: number) => T
+  /** Bit crusher — reduce bit depth (4–16). */
+  readonly bit: (bits: number) => T
+  /** Overdrive / saturation warmth (0–1). */
+  readonly saturate: (amt: number) => T
+  // ── Space ────────────────────────────────────────────────────────────────
+  /** Stereo position -1 (left) to 1 (right). */
+  readonly pan: (v: number) => T
+  /** Stereo width via StereoWidener (0–2, 1 = unity). */
+  readonly widen: (amt: number) => T
+  /** Add reverb. `wet` = 0–1. */
+  readonly reverb: (wet: number, opts?: Record<string, unknown>) => T
+  /** Add delay. `time` in seconds or note value ('1/8d'). `feedback` = 0–1. */
+  readonly delay: (time: number | string, feedback?: number) => T
+  /** Chorus / ensemble detune. `depth` = 0–1. */
+  readonly chorus: (depth?: number) => T
+  /** Flanger sweep. `depth` = 0–1. */
+  readonly flange: (depth?: number) => T
+  // ── Routing ──────────────────────────────────────────────────────────────
+  /** Send to named effect bus at given amount (0–1). */
+  readonly send: (bus: string, amount?: number) => T
+  /** Silence this part. */
+  readonly mute: () => T
+  /** Solo this part (silence all others). */
+  readonly solo: () => T
+  /** Assign to choke group — hits cut each other off. */
+  readonly chokeGroup: (name: string) => T
+  /** Layer additional parts under this one. */
+  readonly layer: (...parts: ChainablePart[]) => T
+  // ── Modulation (musical names) ────────────────────────────────────────────
+  /** LFO on volume — rate Hz, depth 0–1. */
+  readonly tremolo: (rate: number, depth?: number) => T
+  /** Sine on pitch (vibrato) — rate Hz, depth Hz. */
+  readonly vibrato: (rate: number, depth?: number) => T
+  /** LFO on filter cutoff (wobble / acid / dubstep) — rate Hz. */
+  readonly wobble: (rate: number, depth?: number) => T
+  /** LFO on pan (stereo movement). */
+  readonly autopan: (rate: number, depth?: number) => T
+  /** Fast LFO on volume (flute flutter, organ tremolo). */
+  readonly flutter: (rate?: number) => T
+  /** Slow LFO on volume (pad breathe). */
+  readonly breathe: (rate?: number) => T
+  /** OU process on pitch (analog warmth drift). */
+  readonly drift: (amt?: number) => T
+  /** Ramp on volume — swell build over n bars. */
+  readonly swell: (bars: number) => T
+  /** Power escape hatch — modulate any param with any modulation source. */
+  readonly modulate: (param: string, source: ModulationDescriptor) => T
+  // ── Meta ─────────────────────────────────────────────────────────────────
+  /** Per-part stochastic seed — overrides song-level seed. */
+  readonly seed: (n: number) => T
+  /** Human-readable label for GUI mixer and codePatcher. */
+  readonly name: (label: string) => T
+  /** Model variant (percussion only): '808' | '909' | 'hard'. */
+  readonly model: (variant: string) => T
+  // ── Visual chain methods ──────────────────────────────────────────────────
+  /**
+   * Set all visual override fields at once.
+   * Merges with any existing `_visual` — fields not provided are preserved.
+   */
+  readonly visual: (override: NonNullable<PartDescriptor['_visual']>) => T
+  /** Shorthand: set the track color (CSS hex). Fast to type mid-set. */
+  readonly color:  (hex: string) => T
+  /** Shorthand: set the inline glyph kind. Fast to type mid-set. */
+  readonly glyph:  (kind: string) => T
+  /** Shorthand: set the display label. Fast to type mid-set. */
+  readonly label:  (text: string) => T
+}
+
 // ── ChainablePart — PartDescriptor + all chain methods ───────────────────────
 
 /**
@@ -151,6 +345,9 @@ export type PartDescriptor = {
  * Every chain method returns a **new** `ChainablePart` — the original is never mutated.
  * The `_` prefixed fields are data from {@link PartDescriptor}; the named methods
  * are fluent sugar that produce new instances via `createPart`.
+ *
+ * Declared as an interface (not a type alias) so that TypeScript can resolve the
+ * self-referential generic `ChainMethods<ChainablePart>` without a circular type error.
  *
  * @example
  * ```ts
@@ -162,176 +359,8 @@ export type PartDescriptor = {
  * @see {@link PartDescriptor} — the underlying data shape read by the engine
  * @see {@link createPart} — factory used internally by all chain methods
  */
-export type ChainablePart = PartDescriptor & {
-  // ── Pattern ──────────────────────────────────────────────────────────────
-  /** Speed multiplier. `n > 1` = fast, `n < 1` = slow, `n < 0` = reverse. */
-  readonly speed: (n: number) => ChainablePart
-  /** Sugar: `speed(1/n)` — play n times slower. */
-  readonly slow: (n: number) => ChainablePart
-  /** Sugar: `speed(n)` — play n times faster. */
-  readonly fast: (n: number) => ChainablePart
-  /** Sugar: reverse the pattern. */
-  readonly rev: () => ChainablePart
-  /** Sugar: half-time feel. */
-  readonly halfTime: () => ChainablePart
-  /** Sugar: double-time feel. */
-  readonly doubleTime: () => ChainablePart
-  /** Sugar: triplet feel (3 against 2). */
-  readonly tripletTime: () => ChainablePart
-  /** Classical term: reverse. Alias for `.rev()`. */
-  readonly retrograde: () => ChainablePart
-  /** Classical: lengthen by factor n. Sugar for `slow(n)`. */
-  readonly augment: (n?: number) => ChainablePart
-  /** Classical: shorten by factor n. Sugar for `fast(n)`. */
-  readonly diminish: (n?: number) => ChainablePart
-  /** Replace pattern with euclidean(hits, steps). Default steps = 16. */
-  readonly euclidean: (hits: number, steps?: number) => ChainablePart
-  /** Rotate pattern n steps. Negative = shift left. */
-  readonly shift: (n: number) => ChainablePart
-  /** Flip 1s and 0s. */
-  readonly invert: () => ChainablePart
-  /** Mute steps where mask = 0. */
-  readonly mask: (pattern: PatternInput) => ChainablePart
-  /** Stutter — repeat last hit n times. n = 0 is a no-op. */
-  readonly stutter: (n: number) => ChainablePart
-  /** Palindrome — pattern + reversed pattern (exclusive center). */
-  readonly palindrome: () => ChainablePart
-  /** Drop hits at probability p (0 = never, 1 = always silence). */
-  readonly degrade: (p: number) => ChainablePart
-  /** Timing jitter in seconds. */
-  readonly humanize: (amt: number) => ChainablePart
-  /** Swing offset on off-beats (0–1). */
-  readonly swing: (amount: number) => ChainablePart
-  /** Apply fn every n cycles. fn receives current pattern. */
-  readonly every: (n: number, fn: (p: number[]) => number[]) => ChainablePart
-  /** Custom pattern transform: `(pattern, ctx) => pattern`. */
-  readonly apply: (fn: (p: number[], ctx: PatternCtx) => number[]) => ChainablePart
-  /** Play pattern n times per cycle. */
-  readonly repeat: (n: number) => ChainablePart
-  /** Hit on specific step indices. `.hits(0, 4, 8)` or `.hits(0, 4, { of: 14 })`. */
-  readonly hits: (...args: (number | { of: number })[]) => ChainablePart
-  /** Per-step fire probability array. Engine applies with seeded PRNG. */
-  readonly stepProb: (probs: number[]) => ChainablePart
-  /** Fit pattern into exactly n bars. */
-  readonly stretch: (bars: number) => ChainablePart
-  /** 0-1 offset through pattern (`.phase(0.5)` starts halfway). */
-  readonly phase: (amount: number) => ChainablePart
-  /** Start playing at bar n. */
-  readonly fromBar: (n: number) => ChainablePart
-  /** Stop playing at bar n. */
-  readonly untilBar: (n: number) => ChainablePart
-  /** Fade in over n bars. */
-  readonly fadeIn: (bars: number) => ChainablePart
-  /** Fade out over n bars. */
-  readonly fadeOut: (bars: number) => ChainablePart
-  // ── Pitch / notes ────────────────────────────────────────────────────────
-  /** Set a single pitch, e.g. `'C3'`. */
-  readonly note: (pitch: string) => ChainablePart
-  /** Set a note/chord sequence. `'R'` = rest. */
-  readonly notes: (arr: (string | number)[]) => ChainablePart
-  /** Constrain notes to scale. */
-  readonly scale: (name: string, root: string) => ChainablePart
-  /** Transpose ±n semitones. */
-  readonly pitch: (semitones: number) => ChainablePart
-  /** Shift octave by n (n = 1 → one octave up). */
-  readonly octave: (n: number) => ChainablePart
-  /** Portamento / glide time in seconds. */
-  readonly glide: (time: number) => ChainablePart
-  /** Note duration in seconds. */
-  readonly dur: (time: number) => ChainablePart
-  /** Custom note sequence transform: `(notes, ctx) => notes`. */
-  readonly mapNotes: (fn: (notes: (string | number)[], ctx: PatternCtx) => (string | number)[]) => ChainablePart
-  // ── Amplitude ────────────────────────────────────────────────────────────
-  /** Output gain 0–1. */
-  readonly volume: (v: number) => ChainablePart
-  /** ADSR attack in seconds. */
-  readonly attack: (s: number) => ChainablePart
-  /** ADSR decay in seconds. */
-  readonly decay: (s: number) => ChainablePart
-  /** ADSR sustain level 0–1. */
-  readonly sustain: (v: number) => ChainablePart
-  /** ADSR release in seconds. */
-  readonly release: (s: number) => ChainablePart
-  /** Duck gain when source part hits. */
-  readonly duckWith: (source: string | ChainablePart, opts?: { amount?: number; attack?: number; release?: number }) => ChainablePart
-  /** EDM pump effect — alias for `.duckWith()`. */
-  readonly pumpWith: (source: string | ChainablePart, release?: number) => ChainablePart
-  /** Rise on trigger — reverse sidechain. */
-  readonly swellWith: (source: string | ChainablePart) => ChainablePart
-  /** Full sidechain control — escape hatch. */
-  readonly sidechain: (source: string | ChainablePart, opts?: Partial<Omit<SidechainDescriptor, 'source'>>) => ChainablePart
-  // ── Tone ─────────────────────────────────────────────────────────────────
-  /** Lowpass filter: cutoff freq (Hz) + optional resonance Q. */
-  readonly filter: (freq: number, q?: number) => ChainablePart
-  /** 3-band EQ: low, mid, high in dB. */
-  readonly eq: (low: number, mid: number, high: number) => ChainablePart
-  /** Bit crusher — reduce bit depth (4–16). */
-  readonly bit: (bits: number) => ChainablePart
-  /** Overdrive / saturation warmth (0–1). */
-  readonly saturate: (amt: number) => ChainablePart
-  // ── Space ────────────────────────────────────────────────────────────────
-  /** Stereo position -1 (left) to 1 (right). */
-  readonly pan: (v: number) => ChainablePart
-  /** Stereo width via StereoWidener (0–2, 1 = unity). */
-  readonly widen: (amt: number) => ChainablePart
-  /** Add reverb. `wet` = 0–1. */
-  readonly reverb: (wet: number, opts?: Record<string, unknown>) => ChainablePart
-  /** Add delay. `time` in seconds or note value ('1/8d'). `feedback` = 0–1. */
-  readonly delay: (time: number | string, feedback?: number) => ChainablePart
-  /** Chorus / ensemble detune. `depth` = 0–1. */
-  readonly chorus: (depth?: number) => ChainablePart
-  /** Flanger sweep. `depth` = 0–1. */
-  readonly flange: (depth?: number) => ChainablePart
-  // ── Routing ──────────────────────────────────────────────────────────────
-  /** Send to named effect bus at given amount (0–1). */
-  readonly send: (bus: string, amount?: number) => ChainablePart
-  /** Silence this part. */
-  readonly mute: () => ChainablePart
-  /** Solo this part (silence all others). */
-  readonly solo: () => ChainablePart
-  /** Assign to choke group — hits cut each other off. */
-  readonly chokeGroup: (name: string) => ChainablePart
-  /** Layer additional parts under this one. */
-  readonly layer: (...parts: ChainablePart[]) => ChainablePart
-  // ── Modulation (musical names) ────────────────────────────────────────────
-  /** LFO on volume — rate Hz, depth 0–1. */
-  readonly tremolo: (rate: number, depth?: number) => ChainablePart
-  /** Sine on pitch (vibrato) — rate Hz, depth Hz. */
-  readonly vibrato: (rate: number, depth?: number) => ChainablePart
-  /** LFO on filter cutoff (wobble / acid / dubstep) — rate Hz. */
-  readonly wobble: (rate: number, depth?: number) => ChainablePart
-  /** LFO on pan (stereo movement). */
-  readonly autopan: (rate: number, depth?: number) => ChainablePart
-  /** Fast LFO on volume (flute flutter, organ tremolo). */
-  readonly flutter: (rate?: number) => ChainablePart
-  /** Slow LFO on volume (pad breathe). */
-  readonly breathe: (rate?: number) => ChainablePart
-  /** OU process on pitch (analog warmth drift). */
-  readonly drift: (amt?: number) => ChainablePart
-  /** Ramp on volume — swell build over n bars. */
-  readonly swell: (bars: number) => ChainablePart
-  /** Power escape hatch — modulate any param with any modulation source. */
-  readonly modulate: (param: string, source: ModulationDescriptor) => ChainablePart
-  // ── Meta ─────────────────────────────────────────────────────────────────
-  /** Per-part stochastic seed — overrides song-level seed. */
-  readonly seed: (n: number) => ChainablePart
-  /** Human-readable label for GUI mixer and codePatcher. */
-  readonly name: (label: string) => ChainablePart
-  /** Model variant (percussion only): '808' | '909' | 'hard'. */
-  readonly model: (variant: string) => ChainablePart
-  // ── Visual chain methods ──────────────────────────────────────────────────
-  /**
-   * Set all visual override fields at once.
-   * Merges with any existing `_visual` — fields not provided are preserved.
-   */
-  readonly visual: (override: NonNullable<PartDescriptor['_visual']>) => ChainablePart
-  /** Shorthand: set the track color (CSS hex). Fast to type mid-set. */
-  readonly color:  (hex: string) => ChainablePart
-  /** Shorthand: set the inline glyph kind. Fast to type mid-set. */
-  readonly glyph:  (kind: string) => ChainablePart
-  /** Shorthand: set the display label. Fast to type mid-set. */
-  readonly label:  (text: string) => ChainablePart
-}
+ 
+export interface ChainablePart extends PartDescriptor, ChainMethods<ChainablePart> {}
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -379,7 +408,12 @@ const appendMod = (desc: PartDescriptor, param: string, source: ModulationDescri
  *
  * @see {@link defineInstrument} — define a reusable custom instrument factory
  */
-export const createPart = (init: Partial<PartDescriptor> & { readonly instrumentType: string }): ChainablePart => {
+export const createPart = (
+  init: Partial<PartDescriptor> & { readonly instrumentType: string },
+  // Sub-type makers (makeBass303, makeFMSynth, makeSubSynth) pass themselves here so
+  // their extra methods survive any base ChainablePart call. Default: identity.
+  wrap: (p: ChainablePart) => ChainablePart = (p) => p,
+): ChainablePart => {
   const desc: PartDescriptor = {
     _type: 'ChainablePart',
     _version: 1,
@@ -393,6 +427,10 @@ export const createPart = (init: Partial<PartDescriptor> & { readonly instrument
     dispose: undefined as unknown as PartDescriptor['dispose'],
   }
 
+  // Shorthand: build a new part from updated descriptor and re-apply wrap.
+  const cp = (next: Partial<PartDescriptor> & { readonly instrumentType: string }): ChainablePart =>
+    wrap(createPart(next, wrap))
+
   const part: ChainablePart = {
     ...desc,
     connect: (_dest: BackendNode) => part,
@@ -403,106 +441,112 @@ export const createPart = (init: Partial<PartDescriptor> & { readonly instrument
     speed: (n) => {
       if (n === 0) throw ScoreError('.speed(0) is not valid — use .mute() to silence', { received: n, fix: 'Use a non-zero speed value', docs: '' })
       const base = desc._pattern ?? DEFAULT_PATTERN
-      if (n < 0) return createPart({ ...desc, _speed: n, _pattern: rev(fast(Math.abs(n), base)) })
-      if (n === 1) return createPart({ ...desc, _speed: n })
-      return createPart({ ...desc, _speed: n, _pattern: n > 1 ? fast(n, base) : slow(1 / n, base) })
+      if (n < 0) return cp({ ...desc, _speed: n, _pattern: rev(fast(Math.abs(n), base)) })
+      if (n === 1) return cp({ ...desc, _speed: n })
+      return cp({ ...desc, _speed: n, _pattern: n > 1 ? fast(n, base) : slow(1 / n, base) })
     },
-    slow: (n) => createPart({ ...desc, _speed: 1 / n, _pattern: slow(n, desc._pattern ?? DEFAULT_PATTERN) }),
-    fast: (n) => createPart({ ...desc, _speed: n, _pattern: fast(n, desc._pattern ?? DEFAULT_PATTERN) }),
-    rev: () => createPart({ ...desc, _speed: -1, _pattern: rev(desc._pattern ?? DEFAULT_PATTERN) }),
-    halfTime: () => createPart({ ...desc, _speed: 0.5, _pattern: slow(2, desc._pattern ?? DEFAULT_PATTERN) }),
-    doubleTime: () => createPart({ ...desc, _speed: 2, _pattern: fast(2, desc._pattern ?? DEFAULT_PATTERN) }),
-    tripletTime: () => createPart({ ...desc, _speed: 2 / 3, _pattern: fast(2 / 3, desc._pattern ?? DEFAULT_PATTERN) }),
-    retrograde: () => createPart({ ...desc, _speed: -1, _pattern: rev(desc._pattern ?? DEFAULT_PATTERN) }),
-    augment: (n = 2) => createPart({ ...desc, _speed: 1 / n, _pattern: slow(n, desc._pattern ?? DEFAULT_PATTERN) }),
-    diminish: (n = 2) => createPart({ ...desc, _speed: n, _pattern: fast(n, desc._pattern ?? DEFAULT_PATTERN) }),
-    euclidean: (hits, steps = 16) => createPart({ ...desc, _pattern: euclidean(hits, steps) }),
-    shift: (n) => createPart({ ...desc, _pattern: shift(n, desc._pattern ?? DEFAULT_PATTERN) }),
+    slow: (n) => cp({ ...desc, _speed: 1 / n, _pattern: slow(n, desc._pattern ?? DEFAULT_PATTERN) }),
+    fast: (n) => cp({ ...desc, _speed: n, _pattern: fast(n, desc._pattern ?? DEFAULT_PATTERN) }),
+    rev: () => cp({ ...desc, _speed: -1, _pattern: rev(desc._pattern ?? DEFAULT_PATTERN) }),
+    halfTime: () => cp({ ...desc, _speed: 0.5, _pattern: slow(2, desc._pattern ?? DEFAULT_PATTERN) }),
+    doubleTime: () => cp({ ...desc, _speed: 2, _pattern: fast(2, desc._pattern ?? DEFAULT_PATTERN) }),
+    tripletTime: () => cp({ ...desc, _speed: 2 / 3, _pattern: fast(2 / 3, desc._pattern ?? DEFAULT_PATTERN) }),
+    retrograde: () => cp({ ...desc, _speed: -1, _pattern: rev(desc._pattern ?? DEFAULT_PATTERN) }),
+    augment: (n = 2) => cp({ ...desc, _speed: 1 / n, _pattern: slow(n, desc._pattern ?? DEFAULT_PATTERN) }),
+    diminish: (n = 2) => cp({ ...desc, _speed: n, _pattern: fast(n, desc._pattern ?? DEFAULT_PATTERN) }),
+    euclidean: (hits, steps = 16) => cp({ ...desc, _pattern: euclidean(hits, steps) }),
+    shift: (n) => cp({ ...desc, _pattern: shift(n, desc._pattern ?? DEFAULT_PATTERN) }),
     invert: () => {
       const base = desc._pattern
       if (Array.isArray(base)) {
-        return createPart({ ...desc, _pattern: (base as number[]).map((v) => (v ? 0 : 1)) })
+        return cp({ ...desc, _pattern: (base as number[]).map((v) => (v ? 0 : 1)) })
       }
-      return createPart({ ...desc }) // non-array pattern: no-op
+      return cp({ ...desc }) // non-array pattern: no-op
     },
-    mask: (pattern) => createPart({ ...desc, _mask: pattern }),
+    mask: (pattern) => cp({ ...desc, _mask: pattern }),
     stutter: (n) => {
       if (n < 0) throw ScoreError('.stutter(n) requires n >= 0', { received: n, fix: 'Use a non-negative stutter count', docs: '' })
-      if (n === 0) return createPart({ ...desc })
-      return createPart({ ...desc, _stutter: n })
+      if (n === 0) return cp({ ...desc })
+      return cp({ ...desc, _stutter: n })
     },
     palindrome: () => {
       const base = desc._pattern
       if (Array.isArray(base)) {
         const arr = base as number[]
-        return createPart({ ...desc, _palindrome: true, _pattern: [...arr, ...[...arr].reverse().slice(1)] })
+        return cp({ ...desc, _palindrome: true, _pattern: [...arr, ...[...arr].reverse().slice(1)] })
       }
-      return createPart({ ...desc, _palindrome: true })
+      return cp({ ...desc, _palindrome: true })
     },
     degrade: (p) => {
       if (p < 0) throw ScoreError('.degrade(p) requires p >= 0', { received: p, fix: 'Use 0 (keep all) to 1 (silence all)', docs: '' })
-      return createPart({ ...desc, _degrade: p })
+      return cp({ ...desc, _degrade: p })
     },
-    humanize: (amt) => createPart({ ...desc, _humanize: amt }),
-    swing: (amount) => createPart({ ...desc, _swing: amount }),
-    every: (n, fn) => createPart({ ...desc, _every: { n, fn } }),
-    apply: (fn) => createPart({ ...desc, _applyFn: fn }),
+    humanize: (amt) => cp({ ...desc, _humanize: amt }),
+    swing: (amount) => cp({ ...desc, _swing: amount }),
+    every: (n, fn) => cp({ ...desc, _every: { n, fn } }),
+    apply: (fn) => cp({ ...desc, _applyFn: fn }),
     repeat: (n) => {
       if (n <= 0) throw ScoreError('.repeat(n) requires n > 0', { received: n, fix: 'Use a positive repeat count', docs: '' })
-      return createPart({ ...desc, _repeat: n })
+      return cp({ ...desc, _repeat: n })
     },
     hits: (...args) => {
       const opts = args.find((a): a is { of: number } => typeof a === 'object' && 'of' in (a as object))
       const steps = args.filter((a): a is number => typeof a === 'number')
       const total = opts?.of ?? 16
-      return createPart({ ...desc, _pattern: Array.from({ length: total }, (_, i) => steps.includes(i) ? 1 : 0) })
+      return cp({ ...desc, _pattern: Array.from({ length: total }, (_, i) => steps.includes(i) ? 1 : 0) })
     },
-    stepProb: (probs) => createPart({ ...desc, _stepProb: probs }),
-    stretch: (bars) => createPart({ ...desc, _stretch: bars }),
-    phase: (amount) => createPart({ ...desc, _phase: amount }),
-    fromBar: (n) => createPart({ ...desc, _fromBar: n }),
-    untilBar: (n) => createPart({ ...desc, _untilBar: n }),
-    fadeIn: (bars) => createPart({ ...desc, _fadeInBars: bars }),
-    fadeOut: (bars) => createPart({ ...desc, _fadeOutBars: bars }),
+    pattern: (pat) => {
+      // Split combined pitch+rhythm pattern: strings/non-zero numbers are notes, 0 = rest.
+      const notePat = pat.map((v) => (v === 0 ? 0 : 1))
+      const noteSeq = pat.filter((v): v is string | number => v !== 0)
+      return cp({ ...desc, _pattern: notePat, _notes: noteSeq })
+    },
+    stepProb: (probs) => cp({ ...desc, _stepProb: probs }),
+    stretch: (bars) => cp({ ...desc, _stretch: bars }),
+    phase: (amount) => cp({ ...desc, _phase: amount }),
+    fromBar: (n) => cp({ ...desc, _fromBar: n }),
+    untilBar: (n) => cp({ ...desc, _untilBar: n }),
+    fadeIn: (bars) => cp({ ...desc, _fadeInBars: bars }),
+    fadeOut: (bars) => cp({ ...desc, _fadeOutBars: bars }),
 
     // ── Pitch / notes ──────────────────────────────────────────────────────
-    note: (pitch) => createPart({ ...desc, _notes: [pitch] }),
-    notes: (arr) => createPart({ ...desc, _notes: arr }),
-    scale: (name, root) => createPart({ ...desc, _scale: { name, root } }),
-    pitch: (semitones) => createPart({ ...desc, _pitchOffset: semitones }),
-    octave: (n) => createPart({ ...desc, _octave: n }),
-    glide: (time) => createPart({ ...desc, _glide: time }),
-    dur: (time) => createPart({ ...desc, _dur: time }),
-    mapNotes: (fn) => createPart({ ...desc, _mapNotesFn: fn }),
+    note: (pitch) => cp({ ...desc, _notes: [pitch] }),
+    notes: (arr) => cp({ ...desc, _notes: arr }),
+    scale: (name, root) => cp({ ...desc, _scale: { name, root } }),
+    pitch: (semitones) => cp({ ...desc, _pitchOffset: semitones }),
+    octave: (n) => cp({ ...desc, _octave: n }),
+    glide: (time) => cp({ ...desc, _glide: time }),
+    dur: (time) => cp({ ...desc, _dur: time }),
+    mapNotes: (fn) => cp({ ...desc, _mapNotesFn: fn }),
 
     // ── Amplitude ──────────────────────────────────────────────────────────
-    volume: (v) => createPart({ ...desc, _volume: v }),
-    attack: (s) => createPart({ ...desc, _adsr: { ...desc._adsr, attack: s } }),
-    decay: (s) => createPart({ ...desc, _adsr: { ...desc._adsr, decay: s } }),
-    sustain: (v) => createPart({ ...desc, _adsr: { ...desc._adsr, sustain: v } }),
-    release: (s) => createPart({ ...desc, _adsr: { ...desc._adsr, release: s } }),
-    duckWith: (source, opts) => createPart({ ...desc, _sidechain: {
+    volume: (v) => cp({ ...desc, _volume: v }),
+    attack: (s) => cp({ ...desc, _adsr: { ...desc._adsr, attack: s } }),
+    decay: (s) => cp({ ...desc, _adsr: { ...desc._adsr, decay: s } }),
+    sustain: (v) => cp({ ...desc, _adsr: { ...desc._adsr, sustain: v } }),
+    release: (s) => cp({ ...desc, _adsr: { ...desc._adsr, release: s } }),
+    duckWith: (source, opts) => cp({ ...desc, _sidechain: {
       source,
       amount: opts?.amount ?? 0.8,
       attack: opts?.attack ?? 0.001,
       release: opts?.release ?? 0.3,
       mode: 'duck',
     } }),
-    pumpWith: (source, release = 0.3) => createPart({ ...desc, _sidechain: {
+    pumpWith: (source, release = 0.3) => cp({ ...desc, _sidechain: {
       source,
       amount: 0.8,
       attack: 0.001,
       release,
       mode: 'duck',
     } }),
-    swellWith: (source) => createPart({ ...desc, _sidechain: {
+    swellWith: (source) => cp({ ...desc, _sidechain: {
       source,
       amount: 0.8,
       attack: 0.001,
       release: 0.3,
       mode: 'reverse',
     } }),
-    sidechain: (source, opts) => createPart({ ...desc, _sidechain: {
+    sidechain: (source, opts) => cp({ ...desc, _sidechain: {
       source,
       amount: opts?.amount ?? 0.8,
       attack: opts?.attack ?? 0.001,
@@ -511,47 +555,47 @@ export const createPart = (init: Partial<PartDescriptor> & { readonly instrument
     } }),
 
     // ── Tone ──────────────────────────────────────────────────────────────
-    filter: (freq, q) => createPart({ ...desc, _filter: { frequency: freq, ...(q !== undefined ? { Q: q } : {}) } }),
-    eq: (low, mid, high) => createPart({ ...desc, _eq: { lo: low, mid, hi: high } }),
-    bit: (bits) => createPart({ ...desc, ...appendFx(desc, makeFx('bitcrusher', { bits })) }),
-    saturate: (amt) => createPart({ ...desc, ...appendFx(desc, makeFx('saturation', { drive: amt })) }),
+    filter: (freq, q) => cp({ ...desc, _filter: { frequency: freq, ...(q !== undefined ? { Q: q } : {}) } }),
+    eq: (low, mid, high) => cp({ ...desc, _eq: { lo: low, mid, hi: high } }),
+    bit: (bits) => cp({ ...desc, ...appendFx(desc, makeFx('bitcrusher', { bits })) }),
+    saturate: (amt) => cp({ ...desc, ...appendFx(desc, makeFx('saturation', { drive: amt })) }),
 
     // ── Space ──────────────────────────────────────────────────────────────
-    pan: (v) => createPart({ ...desc, _pan: v }),
-    widen: (amt) => createPart({ ...desc, ...appendFx(desc, makeFx('stereo-widener', { width: amt })) }),
-    reverb: (wet, opts = {}) => createPart({ ...desc, ...appendFx(desc, makeFx('reverb', { wet, ...opts })) }),
-    delay: (time, feedback) => createPart({ ...desc, ...appendFx(desc, makeFx('delay', feedback !== undefined ? { time, feedback } : { time })) }),
-    chorus: (depth = 0.5) => createPart({ ...desc, ...appendFx(desc, makeFx('chorus', { depth })) }),
-    flange: (depth = 0.5) => createPart({ ...desc, ...appendFx(desc, makeFx('flanger', { depth })) }),
+    pan: (v) => cp({ ...desc, _pan: v }),
+    widen: (amt) => cp({ ...desc, ...appendFx(desc, makeFx('stereo-widener', { width: amt })) }),
+    reverb: (wet, opts = {}) => cp({ ...desc, ...appendFx(desc, makeFx('reverb', { wet, ...opts })) }),
+    delay: (time, feedback) => cp({ ...desc, ...appendFx(desc, makeFx('delay', feedback !== undefined ? { time, feedback } : { time })) }),
+    chorus: (depth = 0.5) => cp({ ...desc, ...appendFx(desc, makeFx('chorus', { depth })) }),
+    flange: (depth = 0.5) => cp({ ...desc, ...appendFx(desc, makeFx('flanger', { depth })) }),
 
     // ── Routing ────────────────────────────────────────────────────────────
-    send: (bus, amount = 1) => createPart({ ...desc, _sends: [...(desc._sends ?? []), { bus, amount }] }),
-    mute: () => createPart({ ...desc, _mute: true }),
-    solo: () => createPart({ ...desc, _solo: true }),
-    chokeGroup: (name) => createPart({ ...desc, _chokeGroup: name }),
-    layer: (...parts) => createPart({ ...desc, _layers: [...(desc._layers ?? []), ...(parts as PartDescriptor[])] }),
+    send: (bus, amount = 1) => cp({ ...desc, _sends: [...(desc._sends ?? []), { bus, amount }] }),
+    mute: () => cp({ ...desc, _mute: true }),
+    solo: () => cp({ ...desc, _solo: true }),
+    chokeGroup: (name) => cp({ ...desc, _chokeGroup: name }),
+    layer: (...parts) => cp({ ...desc, _layers: [...(desc._layers ?? []), ...(parts as PartDescriptor[])] }),
 
     // ── Modulation (musical names) ─────────────────────────────────────────
-    tremolo: (rate, depth = 0.8) => createPart({ ...desc, ...appendMod(desc, 'volume', lfo(rate, depth)) }),
-    vibrato: (rate, depth = 8) => createPart({ ...desc, ...appendMod(desc, 'pitch', sine(rate, depth)) }),
-    wobble: (rate, depth = 1) => createPart({ ...desc, ...appendMod(desc, 'filter', lfo(rate, depth)) }),
-    autopan: (rate, depth = 0.8) => createPart({ ...desc, ...appendMod(desc, 'pan', lfo(rate, depth)) }),
-    flutter: (rate = 12) => createPart({ ...desc, ...appendMod(desc, 'volume', lfo(rate, 0.5)) }),
-    breathe: (rate = 0.3) => createPart({ ...desc, ...appendMod(desc, 'volume', lfo(rate, 0.4)) }),
-    drift: (amt = 0.3) => createPart({ ...desc, ...appendMod(desc, 'pitch', ou(amt)) }),
-    swell: (bars) => createPart({ ...desc, ...appendMod(desc, 'volume', ramp(bars)) }),
-    modulate: (param, source) => createPart({ ...desc, ...appendMod(desc, param, source) }),
+    tremolo: (rate, depth = 0.8) => cp({ ...desc, ...appendMod(desc, 'volume', lfo(rate, depth)) }),
+    vibrato: (rate, depth = 8) => cp({ ...desc, ...appendMod(desc, 'pitch', sine(rate, depth)) }),
+    wobble: (rate, depth = 1) => cp({ ...desc, ...appendMod(desc, 'filter', lfo(rate, depth)) }),
+    autopan: (rate, depth = 0.8) => cp({ ...desc, ...appendMod(desc, 'pan', lfo(rate, depth)) }),
+    flutter: (rate = 12) => cp({ ...desc, ...appendMod(desc, 'volume', lfo(rate, 0.5)) }),
+    breathe: (rate = 0.3) => cp({ ...desc, ...appendMod(desc, 'volume', lfo(rate, 0.4)) }),
+    drift: (amt = 0.3) => cp({ ...desc, ...appendMod(desc, 'pitch', ou(amt)) }),
+    swell: (bars) => cp({ ...desc, ...appendMod(desc, 'volume', ramp(bars)) }),
+    modulate: (param, source) => cp({ ...desc, ...appendMod(desc, param, source) }),
 
     // ── Meta ──────────────────────────────────────────────────────────────
-    seed: (n) => createPart({ ...desc, _seed: n }),
-    name: (label) => createPart({ ...desc, _name: label }),
-    model: (variant) => createPart({ ...desc, _model: variant }),
+    seed: (n) => cp({ ...desc, _seed: n }),
+    name: (label) => cp({ ...desc, _name: label }),
+    model: (variant) => cp({ ...desc, _model: variant }),
 
     // ── Visual ────────────────────────────────────────────────────────────
-    visual: (override) => createPart({ ...desc, _visual: { ...desc._visual, ...override } }),
-    color:  (hex)  => createPart({ ...desc, _visual: { ...desc._visual, color: hex } }),
-    glyph:  (kind) => createPart({ ...desc, _visual: { ...desc._visual, glyph: kind } }),
-    label:  (text) => createPart({ ...desc, _visual: { ...desc._visual, label: text } }),
+    visual: (override) => cp({ ...desc, _visual: { ...desc._visual, ...override } }),
+    color:  (hex)  => cp({ ...desc, _visual: { ...desc._visual, color: hex } }),
+    glyph:  (kind) => cp({ ...desc, _visual: { ...desc._visual, glyph: kind } }),
+    label:  (text) => cp({ ...desc, _visual: { ...desc._visual, label: text } }),
   }
 
   return part
@@ -579,7 +623,7 @@ export const createPart = (init: Partial<PartDescriptor> & { readonly instrument
  * Song(128, [ReeseBass('C2').wobble(0.5)])
  * ```
  */
-export const defineInstrument = <Args extends unknown[]>(
+export const defineInstrument = <Args extends unknown[], T extends ChainablePart = ChainablePart>(
   _typeName: string,
-  factory: (...args: Args) => ChainablePart,
-): ((...args: Args) => ChainablePart) => factory
+  factory: (...args: Args) => T,
+): ((...args: Args) => T) => factory

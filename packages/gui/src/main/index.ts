@@ -95,9 +95,13 @@ const effectivePattern = (desc: InstrumentDescriptor): ReadonlyArray<number | st
 
 const pushSong = (song: SongDefinition): void => {
   const tracks = song.tracks.map(t => {
-    const desc = resolveDesc(t)
+    const desc    = resolveDesc(t)
     const pattern = effectivePattern(desc)
-    return { name: desc.instrumentType, type: desc.instrumentType, pattern }
+    const p       = desc.props as Record<string, unknown>
+    const volume  = typeof p['volume'] === 'number' ? p['volume']
+                  : typeof p['gain']   === 'number' ? p['gain']
+                  : undefined
+    return { name: desc.instrumentType, type: desc.instrumentType, pattern, ...(volume !== undefined ? { volume } : {}) }
   })
   send('song:update', {
     tracks,
@@ -147,9 +151,10 @@ const stopAnalysis = (): void => {
 
 // Pop detector — tracks the previous waveform frame to detect sample-to-sample
 // discontinuities that indicate hard-onset clicks, scheduling jitter, or gain spikes.
-// Threshold 0.25: normal enveloped audio rarely exceeds 0.1 delta between adjacent
-// 50ms frames; 0.25 catches real discontinuities while ignoring ordinary transients.
-const POP_THRESHOLD = 0.25
+// Threshold 0.6: percussion transients (kick, snare) legitimately spike to 0.3–0.5 delta
+// between 50ms frames — that is correct behavior, not an artifact. Only flag values
+// above 0.6 which indicate genuine scheduling jitter or gain staging problems.
+const POP_THRESHOLD = 0.6
 const popDetectorRef: { prevMax: number } = { prevMax: 0 }
 
 const startAnalysis = (): void => {
@@ -158,23 +163,23 @@ const startAnalysis = (): void => {
   if (!slot) return
   const buf = new Float32Array(slot.engine.analyser.frequencyBinCount)
   intervalRef.value = setInterval(() => {
-    const s = slotRef.value
-    if (!s || !s.playing) { stopAnalysis(); return }
-    s.engine.analyser.getFloatTimeDomainData(buf)
-    send('engine:analysis', { waveform: Array.from(buf) })
+    try {
+      const s = slotRef.value
+      if (!s || !s.playing) { stopAnalysis(); return }
+      s.engine.analyser.getFloatTimeDomainData(buf)
+      send('engine:analysis', { waveform: Array.from(buf) })
 
-    // Detect large inter-frame amplitude jump — symptom of a pop/click
-    // Compare max absolute value in this frame vs previous frame
-    let frameMax = 0
-    for (let i = 0; i < buf.length; i++) {
-      const abs = Math.abs(buf[i] ?? 0)
-      if (abs > frameMax) frameMax = abs
+      // Detect large inter-frame amplitude jump — symptom of a pop/click
+      // Compare max absolute value in this frame vs previous frame
+      const frameMax = Array.from(buf).reduce((acc, v) => Math.max(acc, Math.abs(v)), 0)
+      const delta = Math.abs(frameMax - popDetectorRef.prevMax)
+      if (delta > POP_THRESHOLD) {
+        send('debug:pop', { maxDelta: delta, step: s.bars, bars: s.bars })
+      }
+      popDetectorRef.prevMax = frameMax
+    } catch {
+      stopAnalysis()
     }
-    const delta = Math.abs(frameMax - popDetectorRef.prevMax)
-    if (delta > POP_THRESHOLD) {
-      send('debug:pop', { maxDelta: delta, step: s.bars, bars: s.bars })
-    }
-    popDetectorRef.prevMax = frameMax
   }, 50) // ~20fps
 }
 
@@ -260,7 +265,7 @@ const createWindow = (): BrowserWindow => {
       preload:          path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration:  false,
-      sandbox:          false,
+      sandbox:          true,
     },
   })
 
@@ -369,7 +374,7 @@ app.on('activate', () => {
 
 ipcMain.on('mode:selected', (_event, payload: RendererToMain['mode:selected']) => {
   // BOUNDARY — IO: boot engine on mode selection, push initial state
-  console.log('[score-studio] mode selected', payload)
+  if (process.env['DEBUG']) console.log('[score-studio] mode selected', payload)
   void boot(defaultSong())
 })
 
@@ -433,8 +438,14 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
     // e.g. pat('1 0 C4 E4 _') → [1, 0, 'C4', 'E4', 0]
     pat: (s: string): (number | string)[] =>
       s.trim().split(/\s+/).map(t => (t === '0' || t === '_' || t === '.') ? 0 : (t === '1' ? 1 : t)),
-    // Standard globals safe to expose in song files
-    Math, console,
+    // Standard globals — console is a controlled stub so user code cannot
+    // invoke arbitrary main-process console methods or access ipcMain via closure.
+    Math,
+    console: {
+      log:   (...args: unknown[]) => { send('error:report', { message: `[song] ${args.join(' ')}` }) },
+      warn:  (...args: unknown[]) => { send('error:report', { message: `[song:warn] ${args.join(' ')}` }) },
+      error: (...args: unknown[]) => { send('error:report', { message: `[song:error] ${args.join(' ')}` }) },
+    },
     // Export capture
     __exports__: null,
   }
@@ -470,15 +481,40 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
   }
 })
 
+// ── Runtime IPC payload guard ─────────────────────────────────────────────────
+// Validates that an engine:patch payload has the expected shape before use.
+// Prevents renderer-side type confusion from reaching the engine.
+
+const isPatchProps = (v: unknown): v is PatchProps => {
+  if (typeof v !== 'object' || v === null) return false
+  const p = v as Record<string, unknown>
+  if (p['bpm']          !== undefined && typeof p['bpm']          !== 'number') return false
+  if (p['masterVolume'] !== undefined && typeof p['masterVolume'] !== 'number') return false
+  if (p['tracks'] !== undefined) {
+    if (!Array.isArray(p['tracks'])) return false
+    return (p['tracks'] as unknown[]).every(t => {
+      if (typeof t !== 'object' || t === null) return false
+      const tr = t as Record<string, unknown>
+      return typeof tr['index'] === 'number'
+        && (tr['volume'] === undefined || typeof tr['volume'] === 'number')
+        && (tr['mute']   === undefined || typeof tr['mute']   === 'boolean')
+    })
+  }
+  return true
+}
+
 // BOUNDARY — IO: surgical patch — volume/mute/bpm without reloading the song.
 // engine.patch() already handles per-track volume/mute and bpm.
 ipcMain.on('engine:patch', (_event, payload: RendererToMain['engine:patch']) => {
   const slot = slotRef.value
   if (!slot) return
-  const props = payload as PatchProps
-  slot.engine.patch(props)
-  if (props.bpm !== undefined) {
-    slot.bpm = props.bpm
+  if (!isPatchProps(payload)) {
+    send('error:report', { message: 'engine:patch received invalid payload shape' })
+    return
+  }
+  slot.engine.patch(payload)
+  if (payload.bpm !== undefined) {
+    slot.bpm = payload.bpm
     pushState()
   }
 })
@@ -498,6 +534,8 @@ ipcMain.on('file:save', (_event, { code }: RendererToMain['file:save']) => {
     } catch (err) {
       send('error:report', { message: `Save failed: ${err instanceof Error ? err.message : String(err)}` })
     }
+  }).catch((err: unknown) => {
+    send('error:report', { message: `Save dialog failed: ${err instanceof Error ? err.message : String(err)}` })
   })
 })
 
@@ -523,5 +561,7 @@ ipcMain.on('file:open', () => {
     } catch (err) {
       send('error:report', { message: `Open failed: ${err instanceof Error ? err.message : String(err)}` })
     }
+  }).catch((err: unknown) => {
+    send('error:report', { message: `Open dialog failed: ${err instanceof Error ? err.message : String(err)}` })
   })
 })
