@@ -166,3 +166,38 @@ describe('LiveCode — song:error crash resilience (t184)', () => {
     expect(window.scoreBridge.send).not.toHaveBeenCalledWith('transport:stop', expect.anything())
   })
 })
+
+// ── t152: resizable editor split ──────────────────────────────────────────────
+
+describe('LiveCode — resizable editor/canvas split (t152)', () => {
+  it('renders splitter with aria-label "Resize editor pane"', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    expect(screen.getByLabelText('Resize editor pane')).toBeInTheDocument()
+  })
+
+  it('splitter has role=separator', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    const splitter = screen.getByLabelText('Resize editor pane')
+    expect(splitter).toHaveAttribute('role', 'separator')
+  })
+
+  it('splitter has col-resize cursor style', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    const splitter = screen.getByLabelText('Resize editor pane')
+    expect(splitter).toHaveStyle({ cursor: 'col-resize' })
+  })
+
+  it('mousedown on splitter does not throw', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    const splitter = screen.getByLabelText('Resize editor pane')
+    expect(() => { fireEvent.mouseDown(splitter, { clientX: 400 }) }).not.toThrow()
+  })
+
+  it('mousemove after splitter mousedown does not throw', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    const splitter = screen.getByLabelText('Resize editor pane')
+    fireEvent.mouseDown(splitter, { clientX: 400 })
+    expect(() => { fireEvent.mouseMove(window, { clientX: 450 }) }).not.toThrow()
+    fireEvent.mouseUp(window)
+  })
+})
