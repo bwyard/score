@@ -20,7 +20,7 @@ import { EvalStatus }                       from '../status/index.js'
 import type { EvalStatusKind }             from '../status/EvalStatus.js'
 import { BarCounter }                       from '../status/index.js'
 import { PendingSwapBadge }                 from '../status/index.js'
-import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams, parseTrackModel, patchInstrumentModel, patchMute, parseMuteState } from '../../lib/codePatcher.js'
+import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams, parseTrackModel, patchInstrumentModel, patchMute, parseMuteState, patchAddInstrument, uniqueVarName } from '../../lib/codePatcher.js'
 import { InstrumentPanel } from '../shared/InstrumentPanel.js'
 import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
 import type { PanelLayoutMap }            from '../../../main/ipc-types.js'
@@ -137,6 +137,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [importsVisible, setImportsVisible] = useState(false)
   // Instrument panel — which track is currently selected (null = none)
   const [selectedTrack, setSelectedTrack] = useState<number | null>(null)
+  // Add-track picker — null = hidden, true = picker open
+  const [addTrackOpen, setAddTrackOpen] = useState(false)
   // Set to true when the user clicks play before eval — song:update handler will
   // fire transport:play once the eval succeeds (eval-then-play flow).
   const autoPlayRef      = useRef(false)
@@ -498,6 +500,44 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     setCode(prev => patchTrackNote(prev, arpIndex, step, noteName))
   }, [tracks])
 
+  const onAddTrack = useCallback((instrumentType: string): void => {
+    setAddTrackOpen(false)
+    // Default snippets per instrument type
+    const DEFAULTS: Record<string, string> = {
+      kick808:  'Kick808(4).decay(0.7).volume(0.8)',
+      kick909:  'Kick909(4).decay(0.6).volume(0.8)',
+      kick:     'Kick(4).volume(0.8)',
+      snare909: 'Snare909(2).decay(0.2).volume(0.6)',
+      snare:    'Snare(2).volume(0.6)',
+      hihat808: 'Hihat808(8).decay(0.08).volume(0.3)',
+      hihat:    'HiHat(8).volume(0.3)',
+      bass303:  "Bass303('A2').cutoff(600).resonance(0.4).volume(0.6)",
+      synth:    "Synth('C3').attack(0.01).release(0.4).volume(0.6)",
+      subsynth: "SubSynth('C3').filter(1200).volume(0.6)",
+      fmsynth:  "FMSynth('C3').attack(0.01).release(0.4).volume(0.6)",
+      pad:      "Pad('Am').attack(0.3).reverb(0.3).volume(0.5)",
+      pluck:    "Pluck('C3').volume(0.6)",
+    }
+    const snippet = DEFAULTS[instrumentType] ?? `Synth('C3').volume(0.6)`
+    // Derive a base var name from the type (kick808→kick, bass303→bass, etc.)
+    const base = instrumentType.replace(/\d+$/, '').replace(/[^a-z]/g, '')
+    setCode(prev => {
+      const varName = uniqueVarName(prev, base)
+      return patchAddInstrument(prev, varName, snippet)
+    })
+    // Re-eval after insert
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null)
+      setEvalStatus('pending')
+      addLog('info', 'Evaluating…')
+      setCode(latest => {
+        window.scoreBridge.send('engine:eval', { code: latest })
+        return latest
+      })
+    }, 80)
+  }, [addLog])
+
   // Smart insert — appends snippet inside the tracks: [...] array rather than at cursor.
   // Falls back to end-of-file append if no tracks array is found.
   const onInsert = useCallback((snippet: string): void => {
@@ -800,6 +840,41 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                     </div>
                   )
                 })}
+                {/* Add Track button */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, alignSelf: 'flex-start', paddingTop: 4, position: 'relative' }}>
+                  <button
+                    style={styles.addTrackBtn}
+                    aria-label="Add track"
+                    title="Add a new instrument track"
+                    onClick={() => { setAddTrackOpen(v => !v) }}
+                  >
+                    +
+                  </button>
+                  {addTrackOpen && (
+                    <div style={styles.addTrackPicker}>
+                      {([
+                        ['kick808',  'Kick 808'],
+                        ['kick909',  'Kick 909'],
+                        ['snare909', 'Snare 909'],
+                        ['hihat808', 'HiHat 808'],
+                        ['bass303',  'Bass 303'],
+                        ['synth',    'Synth'],
+                        ['subsynth', 'SubSynth'],
+                        ['fmsynth',  'FM Synth'],
+                        ['pad',      'Pad'],
+                        ['pluck',    'Pluck'],
+                      ] as const).map(([type, label]) => (
+                        <button
+                          key={type}
+                          style={styles.addTrackPickerBtn}
+                          onClick={() => { onAddTrack(type) }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 {tracks.length === 0 && (
                   <span style={styles.mixerEmpty}>No tracks — eval a song first</span>
                 )}
@@ -1002,5 +1077,47 @@ const styles = {
     fontSize:   '0.75rem',
     fontFamily: "'JetBrains Mono', monospace",
     padding:    '8px',
+  },
+  addTrackBtn: {
+    width:         '32px',
+    height:        '32px',
+    background:    '#141420',
+    border:        '1px solid #2a2a42',
+    borderRadius:  '3px',
+    color:         '#4a8fff',
+    fontSize:      '1.2rem',
+    cursor:        'pointer',
+    display:       'flex',
+    alignItems:    'center',
+    justifyContent:'center',
+    flexShrink:    0,
+    padding:       0,
+    lineHeight:    1,
+  },
+  addTrackPicker: {
+    position:      'absolute' as const,
+    top:           '40px',
+    left:          0,
+    zIndex:        300,
+    background:    '#0e0e14',
+    border:        '1px solid #2a2a42',
+    borderRadius:  '4px',
+    display:       'flex',
+    flexDirection: 'column' as const,
+    minWidth:      '90px',
+    boxShadow:     '0 4px 16px #0006',
+    overflow:      'hidden',
+  },
+  addTrackPickerBtn: {
+    background:    'none',
+    border:        'none',
+    borderBottom:  '1px solid #1a1a28',
+    color:         '#8a9ab0',
+    fontSize:      '0.65rem',
+    fontFamily:    'monospace',
+    letterSpacing: '0.05em',
+    padding:       '5px 10px',
+    cursor:        'pointer',
+    textAlign:     'left' as const,
   },
 } as const

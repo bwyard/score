@@ -326,6 +326,22 @@ export const parseTrackChainParams = (code: string, trackIndex: number): Record<
 }
 
 /**
+ * Return a variable name that doesn't already exist in the code.
+ * Tries `base`, then `base2`, `base3`, etc.
+ *
+ * @param code - Full DSL code string.
+ * @param base - Preferred base name (e.g. `'kick'`).
+ */
+export const uniqueVarName = (code: string, base: string): string => {
+  if (!new RegExp(`\\bconst\\s+${base}\\b`).test(code)) return base
+  for (let n = 2; n < 20; n++) {
+    const candidate = `${base}${String(n)}`
+    if (!new RegExp(`\\bconst\\s+${candidate}\\b`).test(code)) return candidate
+  }
+  return `${base}${String(Date.now())}`
+}
+
+/**
  * Insert a new instrument `const` declaration before `export default Song(` and
  * append the variable name to the Song's `tracks` array.
  *
