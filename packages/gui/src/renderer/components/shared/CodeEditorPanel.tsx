@@ -149,11 +149,11 @@ const registerScoreDslLanguage = (monaco: Monaco): void => {
 
 // ── Decoration CSS injection (once) ───────────────────────────────────────────
 
-let cssInjected = false
+const cssState = { injected: false }
 
 const injectDecorationCss = (): void => {
-  if (cssInjected) return
-  cssInjected = true
+  if (cssState.injected) return
+  cssState.injected = true
   const style = document.createElement('style')
   style.textContent = `
     /* Beat highlight — active track line during playback */
