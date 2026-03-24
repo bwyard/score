@@ -24,7 +24,7 @@ class DevErrorBoundary extends React.Component<
         </div>
       )
     }
-    return this.state.error === null ? this.props.children : null
+    return this.props.children
   }
 }
 
