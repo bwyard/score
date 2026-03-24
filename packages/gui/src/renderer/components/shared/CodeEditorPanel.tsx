@@ -322,8 +322,10 @@ export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadg
           verticalScrollbarSize:   6,
           horizontalScrollbarSize: 6,
         },
-        // Minimal UI — no breadcrumbs, no indent guides that clash with Score aesthetic
-        folding:               false,
+        // Folding enabled so import block can be collapsed via the Imports toggle (t220).
+        // The fold icon is hidden via CSS — folding: true is required for editor.fold() to work.
+        folding:               true,
+        showFoldingControls:   'never',
         renderWhitespace:      'none',
         guides:                { indentation: false },
       }}
