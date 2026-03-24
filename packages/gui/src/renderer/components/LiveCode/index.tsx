@@ -20,7 +20,7 @@ import { EvalStatus }                       from '../status/index.js'
 import type { EvalStatusKind }             from '../status/EvalStatus.js'
 import { BarCounter }                       from '../status/index.js'
 import { PendingSwapBadge }                 from '../status/index.js'
-import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod } from '../../lib/codePatcher.js'
+import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams } from '../../lib/codePatcher.js'
 import { InstrumentPanel } from '../shared/InstrumentPanel.js'
 import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
 import type { PanelLayoutMap }            from '../../../main/ipc-types.js'
@@ -747,7 +747,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                   trackIndex={selectedTrack}
                   instrumentType={tracks[selectedTrack].type}
                   trackName={tracks[selectedTrack].name}
-                  params={{ volume: stripStates[selectedTrack]?.volume ?? 1 }}
+                  params={{ ...parseTrackChainParams(code, selectedTrack), volume: stripStates[selectedTrack]?.volume ?? 1 }}
                   muted={stripStates[selectedTrack]?.muted ?? false}
                   onChange={(method: string, value: number | string) => { onInstrumentChange(selectedTrack, method, value) }}
                   onMute={() => { onInstrumentMute(selectedTrack) }}

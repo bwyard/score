@@ -258,6 +258,37 @@ export const patchChainMethod = (
 }
 
 /**
+ * Parse all chain method values from the given track's code region.
+ *
+ * Scans for `.method(number)` calls in the track slice and returns them as a
+ * `Record<string, number>`. Used to seed InstrumentPanel slider state from code.
+ *
+ * @param code       - Full DSL code string.
+ * @param trackIndex - Zero-based track index.
+ * @returns Map of method names to their current numeric arguments.
+ *
+ * @example
+ * ```ts
+ * // code: const kick = Kick808(4).volume(0.8).decay(0.6).reverb(0.1)
+ * parseTrackChainParams(code, 0)
+ * // → { volume: 0.8, decay: 0.6, reverb: 0.1 }
+ * ```
+ */
+export const parseTrackChainParams = (code: string, trackIndex: number): Record<string, number> => {
+  const region = trackSlice(code, trackIndex)
+  if (!region) return {}
+  const slice = code.slice(region.start, region.end)
+  const result: Record<string, number> = {}
+  const re = /\.([a-zA-Z]\w*)\(\s*(-?\d+(?:\.\d+)?)\s*\)/g
+  for (const m of slice.matchAll(re)) {
+    const method = m[1]
+    const val    = parseFloat(m[2] ?? '')
+    if (method !== undefined && !isNaN(val)) result[method] = val
+  }
+  return result
+}
+
+/**
  * Insert a new instrument `const` declaration before `export default Song(` and
  * append the variable name to the Song's `tracks` array.
  *
