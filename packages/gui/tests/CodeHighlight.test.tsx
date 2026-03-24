@@ -240,3 +240,62 @@ describe('getStepBadges (t219)', () => {
     expect(result[0]?.total).toBe(16)
   })
 })
+
+// ── getActiveLines — PR #74 melodic instruments ────────────────────────────────
+
+const MELODIC_CODE = `import { Song, Bass303, Pad, Rhodes, Pluck } from '@score/dsl'
+
+const bass   = Bass303('A2').filter(600).resonance(0.4).pattern(['A2', 0, 'D3', 0]).volume(0.6)
+const pad    = Pad({ frequency: 220 }).volume(0.5)
+const rhodes = Rhodes({ frequency: 440 }).volume(0.7)
+const pluck  = Pluck({ frequency: 330 }).volume(0.6)
+
+export default Song({ bpm: 128, tracks: [bass, pad, rhodes, pluck] })`
+
+// bass   = line 2 (0-based)
+// pad    = line 3
+// rhodes = line 4
+// pluck  = line 5
+
+describe('getActiveLines — PR #74 melodic instruments', () => {
+  const tracks = [
+    { type: 'bass303', pattern: ['A2', 0, 'D3', 0] },
+    { type: 'pad',     pattern: [1, 0, 0, 0] },
+    { type: 'rhodes',  pattern: [0, 1, 0, 0] },
+    { type: 'pluck',   pattern: [0, 0, 1, 0] },
+  ]
+
+  it('detects Bass303 line at step 0 (note hit)', () => {
+    expect(getActiveLines(MELODIC_CODE, tracks, 0)).toContain(2)
+  })
+
+  it('does not highlight Bass303 at step 1 (rest)', () => {
+    expect(getActiveLines(MELODIC_CODE, tracks, 1)).not.toContain(2)
+  })
+
+  it('detects Pad line at step 0', () => {
+    expect(getActiveLines(MELODIC_CODE, tracks, 0)).toContain(3)
+  })
+
+  it('detects Rhodes line at step 1', () => {
+    expect(getActiveLines(MELODIC_CODE, tracks, 1)).toContain(4)
+  })
+
+  it('detects Pluck line at step 2', () => {
+    expect(getActiveLines(MELODIC_CODE, tracks, 2)).toContain(5)
+  })
+})
+
+describe('getTrackLines — PR #74 melodic instruments', () => {
+  const tracks = [
+    { type: 'bass303', pattern: ['A2', 0] },
+    { type: 'pad',     pattern: [1, 0] },
+  ]
+
+  it('maps Bass303 and Pad lines correctly', () => {
+    const result = getTrackLines(MELODIC_CODE, tracks)
+    expect(result).toHaveLength(2)
+    expect(result[0]).toEqual({ lineIndex: 2, trackIndex: 0 })
+    expect(result[1]).toEqual({ lineIndex: 3, trackIndex: 1 })
+  })
+})
