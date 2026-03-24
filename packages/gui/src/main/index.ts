@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, globalShortcut, ipcMain, shell } from 'elec
 import path                                          from 'node:path'
 import { readFileSync, writeFileSync }               from 'node:fs'
 import vm                                            from 'node:vm'
-import { createScoreEngine }                         from '@score/cli/engine'
+import { createScoreEngine, isPartDescriptor, partToInstrumentDescriptor } from '@score/cli/engine'
 import type { PatchProps }                           from '@score/cli/engine'
 import {
   Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp,
@@ -75,7 +75,11 @@ const pushState = (): void => {
 }
 
 const resolveDesc = (t: { readonly _type: string; readonly component?: unknown }): InstrumentDescriptor =>
-  (t._type === 'InstrumentDescriptor' ? t : t.component) as InstrumentDescriptor
+  (t._type === 'InstrumentDescriptor'
+    ? t
+    : isPartDescriptor(t)
+      ? partToInstrumentDescriptor(t)
+      : t.component) as InstrumentDescriptor
 
 // Returns the effective pattern for a track — falls back to engine defaults so
 // the renderer always has something meaningful to drive CodeHighlight bars.
@@ -338,10 +342,14 @@ app.on('ready', () => {
   // In dev/unpackaged mode this is a no-op. publish: null in electron-builder.yml
   // disables actual downloads until a GitHub release channel is configured.
   if (app.isPackaged) {
+     
     autoUpdater.logger = console
+     
     autoUpdater.on('update-downloaded', () => {
+       
       autoUpdater.quitAndInstall(false, true)
     })
+     
     void autoUpdater.checkForUpdatesAndNotify()
   }
 })

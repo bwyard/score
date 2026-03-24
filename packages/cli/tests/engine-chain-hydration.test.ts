@@ -107,4 +107,23 @@ describe('engine — chain API hydration', () => {
     expect(() => { engine.update(nextSong) }).not.toThrow()
     engine.dispose()
   })
+
+  it('t147: onStep fires with PartDescriptor-only song (cursor advance fix)', async () => {
+    // Before the fix, PartDescriptor tracks were dropped from descriptors in
+    // createScoreEngine(), so cursorStepCount defaulted to 8 and no instruments
+    // played. This test verifies onStep fires when tracks are ChainablePart only.
+    const song = Song({
+      bpm: 128,
+      tracks: [Track(chainKick), Track(chainSnare)],
+    })
+    const engine = await createScoreEngine(song)
+    const steps: number[] = []
+    engine.onStep((step, _stepCount) => { steps.push(step) })
+    engine.start()
+    // Advance transport enough to collect a step
+    await new Promise(resolve => { setTimeout(resolve, 200) })
+    engine.stop()
+    engine.dispose()
+    expect(steps.length).toBeGreaterThan(0)
+  })
 })
