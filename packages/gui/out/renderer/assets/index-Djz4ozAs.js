@@ -14,7 +14,7 @@ var react_production_min = {};
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var l$1 = Symbol.for("react.element"), n$1 = Symbol.for("react.portal"), p$2 = Symbol.for("react.fragment"), q$1 = Symbol.for("react.strict_mode"), r = Symbol.for("react.profiler"), t = Symbol.for("react.provider"), u = Symbol.for("react.context"), v$1 = Symbol.for("react.forward_ref"), w = Symbol.for("react.suspense"), x = Symbol.for("react.memo"), y = Symbol.for("react.lazy"), z$1 = Symbol.iterator;
+var l$2 = Symbol.for("react.element"), n$1 = Symbol.for("react.portal"), p$2 = Symbol.for("react.fragment"), q$1 = Symbol.for("react.strict_mode"), r = Symbol.for("react.profiler"), t = Symbol.for("react.provider"), u = Symbol.for("react.context"), v$2 = Symbol.for("react.forward_ref"), w = Symbol.for("react.suspense"), x = Symbol.for("react.memo"), y = Symbol.for("react.lazy"), z$1 = Symbol.iterator;
 function A$1(a) {
   if (null === a || "object" !== typeof a) return null;
   a = z$1 && a[z$1] || a["@@iterator"];
@@ -25,11 +25,11 @@ var B$1 = { isMounted: function() {
 }, enqueueForceUpdate: function() {
 }, enqueueReplaceState: function() {
 }, enqueueSetState: function() {
-} }, C$1 = Object.assign, D$1 = {};
+} }, C$1 = Object.assign, D$2 = {};
 function E$1(a, b, e) {
   this.props = a;
   this.context = b;
-  this.refs = D$1;
+  this.refs = D$2;
   this.updater = e || B$1;
 }
 E$1.prototype.isReactComponent = {};
@@ -46,17 +46,17 @@ F.prototype = E$1.prototype;
 function G$1(a, b, e) {
   this.props = a;
   this.context = b;
-  this.refs = D$1;
+  this.refs = D$2;
   this.updater = e || B$1;
 }
-var H$1 = G$1.prototype = new F();
-H$1.constructor = G$1;
-C$1(H$1, E$1.prototype);
-H$1.isPureReactComponent = true;
+var H$2 = G$1.prototype = new F();
+H$2.constructor = G$1;
+C$1(H$2, E$1.prototype);
+H$2.isPureReactComponent = true;
 var I$1 = Array.isArray, J = Object.prototype.hasOwnProperty, K$1 = { current: null }, L$1 = { key: true, ref: true, __self: true, __source: true };
 function M$1(a, b, e) {
-  var d, c = {}, k2 = null, h = null;
-  if (null != b) for (d in void 0 !== b.ref && (h = b.ref), void 0 !== b.key && (k2 = "" + b.key), b) J.call(b, d) && !L$1.hasOwnProperty(d) && (c[d] = b[d]);
+  var d, c = {}, k2 = null, h2 = null;
+  if (null != b) for (d in void 0 !== b.ref && (h2 = b.ref), void 0 !== b.key && (k2 = "" + b.key), b) J.call(b, d) && !L$1.hasOwnProperty(d) && (c[d] = b[d]);
   var g = arguments.length - 2;
   if (1 === g) c.children = e;
   else if (1 < g) {
@@ -64,13 +64,13 @@ function M$1(a, b, e) {
     c.children = f2;
   }
   if (a && a.defaultProps) for (d in g = a.defaultProps, g) void 0 === c[d] && (c[d] = g[d]);
-  return { $$typeof: l$1, type: a, key: k2, ref: h, props: c, _owner: K$1.current };
+  return { $$typeof: l$2, type: a, key: k2, ref: h2, props: c, _owner: K$1.current };
 }
 function N$1(a, b) {
-  return { $$typeof: l$1, type: a.type, key: b, ref: a.ref, props: a.props, _owner: a._owner };
+  return { $$typeof: l$2, type: a.type, key: b, ref: a.ref, props: a.props, _owner: a._owner };
 }
 function O$1(a) {
-  return "object" === typeof a && null !== a && a.$$typeof === l$1;
+  return "object" === typeof a && null !== a && a.$$typeof === l$2;
 }
 function escape(a) {
   var b = { "=": "=0", ":": "=2" };
@@ -85,33 +85,33 @@ function Q$1(a, b) {
 function R$1(a, b, e, d, c) {
   var k2 = typeof a;
   if ("undefined" === k2 || "boolean" === k2) a = null;
-  var h = false;
-  if (null === a) h = true;
+  var h2 = false;
+  if (null === a) h2 = true;
   else switch (k2) {
     case "string":
     case "number":
-      h = true;
+      h2 = true;
       break;
     case "object":
       switch (a.$$typeof) {
-        case l$1:
+        case l$2:
         case n$1:
-          h = true;
+          h2 = true;
       }
   }
-  if (h) return h = a, c = c(h), a = "" === d ? "." + Q$1(h, 0) : d, I$1(c) ? (e = "", null != a && (e = a.replace(P$1, "$&/") + "/"), R$1(c, b, e, "", function(a2) {
+  if (h2) return h2 = a, c = c(h2), a = "" === d ? "." + Q$1(h2, 0) : d, I$1(c) ? (e = "", null != a && (e = a.replace(P$1, "$&/") + "/"), R$1(c, b, e, "", function(a2) {
     return a2;
-  })) : null != c && (O$1(c) && (c = N$1(c, e + (!c.key || h && h.key === c.key ? "" : ("" + c.key).replace(P$1, "$&/") + "/") + a)), b.push(c)), 1;
-  h = 0;
+  })) : null != c && (O$1(c) && (c = N$1(c, e + (!c.key || h2 && h2.key === c.key ? "" : ("" + c.key).replace(P$1, "$&/") + "/") + a)), b.push(c)), 1;
+  h2 = 0;
   d = "" === d ? "." : d + ":";
   if (I$1(a)) for (var g = 0; g < a.length; g++) {
     k2 = a[g];
     var f2 = d + Q$1(k2, g);
-    h += R$1(k2, b, e, f2, c);
+    h2 += R$1(k2, b, e, f2, c);
   }
-  else if (f2 = A$1(a), "function" === typeof f2) for (a = f2.call(a), g = 0; !(k2 = a.next()).done; ) k2 = k2.value, f2 = d + Q$1(k2, g++), h += R$1(k2, b, e, f2, c);
+  else if (f2 = A$1(a), "function" === typeof f2) for (a = f2.call(a), g = 0; !(k2 = a.next()).done; ) k2 = k2.value, f2 = d + Q$1(k2, g++), h2 += R$1(k2, b, e, f2, c);
   else if ("object" === k2) throw b = String(a), Error("Objects are not valid as a React child (found: " + ("[object Object]" === b ? "object with keys {" + Object.keys(a).join(", ") + "}" : b) + "). If you meant to render a collection of children, use an array instead.");
-  return h;
+  return h2;
 }
 function S$1(a, b, e) {
   if (null == a) return a;
@@ -167,9 +167,9 @@ react_production_min.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = W$1;
 react_production_min.act = X$1;
 react_production_min.cloneElement = function(a, b, e) {
   if (null === a || void 0 === a) throw Error("React.cloneElement(...): The argument must be a React element, but you passed " + a + ".");
-  var d = C$1({}, a.props), c = a.key, k2 = a.ref, h = a._owner;
+  var d = C$1({}, a.props), c = a.key, k2 = a.ref, h2 = a._owner;
   if (null != b) {
-    void 0 !== b.ref && (k2 = b.ref, h = K$1.current);
+    void 0 !== b.ref && (k2 = b.ref, h2 = K$1.current);
     void 0 !== b.key && (c = "" + b.key);
     if (a.type && a.type.defaultProps) var g = a.type.defaultProps;
     for (f2 in b) J.call(b, f2) && !L$1.hasOwnProperty(f2) && (d[f2] = void 0 === b[f2] && void 0 !== g ? g[f2] : b[f2]);
@@ -181,7 +181,7 @@ react_production_min.cloneElement = function(a, b, e) {
     for (var m2 = 0; m2 < f2; m2++) g[m2] = arguments[m2 + 2];
     d.children = g;
   }
-  return { $$typeof: l$1, type: a.type, key: c, ref: k2, props: d, _owner: h };
+  return { $$typeof: l$2, type: a.type, key: c, ref: k2, props: d, _owner: h2 };
 };
 react_production_min.createContext = function(a) {
   a = { $$typeof: u, _currentValue: a, _currentValue2: a, _threadCount: 0, Provider: null, Consumer: null, _defaultValue: null, _globalName: null };
@@ -198,7 +198,7 @@ react_production_min.createRef = function() {
   return { current: null };
 };
 react_production_min.forwardRef = function(a) {
-  return { $$typeof: v$1, render: a };
+  return { $$typeof: v$2, render: a };
 };
 react_production_min.isValidElement = O$1;
 react_production_min.lazy = function(a) {
@@ -276,17 +276,17 @@ const React = /* @__PURE__ */ getDefaultExportFromCjs(reactExports);
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var f = reactExports, k = Symbol.for("react.element"), l = Symbol.for("react.fragment"), m$1 = Object.prototype.hasOwnProperty, n = f.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, p$1 = { key: true, ref: true, __self: true, __source: true };
+var f = reactExports, k$1 = Symbol.for("react.element"), l$1 = Symbol.for("react.fragment"), m$1 = Object.prototype.hasOwnProperty, n = f.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, p$1 = { key: true, ref: true, __self: true, __source: true };
 function q(c, a, g) {
-  var b, d = {}, e = null, h = null;
+  var b, d = {}, e = null, h2 = null;
   void 0 !== g && (e = "" + g);
   void 0 !== a.key && (e = "" + a.key);
-  void 0 !== a.ref && (h = a.ref);
+  void 0 !== a.ref && (h2 = a.ref);
   for (b in a) m$1.call(a, b) && !p$1.hasOwnProperty(b) && (d[b] = a[b]);
   if (c && c.defaultProps) for (b in a = c.defaultProps, a) void 0 === d[b] && (d[b] = a[b]);
-  return { $$typeof: k, type: c, key: e, ref: h, props: d, _owner: n.current };
+  return { $$typeof: k$1, type: c, key: e, ref: h2, props: d, _owner: n.current };
 }
-reactJsxRuntime_production_min.Fragment = l;
+reactJsxRuntime_production_min.Fragment = l$1;
 reactJsxRuntime_production_min.jsx = q;
 reactJsxRuntime_production_min.jsxs = q;
 {
@@ -316,7 +316,7 @@ var scheduler_production_min = {};
       else break a;
     }
   }
-  function h(a) {
+  function h2(a) {
     return 0 === a.length ? null : a[0];
   }
   function k2(a) {
@@ -351,19 +351,19 @@ var scheduler_production_min = {};
   var r2 = [], t2 = [], u2 = 1, v2 = null, y2 = 3, z2 = false, A2 = false, B2 = false, D2 = "function" === typeof setTimeout ? setTimeout : null, E2 = "function" === typeof clearTimeout ? clearTimeout : null, F2 = "undefined" !== typeof setImmediate ? setImmediate : null;
   "undefined" !== typeof navigator && void 0 !== navigator.scheduling && void 0 !== navigator.scheduling.isInputPending && navigator.scheduling.isInputPending.bind(navigator.scheduling);
   function G2(a) {
-    for (var b = h(t2); null !== b; ) {
+    for (var b = h2(t2); null !== b; ) {
       if (null === b.callback) k2(t2);
       else if (b.startTime <= a) k2(t2), b.sortIndex = b.expirationTime, f2(r2, b);
       else break;
-      b = h(t2);
+      b = h2(t2);
     }
   }
   function H2(a) {
     B2 = false;
     G2(a);
-    if (!A2) if (null !== h(r2)) A2 = true, I2(J2);
+    if (!A2) if (null !== h2(r2)) A2 = true, I2(J2);
     else {
-      var b = h(t2);
+      var b = h2(t2);
       null !== b && K2(H2, b.startTime - a);
     }
   }
@@ -374,21 +374,21 @@ var scheduler_production_min = {};
     var c = y2;
     try {
       G2(b);
-      for (v2 = h(r2); null !== v2 && (!(v2.expirationTime > b) || a && !M2()); ) {
+      for (v2 = h2(r2); null !== v2 && (!(v2.expirationTime > b) || a && !M2()); ) {
         var d = v2.callback;
         if ("function" === typeof d) {
           v2.callback = null;
           y2 = v2.priorityLevel;
           var e = d(v2.expirationTime <= b);
           b = exports$1.unstable_now();
-          "function" === typeof e ? v2.callback = e : v2 === h(r2) && k2(r2);
+          "function" === typeof e ? v2.callback = e : v2 === h2(r2) && k2(r2);
           G2(b);
         } else k2(r2);
-        v2 = h(r2);
+        v2 = h2(r2);
       }
       if (null !== v2) var w2 = true;
       else {
-        var m2 = h(t2);
+        var m2 = h2(t2);
         null !== m2 && K2(H2, m2.startTime - b);
         w2 = false;
       }
@@ -454,7 +454,7 @@ var scheduler_production_min = {};
     return y2;
   };
   exports$1.unstable_getFirstCallbackNode = function() {
-    return h(r2);
+    return h2(r2);
   };
   exports$1.unstable_next = function(a) {
     switch (y2) {
@@ -518,7 +518,7 @@ var scheduler_production_min = {};
     }
     e = c + e;
     a = { id: u2++, callback: b, priorityLevel: a, startTime: c, expirationTime: e, sortIndex: -1 };
-    c > d ? (a.sortIndex = c, f2(t2, a), null === h(r2) && a === h(t2) && (B2 ? (E2(L2), L2 = -1) : B2 = true, K2(H2, c - d))) : (a.sortIndex = e, f2(r2, a), A2 || z2 || (A2 = true, I2(J2)));
+    c > d ? (a.sortIndex = c, f2(t2, a), null === h2(r2) && a === h2(t2) && (B2 ? (E2(L2), L2 = -1) : B2 = true, K2(H2, c - d))) : (a.sortIndex = e, f2(r2, a), A2 || z2 || (A2 = true, I2(J2)));
     return a;
   };
   exports$1.unstable_shouldYield = M2;
@@ -600,7 +600,7 @@ function qa(a, b, c, d) {
   }
   return false;
 }
-function v(a, b, c, d, e, f2, g) {
+function v$1(a, b, c, d, e, f2, g) {
   this.acceptsBooleans = 2 === b || 3 === b || 4 === b;
   this.attributeName = d;
   this.attributeNamespace = e;
@@ -612,32 +612,32 @@ function v(a, b, c, d, e, f2, g) {
 }
 var z = {};
 "children dangerouslySetInnerHTML defaultValue defaultChecked innerHTML suppressContentEditableWarning suppressHydrationWarning style".split(" ").forEach(function(a) {
-  z[a] = new v(a, 0, false, a, null, false, false);
+  z[a] = new v$1(a, 0, false, a, null, false, false);
 });
 [["acceptCharset", "accept-charset"], ["className", "class"], ["htmlFor", "for"], ["httpEquiv", "http-equiv"]].forEach(function(a) {
   var b = a[0];
-  z[b] = new v(b, 1, false, a[1], null, false, false);
+  z[b] = new v$1(b, 1, false, a[1], null, false, false);
 });
 ["contentEditable", "draggable", "spellCheck", "value"].forEach(function(a) {
-  z[a] = new v(a, 2, false, a.toLowerCase(), null, false, false);
+  z[a] = new v$1(a, 2, false, a.toLowerCase(), null, false, false);
 });
 ["autoReverse", "externalResourcesRequired", "focusable", "preserveAlpha"].forEach(function(a) {
-  z[a] = new v(a, 2, false, a, null, false, false);
+  z[a] = new v$1(a, 2, false, a, null, false, false);
 });
 "allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope".split(" ").forEach(function(a) {
-  z[a] = new v(a, 3, false, a.toLowerCase(), null, false, false);
+  z[a] = new v$1(a, 3, false, a.toLowerCase(), null, false, false);
 });
 ["checked", "multiple", "muted", "selected"].forEach(function(a) {
-  z[a] = new v(a, 3, true, a, null, false, false);
+  z[a] = new v$1(a, 3, true, a, null, false, false);
 });
 ["capture", "download"].forEach(function(a) {
-  z[a] = new v(a, 4, false, a, null, false, false);
+  z[a] = new v$1(a, 4, false, a, null, false, false);
 });
 ["cols", "rows", "size", "span"].forEach(function(a) {
-  z[a] = new v(a, 6, false, a, null, false, false);
+  z[a] = new v$1(a, 6, false, a, null, false, false);
 });
 ["rowSpan", "start"].forEach(function(a) {
-  z[a] = new v(a, 5, false, a.toLowerCase(), null, false, false);
+  z[a] = new v$1(a, 5, false, a.toLowerCase(), null, false, false);
 });
 var ra = /[\-:]([a-z])/g;
 function sa(a) {
@@ -648,22 +648,22 @@ function sa(a) {
     ra,
     sa
   );
-  z[b] = new v(b, 1, false, a, null, false, false);
+  z[b] = new v$1(b, 1, false, a, null, false, false);
 });
 "xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type".split(" ").forEach(function(a) {
   var b = a.replace(ra, sa);
-  z[b] = new v(b, 1, false, a, "http://www.w3.org/1999/xlink", false, false);
+  z[b] = new v$1(b, 1, false, a, "http://www.w3.org/1999/xlink", false, false);
 });
 ["xml:base", "xml:lang", "xml:space"].forEach(function(a) {
   var b = a.replace(ra, sa);
-  z[b] = new v(b, 1, false, a, "http://www.w3.org/XML/1998/namespace", false, false);
+  z[b] = new v$1(b, 1, false, a, "http://www.w3.org/XML/1998/namespace", false, false);
 });
 ["tabIndex", "crossOrigin"].forEach(function(a) {
-  z[a] = new v(a, 1, false, a.toLowerCase(), null, false, false);
+  z[a] = new v$1(a, 1, false, a.toLowerCase(), null, false, false);
 });
-z.xlinkHref = new v("xlinkHref", 1, false, "xlink:href", "http://www.w3.org/1999/xlink", true, false);
+z.xlinkHref = new v$1("xlinkHref", 1, false, "xlink:href", "http://www.w3.org/1999/xlink", true, false);
 ["src", "href", "action", "formAction"].forEach(function(a) {
-  z[a] = new v(a, 1, false, a.toLowerCase(), null, true, true);
+  z[a] = new v$1(a, 1, false, a.toLowerCase(), null, true, true);
 });
 function ta(a, b, c, d) {
   var e = z.hasOwnProperty(b) ? z[b] : null;
@@ -723,16 +723,16 @@ function Oa(a, b) {
     }
   } catch (l2) {
     if (l2 && d && "string" === typeof l2.stack) {
-      for (var e = l2.stack.split("\n"), f2 = d.stack.split("\n"), g = e.length - 1, h = f2.length - 1; 1 <= g && 0 <= h && e[g] !== f2[h]; ) h--;
-      for (; 1 <= g && 0 <= h; g--, h--) if (e[g] !== f2[h]) {
-        if (1 !== g || 1 !== h) {
+      for (var e = l2.stack.split("\n"), f2 = d.stack.split("\n"), g = e.length - 1, h2 = f2.length - 1; 1 <= g && 0 <= h2 && e[g] !== f2[h2]; ) h2--;
+      for (; 1 <= g && 0 <= h2; g--, h2--) if (e[g] !== f2[h2]) {
+        if (1 !== g || 1 !== h2) {
           do
-            if (g--, h--, 0 > h || e[g] !== f2[h]) {
+            if (g--, h2--, 0 > h2 || e[g] !== f2[h2]) {
               var k2 = "\n" + e[g].replace(" at new ", " at ");
               a.displayName && k2.includes("<anonymous>") && (k2 = k2.replace("<anonymous>", a.displayName));
               return k2;
             }
-          while (1 <= g && 0 <= h);
+          while (1 <= g && 0 <= h2);
         }
         break;
       }
@@ -1214,7 +1214,7 @@ if (ia) try {
 } catch (a) {
   Lb = false;
 }
-function Nb(a, b, c, d, e, f2, g, h, k2) {
+function Nb(a, b, c, d, e, f2, g, h2, k2) {
   var l2 = Array.prototype.slice.call(arguments, 3);
   try {
     b.apply(c, l2);
@@ -1226,12 +1226,12 @@ var Ob = false, Pb = null, Qb = false, Rb = null, Sb = { onError: function(a) {
   Ob = true;
   Pb = a;
 } };
-function Tb(a, b, c, d, e, f2, g, h, k2) {
+function Tb(a, b, c, d, e, f2, g, h2, k2) {
   Ob = false;
   Pb = null;
   Nb.apply(Sb, arguments);
 }
-function Ub(a, b, c, d, e, f2, g, h, k2) {
+function Ub(a, b, c, d, e, f2, g, h2, k2) {
   Tb.apply(this, arguments);
   if (Ob) {
     if (Ob) {
@@ -1293,36 +1293,36 @@ function Yb(a) {
     }
     if (c.return !== d.return) c = e, d = f2;
     else {
-      for (var g = false, h = e.child; h; ) {
-        if (h === c) {
+      for (var g = false, h2 = e.child; h2; ) {
+        if (h2 === c) {
           g = true;
           c = e;
           d = f2;
           break;
         }
-        if (h === d) {
+        if (h2 === d) {
           g = true;
           d = e;
           c = f2;
           break;
         }
-        h = h.sibling;
+        h2 = h2.sibling;
       }
       if (!g) {
-        for (h = f2.child; h; ) {
-          if (h === c) {
+        for (h2 = f2.child; h2; ) {
+          if (h2 === c) {
             g = true;
             c = f2;
             d = e;
             break;
           }
-          if (h === d) {
+          if (h2 === d) {
             g = true;
             d = f2;
             c = e;
             break;
           }
-          h = h.sibling;
+          h2 = h2.sibling;
         }
         if (!g) throw Error(p(189));
       }
@@ -1412,8 +1412,8 @@ function uc(a, b) {
   if (0 === c) return 0;
   var d = 0, e = a.suspendedLanes, f2 = a.pingedLanes, g = c & 268435455;
   if (0 !== g) {
-    var h = g & ~e;
-    0 !== h ? d = tc(h) : (f2 &= g, 0 !== f2 && (d = tc(f2)));
+    var h2 = g & ~e;
+    0 !== h2 ? d = tc(h2) : (f2 &= g, 0 !== f2 && (d = tc(f2)));
   } else g = c & ~e, 0 !== g ? d = tc(g) : 0 !== f2 && (d = tc(f2));
   if (0 === d) return 0;
   if (0 !== b && b !== d && 0 === (b & e) && (e = d & -d, f2 = b & -b, e >= f2 || 16 === e && 0 !== (f2 & 4194240))) return b;
@@ -1465,11 +1465,11 @@ function vc(a, b) {
 }
 function wc(a, b) {
   for (var c = a.suspendedLanes, d = a.pingedLanes, e = a.expirationTimes, f2 = a.pendingLanes; 0 < f2; ) {
-    var g = 31 - oc(f2), h = 1 << g, k2 = e[g];
+    var g = 31 - oc(f2), h2 = 1 << g, k2 = e[g];
     if (-1 === k2) {
-      if (0 === (h & c) || 0 !== (h & d)) e[g] = vc(h, b);
-    } else k2 <= b && (a.expiredLanes |= h);
-    f2 &= ~h;
+      if (0 === (h2 & c) || 0 !== (h2 & d)) e[g] = vc(h2, b);
+    } else k2 <= b && (a.expiredLanes |= h2);
+    f2 &= ~h2;
   }
 }
 function xc(a) {
@@ -1923,9 +1923,9 @@ var Qd = A({}, ud, { key: function(a) {
   },
   deltaZ: 0,
   deltaMode: 0
-}), Zd = rd(Yd), $d = [9, 13, 27, 32], ae = ia && "CompositionEvent" in window, be = null;
-ia && "documentMode" in document && (be = document.documentMode);
-var ce = ia && "TextEvent" in window && !be, de = ia && (!ae || be && 8 < be && 11 >= be), ee = String.fromCharCode(32), fe = false;
+}), Zd = rd(Yd), $d = [9, 13, 27, 32], ae$1 = ia && "CompositionEvent" in window, be$1 = null;
+ia && "documentMode" in document && (be$1 = document.documentMode);
+var ce = ia && "TextEvent" in window && !be$1, de$1 = ia && (!ae$1 || be$1 && 8 < be$1 && 11 >= be$1), ee$1 = String.fromCharCode(32), fe$1 = false;
 function ge(a, b) {
   switch (a) {
     case "keyup":
@@ -1940,27 +1940,27 @@ function ge(a, b) {
       return false;
   }
 }
-function he(a) {
+function he$1(a) {
   a = a.detail;
   return "object" === typeof a && "data" in a ? a.data : null;
 }
-var ie = false;
+var ie$1 = false;
 function je(a, b) {
   switch (a) {
     case "compositionend":
-      return he(b);
+      return he$1(b);
     case "keypress":
       if (32 !== b.which) return null;
-      fe = true;
-      return ee;
+      fe$1 = true;
+      return ee$1;
     case "textInput":
-      return a = b.data, a === ee && fe ? null : a;
+      return a = b.data, a === ee$1 && fe$1 ? null : a;
     default:
       return null;
   }
 }
 function ke(a, b) {
-  if (ie) return "compositionend" === a || !ae && ge(a, b) ? (a = nd(), md = ld = kd = null, ie = false, a) : null;
+  if (ie$1) return "compositionend" === a || !ae$1 && ge(a, b) ? (a = nd(), md = ld = kd = null, ie$1 = false, a) : null;
   switch (a) {
     case "paste":
       return null;
@@ -1971,15 +1971,15 @@ function ke(a, b) {
       }
       return null;
     case "compositionend":
-      return de && "ko" !== b.locale ? null : b.data;
+      return de$1 && "ko" !== b.locale ? null : b.data;
     default:
       return null;
   }
 }
-var le = { color: true, date: true, datetime: true, "datetime-local": true, email: true, month: true, number: true, password: true, range: true, search: true, tel: true, text: true, time: true, url: true, week: true };
+var le$1 = { color: true, date: true, datetime: true, "datetime-local": true, email: true, month: true, number: true, password: true, range: true, search: true, tel: true, text: true, time: true, url: true, week: true };
 function me(a) {
   var b = a && a.nodeName && a.nodeName.toLowerCase();
-  return "input" === b ? !!le[a.type] : "textarea" === b ? true : false;
+  return "input" === b ? !!le$1[a.type] : "textarea" === b ? true : false;
 }
 function ne(a, b, c, d) {
   Eb(d);
@@ -1988,9 +1988,9 @@ function ne(a, b, c, d) {
 }
 var pe = null, qe = null;
 function re(a) {
-  se(a, 0);
+  se$1(a, 0);
 }
-function te(a) {
+function te$1(a) {
   var b = ue(a);
   if (Wa(b)) return a;
 }
@@ -2015,36 +2015,36 @@ function Ae() {
   pe && (pe.detachEvent("onpropertychange", Be), qe = pe = null);
 }
 function Be(a) {
-  if ("value" === a.propertyName && te(qe)) {
+  if ("value" === a.propertyName && te$1(qe)) {
     var b = [];
     ne(b, qe, a, xb(a));
     Jb(re, b);
   }
 }
-function Ce(a, b, c) {
+function Ce$1(a, b, c) {
   "focusin" === a ? (Ae(), pe = b, qe = c, pe.attachEvent("onpropertychange", Be)) : "focusout" === a && Ae();
 }
-function De(a) {
-  if ("selectionchange" === a || "keyup" === a || "keydown" === a) return te(qe);
+function De$1(a) {
+  if ("selectionchange" === a || "keyup" === a || "keydown" === a) return te$1(qe);
 }
-function Ee(a, b) {
-  if ("click" === a) return te(b);
+function Ee$1(a, b) {
+  if ("click" === a) return te$1(b);
 }
 function Fe(a, b) {
-  if ("input" === a || "change" === a) return te(b);
+  if ("input" === a || "change" === a) return te$1(b);
 }
 function Ge(a, b) {
   return a === b && (0 !== a || 1 / a === 1 / b) || a !== a && b !== b;
 }
-var He = "function" === typeof Object.is ? Object.is : Ge;
+var He$1 = "function" === typeof Object.is ? Object.is : Ge;
 function Ie(a, b) {
-  if (He(a, b)) return true;
+  if (He$1(a, b)) return true;
   if ("object" !== typeof a || null === a || "object" !== typeof b || null === b) return false;
   var c = Object.keys(a), d = Object.keys(b);
   if (c.length !== d.length) return false;
   for (d = 0; d < c.length; d++) {
     var e = c[d];
-    if (!ja.call(b, e) || !He(a[e], b[e])) return false;
+    if (!ja.call(b, e) || !He$1(a[e], b[e])) return false;
   }
   return true;
 }
@@ -2077,7 +2077,7 @@ function Ke(a, b) {
 function Le(a, b) {
   return a && b ? a === b ? true : a && 3 === a.nodeType ? false : b && 3 === b.nodeType ? Le(a, b.parentNode) : "contains" in a ? a.contains(b) : a.compareDocumentPosition ? !!(a.compareDocumentPosition(b) & 16) : false : false;
 }
-function Me() {
+function Me$1() {
   for (var a = window, b = Xa(); b instanceof a.HTMLIFrameElement; ) {
     try {
       var c = "string" === typeof b.contentWindow.location.href;
@@ -2094,8 +2094,8 @@ function Ne(a) {
   var b = a && a.nodeName && a.nodeName.toLowerCase();
   return b && ("input" === b && ("text" === a.type || "search" === a.type || "tel" === a.type || "url" === a.type || "password" === a.type) || "textarea" === b || "true" === a.contentEditable);
 }
-function Oe(a) {
-  var b = Me(), c = a.focusedElem, d = a.selectionRange;
+function Oe$1(a) {
+  var b = Me$1(), c = a.focusedElem, d = a.selectionRange;
   if (b !== c && c && c.ownerDocument && Le(c.ownerDocument.documentElement, c)) {
     if (null !== d && Ne(c)) {
       if (b = d.start, a = d.end, void 0 === a && (a = b), "selectionStart" in c) c.selectionStart = b, c.selectionEnd = Math.min(a, c.value.length);
@@ -2123,14 +2123,14 @@ function Ue(a, b, c) {
   var d = c.window === c ? c.document : 9 === c.nodeType ? c : c.ownerDocument;
   Te || null == Qe || Qe !== Xa(d) || (d = Qe, "selectionStart" in d && Ne(d) ? d = { start: d.selectionStart, end: d.selectionEnd } : (d = (d.ownerDocument && d.ownerDocument.defaultView || window).getSelection(), d = { anchorNode: d.anchorNode, anchorOffset: d.anchorOffset, focusNode: d.focusNode, focusOffset: d.focusOffset }), Se && Ie(Se, d) || (Se = d, d = oe(Re, "onSelect"), 0 < d.length && (b = new td("onSelect", "select", null, b, c), a.push({ event: b, listeners: d }), b.target = Qe)));
 }
-function Ve(a, b) {
+function Ve$1(a, b) {
   var c = {};
   c[a.toLowerCase()] = b.toLowerCase();
   c["Webkit" + a] = "webkit" + b;
   c["Moz" + a] = "moz" + b;
   return c;
 }
-var We = { animationend: Ve("Animation", "AnimationEnd"), animationiteration: Ve("Animation", "AnimationIteration"), animationstart: Ve("Animation", "AnimationStart"), transitionend: Ve("Transition", "TransitionEnd") }, Xe = {}, Ye = {};
+var We = { animationend: Ve$1("Animation", "AnimationEnd"), animationiteration: Ve$1("Animation", "AnimationIteration"), animationstart: Ve$1("Animation", "AnimationStart"), transitionend: Ve$1("Transition", "TransitionEnd") }, Xe = {}, Ye = {};
 ia && (Ye = document.createElement("div").style, "AnimationEvent" in window || (delete We.animationend.animation, delete We.animationiteration.animation, delete We.animationstart.animation), "TransitionEvent" in window || delete We.transitionend.transition);
 function Ze(a) {
   if (Xe[a]) return Xe[a];
@@ -2172,7 +2172,7 @@ function nf(a, b, c) {
   Ub(d, b, void 0, a);
   a.currentTarget = null;
 }
-function se(a, b) {
+function se$1(a, b) {
   b = 0 !== (b & 4);
   for (var c = 0; c < a.length; c++) {
     var d = a[c], e = d.event;
@@ -2180,26 +2180,26 @@ function se(a, b) {
     a: {
       var f2 = void 0;
       if (b) for (var g = d.length - 1; 0 <= g; g--) {
-        var h = d[g], k2 = h.instance, l2 = h.currentTarget;
-        h = h.listener;
+        var h2 = d[g], k2 = h2.instance, l2 = h2.currentTarget;
+        h2 = h2.listener;
         if (k2 !== f2 && e.isPropagationStopped()) break a;
-        nf(e, h, l2);
+        nf(e, h2, l2);
         f2 = k2;
       }
       else for (g = 0; g < d.length; g++) {
-        h = d[g];
-        k2 = h.instance;
-        l2 = h.currentTarget;
-        h = h.listener;
+        h2 = d[g];
+        k2 = h2.instance;
+        l2 = h2.currentTarget;
+        h2 = h2.listener;
         if (k2 !== f2 && e.isPropagationStopped()) break a;
-        nf(e, h, l2);
+        nf(e, h2, l2);
         f2 = k2;
       }
     }
   }
   if (Qb) throw a = Rb, Qb = false, Rb = null, a;
 }
-function D(a, b) {
+function D$1(a, b) {
   var c = b[of];
   void 0 === c && (c = b[of] = /* @__PURE__ */ new Set());
   var d = a + "__bubble";
@@ -2243,8 +2243,8 @@ function hd(a, b, c, d, e) {
     if (null === d) return;
     var g = d.tag;
     if (3 === g || 4 === g) {
-      var h = d.stateNode.containerInfo;
-      if (h === e || 8 === h.nodeType && h.parentNode === e) break;
+      var h2 = d.stateNode.containerInfo;
+      if (h2 === e || 8 === h2.nodeType && h2.parentNode === e) break;
       if (4 === g) for (g = d.return; null !== g; ) {
         var k2 = g.tag;
         if (3 === k2 || 4 === k2) {
@@ -2252,15 +2252,15 @@ function hd(a, b, c, d, e) {
         }
         g = g.return;
       }
-      for (; null !== h; ) {
-        g = Wc(h);
+      for (; null !== h2; ) {
+        g = Wc(h2);
         if (null === g) return;
         k2 = g.tag;
         if (5 === k2 || 6 === k2) {
           d = f2 = g;
           continue a;
         }
-        h = h.parentNode;
+        h2 = h2.parentNode;
       }
     }
     d = d.return;
@@ -2268,8 +2268,8 @@ function hd(a, b, c, d, e) {
   Jb(function() {
     var d2 = f2, e2 = xb(c), g2 = [];
     a: {
-      var h2 = df.get(a);
-      if (void 0 !== h2) {
+      var h3 = df.get(a);
+      if (void 0 !== h3) {
         var k3 = td, n2 = a;
         switch (a) {
           case "keypress":
@@ -2347,7 +2347,7 @@ function hd(a, b, c, d, e) {
           case "pointerup":
             k3 = Td;
         }
-        var t2 = 0 !== (b & 4), J2 = !t2 && "scroll" === a, x2 = t2 ? null !== h2 ? h2 + "Capture" : null : h2;
+        var t2 = 0 !== (b & 4), J2 = !t2 && "scroll" === a, x2 = t2 ? null !== h3 ? h3 + "Capture" : null : h3;
         t2 = [];
         for (var w2 = d2, u2; null !== w2; ) {
           u2 = w2;
@@ -2356,16 +2356,16 @@ function hd(a, b, c, d, e) {
           if (J2) break;
           w2 = w2.return;
         }
-        0 < t2.length && (h2 = new k3(h2, n2, null, c, e2), g2.push({ event: h2, listeners: t2 }));
+        0 < t2.length && (h3 = new k3(h3, n2, null, c, e2), g2.push({ event: h3, listeners: t2 }));
       }
     }
     if (0 === (b & 7)) {
       a: {
-        h2 = "mouseover" === a || "pointerover" === a;
+        h3 = "mouseover" === a || "pointerover" === a;
         k3 = "mouseout" === a || "pointerout" === a;
-        if (h2 && c !== wb && (n2 = c.relatedTarget || c.fromElement) && (Wc(n2) || n2[uf])) break a;
-        if (k3 || h2) {
-          h2 = e2.window === e2 ? e2 : (h2 = e2.ownerDocument) ? h2.defaultView || h2.parentWindow : window;
+        if (h3 && c !== wb && (n2 = c.relatedTarget || c.fromElement) && (Wc(n2) || n2[uf])) break a;
+        if (k3 || h3) {
+          h3 = e2.window === e2 ? e2 : (h3 = e2.ownerDocument) ? h3.defaultView || h3.parentWindow : window;
           if (k3) {
             if (n2 = c.relatedTarget || c.toElement, k3 = d2, n2 = n2 ? Wc(n2) : null, null !== n2 && (J2 = Vb(n2), n2 !== J2 || 5 !== n2.tag && 6 !== n2.tag)) n2 = null;
           } else k3 = null, n2 = d2;
@@ -2375,11 +2375,11 @@ function hd(a, b, c, d, e) {
             x2 = "onMouseEnter";
             w2 = "mouse";
             if ("pointerout" === a || "pointerover" === a) t2 = Td, F2 = "onPointerLeave", x2 = "onPointerEnter", w2 = "pointer";
-            J2 = null == k3 ? h2 : ue(k3);
-            u2 = null == n2 ? h2 : ue(n2);
-            h2 = new t2(F2, w2 + "leave", k3, c, e2);
-            h2.target = J2;
-            h2.relatedTarget = u2;
+            J2 = null == k3 ? h3 : ue(k3);
+            u2 = null == n2 ? h3 : ue(n2);
+            h3 = new t2(F2, w2 + "leave", k3, c, e2);
+            h3.target = J2;
+            h3.relatedTarget = u2;
             F2 = null;
             Wc(e2) === d2 && (t2 = new t2(x2, w2 + "enter", n2, c, e2), t2.target = u2, t2.relatedTarget = J2, F2 = t2);
             J2 = F2;
@@ -2400,27 +2400,27 @@ function hd(a, b, c, d, e) {
               t2 = null;
             }
             else t2 = null;
-            null !== k3 && wf(g2, h2, k3, t2, false);
+            null !== k3 && wf(g2, h3, k3, t2, false);
             null !== n2 && null !== J2 && wf(g2, J2, n2, t2, true);
           }
         }
       }
       a: {
-        h2 = d2 ? ue(d2) : window;
-        k3 = h2.nodeName && h2.nodeName.toLowerCase();
-        if ("select" === k3 || "input" === k3 && "file" === h2.type) var na = ve;
-        else if (me(h2)) if (we) na = Fe;
+        h3 = d2 ? ue(d2) : window;
+        k3 = h3.nodeName && h3.nodeName.toLowerCase();
+        if ("select" === k3 || "input" === k3 && "file" === h3.type) var na = ve;
+        else if (me(h3)) if (we) na = Fe;
         else {
-          na = De;
-          var xa = Ce;
+          na = De$1;
+          var xa = Ce$1;
         }
-        else (k3 = h2.nodeName) && "input" === k3.toLowerCase() && ("checkbox" === h2.type || "radio" === h2.type) && (na = Ee);
+        else (k3 = h3.nodeName) && "input" === k3.toLowerCase() && ("checkbox" === h3.type || "radio" === h3.type) && (na = Ee$1);
         if (na && (na = na(a, d2))) {
           ne(g2, na, c, e2);
           break a;
         }
-        xa && xa(a, h2, d2);
-        "focusout" === a && (xa = h2._wrapperState) && xa.controlled && "number" === h2.type && cb(h2, "number", h2.value);
+        xa && xa(a, h3, d2);
+        "focusout" === a && (xa = h3._wrapperState) && xa.controlled && "number" === h3.type && cb(h3, "number", h3.value);
       }
       xa = d2 ? ue(d2) : window;
       switch (a) {
@@ -2446,7 +2446,7 @@ function hd(a, b, c, d, e) {
           Ue(g2, c, e2);
       }
       var $a;
-      if (ae) b: {
+      if (ae$1) b: {
         switch (a) {
           case "compositionstart":
             var ba = "onCompositionStart";
@@ -2460,11 +2460,11 @@ function hd(a, b, c, d, e) {
         }
         ba = void 0;
       }
-      else ie ? ge(a, c) && (ba = "onCompositionEnd") : "keydown" === a && 229 === c.keyCode && (ba = "onCompositionStart");
-      ba && (de && "ko" !== c.locale && (ie || "onCompositionStart" !== ba ? "onCompositionEnd" === ba && ie && ($a = nd()) : (kd = e2, ld = "value" in kd ? kd.value : kd.textContent, ie = true)), xa = oe(d2, ba), 0 < xa.length && (ba = new Ld(ba, a, null, c, e2), g2.push({ event: ba, listeners: xa }), $a ? ba.data = $a : ($a = he(c), null !== $a && (ba.data = $a))));
+      else ie$1 ? ge(a, c) && (ba = "onCompositionEnd") : "keydown" === a && 229 === c.keyCode && (ba = "onCompositionStart");
+      ba && (de$1 && "ko" !== c.locale && (ie$1 || "onCompositionStart" !== ba ? "onCompositionEnd" === ba && ie$1 && ($a = nd()) : (kd = e2, ld = "value" in kd ? kd.value : kd.textContent, ie$1 = true)), xa = oe(d2, ba), 0 < xa.length && (ba = new Ld(ba, a, null, c, e2), g2.push({ event: ba, listeners: xa }), $a ? ba.data = $a : ($a = he$1(c), null !== $a && (ba.data = $a))));
       if ($a = ce ? je(a, c) : ke(a, c)) d2 = oe(d2, "onBeforeInput"), 0 < d2.length && (e2 = new Ld("onBeforeInput", "beforeinput", null, c, e2), g2.push({ event: e2, listeners: d2 }), e2.data = $a);
     }
-    se(g2, b);
+    se$1(g2, b);
   });
 }
 function tf(a, b, c) {
@@ -2487,9 +2487,9 @@ function vf(a) {
 }
 function wf(a, b, c, d, e) {
   for (var f2 = b._reactName, g = []; null !== c && c !== d; ) {
-    var h = c, k2 = h.alternate, l2 = h.stateNode;
+    var h2 = c, k2 = h2.alternate, l2 = h2.stateNode;
     if (null !== k2 && k2 === d) break;
-    5 === h.tag && null !== l2 && (h = l2, e ? (k2 = Kb(c, f2), null != k2 && g.unshift(tf(c, k2, h))) : e || (k2 = Kb(c, f2), null != k2 && g.push(tf(c, k2, h))));
+    5 === h2.tag && null !== l2 && (h2 = l2, e ? (k2 = Kb(c, f2), null != k2 && g.unshift(tf(c, k2, h2))) : e || (k2 = Kb(c, f2), null != k2 && g.push(tf(c, k2, h2))));
     c = c.return;
   }
   0 !== g.length && a.push({ event: b, listeners: g });
@@ -2600,7 +2600,7 @@ function G(a, b) {
   Sf[Tf] = a.current;
   a.current = b;
 }
-var Vf = {}, H = Uf(Vf), Wf = Uf(false), Xf = Vf;
+var Vf = {}, H$1 = Uf(Vf), Wf = Uf(false), Xf = Vf;
 function Yf(a, b) {
   var c = a.type.contextTypes;
   if (!c) return Vf;
@@ -2617,11 +2617,11 @@ function Zf(a) {
 }
 function $f() {
   E(Wf);
-  E(H);
+  E(H$1);
 }
 function ag(a, b, c) {
-  if (H.current !== Vf) throw Error(p(168));
-  G(H, b);
+  if (H$1.current !== Vf) throw Error(p(168));
+  G(H$1, b);
   G(Wf, c);
 }
 function bg(a, b, c) {
@@ -2634,15 +2634,15 @@ function bg(a, b, c) {
 }
 function cg(a) {
   a = (a = a.stateNode) && a.__reactInternalMemoizedMergedChildContext || Vf;
-  Xf = H.current;
-  G(H, a);
+  Xf = H$1.current;
+  G(H$1, a);
   G(Wf, Wf.current);
   return true;
 }
 function dg(a, b, c) {
   var d = a.stateNode;
   if (!d) throw Error(p(169));
-  c ? (a = bg(a, b, Xf), d.__reactInternalMemoizedMergedChildContext = a, E(Wf), E(H), G(H, a)) : E(Wf);
+  c ? (a = bg(a, b, Xf), d.__reactInternalMemoizedMergedChildContext = a, E(Wf), E(H$1), G(H$1, a)) : E(Wf);
   G(Wf, c);
 }
 var eg = null, fg = false, gg = false;
@@ -2869,7 +2869,7 @@ function Og(a) {
     a && null === b2.alternate && (b2.flags |= 2);
     return b2;
   }
-  function h(a2, b2, c2, d2) {
+  function h2(a2, b2, c2, d2) {
     if (null === b2 || 6 !== b2.tag) return b2 = Qg(c2, a2.mode, d2), b2.return = a2, b2;
     b2 = e(b2, c2);
     b2.return = a2;
@@ -2915,7 +2915,7 @@ function Og(a) {
   }
   function r2(a2, b2, c2, d2) {
     var e2 = null !== b2 ? b2.key : null;
-    if ("string" === typeof c2 && "" !== c2 || "number" === typeof c2) return null !== e2 ? null : h(a2, b2, "" + c2, d2);
+    if ("string" === typeof c2 && "" !== c2 || "number" === typeof c2) return null !== e2 ? null : h2(a2, b2, "" + c2, d2);
     if ("object" === typeof c2 && null !== c2) {
       switch (c2.$$typeof) {
         case va:
@@ -2936,7 +2936,7 @@ function Og(a) {
     return null;
   }
   function y2(a2, b2, c2, d2, e2) {
-    if ("string" === typeof d2 && "" !== d2 || "number" === typeof d2) return a2 = a2.get(c2) || null, h(b2, a2, "" + d2, e2);
+    if ("string" === typeof d2 && "" !== d2 || "number" === typeof d2) return a2 = a2.get(c2) || null, h2(b2, a2, "" + d2, e2);
     if ("object" === typeof d2 && null !== d2) {
       switch (d2.$$typeof) {
         case va:
@@ -2952,10 +2952,10 @@ function Og(a) {
     }
     return null;
   }
-  function n2(e2, g2, h2, k3) {
-    for (var l3 = null, m3 = null, u2 = g2, w2 = g2 = 0, x2 = null; null !== u2 && w2 < h2.length; w2++) {
+  function n2(e2, g2, h3, k3) {
+    for (var l3 = null, m3 = null, u2 = g2, w2 = g2 = 0, x2 = null; null !== u2 && w2 < h3.length; w2++) {
       u2.index > w2 ? (x2 = u2, u2 = null) : x2 = u2.sibling;
-      var n3 = r2(e2, u2, h2[w2], k3);
+      var n3 = r2(e2, u2, h3[w2], k3);
       if (null === n3) {
         null === u2 && (u2 = x2);
         break;
@@ -2966,25 +2966,25 @@ function Og(a) {
       m3 = n3;
       u2 = x2;
     }
-    if (w2 === h2.length) return c(e2, u2), I && tg(e2, w2), l3;
+    if (w2 === h3.length) return c(e2, u2), I && tg(e2, w2), l3;
     if (null === u2) {
-      for (; w2 < h2.length; w2++) u2 = q2(e2, h2[w2], k3), null !== u2 && (g2 = f2(u2, g2, w2), null === m3 ? l3 = u2 : m3.sibling = u2, m3 = u2);
+      for (; w2 < h3.length; w2++) u2 = q2(e2, h3[w2], k3), null !== u2 && (g2 = f2(u2, g2, w2), null === m3 ? l3 = u2 : m3.sibling = u2, m3 = u2);
       I && tg(e2, w2);
       return l3;
     }
-    for (u2 = d(e2, u2); w2 < h2.length; w2++) x2 = y2(u2, e2, w2, h2[w2], k3), null !== x2 && (a && null !== x2.alternate && u2.delete(null === x2.key ? w2 : x2.key), g2 = f2(x2, g2, w2), null === m3 ? l3 = x2 : m3.sibling = x2, m3 = x2);
+    for (u2 = d(e2, u2); w2 < h3.length; w2++) x2 = y2(u2, e2, w2, h3[w2], k3), null !== x2 && (a && null !== x2.alternate && u2.delete(null === x2.key ? w2 : x2.key), g2 = f2(x2, g2, w2), null === m3 ? l3 = x2 : m3.sibling = x2, m3 = x2);
     a && u2.forEach(function(a2) {
       return b(e2, a2);
     });
     I && tg(e2, w2);
     return l3;
   }
-  function t2(e2, g2, h2, k3) {
-    var l3 = Ka(h2);
+  function t2(e2, g2, h3, k3) {
+    var l3 = Ka(h3);
     if ("function" !== typeof l3) throw Error(p(150));
-    h2 = l3.call(h2);
-    if (null == h2) throw Error(p(151));
-    for (var u2 = l3 = null, m3 = g2, w2 = g2 = 0, x2 = null, n3 = h2.next(); null !== m3 && !n3.done; w2++, n3 = h2.next()) {
+    h3 = l3.call(h3);
+    if (null == h3) throw Error(p(151));
+    for (var u2 = l3 = null, m3 = g2, w2 = g2 = 0, x2 = null, n3 = h3.next(); null !== m3 && !n3.done; w2++, n3 = h3.next()) {
       m3.index > w2 ? (x2 = m3, m3 = null) : x2 = m3.sibling;
       var t3 = r2(e2, m3, n3.value, k3);
       if (null === t3) {
@@ -3002,18 +3002,18 @@ function Og(a) {
       m3
     ), I && tg(e2, w2), l3;
     if (null === m3) {
-      for (; !n3.done; w2++, n3 = h2.next()) n3 = q2(e2, n3.value, k3), null !== n3 && (g2 = f2(n3, g2, w2), null === u2 ? l3 = n3 : u2.sibling = n3, u2 = n3);
+      for (; !n3.done; w2++, n3 = h3.next()) n3 = q2(e2, n3.value, k3), null !== n3 && (g2 = f2(n3, g2, w2), null === u2 ? l3 = n3 : u2.sibling = n3, u2 = n3);
       I && tg(e2, w2);
       return l3;
     }
-    for (m3 = d(e2, m3); !n3.done; w2++, n3 = h2.next()) n3 = y2(m3, e2, w2, n3.value, k3), null !== n3 && (a && null !== n3.alternate && m3.delete(null === n3.key ? w2 : n3.key), g2 = f2(n3, g2, w2), null === u2 ? l3 = n3 : u2.sibling = n3, u2 = n3);
+    for (m3 = d(e2, m3); !n3.done; w2++, n3 = h3.next()) n3 = y2(m3, e2, w2, n3.value, k3), null !== n3 && (a && null !== n3.alternate && m3.delete(null === n3.key ? w2 : n3.key), g2 = f2(n3, g2, w2), null === u2 ? l3 = n3 : u2.sibling = n3, u2 = n3);
     a && m3.forEach(function(a2) {
       return b(e2, a2);
     });
     I && tg(e2, w2);
     return l3;
   }
-  function J2(a2, d2, f3, h2) {
+  function J2(a2, d2, f3, h3) {
     "object" === typeof f3 && null !== f3 && f3.type === ya && null === f3.key && (f3 = f3.props.children);
     if ("object" === typeof f3 && null !== f3) {
       switch (f3.$$typeof) {
@@ -3043,7 +3043,7 @@ function Og(a) {
               } else b(a2, l3);
               l3 = l3.sibling;
             }
-            f3.type === ya ? (d2 = Tg(f3.props.children, a2.mode, h2, f3.key), d2.return = a2, a2 = d2) : (h2 = Rg(f3.type, f3.key, f3.props, null, a2.mode, h2), h2.ref = Lg(a2, d2, f3), h2.return = a2, a2 = h2);
+            f3.type === ya ? (d2 = Tg(f3.props.children, a2.mode, h3, f3.key), d2.return = a2, a2 = d2) : (h3 = Rg(f3.type, f3.key, f3.props, null, a2.mode, h3), h3.ref = Lg(a2, d2, f3), h3.return = a2, a2 = h3);
           }
           return g(a2);
         case wa:
@@ -3062,19 +3062,19 @@ function Og(a) {
               else b(a2, d2);
               d2 = d2.sibling;
             }
-            d2 = Sg(f3, a2.mode, h2);
+            d2 = Sg(f3, a2.mode, h3);
             d2.return = a2;
             a2 = d2;
           }
           return g(a2);
         case Ha:
-          return l3 = f3._init, J2(a2, d2, l3(f3._payload), h2);
+          return l3 = f3._init, J2(a2, d2, l3(f3._payload), h3);
       }
-      if (eb(f3)) return n2(a2, d2, f3, h2);
-      if (Ka(f3)) return t2(a2, d2, f3, h2);
+      if (eb(f3)) return n2(a2, d2, f3, h3);
+      if (Ka(f3)) return t2(a2, d2, f3, h3);
       Mg(a2, f3);
     }
-    return "string" === typeof f3 && "" !== f3 || "number" === typeof f3 ? (f3 = "" + f3, null !== d2 && 6 === d2.tag ? (c(a2, d2.sibling), d2 = e(d2, f3), d2.return = a2, a2 = d2) : (c(a2, d2), d2 = Qg(f3, a2.mode, h2), d2.return = a2, a2 = d2), g(a2)) : c(a2, d2);
+    return "string" === typeof f3 && "" !== f3 || "number" === typeof f3 ? (f3 = "" + f3, null !== d2 && 6 === d2.tag ? (c(a2, d2.sibling), d2 = e(d2, f3), d2.return = a2, a2 = d2) : (c(a2, d2), d2 = Qg(f3, a2.mode, h3), d2.return = a2, a2 = d2), g(a2)) : c(a2, d2);
   }
   return J2;
 }
@@ -3188,34 +3188,34 @@ function ph(a, b) {
 function qh(a, b, c, d) {
   var e = a.updateQueue;
   jh = false;
-  var f2 = e.firstBaseUpdate, g = e.lastBaseUpdate, h = e.shared.pending;
-  if (null !== h) {
+  var f2 = e.firstBaseUpdate, g = e.lastBaseUpdate, h2 = e.shared.pending;
+  if (null !== h2) {
     e.shared.pending = null;
-    var k2 = h, l2 = k2.next;
+    var k2 = h2, l2 = k2.next;
     k2.next = null;
     null === g ? f2 = l2 : g.next = l2;
     g = k2;
     var m2 = a.alternate;
-    null !== m2 && (m2 = m2.updateQueue, h = m2.lastBaseUpdate, h !== g && (null === h ? m2.firstBaseUpdate = l2 : h.next = l2, m2.lastBaseUpdate = k2));
+    null !== m2 && (m2 = m2.updateQueue, h2 = m2.lastBaseUpdate, h2 !== g && (null === h2 ? m2.firstBaseUpdate = l2 : h2.next = l2, m2.lastBaseUpdate = k2));
   }
   if (null !== f2) {
     var q2 = e.baseState;
     g = 0;
     m2 = l2 = k2 = null;
-    h = f2;
+    h2 = f2;
     do {
-      var r2 = h.lane, y2 = h.eventTime;
+      var r2 = h2.lane, y2 = h2.eventTime;
       if ((d & r2) === r2) {
         null !== m2 && (m2 = m2.next = {
           eventTime: y2,
           lane: 0,
-          tag: h.tag,
-          payload: h.payload,
-          callback: h.callback,
+          tag: h2.tag,
+          payload: h2.payload,
+          callback: h2.callback,
           next: null
         });
         a: {
-          var n2 = a, t2 = h;
+          var n2 = a, t2 = h2;
           r2 = b;
           y2 = c;
           switch (t2.tag) {
@@ -3239,11 +3239,11 @@ function qh(a, b, c, d) {
               jh = true;
           }
         }
-        null !== h.callback && 0 !== h.lane && (a.flags |= 64, r2 = e.effects, null === r2 ? e.effects = [h] : r2.push(h));
-      } else y2 = { eventTime: y2, lane: r2, tag: h.tag, payload: h.payload, callback: h.callback, next: null }, null === m2 ? (l2 = m2 = y2, k2 = q2) : m2 = m2.next = y2, g |= r2;
-      h = h.next;
-      if (null === h) if (h = e.shared.pending, null === h) break;
-      else r2 = h, h = r2.next, r2.next = null, e.lastBaseUpdate = r2, e.shared.pending = null;
+        null !== h2.callback && 0 !== h2.lane && (a.flags |= 64, r2 = e.effects, null === r2 ? e.effects = [h2] : r2.push(h2));
+      } else y2 = { eventTime: y2, lane: r2, tag: h2.tag, payload: h2.payload, callback: h2.callback, next: null }, null === m2 ? (l2 = m2 = y2, k2 = q2) : m2 = m2.next = y2, g |= r2;
+      h2 = h2.next;
+      if (null === h2) if (h2 = e.shared.pending, null === h2) break;
+      else r2 = h2, h2 = r2.next, r2.next = null, e.lastBaseUpdate = r2, e.shared.pending = null;
     } while (1);
     null === m2 && (k2 = q2);
     e.baseState = k2;
@@ -3343,7 +3343,7 @@ function P() {
 }
 function Mh(a, b) {
   if (null === b) return false;
-  for (var c = 0; c < b.length && c < a.length; c++) if (!He(a[c], b[c])) return false;
+  for (var c = 0; c < b.length && c < a.length; c++) if (!He$1(a[c], b[c])) return false;
   return true;
 }
 function Nh(a, b, c, d, e, f2) {
@@ -3420,7 +3420,7 @@ function Wh(a) {
   if (null !== e) {
     f2 = e.next;
     d = d.baseState;
-    var h = g = null, k2 = null, l2 = f2;
+    var h2 = g = null, k2 = null, l2 = f2;
     do {
       var m2 = l2.lane;
       if ((Hh & m2) === m2) null !== k2 && (k2 = k2.next = { lane: 0, action: l2.action, hasEagerState: l2.hasEagerState, eagerState: l2.eagerState, next: null }), d = l2.hasEagerState ? l2.eagerState : a(d, l2.action);
@@ -3432,14 +3432,14 @@ function Wh(a) {
           eagerState: l2.eagerState,
           next: null
         };
-        null === k2 ? (h = k2 = q2, g = d) : k2 = k2.next = q2;
+        null === k2 ? (h2 = k2 = q2, g = d) : k2 = k2.next = q2;
         M.lanes |= m2;
         rh |= m2;
       }
       l2 = l2.next;
     } while (null !== l2 && l2 !== f2);
-    null === k2 ? g = d : k2.next = h;
-    He(d, b.memoizedState) || (dh = true);
+    null === k2 ? g = d : k2.next = h2;
+    He$1(d, b.memoizedState) || (dh = true);
     b.memoizedState = d;
     b.baseState = g;
     b.baseQueue = k2;
@@ -3465,7 +3465,7 @@ function Xh(a) {
     do
       f2 = a(f2, g.action), g = g.next;
     while (g !== e);
-    He(f2, b.memoizedState) || (dh = true);
+    He$1(f2, b.memoizedState) || (dh = true);
     b.memoizedState = f2;
     null === b.baseQueue && (b.baseState = f2);
     c.lastRenderedState = f2;
@@ -3475,7 +3475,7 @@ function Xh(a) {
 function Yh() {
 }
 function Zh(a, b) {
-  var c = M, d = Uh(), e = b(), f2 = !He(d.memoizedState, e);
+  var c = M, d = Uh(), e = b(), f2 = !He$1(d.memoizedState, e);
   f2 && (d.memoizedState = e, dh = true);
   d = d.queue;
   $h(ai.bind(null, c, d, a), [a]);
@@ -3508,7 +3508,7 @@ function ei(a) {
   a = a.value;
   try {
     var c = b();
-    return !He(a, c);
+    return !He$1(a, c);
   } catch (d) {
     return true;
   }
@@ -3600,7 +3600,7 @@ function ti(a, b) {
 }
 function ui(a, b, c) {
   if (0 === (Hh & 21)) return a.baseState && (a.baseState = false, dh = true), a.memoizedState = c;
-  He(c, b) || (c = yc(), M.lanes |= c, rh |= c, a.baseState = true);
+  He$1(c, b) || (c = yc(), M.lanes |= c, rh |= c, a.baseState = true);
   return b;
 }
 function vi(a, b) {
@@ -3634,10 +3634,10 @@ function ii(a, b, c) {
   else {
     var f2 = a.alternate;
     if (0 === a.lanes && (null === f2 || 0 === f2.lanes) && (f2 = b.lastRenderedReducer, null !== f2)) try {
-      var g = b.lastRenderedState, h = f2(g, c);
+      var g = b.lastRenderedState, h2 = f2(g, c);
       e.hasEagerState = true;
-      e.eagerState = h;
-      if (He(h, g)) {
+      e.eagerState = h2;
+      if (He$1(h2, g)) {
         var k2 = b.interleaved;
         null === k2 ? (e.next = e, gh(b)) : (e.next = k2.next, k2.next = e);
         b.interleaved = e;
@@ -3828,7 +3828,7 @@ function Fi(a, b, c, d, e, f2, g) {
 function Gi(a, b, c) {
   var d = false, e = Vf;
   var f2 = b.contextType;
-  "object" === typeof f2 && null !== f2 ? f2 = eh(f2) : (e = Zf(b) ? Xf : H.current, d = b.contextTypes, f2 = (d = null !== d && void 0 !== d) ? Yf(a, e) : Vf);
+  "object" === typeof f2 && null !== f2 ? f2 = eh(f2) : (e = Zf(b) ? Xf : H$1.current, d = b.contextTypes, f2 = (d = null !== d && void 0 !== d) ? Yf(a, e) : Vf);
   b = new b(c, f2);
   a.memoizedState = null !== b.state && void 0 !== b.state ? b.state : null;
   b.updater = Ei;
@@ -3850,7 +3850,7 @@ function Ii(a, b, c, d) {
   e.refs = {};
   kh(a);
   var f2 = b.contextType;
-  "object" === typeof f2 && null !== f2 ? e.context = eh(f2) : (f2 = Zf(b) ? Xf : H.current, e.context = Yf(a, f2));
+  "object" === typeof f2 && null !== f2 ? e.context = eh(f2) : (f2 = Zf(b) ? Xf : H$1.current, e.context = Yf(a, f2));
   e.state = a.memoizedState;
   f2 = b.getDerivedStateFromProps;
   "function" === typeof f2 && (Di(a, b, f2, c), e.state = a.memoizedState);
@@ -4004,7 +4004,7 @@ function gj(a, b) {
   if (null === a && null !== c || null !== a && a.ref !== c) b.flags |= 512, b.flags |= 2097152;
 }
 function cj(a, b, c, d, e) {
-  var f2 = Zf(c) ? Xf : H.current;
+  var f2 = Zf(c) ? Xf : H$1.current;
   f2 = Yf(b, f2);
   ch(b, e);
   c = Nh(a, b, c, d, f2, e);
@@ -4023,36 +4023,36 @@ function hj(a, b, c, d, e) {
   ch(b, e);
   if (null === b.stateNode) ij(a, b), Gi(b, c, d), Ii(b, c, d, e), d = true;
   else if (null === a) {
-    var g = b.stateNode, h = b.memoizedProps;
-    g.props = h;
+    var g = b.stateNode, h2 = b.memoizedProps;
+    g.props = h2;
     var k2 = g.context, l2 = c.contextType;
-    "object" === typeof l2 && null !== l2 ? l2 = eh(l2) : (l2 = Zf(c) ? Xf : H.current, l2 = Yf(b, l2));
+    "object" === typeof l2 && null !== l2 ? l2 = eh(l2) : (l2 = Zf(c) ? Xf : H$1.current, l2 = Yf(b, l2));
     var m2 = c.getDerivedStateFromProps, q2 = "function" === typeof m2 || "function" === typeof g.getSnapshotBeforeUpdate;
-    q2 || "function" !== typeof g.UNSAFE_componentWillReceiveProps && "function" !== typeof g.componentWillReceiveProps || (h !== d || k2 !== l2) && Hi(b, g, d, l2);
+    q2 || "function" !== typeof g.UNSAFE_componentWillReceiveProps && "function" !== typeof g.componentWillReceiveProps || (h2 !== d || k2 !== l2) && Hi(b, g, d, l2);
     jh = false;
     var r2 = b.memoizedState;
     g.state = r2;
     qh(b, d, g, e);
     k2 = b.memoizedState;
-    h !== d || r2 !== k2 || Wf.current || jh ? ("function" === typeof m2 && (Di(b, c, m2, d), k2 = b.memoizedState), (h = jh || Fi(b, c, h, d, r2, k2, l2)) ? (q2 || "function" !== typeof g.UNSAFE_componentWillMount && "function" !== typeof g.componentWillMount || ("function" === typeof g.componentWillMount && g.componentWillMount(), "function" === typeof g.UNSAFE_componentWillMount && g.UNSAFE_componentWillMount()), "function" === typeof g.componentDidMount && (b.flags |= 4194308)) : ("function" === typeof g.componentDidMount && (b.flags |= 4194308), b.memoizedProps = d, b.memoizedState = k2), g.props = d, g.state = k2, g.context = l2, d = h) : ("function" === typeof g.componentDidMount && (b.flags |= 4194308), d = false);
+    h2 !== d || r2 !== k2 || Wf.current || jh ? ("function" === typeof m2 && (Di(b, c, m2, d), k2 = b.memoizedState), (h2 = jh || Fi(b, c, h2, d, r2, k2, l2)) ? (q2 || "function" !== typeof g.UNSAFE_componentWillMount && "function" !== typeof g.componentWillMount || ("function" === typeof g.componentWillMount && g.componentWillMount(), "function" === typeof g.UNSAFE_componentWillMount && g.UNSAFE_componentWillMount()), "function" === typeof g.componentDidMount && (b.flags |= 4194308)) : ("function" === typeof g.componentDidMount && (b.flags |= 4194308), b.memoizedProps = d, b.memoizedState = k2), g.props = d, g.state = k2, g.context = l2, d = h2) : ("function" === typeof g.componentDidMount && (b.flags |= 4194308), d = false);
   } else {
     g = b.stateNode;
     lh(a, b);
-    h = b.memoizedProps;
-    l2 = b.type === b.elementType ? h : Ci(b.type, h);
+    h2 = b.memoizedProps;
+    l2 = b.type === b.elementType ? h2 : Ci(b.type, h2);
     g.props = l2;
     q2 = b.pendingProps;
     r2 = g.context;
     k2 = c.contextType;
-    "object" === typeof k2 && null !== k2 ? k2 = eh(k2) : (k2 = Zf(c) ? Xf : H.current, k2 = Yf(b, k2));
+    "object" === typeof k2 && null !== k2 ? k2 = eh(k2) : (k2 = Zf(c) ? Xf : H$1.current, k2 = Yf(b, k2));
     var y2 = c.getDerivedStateFromProps;
-    (m2 = "function" === typeof y2 || "function" === typeof g.getSnapshotBeforeUpdate) || "function" !== typeof g.UNSAFE_componentWillReceiveProps && "function" !== typeof g.componentWillReceiveProps || (h !== q2 || r2 !== k2) && Hi(b, g, d, k2);
+    (m2 = "function" === typeof y2 || "function" === typeof g.getSnapshotBeforeUpdate) || "function" !== typeof g.UNSAFE_componentWillReceiveProps && "function" !== typeof g.componentWillReceiveProps || (h2 !== q2 || r2 !== k2) && Hi(b, g, d, k2);
     jh = false;
     r2 = b.memoizedState;
     g.state = r2;
     qh(b, d, g, e);
     var n2 = b.memoizedState;
-    h !== q2 || r2 !== n2 || Wf.current || jh ? ("function" === typeof y2 && (Di(b, c, y2, d), n2 = b.memoizedState), (l2 = jh || Fi(b, c, l2, d, r2, n2, k2) || false) ? (m2 || "function" !== typeof g.UNSAFE_componentWillUpdate && "function" !== typeof g.componentWillUpdate || ("function" === typeof g.componentWillUpdate && g.componentWillUpdate(d, n2, k2), "function" === typeof g.UNSAFE_componentWillUpdate && g.UNSAFE_componentWillUpdate(d, n2, k2)), "function" === typeof g.componentDidUpdate && (b.flags |= 4), "function" === typeof g.getSnapshotBeforeUpdate && (b.flags |= 1024)) : ("function" !== typeof g.componentDidUpdate || h === a.memoizedProps && r2 === a.memoizedState || (b.flags |= 4), "function" !== typeof g.getSnapshotBeforeUpdate || h === a.memoizedProps && r2 === a.memoizedState || (b.flags |= 1024), b.memoizedProps = d, b.memoizedState = n2), g.props = d, g.state = n2, g.context = k2, d = l2) : ("function" !== typeof g.componentDidUpdate || h === a.memoizedProps && r2 === a.memoizedState || (b.flags |= 4), "function" !== typeof g.getSnapshotBeforeUpdate || h === a.memoizedProps && r2 === a.memoizedState || (b.flags |= 1024), d = false);
+    h2 !== q2 || r2 !== n2 || Wf.current || jh ? ("function" === typeof y2 && (Di(b, c, y2, d), n2 = b.memoizedState), (l2 = jh || Fi(b, c, l2, d, r2, n2, k2) || false) ? (m2 || "function" !== typeof g.UNSAFE_componentWillUpdate && "function" !== typeof g.componentWillUpdate || ("function" === typeof g.componentWillUpdate && g.componentWillUpdate(d, n2, k2), "function" === typeof g.UNSAFE_componentWillUpdate && g.UNSAFE_componentWillUpdate(d, n2, k2)), "function" === typeof g.componentDidUpdate && (b.flags |= 4), "function" === typeof g.getSnapshotBeforeUpdate && (b.flags |= 1024)) : ("function" !== typeof g.componentDidUpdate || h2 === a.memoizedProps && r2 === a.memoizedState || (b.flags |= 4), "function" !== typeof g.getSnapshotBeforeUpdate || h2 === a.memoizedProps && r2 === a.memoizedState || (b.flags |= 1024), b.memoizedProps = d, b.memoizedState = n2), g.props = d, g.state = n2, g.context = k2, d = l2) : ("function" !== typeof g.componentDidUpdate || h2 === a.memoizedProps && r2 === a.memoizedState || (b.flags |= 4), "function" !== typeof g.getSnapshotBeforeUpdate || h2 === a.memoizedProps && r2 === a.memoizedState || (b.flags |= 1024), d = false);
   }
   return jj(a, b, c, d, f2, e);
 }
@@ -4062,9 +4062,9 @@ function jj(a, b, c, d, e, f2) {
   if (!d && !g) return e && dg(b, c, false), Zi(a, b, f2);
   d = b.stateNode;
   Wi.current = b;
-  var h = g && "function" !== typeof c.getDerivedStateFromError ? null : d.render();
+  var h2 = g && "function" !== typeof c.getDerivedStateFromError ? null : d.render();
   b.flags |= 1;
-  null !== a && g ? (b.child = Ug(b, a.child, null, f2), b.child = Ug(b, null, h, f2)) : Xi(a, b, h, f2);
+  null !== a && g ? (b.child = Ug(b, a.child, null, f2), b.child = Ug(b, null, h2, f2)) : Xi(a, b, h2, f2);
   b.memoizedState = d.state;
   e && dg(b, c, true);
   return b.child;
@@ -4086,9 +4086,9 @@ function nj(a) {
   return { baseLanes: a, cachePool: null, transitions: null };
 }
 function oj(a, b, c) {
-  var d = b.pendingProps, e = L.current, f2 = false, g = 0 !== (b.flags & 128), h;
-  (h = g) || (h = null !== a && null === a.memoizedState ? false : 0 !== (e & 2));
-  if (h) f2 = true, b.flags &= -129;
+  var d = b.pendingProps, e = L.current, f2 = false, g = 0 !== (b.flags & 128), h2;
+  (h2 = g) || (h2 = null !== a && null === a.memoizedState ? false : 0 !== (e & 2));
+  if (h2) f2 = true, b.flags &= -129;
   else if (null === a || null !== a.memoizedState) e |= 1;
   G(L, e & 1);
   if (null === a) {
@@ -4100,15 +4100,15 @@ function oj(a, b, c) {
     return f2 ? (d = b.mode, f2 = b.child, g = { mode: "hidden", children: g }, 0 === (d & 1) && null !== f2 ? (f2.childLanes = 0, f2.pendingProps = g) : f2 = pj(g, d, 0, null), a = Tg(a, d, c, null), f2.return = b, a.return = b, f2.sibling = a, b.child = f2, b.child.memoizedState = nj(c), b.memoizedState = mj, a) : qj(b, g);
   }
   e = a.memoizedState;
-  if (null !== e && (h = e.dehydrated, null !== h)) return rj(a, b, g, d, h, e, c);
+  if (null !== e && (h2 = e.dehydrated, null !== h2)) return rj(a, b, g, d, h2, e, c);
   if (f2) {
     f2 = d.fallback;
     g = b.mode;
     e = a.child;
-    h = e.sibling;
+    h2 = e.sibling;
     var k2 = { mode: "hidden", children: d.children };
     0 === (g & 1) && b.child !== e ? (d = b.child, d.childLanes = 0, d.pendingProps = k2, b.deletions = null) : (d = Pg(e, k2), d.subtreeFlags = e.subtreeFlags & 14680064);
-    null !== h ? f2 = Pg(h, f2) : (f2 = Tg(f2, g, c, null), f2.flags |= 2);
+    null !== h2 ? f2 = Pg(h2, f2) : (f2 = Tg(f2, g, c, null), f2.flags |= 2);
     f2.return = b;
     d.return = b;
     d.sibling = f2;
@@ -4167,14 +4167,14 @@ function rj(a, b, c, d, e, f2, g) {
   if (0 === (b.mode & 1)) return sj(a, b, g, null);
   if ("$!" === e.data) {
     d = e.nextSibling && e.nextSibling.dataset;
-    if (d) var h = d.dgst;
-    d = h;
+    if (d) var h2 = d.dgst;
+    d = h2;
     f2 = Error(p(419));
     d = Ki(f2, d, void 0);
     return sj(a, b, g, d);
   }
-  h = 0 !== (g & a.childLanes);
-  if (dh || h) {
+  h2 = 0 !== (g & a.childLanes);
+  if (dh || h2) {
     d = Q;
     if (null !== d) {
       switch (g & -g) {
@@ -4413,20 +4413,20 @@ Bj = function(a, b, c, d) {
     var g;
     c = null;
     for (l2 in e) if (!d.hasOwnProperty(l2) && e.hasOwnProperty(l2) && null != e[l2]) if ("style" === l2) {
-      var h = e[l2];
-      for (g in h) h.hasOwnProperty(g) && (c || (c = {}), c[g] = "");
+      var h2 = e[l2];
+      for (g in h2) h2.hasOwnProperty(g) && (c || (c = {}), c[g] = "");
     } else "dangerouslySetInnerHTML" !== l2 && "children" !== l2 && "suppressContentEditableWarning" !== l2 && "suppressHydrationWarning" !== l2 && "autoFocus" !== l2 && (ea.hasOwnProperty(l2) ? f2 || (f2 = []) : (f2 = f2 || []).push(l2, null));
     for (l2 in d) {
       var k2 = d[l2];
-      h = null != e ? e[l2] : void 0;
-      if (d.hasOwnProperty(l2) && k2 !== h && (null != k2 || null != h)) if ("style" === l2) if (h) {
-        for (g in h) !h.hasOwnProperty(g) || k2 && k2.hasOwnProperty(g) || (c || (c = {}), c[g] = "");
-        for (g in k2) k2.hasOwnProperty(g) && h[g] !== k2[g] && (c || (c = {}), c[g] = k2[g]);
+      h2 = null != e ? e[l2] : void 0;
+      if (d.hasOwnProperty(l2) && k2 !== h2 && (null != k2 || null != h2)) if ("style" === l2) if (h2) {
+        for (g in h2) !h2.hasOwnProperty(g) || k2 && k2.hasOwnProperty(g) || (c || (c = {}), c[g] = "");
+        for (g in k2) k2.hasOwnProperty(g) && h2[g] !== k2[g] && (c || (c = {}), c[g] = k2[g]);
       } else c || (f2 || (f2 = []), f2.push(
         l2,
         c
       )), c = k2;
-      else "dangerouslySetInnerHTML" === l2 ? (k2 = k2 ? k2.__html : void 0, h = h ? h.__html : void 0, null != k2 && h !== k2 && (f2 = f2 || []).push(l2, k2)) : "children" === l2 ? "string" !== typeof k2 && "number" !== typeof k2 || (f2 = f2 || []).push(l2, "" + k2) : "suppressContentEditableWarning" !== l2 && "suppressHydrationWarning" !== l2 && (ea.hasOwnProperty(l2) ? (null != k2 && "onScroll" === l2 && D("scroll", a), f2 || h === k2 || (f2 = [])) : (f2 = f2 || []).push(l2, k2));
+      else "dangerouslySetInnerHTML" === l2 ? (k2 = k2 ? k2.__html : void 0, h2 = h2 ? h2.__html : void 0, null != k2 && h2 !== k2 && (f2 = f2 || []).push(l2, k2)) : "children" === l2 ? "string" !== typeof k2 && "number" !== typeof k2 || (f2 = f2 || []).push(l2, "" + k2) : "suppressContentEditableWarning" !== l2 && "suppressHydrationWarning" !== l2 && (ea.hasOwnProperty(l2) ? (null != k2 && "onScroll" === l2 && D$1("scroll", a), f2 || h2 === k2 || (f2 = [])) : (f2 = f2 || []).push(l2, k2));
     }
     c && (f2 = f2 || []).push("style", c);
     var l2 = f2;
@@ -4478,7 +4478,7 @@ function Ej(a, b, c) {
       d = b.stateNode;
       zh();
       E(Wf);
-      E(H);
+      E(H$1);
       Eh();
       d.pendingContext && (d.context = d.pendingContext, d.pendingContext = null);
       if (null === a || null === a.child) Gg(b) ? b.flags |= 4 : null === a || a.memoizedState.isDehydrated && 0 === (b.flags & 256) || (b.flags |= 1024, null !== zg && (Fj(zg), zg = null));
@@ -4506,53 +4506,53 @@ function Ej(a, b, c) {
           a = 0 !== (b.mode & 1);
           switch (c) {
             case "dialog":
-              D("cancel", d);
-              D("close", d);
+              D$1("cancel", d);
+              D$1("close", d);
               break;
             case "iframe":
             case "object":
             case "embed":
-              D("load", d);
+              D$1("load", d);
               break;
             case "video":
             case "audio":
-              for (e = 0; e < lf.length; e++) D(lf[e], d);
+              for (e = 0; e < lf.length; e++) D$1(lf[e], d);
               break;
             case "source":
-              D("error", d);
+              D$1("error", d);
               break;
             case "img":
             case "image":
             case "link":
-              D(
+              D$1(
                 "error",
                 d
               );
-              D("load", d);
+              D$1("load", d);
               break;
             case "details":
-              D("toggle", d);
+              D$1("toggle", d);
               break;
             case "input":
               Za(d, f2);
-              D("invalid", d);
+              D$1("invalid", d);
               break;
             case "select":
               d._wrapperState = { wasMultiple: !!f2.multiple };
-              D("invalid", d);
+              D$1("invalid", d);
               break;
             case "textarea":
-              hb(d, f2), D("invalid", d);
+              hb(d, f2), D$1("invalid", d);
           }
           ub(c, f2);
           e = null;
           for (var g in f2) if (f2.hasOwnProperty(g)) {
-            var h = f2[g];
-            "children" === g ? "string" === typeof h ? d.textContent !== h && (true !== f2.suppressHydrationWarning && Af(d.textContent, h, a), e = ["children", h]) : "number" === typeof h && d.textContent !== "" + h && (true !== f2.suppressHydrationWarning && Af(
+            var h2 = f2[g];
+            "children" === g ? "string" === typeof h2 ? d.textContent !== h2 && (true !== f2.suppressHydrationWarning && Af(d.textContent, h2, a), e = ["children", h2]) : "number" === typeof h2 && d.textContent !== "" + h2 && (true !== f2.suppressHydrationWarning && Af(
               d.textContent,
-              h,
+              h2,
               a
-            ), e = ["children", "" + h]) : ea.hasOwnProperty(g) && null != h && "onScroll" === g && D("scroll", d);
+            ), e = ["children", "" + h2]) : ea.hasOwnProperty(g) && null != h2 && "onScroll" === g && D$1("scroll", d);
           }
           switch (c) {
             case "input":
@@ -4584,43 +4584,43 @@ function Ej(a, b, c) {
             g = vb(c, d);
             switch (c) {
               case "dialog":
-                D("cancel", a);
-                D("close", a);
+                D$1("cancel", a);
+                D$1("close", a);
                 e = d;
                 break;
               case "iframe":
               case "object":
               case "embed":
-                D("load", a);
+                D$1("load", a);
                 e = d;
                 break;
               case "video":
               case "audio":
-                for (e = 0; e < lf.length; e++) D(lf[e], a);
+                for (e = 0; e < lf.length; e++) D$1(lf[e], a);
                 e = d;
                 break;
               case "source":
-                D("error", a);
+                D$1("error", a);
                 e = d;
                 break;
               case "img":
               case "image":
               case "link":
-                D(
+                D$1(
                   "error",
                   a
                 );
-                D("load", a);
+                D$1("load", a);
                 e = d;
                 break;
               case "details":
-                D("toggle", a);
+                D$1("toggle", a);
                 e = d;
                 break;
               case "input":
                 Za(a, d);
                 e = Ya(a, d);
-                D("invalid", a);
+                D$1("invalid", a);
                 break;
               case "option":
                 e = d;
@@ -4628,21 +4628,21 @@ function Ej(a, b, c) {
               case "select":
                 a._wrapperState = { wasMultiple: !!d.multiple };
                 e = A({}, d, { value: void 0 });
-                D("invalid", a);
+                D$1("invalid", a);
                 break;
               case "textarea":
                 hb(a, d);
                 e = gb(a, d);
-                D("invalid", a);
+                D$1("invalid", a);
                 break;
               default:
                 e = d;
             }
             ub(c, e);
-            h = e;
-            for (f2 in h) if (h.hasOwnProperty(f2)) {
-              var k2 = h[f2];
-              "style" === f2 ? sb(a, k2) : "dangerouslySetInnerHTML" === f2 ? (k2 = k2 ? k2.__html : void 0, null != k2 && nb(a, k2)) : "children" === f2 ? "string" === typeof k2 ? ("textarea" !== c || "" !== k2) && ob(a, k2) : "number" === typeof k2 && ob(a, "" + k2) : "suppressContentEditableWarning" !== f2 && "suppressHydrationWarning" !== f2 && "autoFocus" !== f2 && (ea.hasOwnProperty(f2) ? null != k2 && "onScroll" === f2 && D("scroll", a) : null != k2 && ta(a, f2, k2, g));
+            h2 = e;
+            for (f2 in h2) if (h2.hasOwnProperty(f2)) {
+              var k2 = h2[f2];
+              "style" === f2 ? sb(a, k2) : "dangerouslySetInnerHTML" === f2 ? (k2 = k2 ? k2.__html : void 0, null != k2 && nb(a, k2)) : "children" === f2 ? "string" === typeof k2 ? ("textarea" !== c || "" !== k2) && ob(a, k2) : "number" === typeof k2 && ob(a, "" + k2) : "suppressContentEditableWarning" !== f2 && "suppressHydrationWarning" !== f2 && "autoFocus" !== f2 && (ea.hasOwnProperty(f2) ? null != k2 && "onScroll" === f2 && D$1("scroll", a) : null != k2 && ta(a, f2, k2, g));
             }
             switch (c) {
               case "input":
@@ -4793,7 +4793,7 @@ function Ij(a, b) {
     case 1:
       return Zf(b.type) && $f(), a = b.flags, a & 65536 ? (b.flags = a & -65537 | 128, b) : null;
     case 3:
-      return zh(), E(Wf), E(H), Eh(), a = b.flags, 0 !== (a & 65536) && 0 === (a & 128) ? (b.flags = a & -65537 | 128, b) : null;
+      return zh(), E(Wf), E(H$1), Eh(), a = b.flags, 0 !== (a & 65536) && 0 === (a & 128) ? (b.flags = a & -65537 | 128, b) : null;
     case 5:
       return Bh(b), null;
     case 13:
@@ -4840,7 +4840,7 @@ function Mj(a, b, c) {
 var Nj = false;
 function Oj(a, b) {
   Cf = dd;
-  a = Me();
+  a = Me$1();
   if (Ne(a)) {
     if ("selectionStart" in a) var c = { start: a.selectionStart, end: a.selectionEnd };
     else a: {
@@ -4856,10 +4856,10 @@ function Oj(a, b) {
           c = null;
           break a;
         }
-        var g = 0, h = -1, k2 = -1, l2 = 0, m2 = 0, q2 = a, r2 = null;
+        var g = 0, h2 = -1, k2 = -1, l2 = 0, m2 = 0, q2 = a, r2 = null;
         b: for (; ; ) {
           for (var y2; ; ) {
-            q2 !== c || 0 !== e && 3 !== q2.nodeType || (h = g + e);
+            q2 !== c || 0 !== e && 3 !== q2.nodeType || (h2 = g + e);
             q2 !== f2 || 0 !== d && 3 !== q2.nodeType || (k2 = g + d);
             3 === q2.nodeType && (g += q2.nodeValue.length);
             if (null === (y2 = q2.firstChild)) break;
@@ -4868,7 +4868,7 @@ function Oj(a, b) {
           }
           for (; ; ) {
             if (q2 === a) break b;
-            r2 === c && ++l2 === e && (h = g);
+            r2 === c && ++l2 === e && (h2 = g);
             r2 === f2 && ++m2 === d && (k2 = g);
             if (null !== (y2 = q2.nextSibling)) break;
             q2 = r2;
@@ -4876,7 +4876,7 @@ function Oj(a, b) {
           }
           q2 = y2;
         }
-        c = -1 === h || -1 === k2 ? null : { start: h, end: k2 };
+        c = -1 === h2 || -1 === k2 ? null : { start: h2, end: k2 };
       } else c = null;
     }
     c = c || { start: 0, end: 0 };
@@ -5020,7 +5020,7 @@ function Yj(a, b, c) {
 function Zj(a, b, c) {
   if (lc && "function" === typeof lc.onCommitFiberUnmount) try {
     lc.onCommitFiberUnmount(kc, c);
-  } catch (h) {
+  } catch (h2) {
   }
   switch (c.tag) {
     case 5:
@@ -5063,8 +5063,8 @@ function Zj(a, b, c) {
     case 1:
       if (!U && (Lj(c, b), d = c.stateNode, "function" === typeof d.componentWillUnmount)) try {
         d.props = c.memoizedProps, d.state = c.memoizedState, d.componentWillUnmount();
-      } catch (h) {
-        W(c, b, h);
+      } catch (h2) {
+        W(c, b, h2);
       }
       Yj(a, b, c);
       break;
@@ -5095,23 +5095,23 @@ function ck(a, b) {
   if (null !== c) for (var d = 0; d < c.length; d++) {
     var e = c[d];
     try {
-      var f2 = a, g = b, h = g;
-      a: for (; null !== h; ) {
-        switch (h.tag) {
+      var f2 = a, g = b, h2 = g;
+      a: for (; null !== h2; ) {
+        switch (h2.tag) {
           case 5:
-            X = h.stateNode;
+            X = h2.stateNode;
             Xj = false;
             break a;
           case 3:
-            X = h.stateNode.containerInfo;
+            X = h2.stateNode.containerInfo;
             Xj = true;
             break a;
           case 4:
-            X = h.stateNode.containerInfo;
+            X = h2.stateNode.containerInfo;
             Xj = true;
             break a;
         }
-        h = h.return;
+        h2 = h2.return;
       }
       if (null === X) throw Error(p(160));
       Zj(f2, g, e);
@@ -5166,17 +5166,17 @@ function dk(a, b) {
         }
       }
       if (d & 4 && (e = a.stateNode, null != e)) {
-        var f2 = a.memoizedProps, g = null !== c ? c.memoizedProps : f2, h = a.type, k2 = a.updateQueue;
+        var f2 = a.memoizedProps, g = null !== c ? c.memoizedProps : f2, h2 = a.type, k2 = a.updateQueue;
         a.updateQueue = null;
         if (null !== k2) try {
-          "input" === h && "radio" === f2.type && null != f2.name && ab(e, f2);
-          vb(h, g);
-          var l2 = vb(h, f2);
+          "input" === h2 && "radio" === f2.type && null != f2.name && ab(e, f2);
+          vb(h2, g);
+          var l2 = vb(h2, f2);
           for (g = 0; g < k2.length; g += 2) {
             var m2 = k2[g], q2 = k2[g + 1];
             "style" === m2 ? sb(e, q2) : "dangerouslySetInnerHTML" === m2 ? nb(e, q2) : "children" === m2 ? ob(e, q2) : ta(e, m2, q2, l2);
           }
-          switch (h) {
+          switch (h2) {
             case "input":
               bb(e, f2);
               break;
@@ -5282,7 +5282,7 @@ function dk(a, b) {
             if (null === m2) {
               m2 = q2;
               try {
-                e = q2.stateNode, l2 ? (f2 = e.style, "function" === typeof f2.setProperty ? f2.setProperty("display", "none", "important") : f2.display = "none") : (h = q2.stateNode, k2 = q2.memoizedProps.style, g = void 0 !== k2 && null !== k2 && k2.hasOwnProperty("display") ? k2.display : null, h.style.display = rb("display", g));
+                e = q2.stateNode, l2 ? (f2 = e.style, "function" === typeof f2.setProperty ? f2.setProperty("display", "none", "important") : f2.display = "none") : (h2 = q2.stateNode, k2 = q2.memoizedProps.style, g = void 0 !== k2 && null !== k2 && k2.hasOwnProperty("display") ? k2.display : null, h2.style.display = rb("display", g));
               } catch (t2) {
                 W(a, a.return, t2);
               }
@@ -5347,8 +5347,8 @@ function ek(a) {
           break;
         case 3:
         case 4:
-          var g = d.stateNode.containerInfo, h = Uj(a);
-          Vj(a, h, g);
+          var g = d.stateNode.containerInfo, h2 = Uj(a);
+          Vj(a, h2, g);
           break;
         default:
           throw Error(p(161));
@@ -5370,14 +5370,14 @@ function ik(a, b, c) {
     if (22 === e.tag && d) {
       var g = null !== e.memoizedState || Jj;
       if (!g) {
-        var h = e.alternate, k2 = null !== h && null !== h.memoizedState || U;
-        h = Jj;
+        var h2 = e.alternate, k2 = null !== h2 && null !== h2.memoizedState || U;
+        h2 = Jj;
         var l2 = U;
         Jj = g;
         if ((U = k2) && !l2) for (V = e; null !== V; ) g = V, k2 = g.child, 22 === g.tag && null !== g.memoizedState ? jk(e) : null !== k2 ? (k2.return = g, V = k2) : jk(e);
         for (; null !== f2; ) V = f2, ik(f2), f2 = f2.sibling;
         V = e;
-        Jj = h;
+        Jj = h2;
         U = l2;
       }
       kk(a);
@@ -5421,9 +5421,9 @@ function kk(a) {
             }
             break;
           case 5:
-            var h = b.stateNode;
+            var h2 = b.stateNode;
             if (null === c && b.flags & 4) {
-              c = h;
+              c = h2;
               var k2 = b.memoizedProps;
               switch (b.type) {
                 case "button":
@@ -5546,22 +5546,22 @@ function jk(a) {
       V = null;
       break;
     }
-    var h = b.sibling;
-    if (null !== h) {
-      h.return = b.return;
-      V = h;
+    var h2 = b.sibling;
+    if (null !== h2) {
+      h2.return = b.return;
+      V = h2;
       break;
     }
     V = b.return;
   }
 }
-var lk = Math.ceil, mk = ua.ReactCurrentDispatcher, nk = ua.ReactCurrentOwner, ok = ua.ReactCurrentBatchConfig, K = 0, Q = null, Y = null, Z = 0, fj = 0, ej = Uf(0), T = 0, pk = null, rh = 0, qk = 0, rk = 0, sk = null, tk = null, fk = 0, Gj = Infinity, uk = null, Oi = false, Pi = null, Ri = null, vk = false, wk = null, xk = 0, yk = 0, zk = null, Ak = -1, Bk = 0;
+var lk = Math.ceil, mk = ua.ReactCurrentDispatcher, nk = ua.ReactCurrentOwner, ok = ua.ReactCurrentBatchConfig, K = 0, Q = null, Y$1 = null, Z$1 = 0, fj = 0, ej = Uf(0), T = 0, pk = null, rh = 0, qk = 0, rk = 0, sk = null, tk = null, fk = 0, Gj = Infinity, uk = null, Oi = false, Pi = null, Ri = null, vk = false, wk = null, xk = 0, yk = 0, zk = null, Ak = -1, Bk = 0;
 function R() {
   return 0 !== (K & 6) ? B() : -1 !== Ak ? Ak : Ak = B();
 }
 function yi(a) {
   if (0 === (a.mode & 1)) return 1;
-  if (0 !== (K & 2) && 0 !== Z) return Z & -Z;
+  if (0 !== (K & 2) && 0 !== Z$1) return Z$1 & -Z$1;
   if (null !== Kg.transition) return 0 === Bk && (Bk = yc()), Bk;
   a = C;
   if (0 !== a) return a;
@@ -5572,12 +5572,12 @@ function yi(a) {
 function gi(a, b, c, d) {
   if (50 < yk) throw yk = 0, zk = null, Error(p(185));
   Ac(a, c, d);
-  if (0 === (K & 2) || a !== Q) a === Q && (0 === (K & 2) && (qk |= c), 4 === T && Ck(a, Z)), Dk(a, d), 1 === c && 0 === K && 0 === (b.mode & 1) && (Gj = B() + 500, fg && jg());
+  if (0 === (K & 2) || a !== Q) a === Q && (0 === (K & 2) && (qk |= c), 4 === T && Ck(a, Z$1)), Dk(a, d), 1 === c && 0 === K && 0 === (b.mode & 1) && (Gj = B() + 500, fg && jg());
 }
 function Dk(a, b) {
   var c = a.callbackNode;
   wc(a, b);
-  var d = uc(a, a === Q ? Z : 0);
+  var d = uc(a, a === Q ? Z$1 : 0);
   if (0 === d) null !== c && bc(c), a.callbackNode = null, a.callbackPriority = 0;
   else if (b = d & -d, a.callbackPriority !== b) {
     null != c && bc(c);
@@ -5613,7 +5613,7 @@ function Gk(a, b) {
   if (0 !== (K & 6)) throw Error(p(327));
   var c = a.callbackNode;
   if (Hk() && a.callbackNode !== c) return null;
-  var d = uc(a, a === Q ? Z : 0);
+  var d = uc(a, a === Q ? Z$1 : 0);
   if (0 === d) return null;
   if (0 !== (d & 30) || 0 !== (d & a.expiredLanes) || b) b = Ik(a, d);
   else {
@@ -5621,19 +5621,19 @@ function Gk(a, b) {
     var e = K;
     K |= 2;
     var f2 = Jk();
-    if (Q !== a || Z !== b) uk = null, Gj = B() + 500, Kk(a, b);
+    if (Q !== a || Z$1 !== b) uk = null, Gj = B() + 500, Kk(a, b);
     do
       try {
         Lk();
         break;
-      } catch (h) {
-        Mk(a, h);
+      } catch (h2) {
+        Mk(a, h2);
       }
     while (1);
     $g();
     mk.current = f2;
     K = e;
-    null !== Y ? b = 0 : (Q = null, Z = 0, b = T);
+    null !== Y$1 ? b = 0 : (Q = null, Z$1 = 0, b = T);
   }
   if (0 !== b) {
     2 === b && (e = xc(a), 0 !== e && (d = e, b = Nk(a, e)));
@@ -5715,7 +5715,7 @@ function Ok(a) {
         var e = c[d], f2 = e.getSnapshot;
         e = e.value;
         try {
-          if (!He(f2(), e)) return false;
+          if (!He$1(f2(), e)) return false;
         } catch (g) {
           return false;
         }
@@ -5793,7 +5793,7 @@ function Kk(a, b) {
   a.finishedLanes = 0;
   var c = a.timeoutHandle;
   -1 !== c && (a.timeoutHandle = -1, Gf(c));
-  if (null !== Y) for (c = Y.return; null !== c; ) {
+  if (null !== Y$1) for (c = Y$1.return; null !== c; ) {
     var d = c;
     wg(d);
     switch (d.tag) {
@@ -5804,7 +5804,7 @@ function Kk(a, b) {
       case 3:
         zh();
         E(Wf);
-        E(H);
+        E(H$1);
         Eh();
         break;
       case 5:
@@ -5829,8 +5829,8 @@ function Kk(a, b) {
     c = c.return;
   }
   Q = a;
-  Y = a = Pg(a.current, null);
-  Z = fj = b;
+  Y$1 = a = Pg(a.current, null);
+  Z$1 = fj = b;
   T = 0;
   pk = null;
   rk = qk = rh = 0;
@@ -5852,7 +5852,7 @@ function Kk(a, b) {
 }
 function Mk(a, b) {
   do {
-    var c = Y;
+    var c = Y$1;
     try {
       $g();
       Fh.current = Rh;
@@ -5872,15 +5872,15 @@ function Mk(a, b) {
       if (null === c || null === c.return) {
         T = 1;
         pk = b;
-        Y = null;
+        Y$1 = null;
         break;
       }
       a: {
-        var f2 = a, g = c.return, h = c, k2 = b;
-        b = Z;
-        h.flags |= 32768;
+        var f2 = a, g = c.return, h2 = c, k2 = b;
+        b = Z$1;
+        h2.flags |= 32768;
         if (null !== k2 && "object" === typeof k2 && "function" === typeof k2.then) {
-          var l2 = k2, m2 = h, q2 = m2.tag;
+          var l2 = k2, m2 = h2, q2 = m2.tag;
           if (0 === (m2.mode & 1) && (0 === q2 || 11 === q2 || 15 === q2)) {
             var r2 = m2.alternate;
             r2 ? (m2.updateQueue = r2.updateQueue, m2.memoizedState = r2.memoizedState, m2.lanes = r2.lanes) : (m2.updateQueue = null, m2.memoizedState = null);
@@ -5888,7 +5888,7 @@ function Mk(a, b) {
           var y2 = Ui(g);
           if (null !== y2) {
             y2.flags &= -257;
-            Vi(y2, g, h, f2, b);
+            Vi(y2, g, h2, f2, b);
             y2.mode & 1 && Si(f2, l2, b);
             b = y2;
             k2 = l2;
@@ -5907,16 +5907,16 @@ function Mk(a, b) {
             }
             k2 = Error(p(426));
           }
-        } else if (I && h.mode & 1) {
+        } else if (I && h2.mode & 1) {
           var J2 = Ui(g);
           if (null !== J2) {
             0 === (J2.flags & 65536) && (J2.flags |= 256);
-            Vi(J2, g, h, f2, b);
-            Jg(Ji(k2, h));
+            Vi(J2, g, h2, f2, b);
+            Jg(Ji(k2, h2));
             break a;
           }
         }
-        f2 = k2 = Ji(k2, h);
+        f2 = k2 = Ji(k2, h2);
         4 !== T && (T = 2);
         null === sk ? sk = [f2] : sk.push(f2);
         f2 = g;
@@ -5930,13 +5930,13 @@ function Mk(a, b) {
               ph(f2, x2);
               break a;
             case 1:
-              h = k2;
+              h2 = k2;
               var w2 = f2.type, u2 = f2.stateNode;
               if (0 === (f2.flags & 128) && ("function" === typeof w2.getDerivedStateFromError || null !== u2 && "function" === typeof u2.componentDidCatch && (null === Ri || !Ri.has(u2)))) {
                 f2.flags |= 65536;
                 b &= -b;
                 f2.lanes |= b;
-                var F2 = Qi(f2, h, b);
+                var F2 = Qi(f2, h2, b);
                 ph(f2, F2);
                 break a;
               }
@@ -5947,7 +5947,7 @@ function Mk(a, b) {
       Sk(c);
     } catch (na) {
       b = na;
-      Y === c && null !== c && (Y = c = c.return);
+      Y$1 === c && null !== c && (Y$1 = c = c.return);
       continue;
     }
     break;
@@ -5960,13 +5960,13 @@ function Jk() {
 }
 function tj() {
   if (0 === T || 3 === T || 2 === T) T = 4;
-  null === Q || 0 === (rh & 268435455) && 0 === (qk & 268435455) || Ck(Q, Z);
+  null === Q || 0 === (rh & 268435455) && 0 === (qk & 268435455) || Ck(Q, Z$1);
 }
 function Ik(a, b) {
   var c = K;
   K |= 2;
   var d = Jk();
-  if (Q !== a || Z !== b) uk = null, Kk(a, b);
+  if (Q !== a || Z$1 !== b) uk = null, Kk(a, b);
   do
     try {
       Tk();
@@ -5978,21 +5978,21 @@ function Ik(a, b) {
   $g();
   K = c;
   mk.current = d;
-  if (null !== Y) throw Error(p(261));
+  if (null !== Y$1) throw Error(p(261));
   Q = null;
-  Z = 0;
+  Z$1 = 0;
   return T;
 }
 function Tk() {
-  for (; null !== Y; ) Uk(Y);
+  for (; null !== Y$1; ) Uk(Y$1);
 }
 function Lk() {
-  for (; null !== Y && !cc(); ) Uk(Y);
+  for (; null !== Y$1 && !cc(); ) Uk(Y$1);
 }
 function Uk(a) {
   var b = Vk(a.alternate, a, fj);
   a.memoizedProps = a.pendingProps;
-  null === b ? Sk(a) : Y = b;
+  null === b ? Sk(a) : Y$1 = b;
   nk.current = null;
 }
 function Sk(a) {
@@ -6002,29 +6002,29 @@ function Sk(a) {
     a = b.return;
     if (0 === (b.flags & 32768)) {
       if (c = Ej(c, b, fj), null !== c) {
-        Y = c;
+        Y$1 = c;
         return;
       }
     } else {
       c = Ij(c, b);
       if (null !== c) {
         c.flags &= 32767;
-        Y = c;
+        Y$1 = c;
         return;
       }
       if (null !== a) a.flags |= 32768, a.subtreeFlags = 0, a.deletions = null;
       else {
         T = 6;
-        Y = null;
+        Y$1 = null;
         return;
       }
     }
     b = b.sibling;
     if (null !== b) {
-      Y = b;
+      Y$1 = b;
       return;
     }
-    Y = b = a;
+    Y$1 = b = a;
   } while (null !== b);
   0 === T && (T = 5);
 }
@@ -6052,7 +6052,7 @@ function Wk(a, b, c, d) {
   a.callbackPriority = 0;
   var f2 = c.lanes | c.childLanes;
   Bc(a, f2);
-  a === Q && (Y = Q = null, Z = 0);
+  a === Q && (Y$1 = Q = null, Z$1 = 0);
   0 === (c.subtreeFlags & 2064) && 0 === (c.flags & 2064) || vk || (vk = true, Fk(hc, function() {
     Hk();
     return null;
@@ -6063,18 +6063,18 @@ function Wk(a, b, c, d) {
     ok.transition = null;
     var g = C;
     C = 1;
-    var h = K;
+    var h2 = K;
     K |= 4;
     nk.current = null;
     Oj(a, c);
     dk(c, a);
-    Oe(Df);
+    Oe$1(Df);
     dd = !!Cf;
     Df = Cf = null;
     a.current = c;
     hk(c);
     dc();
-    K = h;
+    K = h2;
     C = g;
     ok.transition = f2;
   } else a.current = c;
@@ -6108,10 +6108,10 @@ function Hk() {
         for (V = a.current; null !== V; ) {
           var f2 = V, g = f2.child;
           if (0 !== (V.flags & 16)) {
-            var h = f2.deletions;
-            if (null !== h) {
-              for (var k2 = 0; k2 < h.length; k2++) {
-                var l2 = h[k2];
+            var h2 = f2.deletions;
+            if (null !== h2) {
+              for (var k2 = 0; k2 < h2.length; k2++) {
+                var l2 = h2[k2];
                 for (V = l2; null !== V; ) {
                   var m2 = V;
                   switch (m2.tag) {
@@ -6178,28 +6178,28 @@ function Hk() {
           var u2 = g.child;
           if (0 !== (g.subtreeFlags & 2064) && null !== u2) u2.return = g, V = u2;
           else b: for (g = w2; null !== V; ) {
-            h = V;
-            if (0 !== (h.flags & 2048)) try {
-              switch (h.tag) {
+            h2 = V;
+            if (0 !== (h2.flags & 2048)) try {
+              switch (h2.tag) {
                 case 0:
                 case 11:
                 case 15:
-                  Qj(9, h);
+                  Qj(9, h2);
               }
             } catch (na) {
-              W(h, h.return, na);
+              W(h2, h2.return, na);
             }
-            if (h === g) {
+            if (h2 === g) {
               V = null;
               break b;
             }
-            var F2 = h.sibling;
+            var F2 = h2.sibling;
             if (null !== F2) {
-              F2.return = h.return;
+              F2.return = h2.return;
               V = F2;
               break b;
             }
-            V = h.return;
+            V = h2.return;
           }
         }
         K = e;
@@ -6249,7 +6249,7 @@ function Ti(a, b, c) {
   null !== d && d.delete(b);
   b = R();
   a.pingedLanes |= a.suspendedLanes & c;
-  Q === a && (Z & c) === c && (4 === T || 3 === T && (Z & 130023424) === Z && 500 > B() - fk ? Kk(a, 0) : rk |= c);
+  Q === a && (Z$1 & c) === c && (4 === T || 3 === T && (Z$1 & 130023424) === Z$1 && 500 > B() - fk ? Kk(a, 0) : rk |= c);
   Dk(a, b);
 }
 function Yk(a, b) {
@@ -6294,7 +6294,7 @@ Vk = function(a, b, c) {
       var d = b.type;
       ij(a, b);
       a = b.pendingProps;
-      var e = Yf(b, H.current);
+      var e = Yf(b, H$1.current);
       ch(b, c);
       e = Nh(null, b, d, a, e, c);
       var f2 = Sh();
@@ -6391,16 +6391,16 @@ Vk = function(a, b, c) {
         g = e.value;
         G(Wg, d._currentValue);
         d._currentValue = g;
-        if (null !== f2) if (He(f2.value, g)) {
+        if (null !== f2) if (He$1(f2.value, g)) {
           if (f2.children === e.children && !Wf.current) {
             b = Zi(a, b, c);
             break a;
           }
         } else for (f2 = b.child, null !== f2 && (f2.return = b); null !== f2; ) {
-          var h = f2.dependencies;
-          if (null !== h) {
+          var h2 = f2.dependencies;
+          if (null !== h2) {
             g = f2.child;
-            for (var k2 = h.firstContext; null !== k2; ) {
+            for (var k2 = h2.firstContext; null !== k2; ) {
               if (k2.context === d) {
                 if (1 === f2.tag) {
                   k2 = mh(-1, c & -c);
@@ -6421,7 +6421,7 @@ Vk = function(a, b, c) {
                   c,
                   b
                 );
-                h.lanes |= c;
+                h2.lanes |= c;
                 break;
               }
               k2 = k2.next;
@@ -6431,8 +6431,8 @@ Vk = function(a, b, c) {
             g = f2.return;
             if (null === g) throw Error(p(341));
             g.lanes |= c;
-            h = g.alternate;
-            null !== h && (h.lanes |= c);
+            h2 = g.alternate;
+            null !== h2 && (h2.lanes |= c);
             bh(g, c, b);
             g = f2.sibling;
           } else g = f2.child;
@@ -6606,8 +6606,8 @@ function al(a, b, c, d, e) {
   this.onRecoverableError = e;
   this.mutableSourceEagerHydrationData = null;
 }
-function bl(a, b, c, d, e, f2, g, h, k2) {
-  a = new al(a, b, c, h, k2);
+function bl(a, b, c, d, e, f2, g, h2, k2) {
+  a = new al(a, b, c, h2, k2);
   1 === b ? (b = 1, true === f2 && (b |= 8)) : b = 0;
   f2 = Bg(3, null, null, b);
   a.current = f2;
@@ -6647,8 +6647,8 @@ function dl(a) {
   }
   return b;
 }
-function el(a, b, c, d, e, f2, g, h, k2) {
-  a = bl(c, d, true, a, e, f2, g, h, k2);
+function el(a, b, c, d, e, f2, g, h2, k2) {
+  a = bl(c, d, true, a, e, f2, g, h2, k2);
   a.context = dl(null);
   c = a.current;
   d = R();
@@ -6757,10 +6757,10 @@ function ql(a, b, c, d, e) {
   }
   for (; e = a.lastChild; ) a.removeChild(e);
   if ("function" === typeof d) {
-    var h = d;
+    var h2 = d;
     d = function() {
       var a2 = gl(k2);
-      h.call(a2);
+      h2.call(a2);
     };
   }
   var k2 = bl(a, 0, false, null, null, false, false, "", pl);
@@ -6777,10 +6777,10 @@ function rl(a, b, c, d, e) {
   if (f2) {
     var g = f2;
     if ("function" === typeof e) {
-      var h = e;
+      var h2 = e;
       e = function() {
         var a2 = gl(g);
-        h.call(a2);
+        h2.call(a2);
       };
     }
     fl(b, g, a, e);
@@ -7001,58 +7001,61 @@ const SplashScreen = ({ onSelect }) => {
   const [selectedMode, setSelectedMode] = reactExports.useState("live-code");
   const [selectedHardware, setSelectedHardware] = reactExports.useState("pc-only");
   const activeMode = MODES.find((m2) => m2.id === selectedMode);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { style: styles$5.root, "aria-label": "Score Studio mode selector", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { style: styles$5.header, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { style: styles$5.logo, children: "Score Studio" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: styles$5.tagline, children: "What are you doing today?" })
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { style: styles$j.root, "aria-label": "Score Studio mode selector", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { style: styles$j.header, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { style: styles$j.logo, children: "Score Studio" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: styles$j.tagline, children: "What are you doing today?" })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { "aria-label": "Select a mode", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { role: "group", "aria-label": "Studio modes", style: styles$5.modeGrid, children: MODES.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { "aria-label": "Select a mode", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { role: "group", "aria-label": "Studio modes", style: styles$j.modeGrid, children: MODES.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
       "button",
       {
-        "aria-label": m2.label,
+        "aria-label": m2.disabled ? `${m2.label} — coming soon` : m2.label,
         "aria-pressed": selectedMode === m2.id,
         "aria-describedby": `mode-desc-${m2.id}`,
+        "aria-disabled": m2.disabled,
+        disabled: m2.disabled,
         style: {
-          ...styles$5.modeCard,
-          ...selectedMode === m2.id ? styles$5.modeCardActive : {}
+          ...styles$j.modeCard,
+          ...selectedMode === m2.id ? styles$j.modeCardActive : {},
+          ...m2.disabled ? styles$j.modeCardDisabled : {}
         },
         onClick: () => {
-          setSelectedMode(m2.id);
+          if (!m2.disabled) setSelectedMode(m2.id);
         },
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { "aria-hidden": "true", style: styles$5.modeIcon, children: m2.icon }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$5.modeLabel, children: m2.label }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { id: `mode-desc-${m2.id}`, style: styles$5.modeDesc, children: m2.description })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { "aria-hidden": "true", style: styles$j.modeIcon, children: m2.icon }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$j.modeLabel, children: m2.label }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { id: `mode-desc-${m2.id}`, style: styles$j.modeDesc, children: m2.disabled ? "Coming soon" : m2.description })
         ]
       },
       m2.id
     )) }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { "aria-label": "Select hardware level", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { role: "group", "aria-label": "Hardware options", style: styles$5.hardwareRow, children: HARDWARE_LEVELS.map((h) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { "aria-label": "Select hardware level", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { role: "group", "aria-label": "Hardware options", style: styles$j.hardwareRow, children: HARDWARE_LEVELS.map((h2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
       "button",
       {
-        "aria-label": h.label,
-        "aria-pressed": selectedHardware === h.id,
-        "aria-describedby": `hw-desc-${h.id}`,
+        "aria-label": h2.label,
+        "aria-pressed": selectedHardware === h2.id,
+        "aria-describedby": `hw-desc-${h2.id}`,
         style: {
-          ...styles$5.hwButton,
-          ...selectedHardware === h.id ? styles$5.hwButtonActive : {}
+          ...styles$j.hwButton,
+          ...selectedHardware === h2.id ? styles$j.hwButtonActive : {}
         },
         onClick: () => {
-          setSelectedHardware(h.id);
+          setSelectedHardware(h2.id);
         },
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$5.hwLabel, children: h.label }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { id: `hw-desc-${h.id}`, style: styles$5.hwDesc, children: h.description })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$j.hwLabel, children: h2.label }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { id: `hw-desc-${h2.id}`, style: styles$j.hwDesc, children: h2.description })
         ]
       },
-      h.id
+      h2.id
     )) }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "button",
       {
         style: {
-          ...styles$5.startButton,
-          ...activeMode ? {} : styles$5.startButtonDisabled
+          ...styles$j.startButton,
+          ...activeMode ? {} : styles$j.startButtonDisabled
         },
         disabled: activeMode === void 0,
         "aria-label": activeMode ? `Start ${activeMode.label}` : "Select a mode to continue",
@@ -7064,7 +7067,7 @@ const SplashScreen = ({ onSelect }) => {
     )
   ] });
 };
-const styles$5 = {
+const styles$j = {
   root: {
     display: "flex",
     flexDirection: "column",
@@ -7093,7 +7096,7 @@ const styles$5 = {
   tagline: {
     fontFamily: "system-ui, sans-serif",
     fontSize: "0.8rem",
-    color: "#4a4a52",
+    color: "#888898",
     margin: 0,
     letterSpacing: "0.06em"
   },
@@ -7111,24 +7114,30 @@ const styles$5 = {
     gap: "0.4rem",
     padding: "1.25rem 0.75rem",
     background: "#111113",
-    border: "1px solid #1e1e22",
+    border: "1px solid #2a2a30",
     borderRadius: "4px",
     cursor: "pointer",
-    color: "#888",
+    color: "#a0a0b0",
     transition: "border-color 0.1s ease, background 0.1s ease"
   },
   modeCardActive: {
     background: "#111825",
-    border: "1px solid #2a4a7a",
-    color: "#c8d8f8",
-    boxShadow: "0 0 16px rgba(74,143,255,0.12)"
+    border: "1px solid #3a6aaa",
+    color: "#d8e8ff",
+    boxShadow: "0 0 20px rgba(74,143,255,0.18)"
+  },
+  modeCardDisabled: {
+    opacity: 0.35,
+    cursor: "not-allowed",
+    background: "#0c0c0e",
+    border: "1px solid #161618"
   },
   modeIcon: {
     fontFamily: "monospace",
     fontSize: "1.5rem",
     lineHeight: 1,
-    color: "#4a8fff",
-    opacity: 0.7
+    color: "#6aafff",
+    opacity: 1
   },
   modeLabel: {
     fontFamily: "system-ui, sans-serif",
@@ -7139,7 +7148,7 @@ const styles$5 = {
   modeDesc: {
     fontFamily: "system-ui, sans-serif",
     fontSize: "0.7rem",
-    color: "#4a4a52",
+    color: "#888898",
     textAlign: "center",
     lineHeight: 1.4
   },
@@ -7174,7 +7183,7 @@ const styles$5 = {
   hwDesc: {
     fontFamily: "system-ui, sans-serif",
     fontSize: "0.65rem",
-    color: "#3e3e46"
+    color: "#888898"
   },
   startButton: {
     padding: "0.6rem 2.5rem",
@@ -7184,8 +7193,8 @@ const styles$5 = {
     letterSpacing: "0.08em",
     textTransform: "uppercase",
     background: "#1a3060",
-    color: "#8ab8ff",
-    border: "1px solid #2a4a8a",
+    color: "#aacfff",
+    border: "1px solid #3a6aaa",
     borderRadius: "3px",
     cursor: "pointer",
     transition: "all 0.1s ease"
@@ -7197,7 +7206,267 @@ const styles$5 = {
     cursor: "not-allowed"
   }
 };
-const TransportBar = ({ hardware, onHome }) => {
+const BugReportModal = ({
+  isOpen,
+  onClose,
+  getCurrentCode,
+  getRecentLogs,
+  engineState
+}) => {
+  const [description, setDescription] = reactExports.useState("");
+  const [detailsOpen, setDetailsOpen] = reactExports.useState(false);
+  const [copied, setCopied] = reactExports.useState(false);
+  if (!isOpen) return null;
+  const buildReport = () => ({
+    description,
+    code: getCurrentCode(),
+    logs: JSON.stringify(getRecentLogs()),
+    timestamp: Date.now(),
+    engineState
+  });
+  const handleCopy = () => {
+    void navigator.clipboard.writeText(JSON.stringify(buildReport(), null, 2)).then(() => {
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2e3);
+    });
+  };
+  const handleSave = () => {
+    window.scoreBridge.send("bug:report", buildReport());
+    onClose();
+  };
+  const handleClose = () => {
+    setDescription("");
+    setDetailsOpen(false);
+    setCopied(false);
+    onClose();
+  };
+  const codePreview = getCurrentCode().split("\n").slice(0, 3).join("\n");
+  const logCount = getRecentLogs().length;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { role: "dialog", "aria-modal": "true", "aria-label": "Report an issue", style: styles$i.overlay, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$i.card, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$i.header, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: styles$i.title, children: "Report an Issue" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          "aria-label": "Close",
+          style: styles$i.closeBtn,
+          onClick: handleClose,
+          children: "✕"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: styles$i.label, htmlFor: "bug-description", children: "What happened?" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "textarea",
+      {
+        id: "bug-description",
+        style: styles$i.textarea,
+        rows: 4,
+        placeholder: "Describe what you were doing and what went wrong...",
+        value: description,
+        onChange: (e) => {
+          setDescription(e.target.value);
+        }
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        "aria-expanded": detailsOpen,
+        style: styles$i.disclosureBtn,
+        onClick: () => {
+          setDetailsOpen((v2) => !v2);
+        },
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$i.disclosureArrow, children: detailsOpen ? "▾" : "▸" }),
+          "What's included"
+        ]
+      }
+    ),
+    detailsOpen && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$i.details, "aria-label": "Report contents", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: styles$i.detailItem, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$i.detailKey, children: "Code snapshot" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("code", { style: styles$i.codeSnippet, children: [
+          codePreview,
+          "\n…"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: styles$i.detailItem, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$i.detailKey, children: "Recent activity" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: styles$i.detailVal, children: [
+          logCount,
+          " recent ",
+          logCount === 1 ? "event" : "events"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: styles$i.detailItem, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$i.detailKey, children: "Engine state" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$i.detailVal, children: "Included automatically" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: styles$i.detailItem, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$i.detailKey, children: "No personal data" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$i.detailVal, children: "Only what you see above" })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$i.actions, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$i.cancelBtn, onClick: handleClose, children: "Cancel" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$i.copyBtn, onClick: handleCopy, "aria-live": "polite", children: copied ? "Copied ✓" : "Copy Report" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$i.saveBtn, onClick: handleSave, children: "Save Report" })
+    ] })
+  ] }) });
+};
+const styles$i = {
+  overlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.7)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1e3
+  },
+  card: {
+    background: "#0e0e11",
+    border: "1px solid #1e1e22",
+    borderRadius: 8,
+    padding: 24,
+    width: 480,
+    maxWidth: "calc(100vw - 32px)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
+    boxShadow: "0 8px 32px rgba(0,0,0,0.6)"
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4
+  },
+  title: {
+    margin: 0,
+    fontSize: 16,
+    fontWeight: 600,
+    color: "#c8d8f8",
+    letterSpacing: "0.02em"
+  },
+  closeBtn: {
+    background: "none",
+    border: "none",
+    color: "#556688",
+    fontSize: 16,
+    cursor: "pointer",
+    padding: "2px 6px",
+    borderRadius: 4,
+    lineHeight: 1
+  },
+  label: {
+    fontSize: 13,
+    color: "#8899bb",
+    fontWeight: 500
+  },
+  textarea: {
+    width: "100%",
+    background: "#12121a",
+    border: "1px solid #2a2a35",
+    borderRadius: 6,
+    color: "#c8d8f8",
+    fontSize: 13,
+    padding: "8px 10px",
+    resize: "vertical",
+    fontFamily: "inherit",
+    outline: "none",
+    boxSizing: "border-box"
+  },
+  disclosureBtn: {
+    background: "none",
+    border: "none",
+    color: "#556688",
+    fontSize: 12,
+    cursor: "pointer",
+    padding: 0,
+    textAlign: "left",
+    display: "flex",
+    alignItems: "center",
+    gap: 4
+  },
+  disclosureArrow: {
+    fontSize: 10,
+    color: "#445577"
+  },
+  details: {
+    background: "#0a0a10",
+    border: "1px solid #1a1a22",
+    borderRadius: 6,
+    padding: "10px 12px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 6
+  },
+  detailItem: {
+    margin: 0,
+    display: "flex",
+    flexDirection: "column",
+    gap: 2
+  },
+  detailKey: {
+    fontSize: 11,
+    color: "#445577",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.05em"
+  },
+  detailVal: {
+    fontSize: 12,
+    color: "#8899bb"
+  },
+  codeSnippet: {
+    fontSize: 11,
+    color: "#6a9fff",
+    fontFamily: "monospace",
+    whiteSpace: "pre",
+    overflow: "hidden",
+    maxHeight: 48,
+    display: "block"
+  },
+  actions: {
+    display: "flex",
+    gap: 8,
+    justifyContent: "flex-end",
+    marginTop: 4
+  },
+  cancelBtn: {
+    background: "none",
+    border: "1px solid #2a2a35",
+    color: "#8899bb",
+    borderRadius: 6,
+    padding: "7px 16px",
+    fontSize: 13,
+    cursor: "pointer"
+  },
+  copyBtn: {
+    background: "#1a1a24",
+    border: "1px solid #2a2a35",
+    color: "#c8d8f8",
+    borderRadius: 6,
+    padding: "7px 16px",
+    fontSize: 13,
+    cursor: "pointer"
+  },
+  saveBtn: {
+    background: "#4a8fff",
+    border: "none",
+    color: "#fff",
+    borderRadius: 6,
+    padding: "7px 16px",
+    fontSize: 13,
+    cursor: "pointer",
+    fontWeight: 600
+  }
+};
+const TransportBar = ({ hardware, onHome, onPlay, onStop, onBpmChange, getCurrentCode, getRecentLogs, bugEngineState }) => {
   const bpmId = reactExports.useId();
   const barsId = reactExports.useId();
   const [engine, setEngine] = reactExports.useState({
@@ -7206,6 +7475,7 @@ const TransportBar = ({ hardware, onHome }) => {
     bars: 0
   });
   const [localBpm, setLocalBpm] = reactExports.useState(128);
+  const [bugModalOpen, setBugModalOpen] = reactExports.useState(false);
   reactExports.useEffect(() => {
     const off = window.scoreBridge.on("engine:state", (payload) => {
       setEngine(payload);
@@ -7217,40 +7487,42 @@ const TransportBar = ({ hardware, onHome }) => {
   }, [engine.bpm]);
   const toggle = () => {
     if (engine.playing) {
-      window.scoreBridge.send("transport:stop", void 0);
+      if (onStop) onStop();
+      else window.scoreBridge.send("transport:stop", void 0);
     } else {
-      window.scoreBridge.send("transport:play", void 0);
+      if (onPlay) onPlay();
+      else window.scoreBridge.send("transport:play", void 0);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { role: "toolbar", "aria-label": "Transport controls", style: styles$4.bar, children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { role: "toolbar", "aria-label": "Transport controls", style: styles$h.bar, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "button",
       {
         "aria-label": "Score Studio home",
-        style: styles$4.homeBtn,
+        style: styles$h.homeBtn,
         onClick: onHome,
         title: "Back to mode selector",
         children: "Score"
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$4.divider, "aria-hidden": "true" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$h.divider, "aria-hidden": "true" }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "button",
       {
         "aria-label": engine.playing ? "Stop" : "Play",
         "aria-pressed": engine.playing,
-        style: engine.playing ? { ...styles$4.playBtn, ...styles$4.playBtnActive } : styles$4.playBtn,
+        style: engine.playing ? { ...styles$h.playBtn, ...styles$h.playBtnActive } : styles$h.playBtn,
         onClick: toggle,
         children: engine.playing ? "■" : "▶"
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.bpmGroup, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("label", { htmlFor: bpmId, style: styles$4.label, children: "BPM" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$h.bpmGroup, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("label", { htmlFor: bpmId, style: styles$h.label, children: "BPM" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         "input",
         {
           id: bpmId,
-          style: styles$4.bpmInput,
+          style: styles$h.bpmInput,
           type: "number",
           min: 20,
           max: 300,
@@ -7260,23 +7532,48 @@ const TransportBar = ({ hardware, onHome }) => {
             setLocalBpm(bpm);
             if (bpm >= 20 && bpm <= 300) {
               window.scoreBridge.send("transport:bpm-set", { bpm });
+              onBpmChange?.(bpm);
             }
           }
         }
       )
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.barCount, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("label", { htmlFor: barsId, style: styles$4.label, children: "Bar" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("output", { id: barsId, htmlFor: bpmId, style: styles$4.value, children: engine.bars })
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$h.barCount, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("label", { htmlFor: barsId, style: styles$h.label, children: "Bar" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("output", { id: barsId, htmlFor: bpmId, style: styles$h.value, children: engine.bars })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.hwBadge, "aria-label": `Hardware: ${hardware}`, children: [
-      hardware === "pc-only" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$4.hw, children: "PC" }),
-      hardware === "controller" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { ...styles$4.hw, ...styles$4.hwActive }, children: "CTRL" }),
-      hardware === "aio" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { ...styles$4.hw, ...styles$4.hwActive }, children: "AIO" })
-    ] })
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$h.hwBadge, "aria-label": `Hardware: ${hardware}`, children: [
+      hardware === "pc-only" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$h.hw, children: "PC" }),
+      hardware === "controller" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { ...styles$h.hw, ...styles$h.hwActive }, children: "CTRL" }),
+      hardware === "aio" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { ...styles$h.hw, ...styles$h.hwActive }, children: "AIO" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "button",
+      {
+        "aria-label": "Report an issue",
+        style: styles$h.reportBtn,
+        title: "Report a bug",
+        onClick: () => {
+          setBugModalOpen(true);
+        },
+        children: "Report Issue"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      BugReportModal,
+      {
+        isOpen: bugModalOpen,
+        onClose: () => {
+          setBugModalOpen(false);
+        },
+        getCurrentCode: getCurrentCode ?? (() => ""),
+        getRecentLogs: getRecentLogs ?? (() => []),
+        engineState: bugEngineState ?? {}
+      }
+    )
   ] });
 };
-const styles$4 = {
+const styles$h = {
   homeBtn: {
     background: "none",
     border: "none",
@@ -7367,7 +7664,21 @@ const styles$4 = {
     textAlign: "right"
   },
   hwBadge: {
-    marginLeft: "auto"
+    // no marginLeft: auto — reportBtn takes that role now
+  },
+  reportBtn: {
+    marginLeft: "auto",
+    background: "none",
+    border: "1px solid #2a2a35",
+    color: "#556688",
+    fontFamily: "system-ui, sans-serif",
+    fontSize: "0.58rem",
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    cursor: "pointer",
+    padding: "0.12rem 0.5rem",
+    borderRadius: 2,
+    flexShrink: 0
   },
   hw: {
     fontFamily: "system-ui, sans-serif",
@@ -7385,160 +7696,3786 @@ const styles$4 = {
     background: "#0d1928"
   }
 };
-const STARTER$1 = `import { Song, Kick, Synth, Pattern } from '@score/core'
-
-const kick = Kick({
-  pattern: Pattern.steps([1, 0, 0, 0, 1, 0, 0, 0]),
-  volume:  0.9,
-})
-
-const bass = Synth({
-  wave:    'sawtooth',
-  note:    'C2',
-  pattern: Pattern.steps([1, 0, 1, 0, 0, 1, 0, 0]),
-  filter:  { type: 'lowpass', frequency: 400 },
-  volume:  0.7,
-})
-
-export default Song({
-  bpm:    140,
-  tracks: [kick, bass],
-})`;
-const LiveCode = ({ hardware, onHome }) => {
-  const [code, setCode] = reactExports.useState(STARTER$1);
-  const [log, setLog] = reactExports.useState([]);
-  const onEval = () => {
-    window.scoreBridge.send("engine:eval", { code });
-    setLog((prev) => [...prev, `[${(/* @__PURE__ */ new Date()).toLocaleTimeString()}] Sent to engine`]);
+const BG_COLOR$2 = "#080809";
+const ROW_HEIGHT$1 = 28;
+const ROW_GAP = 2;
+const LABEL_WIDTH = 52;
+const STRIP_WIDTH = 4;
+const CELL_GAP = 1;
+const STRIP_COLOR$1 = {
+  kick: "#c05a20",
+  kick808: "#c05a20",
+  kick909: "#d04010",
+  snare: "#c02040",
+  snare909: "#c02040",
+  hihat: "#208060",
+  hihat808: "#208060",
+  bass303: "#9040c0",
+  synth: "#2060a0",
+  subsynth: "#2060a0",
+  fmsynth: "#1a50c0",
+  pad: "#206080",
+  pluck: "#208060",
+  arp: "#6040a0",
+  sample: "#606060"
+};
+const STRIP_DEFAULT$1 = "#404040";
+const CELL_ACTIVE = "#2a4a6a";
+const CELL_INACTIVE = "#111115";
+const CURSOR_OVERLAY$1 = "#4a8fff22";
+const CURSOR_OVERLAY_FLASH = "#6aafff44";
+const CURSOR_ACTIVE = "#4a8fff";
+const CURSOR_INACTIVE = "#1a2a3a";
+const EMPTY_COLOR = "#2a3a4a";
+const FLASH_DURATION_MS = 80;
+const resolveStripColor = (type) => STRIP_COLOR$1[type] ?? STRIP_DEFAULT$1;
+const isActive = (value) => value !== 0 && value !== "";
+const drawGrid = (ctx, tracks, currentStep, stepCount, width, height, flash, selectedTrack) => {
+  ctx.fillStyle = BG_COLOR$2;
+  ctx.fillRect(0, 0, width, height);
+  if (tracks.length === 0) {
+    ctx.fillStyle = EMPTY_COLOR;
+    ctx.font = "12px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Waiting for song…", width / 2, height / 2);
+    return;
+  }
+  const cellAreaWidth = width - LABEL_WIDTH;
+  const cellWidth = (cellAreaWidth - (stepCount - 1) * CELL_GAP) / stepCount;
+  tracks.forEach((track, rowIndex) => {
+    const rowY = rowIndex * (ROW_HEIGHT$1 + ROW_GAP);
+    const trackLen = track.pattern.length > 0 ? track.pattern.length : stepCount;
+    const localStep = currentStep % trackLen;
+    const isSelected = selectedTrack === rowIndex;
+    ctx.fillStyle = isSelected ? "#0e1a2e" : "#0a0a0c";
+    ctx.fillRect(0, rowY, LABEL_WIDTH, ROW_HEIGHT$1);
+    ctx.fillStyle = resolveStripColor(track.type);
+    ctx.fillRect(0, rowY, STRIP_WIDTH, ROW_HEIGHT$1);
+    if (isSelected) {
+      ctx.fillStyle = "#4a8fff";
+      ctx.font = "8px monospace";
+      ctx.textAlign = "right";
+      ctx.fillText("▸", LABEL_WIDTH - 2, rowY + ROW_HEIGHT$1 / 2);
+    }
+    ctx.fillStyle = isSelected ? "#8ab8ff" : "#5a6a7a";
+    ctx.font = "9px monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    const label = track.name.length > 5 ? track.name.slice(0, 5) : track.name;
+    ctx.fillText(label.toUpperCase(), STRIP_WIDTH + 4, rowY + ROW_HEIGHT$1 / 2);
+    Array.from({ length: stepCount }, (_2, step) => {
+      const cellX = LABEL_WIDTH + step * (cellWidth + CELL_GAP);
+      const patternIdx = step % trackLen;
+      const isCurrent = step % trackLen === localStep;
+      const active = isActive(track.pattern[patternIdx] ?? 0);
+      if (step > 0 && step % trackLen === 0) {
+        ctx.fillStyle = "#2a2a36";
+        ctx.fillRect(cellX - CELL_GAP, rowY, CELL_GAP, ROW_HEIGHT$1);
+      }
+      const color = isCurrent ? active ? CURSOR_ACTIVE : CURSOR_INACTIVE : active ? CELL_ACTIVE : CELL_INACTIVE;
+      ctx.fillStyle = color;
+      ctx.fillRect(cellX, rowY, cellWidth, ROW_HEIGHT$1);
+    });
+  });
+  const globalCursorStep = currentStep < stepCount ? currentStep : currentStep % stepCount;
+  const cursorX = LABEL_WIDTH + globalCursorStep * (cellWidth + CELL_GAP);
+  const totalHeight = tracks.length * (ROW_HEIGHT$1 + ROW_GAP) - ROW_GAP;
+  ctx.fillStyle = flash ? CURSOR_OVERLAY_FLASH : CURSOR_OVERLAY$1;
+  ctx.fillRect(cursorX, 0, cellWidth, totalHeight);
+};
+const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick, onLabelClick, selectedTrack }) => {
+  const canvasRef = reactExports.useRef(null);
+  const [flash, setFlash] = reactExports.useState(false);
+  reactExports.useEffect(() => {
+    if (currentStep !== 0) return;
+    setFlash(true);
+    const id2 = setTimeout(() => {
+      setFlash(false);
+    }, FLASH_DURATION_MS);
+    return () => {
+      clearTimeout(id2);
+    };
+  }, [currentStep]);
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+    const dpr = window.devicePixelRatio;
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    const ctx = canvas.getContext("2d");
+    if (ctx === null) return;
+    ctx.scale(dpr, dpr);
+    drawGrid(ctx, tracks, currentStep, stepCount, width, height, flash, selectedTrack);
+  }, [tracks, currentStep, stepCount, flash, selectedTrack]);
+  const handleClick = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x2 = e.clientX - rect.left;
+    const y2 = e.clientY - rect.top;
+    const trackIndex = Math.floor(y2 / (ROW_HEIGHT$1 + ROW_GAP));
+    if (trackIndex < 0 || trackIndex >= tracks.length) return;
+    if (x2 < LABEL_WIDTH) {
+      onLabelClick?.(trackIndex);
+      return;
+    }
+    if (!onStepClick) return;
+    const track = tracks[trackIndex];
+    if (!track) return;
+    const trackLen = track.pattern.length > 0 ? track.pattern.length : stepCount;
+    const cellAreaWidth = canvas.clientWidth - LABEL_WIDTH;
+    const cellWidth = (cellAreaWidth - (trackLen - 1) * CELL_GAP) / trackLen;
+    const stepIndex = Math.floor((x2 - LABEL_WIDTH) / (cellWidth + CELL_GAP));
+    if (stepIndex < 0 || stepIndex >= trackLen) return;
+    onStepClick(trackIndex, stepIndex);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$3.root, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(TransportBar, { hardware, onHome }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$3.body, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$3.editorPane, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$3.editorToolbar, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$3.filename, children: "song.ts" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$3.evalBtn, onClick: onEval, "aria-label": "Evaluate song", children: "▶ Eval" })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "textarea",
-          {
-            style: styles$3.editor,
-            value: code,
-            onChange: (e) => {
-              setCode(e.target.value);
-            },
-            spellCheck: false,
-            "aria-label": "Song code editor"
-          }
-        ),
-        log.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$3.repl, "aria-label": "Eval output", children: log.map((line, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$3.replLine, children: line }, i)) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$3.visualizerPane, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$3.placeholder, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$3.placeholderIcon, children: "〰" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Visualizer — Phase 11b" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$3.sub, children: "Waveform · Piano roll · Punchcard · Scope" })
-      ] }) })
-    ] })
+  const canvasHeight = tracks.length === 0 ? 60 : tracks.length * (ROW_HEIGHT$1 + ROW_GAP) - ROW_GAP;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "canvas",
+    {
+      ref: canvasRef,
+      onClick: onStepClick ?? onLabelClick ? handleClick : void 0,
+      style: {
+        width: "100%",
+        height: `${String(canvasHeight)}px`,
+        display: "block",
+        imageRendering: "pixelated",
+        cursor: onStepClick ? "pointer" : "default"
+      }
+    }
+  );
+};
+const drawScope = (canvas, waveform, playing) => {
+  const dpr = window.devicePixelRatio;
+  const rect = canvas.getBoundingClientRect();
+  const w2 = rect.width;
+  const h2 = rect.height;
+  if (canvas.width !== Math.round(w2 * dpr) || canvas.height !== Math.round(h2 * dpr)) {
+    canvas.width = Math.round(w2 * dpr);
+    canvas.height = Math.round(h2 * dpr);
+  }
+  const ctx = canvas.getContext("2d");
+  if (ctx === null) return;
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = "#080809";
+  ctx.fillRect(0, 0, w2, h2);
+  const centerY = h2 / 2;
+  ctx.beginPath();
+  ctx.strokeStyle = "#111115";
+  ctx.lineWidth = 1;
+  ctx.moveTo(0, centerY);
+  ctx.lineTo(w2, centerY);
+  ctx.stroke();
+  const hasData = waveform.length > 0;
+  if (playing && hasData) {
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = "#1a6a4a80";
+    ctx.strokeStyle = "#2a8a6a";
+    ctx.lineWidth = 1.5;
+    const padding = h2 * 0.1;
+    const drawHeight = h2 - padding * 2;
+    const len = waveform.length;
+    ctx.beginPath();
+    Array.from({ length: len }, (_2, i) => {
+      const sample = waveform[i] ?? 0;
+      const x2 = len === 1 ? w2 / 2 : i / (len - 1) * w2;
+      const y2 = centerY - sample * (drawHeight / 2);
+      if (i === 0) {
+        ctx.moveTo(x2, y2);
+      } else {
+        ctx.lineTo(x2, y2);
+      }
+    });
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+  } else {
+    ctx.strokeStyle = "#1a2a2a";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, centerY);
+    ctx.lineTo(w2, centerY);
+    ctx.stroke();
+  }
+  ctx.font = "9px monospace";
+  ctx.fillStyle = "#1a3a3a";
+  ctx.textBaseline = "top";
+  ctx.fillText("SCOPE", 6, 6);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+};
+const Scope = ({ waveform, playing }) => {
+  const canvasRef = reactExports.useRef(null);
+  const containerRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+    drawScope(canvas, waveform, playing);
+  }, [waveform, playing]);
+  reactExports.useEffect(() => {
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (container === null || canvas === null) return;
+    const observer = new ResizeObserver(() => {
+      drawScope(canvas, waveform, playing);
+    });
+    observer.observe(container);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: containerRef, style: styles$g.container, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "canvas",
+    {
+      ref: canvasRef,
+      style: styles$g.canvas,
+      "aria-label": "Oscilloscope waveform display",
+      role: "img"
+    }
+  ) });
+};
+const styles$g = {
+  container: {
+    width: "100%",
+    height: "100%",
+    overflow: "hidden"
+  },
+  canvas: {
+    width: "100%",
+    height: "100%",
+    display: "block"
+  }
+};
+const DEFAULT_COLOR = "#6a9fff";
+const BG_COLOR$1 = "#080809";
+const BAR_GAP = 1;
+const BASELINE_H = 2;
+const GLOW_BLUR = 8;
+const drawSpectrum$1 = (canvas, bins, playing, color) => {
+  const dpr = window.devicePixelRatio;
+  const rect = canvas.getBoundingClientRect();
+  const w2 = rect.width || canvas.clientWidth || 300;
+  const h2 = rect.height || canvas.clientHeight || 120;
+  if (canvas.width !== Math.round(w2 * dpr) || canvas.height !== Math.round(h2 * dpr)) {
+    canvas.width = Math.round(w2 * dpr);
+    canvas.height = Math.round(h2 * dpr);
+  }
+  const ctx = canvas.getContext("2d");
+  if (ctx === null) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = BG_COLOR$1;
+  ctx.fillRect(0, 0, w2, h2);
+  const count = bins.length;
+  if (count === 0) {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, h2 - BASELINE_H, w2, BASELINE_H);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    return;
+  }
+  const allZero = bins.every((b) => b === 0);
+  if (!playing && allZero) {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, h2 - BASELINE_H, w2, BASELINE_H);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    return;
+  }
+  if (playing) {
+    ctx.shadowBlur = GLOW_BLUR;
+    ctx.shadowColor = color;
+  } else {
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+  }
+  ctx.fillStyle = color;
+  const barW = Math.max(1, (w2 - (count - 1) * BAR_GAP) / count);
+  Array.from({ length: count }, (_2, i) => {
+    const magnitude = Math.min(Math.max(bins[i] ?? 0, 0), 1);
+    const barH = Math.max(magnitude * h2, BASELINE_H);
+    const x2 = i * (barW + BAR_GAP);
+    const y2 = h2 - barH;
+    ctx.fillRect(x2, y2, barW, barH);
+  });
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = "transparent";
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+};
+const SpectrumAnalyser = ({
+  bins,
+  playing,
+  color = DEFAULT_COLOR
+}) => {
+  const canvasRef = reactExports.useRef(null);
+  const containerRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+    drawSpectrum$1(canvas, bins, playing, color);
+  }, [bins, playing, color]);
+  reactExports.useEffect(() => {
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (container === null || canvas === null) return;
+    const observer = new ResizeObserver(() => {
+      drawSpectrum$1(canvas, bins, playing, color);
+    });
+    observer.observe(container);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: containerRef, style: styles$f.container, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "canvas",
+    {
+      ref: canvasRef,
+      style: styles$f.canvas,
+      "aria-label": "Spectrum analyser",
+      role: "img",
+      "data-color": color
+    }
+  ) });
+};
+const styles$f = {
+  container: {
+    width: "100%",
+    height: "100%",
+    overflow: "hidden"
+  },
+  canvas: {
+    width: "100%",
+    height: "100%",
+    display: "block"
+  }
+};
+const BG_COLOR = "#080809";
+const EMPTY_TEXT_COLOR = "#2a3a4a";
+const ROW_HEIGHT = 14;
+const PIANO_STRIP_WIDTH = 12;
+const ROW_OCTAVE_BOUND = "#0f0f14";
+const ROW_BLACK_KEY = "#0b0b0f";
+const ROW_WHITE_KEY = "#0e0e13";
+const NOTE_NORMAL = "#4a8fff";
+const NOTE_CURRENT = "#6aafff";
+const CURSOR_OVERLAY = "#4a8fff18";
+const CURSOR_LINE = "#4a8fff66";
+const PIANO_WHITE_KEY = "#1a1a22";
+const PIANO_BLACK_KEY = "#0a0a0f";
+const BLACK_KEY_OFFSETS = /* @__PURE__ */ new Set([1, 3, 6, 8, 10]);
+const DEFAULT_MIN_NOTE = 48;
+const DEFAULT_MAX_NOTE = 72;
+const isBlackKey = (note) => BLACK_KEY_OFFSETS.has(note % 12);
+const rowBgColor = (note) => {
+  if (note % 12 === 0) return ROW_OCTAVE_BOUND;
+  if (isBlackKey(note)) return ROW_BLACK_KEY;
+  return ROW_WHITE_KEY;
+};
+const detectNoteRange = (notes, minNoteProp, maxNoteProp) => {
+  if (notes.length === 0) {
+    return {
+      minNote: minNoteProp ?? DEFAULT_MIN_NOTE,
+      maxNote: maxNoteProp ?? DEFAULT_MAX_NOTE
+    };
+  }
+  const pitches = notes.map((n2) => n2.pitch);
+  const rawMin = Math.min(...pitches);
+  const rawMax = Math.max(...pitches);
+  return {
+    minNote: minNoteProp ?? Math.max(0, rawMin - 2),
+    maxNote: maxNoteProp ?? Math.min(127, rawMax + 2)
+  };
+};
+const drawRoll = (ctx, notes, currentStep, stepCount, width, height, minNote, maxNote) => {
+  ctx.fillStyle = BG_COLOR;
+  ctx.fillRect(0, 0, width, height);
+  if (notes.length === 0) {
+    ctx.fillStyle = EMPTY_TEXT_COLOR;
+    ctx.font = "12px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("No notes", width / 2, height / 2);
+    return;
+  }
+  const noteRange = maxNote - minNote + 1;
+  const gridLeft = PIANO_STRIP_WIDTH;
+  const gridWidth = width - gridLeft;
+  const colWidth = gridWidth / stepCount;
+  Array.from({ length: noteRange }, (_2, i) => {
+    const note = maxNote - i;
+    const rowY = i * ROW_HEIGHT;
+    ctx.fillStyle = rowBgColor(note);
+    ctx.fillRect(gridLeft, rowY, gridWidth, ROW_HEIGHT);
+  });
+  const cursorStep = currentStep < stepCount ? currentStep : currentStep % stepCount;
+  const cursorX = gridLeft + cursorStep * colWidth;
+  ctx.fillStyle = CURSOR_OVERLAY;
+  ctx.fillRect(cursorX, 0, colWidth, height);
+  notes.forEach((note) => {
+    if (note.pitch < minNote || note.pitch > maxNote) return;
+    const rowIndex = maxNote - note.pitch;
+    const rowY = rowIndex * ROW_HEIGHT;
+    const noteX = gridLeft + note.step * colWidth;
+    const noteW = Math.max(colWidth * note.duration - 1, 1);
+    const noteH = ROW_HEIGHT - 1;
+    const isCurrentStepNote = note.step === cursorStep;
+    ctx.fillStyle = isCurrentStepNote ? NOTE_CURRENT : NOTE_NORMAL;
+    ctx.fillRect(noteX, rowY + 0.5, noteW, noteH);
+  });
+  ctx.fillStyle = CURSOR_LINE;
+  ctx.fillRect(cursorX, 0, 1, height);
+  Array.from({ length: noteRange }, (_2, i) => {
+    const note = maxNote - i;
+    const rowY = i * ROW_HEIGHT;
+    ctx.fillStyle = isBlackKey(note) ? PIANO_BLACK_KEY : PIANO_WHITE_KEY;
+    ctx.fillRect(0, rowY, PIANO_STRIP_WIDTH, ROW_HEIGHT);
+  });
+};
+const PianoRoll = ({
+  notes,
+  currentStep,
+  stepCount,
+  minNote: minNoteProp,
+  maxNote: maxNoteProp,
+  onNoteClick
+}) => {
+  const canvasRef = reactExports.useRef(null);
+  const { minNote, maxNote } = detectNoteRange(notes, minNoteProp, maxNoteProp);
+  const noteRange = maxNote - minNote + 1;
+  const canvasHeight = noteRange * ROW_HEIGHT;
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+    const dpr = window.devicePixelRatio;
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    const ctx = canvas.getContext("2d");
+    if (ctx === null) return;
+    ctx.scale(dpr, dpr);
+    drawRoll(ctx, notes, currentStep, stepCount, width, height, minNote, maxNote);
+  }, [notes, currentStep, stepCount, minNote, maxNote]);
+  const handleClick = (e) => {
+    if (!onNoteClick) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x2 = e.clientX - rect.left;
+    const y2 = e.clientY - rect.top;
+    const gridLeft = PIANO_STRIP_WIDTH;
+    if (x2 < gridLeft) return;
+    const noteRange2 = maxNote - minNote + 1;
+    const rowIndex = Math.floor(y2 / ROW_HEIGHT);
+    if (rowIndex < 0 || rowIndex >= noteRange2) return;
+    const pitch = maxNote - rowIndex;
+    const colWidth = (canvas.clientWidth - gridLeft) / stepCount;
+    const step = Math.floor((x2 - gridLeft) / colWidth);
+    if (step < 0 || step >= stepCount) return;
+    onNoteClick(pitch, step);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "canvas",
+    {
+      ref: canvasRef,
+      "aria-label": "Piano roll",
+      role: "img",
+      onClick: onNoteClick ? handleClick : void 0,
+      style: {
+        width: "100%",
+        height: `${String(canvasHeight)}px`,
+        display: "block",
+        imageRendering: "pixelated",
+        cursor: onNoteClick ? "pointer" : "default"
+      }
+    }
+  );
+};
+const METER_W = 16;
+const METER_H = 80;
+const VU_BG$1 = "#141418";
+const VU_GREEN$1 = "#22cc66";
+const VU_YELLOW$1 = "#ccaa00";
+const VU_RED$1 = "#cc2244";
+const GREEN_THRESHOLD$1 = 0.7;
+const YELLOW_THRESHOLD$1 = 0.85;
+const computeRms$1 = (waveform) => {
+  if (waveform.length === 0) return 0;
+  const sumOfSquares = waveform.reduce((acc, v2) => acc + v2 * v2, 0);
+  return Math.min(1, Math.sqrt(sumOfSquares / waveform.length));
+};
+const drawMeter = (canvas, level) => {
+  const ctx = canvas.getContext("2d");
+  if (ctx === null) return;
+  const w2 = canvas.width;
+  const h2 = canvas.height;
+  const lvl = Math.min(Math.max(level, 0), 1);
+  ctx.fillStyle = VU_BG$1;
+  ctx.fillRect(0, 0, w2, h2);
+  const fillH = lvl * h2;
+  const barColor = lvl > YELLOW_THRESHOLD$1 ? VU_RED$1 : lvl > GREEN_THRESHOLD$1 ? VU_YELLOW$1 : VU_GREEN$1;
+  ctx.fillStyle = barColor;
+  ctx.fillRect(0, h2 - fillH, w2, fillH);
+};
+const MasterLevel = ({ waveform, playing }) => {
+  const canvasRef = reactExports.useRef(null);
+  const level = playing ? computeRms$1(waveform) : 0;
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+    drawMeter(canvas, level);
+  }, [level]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$e.wrapper, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "canvas",
+      {
+        ref: canvasRef,
+        "aria-label": "Master level",
+        role: "img",
+        width: METER_W,
+        height: METER_H,
+        style: styles$e.canvas
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { "aria-hidden": "true", style: styles$e.label, children: "MASTER" })
   ] });
 };
-const styles$3 = {
-  root: { display: "flex", flexDirection: "column", height: "100vh", background: "#0c0c0e" },
-  body: { display: "flex", flex: 1, overflow: "hidden" },
-  editorPane: {
-    flex: "0 0 60%",
-    borderRight: "1px solid #1e1e22",
+const styles$e = {
+  wrapper: {
     display: "flex",
     flexDirection: "column",
-    background: "#0d0d10"
+    alignItems: "center",
+    gap: "4px",
+    userSelect: "none"
   },
-  editorToolbar: {
+  canvas: {
+    display: "block",
+    width: `${String(METER_W)}px`,
+    height: `${String(METER_H)}px`,
+    imageRendering: "pixelated",
+    border: "1px solid #1e1e22"
+  },
+  label: {
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    fontSize: "0.6rem",
+    color: "#6a6a7a",
+    letterSpacing: "0.1em",
+    textTransform: "uppercase"
+  }
+};
+const STRIP_COLOR = {
+  kick: "#c05a20",
+  kick808: "#c05a20",
+  kick909: "#d04010",
+  snare: "#c02040",
+  snare909: "#c02040",
+  hihat: "#208060",
+  hihat808: "#208060",
+  bass303: "#9040c0",
+  synth: "#2060a0",
+  subsynth: "#2060a0",
+  fmsynth: "#1a50c0",
+  pad: "#206080",
+  pluck: "#208060",
+  arp: "#6040a0",
+  sample: "#606060"
+};
+const STRIP_DEFAULT = "#404040";
+const VU_GREEN = "#22cc66";
+const VU_YELLOW = "#ccaa00";
+const VU_RED = "#cc2244";
+const VU_BG = "#0a0a0d";
+const GREEN_THRESHOLD = 0.7;
+const YELLOW_THRESHOLD = 0.85;
+const drawVU = (canvas, level) => {
+  const ctx = canvas.getContext("2d");
+  if (ctx === null) return;
+  const w2 = canvas.width;
+  const h2 = canvas.height;
+  const lvl = Math.min(Math.max(level, 0), 1);
+  ctx.fillStyle = VU_BG;
+  ctx.fillRect(0, 0, w2, h2);
+  const fillH = lvl * h2;
+  const barColor = lvl > YELLOW_THRESHOLD ? VU_RED : lvl > GREEN_THRESHOLD ? VU_YELLOW : VU_GREEN;
+  ctx.fillStyle = barColor;
+  ctx.fillRect(0, h2 - fillH, w2, fillH);
+};
+const MixerStrip = ({
+  name,
+  type,
+  volume,
+  muted,
+  level,
+  onVolume,
+  onMute
+}) => {
+  const canvasRef = reactExports.useRef(null);
+  const accentColor = STRIP_COLOR[type] ?? STRIP_DEFAULT;
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+    drawVU(canvas, level);
+  }, [level]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      "aria-label": `${name} channel strip`,
+      style: styles$d.strip,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            "aria-hidden": "true",
+            style: { ...styles$d.accentBar, background: accentColor }
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            "aria-label": `Track: ${name}`,
+            style: styles$d.trackName,
+            title: name,
+            children: name
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            "aria-label": muted ? `Unmute ${name}` : `Mute ${name}`,
+            "aria-pressed": muted,
+            style: muted ? { ...styles$d.muteBtn, ...styles$d.muteBtnActive } : styles$d.muteBtn,
+            onClick: onMute,
+            children: "M"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            "aria-label": `${name} volume`,
+            type: "range",
+            min: 0,
+            max: 1,
+            step: 0.01,
+            value: volume,
+            style: styles$d.fader,
+            onChange: (e) => {
+              onVolume(Number(e.target.value));
+            }
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "canvas",
+          {
+            ref: canvasRef,
+            "aria-label": `${name} level`,
+            role: "img",
+            width: 4,
+            height: 44,
+            style: styles$d.vuCanvas
+          }
+        )
+      ]
+    }
+  );
+};
+const styles$d = {
+  strip: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    width: "56px",
+    background: "#0d0d10",
+    border: "1px solid #1e1e22",
+    boxSizing: "border-box",
+    padding: "0 0 4px",
+    gap: "3px",
+    userSelect: "none",
+    flexShrink: 0
+  },
+  accentBar: {
+    width: "100%",
+    height: "4px",
+    flexShrink: 0
+  },
+  trackName: {
+    width: "100%",
+    fontSize: "0.6rem",
+    color: "#6a6a7a",
+    fontFamily: "system-ui, sans-serif",
+    textAlign: "center",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    padding: "2px 3px 0",
+    boxSizing: "border-box",
+    letterSpacing: "0.05em"
+  },
+  muteBtn: {
+    width: "28px",
+    height: "20px",
+    background: "#1a1a22",
+    border: "1px solid #2a2a36",
+    borderRadius: "2px",
+    color: "#6a6a7a",
+    fontSize: "0.65rem",
+    fontWeight: 700,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    padding: 0,
+    letterSpacing: "0.05em"
+  },
+  muteBtnActive: {
+    background: "#ffcc00",
+    border: "1px solid #cc9900",
+    color: "#1a1000"
+  },
+  fader: {
+    // writingMode makes the range input render vertically in modern browsers.
+    // WebkitAppearance is kept for older Chromium (Electron) builds.
+    writingMode: "vertical-lr",
+    direction: "rtl",
+    WebkitAppearance: "slider-vertical",
+    width: "28px",
+    height: "60px",
+    cursor: "pointer",
+    accentColor: "#4a8fff",
+    flexShrink: 0
+  },
+  vuCanvas: {
+    display: "block",
+    width: "4px",
+    height: "44px",
+    imageRendering: "pixelated",
+    flexShrink: 0
+  }
+};
+const MIN_W = 120;
+const MIN_H = 80;
+const TITLE_H = 28;
+const HANDLE_SIZE = 8;
+const DraggablePanel = (props) => {
+  const {
+    title,
+    children,
+    defaultX = 40,
+    defaultY = 40,
+    defaultWidth = 320,
+    defaultHeight = 240,
+    onClose,
+    panelId,
+    onMoved
+  } = props;
+  const [pos, setPos] = reactExports.useState({ x: defaultX, y: defaultY });
+  const [size, setSize] = reactExports.useState({ w: defaultWidth, h: defaultHeight });
+  const [dragging, setDragging] = reactExports.useState(false);
+  const [resizing, setResizing] = reactExports.useState(false);
+  const dragOrigin = reactExports.useRef(null);
+  const resizeOrigin = reactExports.useRef(null);
+  const posRef = reactExports.useRef(pos);
+  const sizeRef = reactExports.useRef(size);
+  const onTitleMouseDown = (e) => {
+    e.preventDefault();
+    setDragging(true);
+    dragOrigin.current = { mx: e.clientX, my: e.clientY, ox: pos.x, oy: pos.y };
+  };
+  reactExports.useEffect(() => {
+    if (!dragging) return;
+    const onMouseMove = (e) => {
+      const origin = dragOrigin.current;
+      if (origin === null) return;
+      const newPos = {
+        x: origin.ox + (e.clientX - origin.mx),
+        y: origin.oy + (e.clientY - origin.my)
+      };
+      posRef.current = newPos;
+      setPos(newPos);
+    };
+    const onMouseUp = () => {
+      setDragging(false);
+      dragOrigin.current = null;
+      if (panelId && onMoved) {
+        const { x: x2, y: y2 } = posRef.current;
+        const { w: w2, h: h2 } = sizeRef.current;
+        onMoved(panelId, x2, y2, w2, h2);
+      }
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [dragging, panelId, onMoved]);
+  const onHandleMouseDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizing(true);
+    resizeOrigin.current = { mx: e.clientX, my: e.clientY, ox: size.w, oy: size.h };
+  };
+  reactExports.useEffect(() => {
+    if (!resizing) return;
+    const onMouseMove = (e) => {
+      const origin = resizeOrigin.current;
+      if (origin === null) return;
+      const newSize = {
+        w: Math.max(MIN_W, origin.ox + (e.clientX - origin.mx)),
+        h: Math.max(MIN_H, origin.oy + (e.clientY - origin.my))
+      };
+      sizeRef.current = newSize;
+      setSize(newSize);
+    };
+    const onMouseUp = () => {
+      setResizing(false);
+      resizeOrigin.current = null;
+      if (panelId && onMoved) {
+        const { x: x2, y: y2 } = posRef.current;
+        const { w: w2, h: h2 } = sizeRef.current;
+        onMoved(panelId, x2, y2, w2, h2);
+      }
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [resizing, panelId, onMoved]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      "aria-label": title,
+      style: {
+        ...styles$c.panel,
+        left: pos.x,
+        top: pos.y,
+        width: size.w,
+        height: size.h
+      },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            role: "heading",
+            "aria-level": 3,
+            style: {
+              ...styles$c.titleBar,
+              cursor: dragging ? "grabbing" : "grab"
+            },
+            onMouseDown: onTitleMouseDown,
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$c.titleText, children: title }),
+              onClose !== void 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  "aria-label": `Close ${title}`,
+                  style: styles$c.closeBtn,
+                  onMouseDown: (e) => {
+                    e.stopPropagation();
+                  },
+                  onClick: onClose,
+                  children: "×"
+                }
+              )
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$c.body, children }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            "aria-label": "Resize panel",
+            role: "separator",
+            style: styles$c.resizeHandle,
+            onMouseDown: onHandleMouseDown
+          }
+        )
+      ]
+    }
+  );
+};
+const styles$c = {
+  panel: {
+    position: "absolute",
+    zIndex: 100,
+    border: "1px solid #2a2a36",
+    background: "#0d0d10",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+    boxSizing: "border-box",
+    userSelect: "none"
+  },
+  titleBar: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "0.3rem 0.6rem",
-    background: "#111113",
-    borderBottom: "1px solid #1e1e22",
+    height: `${String(TITLE_H)}px`,
+    flexShrink: 0,
+    padding: "0 6px 0 8px",
+    background: "#141418",
+    borderBottom: "1px solid #1e1e22"
+  },
+  titleText: {
+    color: "#6a9fff",
+    fontSize: "0.7rem",
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+    fontFamily: "system-ui, sans-serif",
+    fontWeight: 600,
+    pointerEvents: "none"
+  },
+  closeBtn: {
+    background: "none",
+    border: "none",
+    color: "#6a9fff",
+    fontSize: "1rem",
+    lineHeight: 1,
+    cursor: "pointer",
+    padding: "0 2px",
+    opacity: 0.7,
     flexShrink: 0
   },
-  filename: {
+  body: {
+    flex: 1,
+    overflow: "auto"
+  },
+  resizeHandle: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    width: `${String(HANDLE_SIZE)}px`,
+    height: `${String(HANDLE_SIZE)}px`,
+    background: "#2a2a36",
+    cursor: "se-resize",
+    flexShrink: 0
+  }
+};
+const drawBeatViz = (ctx, waveform, currentStep, stepCount, width, height, playing) => {
+  ctx.clearRect(0, 0, width, height);
+  if (!playing) return;
+  const rms = Math.sqrt(
+    waveform.reduce((s, v2) => s + v2 * v2, 0) / Math.max(waveform.length, 1)
+  );
+  const intensity = Math.min(rms * 8, 1);
+  if (intensity > 0.01) {
+    const gradient = ctx.createRadialGradient(
+      width / 2,
+      height / 2,
+      0,
+      width / 2,
+      height / 2,
+      width * 0.7
+    );
+    gradient.addColorStop(0, `rgba(74, 143, 255, ${String(intensity * 0.06)})`);
+    gradient.addColorStop(1, "rgba(74, 143, 255, 0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+  }
+  if (stepCount > 0) {
+    const progress = currentStep / stepCount;
+    ctx.fillStyle = "rgba(74, 143, 255, 0.5)";
+    ctx.fillRect(0, 0, width * progress, 2);
+  }
+};
+const CodeWaveform = ({ waveform, playing, currentStep, stepCount }) => {
+  const canvasRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+    const dpr = window.devicePixelRatio;
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    if (width === 0 || height === 0) return;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    const ctx = canvas.getContext("2d");
+    if (ctx === null) return;
+    ctx.scale(dpr, dpr);
+    drawBeatViz(ctx, waveform, currentStep, stepCount, width, height, playing);
+  }, [waveform, playing, currentStep, stepCount]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "canvas",
+    {
+      ref: canvasRef,
+      "aria-hidden": "true",
+      style: styles$b.canvas
+    }
+  );
+};
+const styles$b = {
+  canvas: {
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+    pointerEvents: "none",
+    imageRendering: "pixelated",
+    zIndex: 0
+  }
+};
+const TRACK_LINE_RE = /(?:Track\(|=\s*(?:Kick(?:808|909)?|Snare(?:909)?|HiHat(?:808)?|Hihat(?:808)?|Bass303|Pad|Rhodes|Pluck|Synth|Sample|Theremin|Sax|Arp|SubSynth|FMSynth)\s*\()/;
+const getTrackLines = (code, tracks) => {
+  if (tracks.length === 0) return [];
+  const lines = code.split("\n");
+  const trackLineIndices = [];
+  lines.forEach((line, i) => {
+    if (TRACK_LINE_RE.test(line)) trackLineIndices.push(i);
+  });
+  const result = [];
+  tracks.forEach((_2, i) => {
+    const lineIdx = trackLineIndices[i];
+    if (lineIdx !== void 0) {
+      result.push({ lineIndex: lineIdx, trackIndex: i });
+    }
+  });
+  return result;
+};
+const getActiveLines = (code, tracks, currentStep) => {
+  if (tracks.length === 0) return [];
+  const lines = code.split("\n");
+  const trackLineIndices = [];
+  lines.forEach((line, i) => {
+    if (TRACK_LINE_RE.test(line)) trackLineIndices.push(i);
+  });
+  const result = [];
+  tracks.forEach((track, i) => {
+    const lineIdx = trackLineIndices[i];
+    if (lineIdx === void 0) return;
+    const len = track.pattern.length;
+    if (len === 0) return;
+    const val = track.pattern[currentStep % len];
+    if (val) result.push(lineIdx);
+  });
+  return result.sort((a, b) => a - b);
+};
+const getStepBadges = (code, tracks, currentStep, defaultStepCount) => {
+  if (tracks.length === 0) return [];
+  const trackLines = getTrackLines(code, tracks);
+  return trackLines.map(({ lineIndex, trackIndex }) => {
+    const track = tracks[trackIndex];
+    if (!track) return null;
+    const total = track.pattern.length > 0 ? track.pattern.length : defaultStepCount;
+    return { line: lineIndex + 1, step: currentStep % total, total };
+  }).filter((b) => b !== null);
+};
+function _arrayLikeToArray(r2, a) {
+  (null == a || a > r2.length) && (a = r2.length);
+  for (var e = 0, n2 = Array(a); e < a; e++) n2[e] = r2[e];
+  return n2;
+}
+function _arrayWithHoles(r2) {
+  if (Array.isArray(r2)) return r2;
+}
+function _defineProperty$1(e, r2, t2) {
+  return (r2 = _toPropertyKey(r2)) in e ? Object.defineProperty(e, r2, {
+    value: t2,
+    enumerable: true,
+    configurable: true,
+    writable: true
+  }) : e[r2] = t2, e;
+}
+function _iterableToArrayLimit(r2, l2) {
+  var t2 = null == r2 ? null : "undefined" != typeof Symbol && r2[Symbol.iterator] || r2["@@iterator"];
+  if (null != t2) {
+    var e, n2, i, u2, a = [], f2 = true, o = false;
+    try {
+      if (i = (t2 = t2.call(r2)).next, 0 === l2) ;
+      else for (; !(f2 = (e = i.call(t2)).done) && (a.push(e.value), a.length !== l2); f2 = true) ;
+    } catch (r3) {
+      o = true, n2 = r3;
+    } finally {
+      try {
+        if (!f2 && null != t2.return && (u2 = t2.return(), Object(u2) !== u2)) return;
+      } finally {
+        if (o) throw n2;
+      }
+    }
+    return a;
+  }
+}
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+function ownKeys$1(e, r2) {
+  var t2 = Object.keys(e);
+  if (Object.getOwnPropertySymbols) {
+    var o = Object.getOwnPropertySymbols(e);
+    r2 && (o = o.filter(function(r3) {
+      return Object.getOwnPropertyDescriptor(e, r3).enumerable;
+    })), t2.push.apply(t2, o);
+  }
+  return t2;
+}
+function _objectSpread2$1(e) {
+  for (var r2 = 1; r2 < arguments.length; r2++) {
+    var t2 = null != arguments[r2] ? arguments[r2] : {};
+    r2 % 2 ? ownKeys$1(Object(t2), true).forEach(function(r3) {
+      _defineProperty$1(e, r3, t2[r3]);
+    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t2)) : ownKeys$1(Object(t2)).forEach(function(r3) {
+      Object.defineProperty(e, r3, Object.getOwnPropertyDescriptor(t2, r3));
+    });
+  }
+  return e;
+}
+function _objectWithoutProperties(e, t2) {
+  if (null == e) return {};
+  var o, r2, i = _objectWithoutPropertiesLoose(e, t2);
+  if (Object.getOwnPropertySymbols) {
+    var n2 = Object.getOwnPropertySymbols(e);
+    for (r2 = 0; r2 < n2.length; r2++) o = n2[r2], -1 === t2.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]);
+  }
+  return i;
+}
+function _objectWithoutPropertiesLoose(r2, e) {
+  if (null == r2) return {};
+  var t2 = {};
+  for (var n2 in r2) if ({}.hasOwnProperty.call(r2, n2)) {
+    if (-1 !== e.indexOf(n2)) continue;
+    t2[n2] = r2[n2];
+  }
+  return t2;
+}
+function _slicedToArray(r2, e) {
+  return _arrayWithHoles(r2) || _iterableToArrayLimit(r2, e) || _unsupportedIterableToArray(r2, e) || _nonIterableRest();
+}
+function _toPrimitive(t2, r2) {
+  if ("object" != typeof t2 || !t2) return t2;
+  var e = t2[Symbol.toPrimitive];
+  if (void 0 !== e) {
+    var i = e.call(t2, r2);
+    if ("object" != typeof i) return i;
+    throw new TypeError("@@toPrimitive must return a primitive value.");
+  }
+  return ("string" === r2 ? String : Number)(t2);
+}
+function _toPropertyKey(t2) {
+  var i = _toPrimitive(t2, "string");
+  return "symbol" == typeof i ? i : i + "";
+}
+function _unsupportedIterableToArray(r2, a) {
+  if (r2) {
+    if ("string" == typeof r2) return _arrayLikeToArray(r2, a);
+    var t2 = {}.toString.call(r2).slice(8, -1);
+    return "Object" === t2 && r2.constructor && (t2 = r2.constructor.name), "Map" === t2 || "Set" === t2 ? Array.from(r2) : "Arguments" === t2 || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t2) ? _arrayLikeToArray(r2, a) : void 0;
+  }
+}
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    if (enumerableOnly) symbols = symbols.filter(function(sym) {
+      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    });
+    keys.push.apply(keys, symbols);
+  }
+  return keys;
+}
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function(key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function(key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+  return target;
+}
+function compose$1() {
+  for (var _len = arguments.length, fns = new Array(_len), _key = 0; _key < _len; _key++) {
+    fns[_key] = arguments[_key];
+  }
+  return function(x2) {
+    return fns.reduceRight(function(y2, f2) {
+      return f2(y2);
+    }, x2);
+  };
+}
+function curry$1(fn) {
+  return function curried() {
+    var _this = this;
+    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+    return args.length >= fn.length ? fn.apply(this, args) : function() {
+      for (var _len3 = arguments.length, nextArgs = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        nextArgs[_key3] = arguments[_key3];
+      }
+      return curried.apply(_this, [].concat(args, nextArgs));
+    };
+  };
+}
+function isObject$1(value) {
+  return {}.toString.call(value).includes("Object");
+}
+function isEmpty(obj) {
+  return !Object.keys(obj).length;
+}
+function isFunction(value) {
+  return typeof value === "function";
+}
+function hasOwnProperty(object, property) {
+  return Object.prototype.hasOwnProperty.call(object, property);
+}
+function validateChanges(initial, changes) {
+  if (!isObject$1(changes)) errorHandler$1("changeType");
+  if (Object.keys(changes).some(function(field) {
+    return !hasOwnProperty(initial, field);
+  })) errorHandler$1("changeField");
+  return changes;
+}
+function validateSelector(selector) {
+  if (!isFunction(selector)) errorHandler$1("selectorType");
+}
+function validateHandler(handler) {
+  if (!(isFunction(handler) || isObject$1(handler))) errorHandler$1("handlerType");
+  if (isObject$1(handler) && Object.values(handler).some(function(_handler) {
+    return !isFunction(_handler);
+  })) errorHandler$1("handlersType");
+}
+function validateInitial(initial) {
+  if (!initial) errorHandler$1("initialIsRequired");
+  if (!isObject$1(initial)) errorHandler$1("initialType");
+  if (isEmpty(initial)) errorHandler$1("initialContent");
+}
+function throwError$1(errorMessages2, type) {
+  throw new Error(errorMessages2[type] || errorMessages2["default"]);
+}
+var errorMessages$1 = {
+  initialIsRequired: "initial state is required",
+  initialType: "initial state should be an object",
+  initialContent: "initial state shouldn't be an empty object",
+  handlerType: "handler should be an object or a function",
+  handlersType: "all handlers should be a functions",
+  selectorType: "selector should be a function",
+  changeType: "provided value of changes should be an object",
+  changeField: 'it seams you want to change a field in the state which is not specified in the "initial" state',
+  "default": "an unknown error accured in `state-local` package"
+};
+var errorHandler$1 = curry$1(throwError$1)(errorMessages$1);
+var validators$1 = {
+  changes: validateChanges,
+  selector: validateSelector,
+  handler: validateHandler,
+  initial: validateInitial
+};
+function create(initial) {
+  var handler = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
+  validators$1.initial(initial);
+  validators$1.handler(handler);
+  var state = {
+    current: initial
+  };
+  var didUpdate = curry$1(didStateUpdate)(state, handler);
+  var update = curry$1(updateState)(state);
+  var validate = curry$1(validators$1.changes)(initial);
+  var getChanges = curry$1(extractChanges)(state);
+  function getState2() {
+    var selector = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : function(state2) {
+      return state2;
+    };
+    validators$1.selector(selector);
+    return selector(state.current);
+  }
+  function setState2(causedChanges) {
+    compose$1(didUpdate, update, validate, getChanges)(causedChanges);
+  }
+  return [getState2, setState2];
+}
+function extractChanges(state, causedChanges) {
+  return isFunction(causedChanges) ? causedChanges(state.current) : causedChanges;
+}
+function updateState(state, changes) {
+  state.current = _objectSpread2(_objectSpread2({}, state.current), changes);
+  return changes;
+}
+function didStateUpdate(state, handler, changes) {
+  isFunction(handler) ? handler(state.current) : Object.keys(changes).forEach(function(field) {
+    var _handler$field;
+    return (_handler$field = handler[field]) === null || _handler$field === void 0 ? void 0 : _handler$field.call(handler, state.current[field]);
+  });
+  return changes;
+}
+var index = {
+  create
+};
+var config$1 = {
+  paths: {
+    vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs"
+  }
+};
+function curry(fn) {
+  return function curried() {
+    var _this = this;
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+    return args.length >= fn.length ? fn.apply(this, args) : function() {
+      for (var _len2 = arguments.length, nextArgs = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        nextArgs[_key2] = arguments[_key2];
+      }
+      return curried.apply(_this, [].concat(args, nextArgs));
+    };
+  };
+}
+function isObject(value) {
+  return {}.toString.call(value).includes("Object");
+}
+function validateConfig(config2) {
+  if (!config2) errorHandler("configIsRequired");
+  if (!isObject(config2)) errorHandler("configType");
+  if (config2.urls) {
+    informAboutDeprecation();
+    return {
+      paths: {
+        vs: config2.urls.monacoBase
+      }
+    };
+  }
+  return config2;
+}
+function informAboutDeprecation() {
+  console.warn(errorMessages.deprecation);
+}
+function throwError(errorMessages2, type) {
+  throw new Error(errorMessages2[type] || errorMessages2["default"]);
+}
+var errorMessages = {
+  configIsRequired: "the configuration object is required",
+  configType: "the configuration object should be an object",
+  "default": "an unknown error accured in `@monaco-editor/loader` package",
+  deprecation: "Deprecation warning!\n    You are using deprecated way of configuration.\n\n    Instead of using\n      monaco.config({ urls: { monacoBase: '...' } })\n    use\n      monaco.config({ paths: { vs: '...' } })\n\n    For more please check the link https://github.com/suren-atoyan/monaco-loader#config\n  "
+};
+var errorHandler = curry(throwError)(errorMessages);
+var validators = {
+  config: validateConfig
+};
+var compose = function compose2() {
+  for (var _len = arguments.length, fns = new Array(_len), _key = 0; _key < _len; _key++) {
+    fns[_key] = arguments[_key];
+  }
+  return function(x2) {
+    return fns.reduceRight(function(y2, f2) {
+      return f2(y2);
+    }, x2);
+  };
+};
+function merge(target, source) {
+  Object.keys(source).forEach(function(key) {
+    if (source[key] instanceof Object) {
+      if (target[key]) {
+        Object.assign(source[key], merge(target[key], source[key]));
+      }
+    }
+  });
+  return _objectSpread2$1(_objectSpread2$1({}, target), source);
+}
+var CANCELATION_MESSAGE = {
+  type: "cancelation",
+  msg: "operation is manually canceled"
+};
+function makeCancelable(promise) {
+  var hasCanceled_ = false;
+  var wrappedPromise = new Promise(function(resolve, reject) {
+    promise.then(function(val) {
+      return hasCanceled_ ? reject(CANCELATION_MESSAGE) : resolve(val);
+    });
+    promise["catch"](reject);
+  });
+  return wrappedPromise.cancel = function() {
+    return hasCanceled_ = true;
+  }, wrappedPromise;
+}
+var _excluded = ["monaco"];
+var _state$create = index.create({
+  config: config$1,
+  isInitialized: false,
+  resolve: null,
+  reject: null,
+  monaco: null
+}), _state$create2 = _slicedToArray(_state$create, 2), getState = _state$create2[0], setState = _state$create2[1];
+function config(globalConfig) {
+  var _validators$config = validators.config(globalConfig), monaco = _validators$config.monaco, config2 = _objectWithoutProperties(_validators$config, _excluded);
+  setState(function(state) {
+    return {
+      config: merge(state.config, config2),
+      monaco
+    };
+  });
+}
+function init() {
+  var state = getState(function(_ref) {
+    var monaco = _ref.monaco, isInitialized = _ref.isInitialized, resolve = _ref.resolve;
+    return {
+      monaco,
+      isInitialized,
+      resolve
+    };
+  });
+  if (!state.isInitialized) {
+    setState({
+      isInitialized: true
+    });
+    if (state.monaco) {
+      state.resolve(state.monaco);
+      return makeCancelable(wrapperPromise);
+    }
+    if (window.monaco && window.monaco.editor) {
+      storeMonacoInstance(window.monaco);
+      state.resolve(window.monaco);
+      return makeCancelable(wrapperPromise);
+    }
+    compose(injectScripts, getMonacoLoaderScript)(configureLoader);
+  }
+  return makeCancelable(wrapperPromise);
+}
+function injectScripts(script) {
+  return document.body.appendChild(script);
+}
+function createScript(src) {
+  var script = document.createElement("script");
+  return src && (script.src = src), script;
+}
+function getMonacoLoaderScript(configureLoader2) {
+  var state = getState(function(_ref2) {
+    var config2 = _ref2.config, reject = _ref2.reject;
+    return {
+      config: config2,
+      reject
+    };
+  });
+  var loaderScript = createScript("".concat(state.config.paths.vs, "/loader.js"));
+  loaderScript.onload = function() {
+    return configureLoader2();
+  };
+  loaderScript.onerror = state.reject;
+  return loaderScript;
+}
+function configureLoader() {
+  var state = getState(function(_ref3) {
+    var config2 = _ref3.config, resolve = _ref3.resolve, reject = _ref3.reject;
+    return {
+      config: config2,
+      resolve,
+      reject
+    };
+  });
+  var require2 = window.require;
+  require2.config(state.config);
+  require2(["vs/editor/editor.main"], function(loaded) {
+    var monaco = loaded.m || loaded;
+    storeMonacoInstance(monaco);
+    state.resolve(monaco);
+  }, function(error) {
+    state.reject(error);
+  });
+}
+function storeMonacoInstance(monaco) {
+  if (!getState().monaco) {
+    setState({
+      monaco
+    });
+  }
+}
+function __getMonacoInstance() {
+  return getState(function(_ref4) {
+    var monaco = _ref4.monaco;
+    return monaco;
+  });
+}
+var wrapperPromise = new Promise(function(resolve, reject) {
+  return setState({
+    resolve,
+    reject
+  });
+});
+var loader = {
+  config,
+  init,
+  __getMonacoInstance
+};
+var le = { wrapper: { display: "flex", position: "relative", textAlign: "initial" }, fullWidth: { width: "100%" }, hide: { display: "none" } }, v = le;
+var ae = { container: { display: "flex", height: "100%", width: "100%", justifyContent: "center", alignItems: "center" } }, Y = ae;
+function Me({ children: e }) {
+  return React.createElement("div", { style: Y.container }, e);
+}
+var Z = Me;
+var $ = Z;
+function Ee({ width: e, height: r2, isEditorReady: n2, loading: t2, _ref: a, className: m2, wrapperProps: E2 }) {
+  return React.createElement("section", { style: { ...v.wrapper, width: e, height: r2 }, ...E2 }, !n2 && React.createElement($, null, t2), React.createElement("div", { ref: a, style: { ...v.fullWidth, ...!n2 && v.hide }, className: m2 }));
+}
+var ee = Ee;
+var H = reactExports.memo(ee);
+function Ce(e) {
+  reactExports.useEffect(e, []);
+}
+var k = Ce;
+function he(e, r2, n2 = true) {
+  let t2 = reactExports.useRef(true);
+  reactExports.useEffect(t2.current || !n2 ? () => {
+    t2.current = false;
+  } : e, r2);
+}
+var l = he;
+function D() {
+}
+function h(e, r2, n2, t2) {
+  return De(e, t2) || be(e, r2, n2, t2);
+}
+function De(e, r2) {
+  return e.editor.getModel(te(e, r2));
+}
+function be(e, r2, n2, t2) {
+  return e.editor.createModel(r2, n2, t2 ? te(e, t2) : void 0);
+}
+function te(e, r2) {
+  return e.Uri.parse(r2);
+}
+function Oe({ original: e, modified: r2, language: n2, originalLanguage: t2, modifiedLanguage: a, originalModelPath: m2, modifiedModelPath: E2, keepCurrentOriginalModel: g = false, keepCurrentModifiedModel: N2 = false, theme: x2 = "light", loading: P2 = "Loading...", options: y2 = {}, height: V2 = "100%", width: z2 = "100%", className: F2, wrapperProps: j = {}, beforeMount: A2 = D, onMount: q2 = D }) {
+  let [M2, O2] = reactExports.useState(false), [T2, s] = reactExports.useState(true), u2 = reactExports.useRef(null), c = reactExports.useRef(null), w2 = reactExports.useRef(null), d = reactExports.useRef(q2), o = reactExports.useRef(A2), b = reactExports.useRef(false);
+  k(() => {
+    let i = loader.init();
+    return i.then((f2) => (c.current = f2) && s(false)).catch((f2) => f2?.type !== "cancelation" && console.error("Monaco initialization: error:", f2)), () => u2.current ? I2() : i.cancel();
+  }), l(() => {
+    if (u2.current && c.current) {
+      let i = u2.current.getOriginalEditor(), f2 = h(c.current, e || "", t2 || n2 || "text", m2 || "");
+      f2 !== i.getModel() && i.setModel(f2);
+    }
+  }, [m2], M2), l(() => {
+    if (u2.current && c.current) {
+      let i = u2.current.getModifiedEditor(), f2 = h(c.current, r2 || "", a || n2 || "text", E2 || "");
+      f2 !== i.getModel() && i.setModel(f2);
+    }
+  }, [E2], M2), l(() => {
+    let i = u2.current.getModifiedEditor();
+    i.getOption(c.current.editor.EditorOption.readOnly) ? i.setValue(r2 || "") : r2 !== i.getValue() && (i.executeEdits("", [{ range: i.getModel().getFullModelRange(), text: r2 || "", forceMoveMarkers: true }]), i.pushUndoStop());
+  }, [r2], M2), l(() => {
+    u2.current?.getModel()?.original.setValue(e || "");
+  }, [e], M2), l(() => {
+    let { original: i, modified: f2 } = u2.current.getModel();
+    c.current.editor.setModelLanguage(i, t2 || n2 || "text"), c.current.editor.setModelLanguage(f2, a || n2 || "text");
+  }, [n2, t2, a], M2), l(() => {
+    c.current?.editor.setTheme(x2);
+  }, [x2], M2), l(() => {
+    u2.current?.updateOptions(y2);
+  }, [y2], M2);
+  let L2 = reactExports.useCallback(() => {
+    if (!c.current) return;
+    o.current(c.current);
+    let i = h(c.current, e || "", t2 || n2 || "text", m2 || ""), f2 = h(c.current, r2 || "", a || n2 || "text", E2 || "");
+    u2.current?.setModel({ original: i, modified: f2 });
+  }, [n2, r2, a, e, t2, m2, E2]), U2 = reactExports.useCallback(() => {
+    !b.current && w2.current && (u2.current = c.current.editor.createDiffEditor(w2.current, { automaticLayout: true, ...y2 }), L2(), c.current?.editor.setTheme(x2), O2(true), b.current = true);
+  }, [y2, x2, L2]);
+  reactExports.useEffect(() => {
+    M2 && d.current(u2.current, c.current);
+  }, [M2]), reactExports.useEffect(() => {
+    !T2 && !M2 && U2();
+  }, [T2, M2, U2]);
+  function I2() {
+    let i = u2.current?.getModel();
+    g || i?.original?.dispose(), N2 || i?.modified?.dispose(), u2.current?.dispose();
+  }
+  return React.createElement(H, { width: z2, height: V2, isEditorReady: M2, loading: P2, _ref: w2, className: F2, wrapperProps: j });
+}
+var ie = Oe;
+reactExports.memo(ie);
+function He(e) {
+  let r2 = reactExports.useRef();
+  return reactExports.useEffect(() => {
+    r2.current = e;
+  }, [e]), r2.current;
+}
+var se = He;
+var _ = /* @__PURE__ */ new Map();
+function Ve({ defaultValue: e, defaultLanguage: r2, defaultPath: n2, value: t2, language: a, path: m2, theme: E2 = "light", line: g, loading: N2 = "Loading...", options: x2 = {}, overrideServices: P2 = {}, saveViewState: y2 = true, keepCurrentModel: V2 = false, width: z2 = "100%", height: F2 = "100%", className: j, wrapperProps: A2 = {}, beforeMount: q2 = D, onMount: M2 = D, onChange: O2, onValidate: T2 = D }) {
+  let [s, u2] = reactExports.useState(false), [c, w2] = reactExports.useState(true), d = reactExports.useRef(null), o = reactExports.useRef(null), b = reactExports.useRef(null), L2 = reactExports.useRef(M2), U2 = reactExports.useRef(q2), I2 = reactExports.useRef(), i = reactExports.useRef(t2), f2 = se(m2), Q2 = reactExports.useRef(false), B2 = reactExports.useRef(false);
+  k(() => {
+    let p2 = loader.init();
+    return p2.then((R2) => (d.current = R2) && w2(false)).catch((R2) => R2?.type !== "cancelation" && console.error("Monaco initialization: error:", R2)), () => o.current ? pe2() : p2.cancel();
+  }), l(() => {
+    let p2 = h(d.current, e || t2 || "", r2 || a || "", m2 || n2 || "");
+    p2 !== o.current?.getModel() && (y2 && _.set(f2, o.current?.saveViewState()), o.current?.setModel(p2), y2 && o.current?.restoreViewState(_.get(m2)));
+  }, [m2], s), l(() => {
+    o.current?.updateOptions(x2);
+  }, [x2], s), l(() => {
+    !o.current || t2 === void 0 || (o.current.getOption(d.current.editor.EditorOption.readOnly) ? o.current.setValue(t2) : t2 !== o.current.getValue() && (B2.current = true, o.current.executeEdits("", [{ range: o.current.getModel().getFullModelRange(), text: t2, forceMoveMarkers: true }]), o.current.pushUndoStop(), B2.current = false));
+  }, [t2], s), l(() => {
+    let p2 = o.current?.getModel();
+    p2 && a && d.current?.editor.setModelLanguage(p2, a);
+  }, [a], s), l(() => {
+    g !== void 0 && o.current?.revealLine(g);
+  }, [g], s), l(() => {
+    d.current?.editor.setTheme(E2);
+  }, [E2], s);
+  let X2 = reactExports.useCallback(() => {
+    if (!(!b.current || !d.current) && !Q2.current) {
+      U2.current(d.current);
+      let p2 = m2 || n2, R2 = h(d.current, t2 || e || "", r2 || a || "", p2 || "");
+      o.current = d.current?.editor.create(b.current, { model: R2, automaticLayout: true, ...x2 }, P2), y2 && o.current.restoreViewState(_.get(p2)), d.current.editor.setTheme(E2), g !== void 0 && o.current.revealLine(g), u2(true), Q2.current = true;
+    }
+  }, [e, r2, n2, t2, a, m2, x2, P2, y2, E2, g]);
+  reactExports.useEffect(() => {
+    s && L2.current(o.current, d.current);
+  }, [s]), reactExports.useEffect(() => {
+    !c && !s && X2();
+  }, [c, s, X2]), i.current = t2, reactExports.useEffect(() => {
+    s && O2 && (I2.current?.dispose(), I2.current = o.current?.onDidChangeModelContent((p2) => {
+      B2.current || O2(o.current.getValue(), p2);
+    }));
+  }, [s, O2]), reactExports.useEffect(() => {
+    if (s) {
+      let p2 = d.current.editor.onDidChangeMarkers((R2) => {
+        let G2 = o.current.getModel()?.uri;
+        if (G2 && R2.find((J2) => J2.path === G2.path)) {
+          let J2 = d.current.editor.getModelMarkers({ resource: G2 });
+          T2?.(J2);
+        }
+      });
+      return () => {
+        p2?.dispose();
+      };
+    }
+    return () => {
+    };
+  }, [s, T2]);
+  function pe2() {
+    I2.current?.dispose(), V2 ? y2 && _.set(m2, o.current.saveViewState()) : o.current.getModel()?.dispose(), o.current.dispose();
+  }
+  return React.createElement(H, { width: z2, height: F2, isEditorReady: s, loading: N2, _ref: b, className: j, wrapperProps: A2 });
+}
+var fe = Ve;
+var de = reactExports.memo(fe);
+var Ft = de;
+const registerScoreDslLanguage = (monaco) => {
+  const existing = monaco.languages.getLanguages().find((l2) => l2.id === "score-dsl");
+  if (existing) return;
+  monaco.languages.register({ id: "score-dsl", extensions: [".score.ts"], aliases: ["Score DSL"] });
+  monaco.languages.setMonarchTokensProvider("score-dsl", {
+    defaultToken: "",
+    tokenPostfix: ".ts",
+    keywords: [
+      "Song",
+      "Track",
+      // Instruments
+      "Kick",
+      "Snare",
+      "HiHat",
+      "Synth",
+      "Sample",
+      "Theremin",
+      "Sax",
+      "Arp",
+      "Kick808",
+      "Kick909",
+      "Snare909",
+      "HiHat808",
+      "SubSynth",
+      "FMSynth",
+      // Effects
+      "Reverb",
+      "Delay",
+      "Filter",
+      "Distortion",
+      "Chorus",
+      "Phaser",
+      "Flanger",
+      "Compressor",
+      "Limiter",
+      "EQ",
+      "Saturation",
+      "AutoPan",
+      "BitCrusher",
+      "StereoWidener",
+      "Gate",
+      "Sidechain",
+      "MultibandCompressor"
+    ],
+    typeKeywords: ["const", "export", "default", "import", "from", "type"],
+    operators: ["=>", ":", ",", ".", "(", ")", "[", "]", "{", "}", "="],
+    symbols: /[=><!~?:&|+\-*/^%]+/,
+    tokenizer: {
+      root: [
+        // Score DSL keywords — instruments and structure
+        [/\b(Song|Track|Kick|Snare|HiHat|Synth|Sample|Theremin|Sax|Arp|Kick808|Kick909|Snare909|HiHat808|SubSynth|FMSynth)\b/, "keyword.score-instrument"],
+        // Effects keywords
+        [/\b(Reverb|Delay|Filter|Distortion|Chorus|Phaser|Flanger|Compressor|Limiter|EQ|Saturation|AutoPan|BitCrusher|StereoWidener|Gate|Sidechain|MultibandCompressor)\b/, "keyword.score-effect"],
+        // import/export
+        [/\b(import|export|default|from|const|type)\b/, "keyword"],
+        // Note strings: 'C4', 'E3', 'A#2' etc.
+        [/'[A-G][#b]?[0-9]'/, "string.note"],
+        // Numbers
+        [/\d+\.?\d*/, "number"],
+        // Strings
+        [/'[^']*'/, "string"],
+        [/"[^"]*"/, "string"],
+        // Comments
+        [/\/\/.*$/, "comment"],
+        [/\/\*/, "comment", "@comment"],
+        // Whitespace
+        { include: "@whitespace" }
+      ],
+      comment: [
+        [/[^/*]+/, "comment"],
+        [/\*\//, "comment", "@pop"],
+        [/[/*]/, "comment"]
+      ],
+      whitespace: [
+        [/[ \t\r\n]+/, "white"]
+      ]
+    }
+  });
+  monaco.editor.defineTheme("score-dark", {
+    base: "vs-dark",
+    inherit: true,
+    rules: [
+      { token: "keyword.score-instrument", foreground: "4a8fff", fontStyle: "bold" },
+      { token: "keyword.score-effect", foreground: "8866cc", fontStyle: "italic" },
+      { token: "string.note", foreground: "88cc66" },
+      { token: "number", foreground: "b5cea8" },
+      { token: "comment", foreground: "4a4a52", fontStyle: "italic" },
+      { token: "string", foreground: "ce9178" },
+      { token: "keyword", foreground: "569cd6" }
+    ],
+    colors: {
+      "editor.background": "#080809",
+      "editor.foreground": "#c8d8f8",
+      "editorLineNumber.foreground": "#2a3040",
+      "editorLineNumber.activeForeground": "#4a6080",
+      "editor.lineHighlightBackground": "#111115",
+      "editorGutter.background": "#080809",
+      "editor.selectionBackground": "#1a3060",
+      "editor.inactiveSelectionBackground": "#0f1e3c",
+      "editorCursor.foreground": "#4a8fff",
+      "editorIndentGuide.background1": "#1e1e22",
+      "scrollbarSlider.background": "#1e1e2288"
+    }
+  });
+};
+const cssState = { injected: false };
+const injectDecorationCss = () => {
+  if (cssState.injected) return;
+  cssState.injected = true;
+  const style = document.createElement("style");
+  style.textContent = `
+    /* Beat highlight — active track line during playback */
+    .score-beat-active {
+      background: rgba(74, 143, 255, 0.07) !important;
+      border-left: 2px solid rgba(74, 143, 255, 0.4) !important;
+    }
+    /* Step badge — inline content widget gutter marker */
+    .score-step-badge {
+      display: inline-block;
+      background: rgba(74, 143, 255, 0.15);
+      color: #4a8fff;
+      font-size: 9px;
+      font-family: monospace;
+      padding: 0 3px;
+      border-radius: 2px;
+      margin-right: 4px;
+      vertical-align: middle;
+      opacity: 0.8;
+    }
+  `;
+  document.head.appendChild(style);
+};
+const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true }) => {
+  const editorRef = reactExports.useRef(null);
+  const decorationsRef = reactExports.useRef([]);
+  const stepBadgesRef = reactExports.useRef([]);
+  const monacoRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    const ed2 = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!ed2 || !monaco) return;
+    const model = ed2.getModel();
+    if (!model) return;
+    const newDecorations = (decorations ?? []).map((d) => ({
+      range: new monaco.Range(d.startLine, 1, d.endLine, 1),
+      options: {
+        isWholeLine: d.isWholeLine ?? true,
+        className: d.className,
+        overviewRulerLane: monaco.editor.OverviewRulerLane.Left,
+        overviewRulerColor: "rgba(74,143,255,0.3)"
+      }
+    }));
+    decorationsRef.current = ed2.deltaDecorations(decorationsRef.current, newDecorations);
+  }, [decorations]);
+  reactExports.useEffect(() => {
+    const ed2 = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!ed2 || !monaco) return;
+    const model = ed2.getModel();
+    if (!model) return;
+    const newBadges = (stepBadges ?? []).map((b) => ({
+      range: new monaco.Range(b.line, 1, b.line, 1),
+      options: {
+        after: {
+          content: ` ${String(b.step + 1)}/${String(b.total)}`,
+          inlineClassName: "score-step-badge"
+        },
+        stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+      }
+    }));
+    stepBadgesRef.current = ed2.deltaDecorations(stepBadgesRef.current, newBadges);
+  }, [stepBadges]);
+  reactExports.useEffect(() => {
+    const ed2 = editorRef.current;
+    if (!ed2) return;
+    if (importsVisible) {
+      ed2.trigger("t220", "editor.unfold", { selectionLines: [1] });
+    } else {
+      ed2.trigger("t220", "editor.fold", { selectionLines: [1] });
+    }
+  }, [importsVisible]);
+  const handleMount = reactExports.useCallback((editor, monaco) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+    registerScoreDslLanguage(monaco);
+    injectDecorationCss();
+    monaco.editor.setTheme("score-dark");
+    const model = editor.getModel();
+    if (model) monaco.editor.setModelLanguage(model, "score-dsl");
+    editor.addCommand(
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+      () => {
+        onEval();
+      }
+    );
+    editor.focus();
+    if (!importsVisible) {
+      window.setTimeout(() => {
+        editor.trigger("t220", "editor.fold", { selectionLines: [1] });
+      }, 150);
+    }
+  }, [onEval, importsVisible]);
+  const handleChange = reactExports.useCallback((val) => {
+    onChange(val ?? "");
+  }, [onChange]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Ft,
+    {
+      height: "100%",
+      language: "score-dsl",
+      theme: "score-dark",
+      value,
+      onChange: handleChange,
+      onMount: handleMount,
+      options: {
+        fontSize: 12.8,
+        fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+        lineHeight: 1.65 * 12.8,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        wordWrap: "on",
+        tabSize: 2,
+        insertSpaces: true,
+        renderLineHighlight: "line",
+        cursorBlinking: "smooth",
+        cursorSmoothCaretAnimation: "on",
+        padding: { top: 12, bottom: 12 },
+        overviewRulerLanes: 1,
+        scrollbar: {
+          verticalScrollbarSize: 6,
+          horizontalScrollbarSize: 6
+        },
+        // Folding enabled so import block can be collapsed via the Imports toggle (t220).
+        // The fold icon is hidden via CSS — folding: true is required for editor.fold() to work.
+        folding: true,
+        showFoldingControls: "never",
+        renderWhitespace: "none",
+        guides: { indentation: false }
+      }
+    }
+  );
+};
+const INSTRUMENTS = {
+  title: "Instruments",
+  items: [
+    { name: "Kick", desc: "pattern, volume, decay, tune" },
+    { name: "Snare", desc: "pattern, volume, decay, tone" },
+    { name: "HiHat", desc: "pattern, volume, decay, open" },
+    { name: "Synth", desc: "wave, frequency, pattern, filter, gain, effects" },
+    { name: "Sample", desc: "src, pattern, volume, rate, loop" },
+    { name: "Theremin", desc: "wave, frequency, vibrato, gain, effects" },
+    { name: "Sax", desc: "pattern (notes), wave, gain, effects" },
+    { name: "Arp", desc: "notes[], mode, rate, wave, gain, effects" }
+  ]
+};
+const EFFECTS = {
+  title: "Effects",
+  items: [
+    { name: "Reverb", desc: "decay, mix" },
+    { name: "Delay", desc: "time, feedback, mix" },
+    { name: "Filter", desc: "type, frequency, Q" },
+    { name: "Compressor", desc: "threshold, ratio, attack, release" },
+    { name: "EQ", desc: "low, mid, high" },
+    { name: "Distortion", desc: "drive, mode, mix" },
+    { name: "Limiter", desc: "threshold, release" },
+    { name: "BitCrusher", desc: "bits, mix" },
+    { name: "Chorus", desc: "rate, depth, mix" },
+    { name: "Phaser", desc: "rate, depth, mix" },
+    { name: "Flanger", desc: "rate, depth, feedback, mix" },
+    { name: "StereoWidener", desc: "width" },
+    { name: "Gate", desc: "threshold, attack, release" },
+    { name: "Saturation", desc: "drive, mix — tanh soft-clip warmth" },
+    { name: "AutoPan", desc: "rate, depth, shape — LFO stereo sweep" }
+  ]
+};
+const STRUCTURE = {
+  title: "Structure",
+  items: [
+    { name: "Song", desc: "bpm, tracks, masterVolume" },
+    { name: "Track", desc: "wraps an instrument, volume, mute" },
+    { name: "Intro", desc: "section({ bars, tracks })" },
+    { name: "Drop", desc: "section({ bars, tracks })" },
+    { name: "Outro", desc: "section({ bars, tracks })" }
+  ]
+};
+const PATTERNS = {
+  title: "Patterns",
+  items: [
+    { name: "euclidean(hits, steps)", desc: "Bjorklund rhythm, e.g. euclidean(3,8)" },
+    { name: "pat(string)", desc: "space-separated pattern, e.g. pat('1 0 1 0')" }
+  ]
+};
+const SHORTCUTS = {
+  title: "Shortcuts",
+  items: [
+    { name: "Ctrl+Enter", desc: "Eval code without playing" },
+    { name: "▶ Run", desc: "Eval + play (stopped) / hot-swap (playing)" },
+    { name: "■ Stop", desc: "Stop transport" }
+  ]
+};
+const SECTIONS = [INSTRUMENTS, EFFECTS, STRUCTURE, PATTERNS, SHORTCUTS];
+const INSERT_SNIPPETS = {
+  Kick: "Track(Kick({  pattern: [1, 0, 0, 0, 1, 0, 0, 0], volume: 0.9 }))",
+  Snare: "Track(Snare({ pattern: [0, 0, 1, 0, 0, 0, 1, 0], volume: 0.7 }))",
+  HiHat: "Track(HiHat({ pattern: [1, 1, 1, 1, 1, 1, 1, 1], volume: 0.4 }))",
+  Synth: "Track(Synth({ wave: 'sawtooth', frequency: 440, pattern: [1, 0, 1, 0], gain: 0.6 }))",
+  Sample: "Track(Sample({ src: './samples/sound.wav', pattern: [1, 0, 0, 0] }))",
+  Theremin: "Track(Theremin({ wave: 'sine', frequency: 440, gain: 0.5 }))",
+  Sax: "Track(Sax({ pattern: ['C4', 'E4', 'G4', 'A4'], wave: 'sawtooth', gain: 0.5 }))",
+  Arp: "Track(Arp({ notes: ['C3', 'E3', 'G3', 'B3'], mode: 'up', rate: 2, wave: 'triangle', gain: 0.4 }))"
+};
+const RefSection = ({ section, onInsert }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$a.section, children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$a.sectionTitle, children: section.title }),
+  section.items.map((item) => {
+    const snippet = section.title === "Instruments" ? INSERT_SNIPPETS[item.name] : void 0;
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$a.row, children: [
+      snippet && onInsert ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          style: styles$a.nameBtn,
+          onClick: () => {
+            onInsert(snippet);
+          },
+          title: `Insert ${item.name}`,
+          children: item.name
+        }
+      ) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$a.name, children: item.name }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$a.desc, children: item.desc })
+    ] }, item.name);
+  })
+] });
+const ReferencePanel = ({ onInsert }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$a.root, "aria-label": "DSL reference panel", children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$a.header, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$a.headerLabel, children: "Score DSL" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: styles$a.headerImport, children: [
+      "import ",
+      "{",
+      " Song, Track, Kick, … ",
+      "}",
+      " from '@score/dsl'"
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: styles$a.headerImport, children: [
+      "import ",
+      "{",
+      " Reverb, Delay, … ",
+      "}",
+      " from '@score/effects'"
+    ] })
+  ] }),
+  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$a.scroll, children: SECTIONS.map((s) => /* @__PURE__ */ jsxRuntimeExports.jsx(RefSection, { section: s, onInsert }, s.title)) })
+] });
+const styles$a = {
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+    background: "#0a0a0d",
+    overflow: "hidden"
+  },
+  header: {
+    flexShrink: 0,
+    padding: "6px 8px 4px",
+    borderBottom: "1px solid #1e1e22",
+    display: "flex",
+    flexDirection: "column",
+    gap: "2px"
+  },
+  headerLabel: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "0.62rem",
+    color: "#6a9fff",
+    letterSpacing: "0.1em",
+    textTransform: "uppercase"
+  },
+  headerImport: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "0.6rem",
+    color: "#3a5a7a"
+  },
+  scroll: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "4px 0 8px"
+  },
+  section: {
+    padding: "4px 0 2px",
+    borderBottom: "1px solid #141418"
+  },
+  sectionTitle: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "0.58rem",
+    color: "#3a3a46",
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    padding: "2px 8px",
+    marginBottom: "2px"
+  },
+  row: {
+    display: "flex",
+    gap: "6px",
+    padding: "1px 8px",
+    alignItems: "baseline"
+  },
+  name: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "0.68rem",
+    color: "#8ab4d4",
+    flexShrink: 0,
+    minWidth: "88px"
+  },
+  nameBtn: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "0.68rem",
+    color: "#8ab4d4",
+    flexShrink: 0,
+    minWidth: "88px",
+    background: "none",
+    border: "none",
+    padding: 0,
+    cursor: "pointer",
+    textAlign: "left",
+    textDecoration: "underline",
+    textDecorationColor: "#3a5a7a"
+  },
+  desc: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "0.62rem",
+    color: "#4a5a6a",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis"
+  }
+};
+const timeStr = (t2) => {
+  const d = new Date(t2);
+  const hh2 = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${hh2}:${mm}:${ss}`;
+};
+const PREFIX = {
+  info: "·",
+  ok: "✓",
+  error: "✗",
+  warn: "!"
+};
+const COLOR = {
+  info: "#6a6a7a",
+  ok: "#22cc66",
+  error: "#ff4444",
+  warn: "#ffcc00"
+};
+const ConsoleLog = ({ entries }) => {
+  const bottomRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [entries]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      role: "log",
+      "aria-label": "Engine console",
+      "aria-live": "polite",
+      style: styles$9.root,
+      children: [
+        entries.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$9.empty, children: "No output yet — eval a song or press play" }),
+        entries.map((entry) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$9.row, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { ...styles$9.prefix, color: COLOR[entry.level] }, children: PREFIX[entry.level] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$9.timestamp, children: timeStr(entry.time) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { ...styles$9.message, color: COLOR[entry.level] }, children: entry.message })
+        ] }, entry.id)),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: bottomRef, "aria-hidden": "true" })
+      ]
+    }
+  );
+};
+const styles$9 = {
+  root: {
+    flex: 1,
+    overflow: "auto",
+    background: "#080809",
+    padding: "0.4rem 0.5rem",
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    fontSize: "0.72rem",
+    display: "flex",
+    flexDirection: "column",
+    gap: "1px"
+  },
+  empty: {
+    color: "#2a2a36",
+    padding: "0.25rem 0"
+  },
+  row: {
+    display: "flex",
+    alignItems: "baseline",
+    gap: "0.5rem",
+    lineHeight: 1.5
+  },
+  prefix: {
+    flexShrink: 0,
+    width: "10px",
+    textAlign: "center"
+  },
+  timestamp: {
+    flexShrink: 0,
+    color: "#3a3a46",
+    fontSize: "0.65rem",
+    fontVariantNumeric: "tabular-nums"
+  },
+  message: {
+    wordBreak: "break-all",
+    flex: 1
+  }
+};
+const relativeTime = (timestamp) => {
+  const secs = Math.floor((Date.now() - timestamp) / 1e3);
+  if (secs < 60) return `${String(secs)}s ago`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${String(mins)}m ago`;
+  return `${String(Math.floor(mins / 60))}h ago`;
+};
+const DOT_COLOR = {
+  idle: "#3a3a46",
+  ok: "#22cc66",
+  error: "#ff4444",
+  pending: "#ffcc00"
+};
+const EvalStatus = ({ status, message, timestamp }) => {
+  const [, setTick] = reactExports.useState(0);
+  reactExports.useEffect(() => {
+    if (status !== "ok" || timestamp === void 0) return;
+    const handle = { value: null };
+    handle.value = setInterval(() => {
+      setTick((t2) => t2 + 1);
+    }, 1e3);
+    return () => {
+      if (handle.value !== null) clearInterval(handle.value);
+    };
+  }, [status, timestamp]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$8.pill, "aria-label": `Eval status: ${status}`, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "span",
+      {
+        "aria-hidden": "true",
+        style: { ...styles$8.dot, background: DOT_COLOR[status] }
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: styles$8.label, children: [
+      status === "idle" && "Ready",
+      status === "ok" && "OK",
+      status === "error" && "Error",
+      status === "pending" && "Pending..."
+    ] }),
+    status === "ok" && timestamp !== void 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$8.time, children: relativeTime(timestamp) }),
+    status === "error" && message !== void 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$8.errorMsg, title: message, children: message.length > 48 ? `${message.slice(0, 45)}…` : message })
+  ] });
+};
+const styles$8 = {
+  pill: {
+    display: "inline-flex",
+    flexDirection: "column",
+    gap: "0.2rem",
+    padding: "0.3rem 0.65rem",
+    background: "#0c0c0e",
+    border: "1px solid #1e1e22",
+    borderRadius: "999px",
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    fontSize: "0.72rem",
+    color: "#a0a0b0",
+    minWidth: "72px"
+  },
+  dot: {
+    display: "inline-block",
+    width: "6px",
+    height: "6px",
+    borderRadius: "50%",
+    flexShrink: 0,
+    marginRight: "0.35rem"
+  },
+  label: {
+    display: "inline",
+    fontWeight: 600
+  },
+  time: {
+    fontSize: "0.65rem",
+    color: "#5a5a6a",
+    marginLeft: "0.25rem"
+  },
+  errorMsg: {
+    display: "block",
+    fontSize: "0.65rem",
+    color: "#ff7777",
+    marginTop: "0.1rem",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    maxWidth: "220px"
+  }
+};
+const BeatClock = ({ step, stepCount }) => {
+  const beatsInPattern = Math.max(Math.ceil(stepCount / 4), 1);
+  const currentBeat = Math.floor(step / 4);
+  const currentSixteenth = step % 4;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$7.beatClock, "aria-label": `Beat ${String(currentBeat + 1)} of ${String(beatsInPattern)}`, children: Array.from({ length: beatsInPattern }, (_2, b) => {
+    const isBeat = b === currentBeat;
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { ...styles$7.beatGroup, ...isBeat ? styles$7.beatGroupActive : {} }, children: Array.from({ length: 4 }, (__, s) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "span",
+      {
+        "aria-hidden": "true",
+        style: {
+          ...styles$7.pip,
+          ...isBeat && s === currentSixteenth ? styles$7.pipActive : styles$7.pipInactive
+        }
+      },
+      s
+    )) }, b);
+  }) });
+};
+const BarCounter = ({ bars, step, stepCount, bpm, playing }) => {
+  const color = playing ? "#6a9fff" : "#2a2a3a";
+  const beatNum = playing ? Math.floor(step / 4) + 1 : 0;
+  const beatsTotal = Math.max(Math.ceil(stepCount / 4), 1);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { ...styles$7.root, color }, "aria-label": "Transport position", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: styles$7.segment, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$7.dimLabel, children: "BAR" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$7.bigNum, children: playing ? bars + 1 : "—" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$7.separator, "aria-hidden": "true", children: "·" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: styles$7.segment, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$7.dimLabel, children: "BEAT" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$7.bigNum, children: playing ? `${String(beatNum)}/${String(beatsTotal)}` : "—" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$7.separator, "aria-hidden": "true", children: "·" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: styles$7.segment, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$7.bigNum, children: bpm }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$7.dimLabel, children: "BPM" })
+    ] }),
+    playing && /* @__PURE__ */ jsxRuntimeExports.jsx(BeatClock, { step, stepCount })
+  ] });
+};
+const styles$7 = {
+  root: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    fontSize: "0.8rem"
+  },
+  segment: {
+    display: "inline-flex",
+    alignItems: "baseline",
+    gap: "0.25rem"
+  },
+  dimLabel: {
+    fontSize: "0.6rem",
+    opacity: 0.5,
+    fontWeight: 400
+  },
+  bigNum: {
+    fontSize: "1.2rem",
+    fontWeight: 700,
+    lineHeight: 1
+  },
+  separator: {
+    opacity: 0.3,
+    fontSize: "0.9rem"
+  },
+  // Beat clock
+  beatClock: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "4px",
+    marginLeft: "0.5rem"
+  },
+  beatGroup: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "1px",
+    padding: "2px 3px",
+    borderRadius: "2px",
+    border: "1px solid transparent"
+  },
+  beatGroupActive: {
+    border: "1px solid rgba(106, 159, 255, 0.35)",
+    background: "rgba(106, 159, 255, 0.07)"
+  },
+  pip: {
+    display: "inline-block",
+    width: "3px",
+    height: "3px",
+    borderRadius: "50%",
+    flexShrink: 0
+  },
+  pipActive: {
+    background: "#6a9fff",
+    opacity: 1
+  },
+  pipInactive: {
+    background: "#6a9fff",
+    opacity: 0.15
+  }
+};
+const PendingSwapBadge = ({ pending, step, stepCount }) => {
+  if (!pending) return null;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$6.pill, "aria-label": "Pending bar-boundary swap", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$6.icon, "aria-hidden": "true", children: "⟳" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$6.label, children: "swap on next bar" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: styles$6.progress, "aria-label": `Step ${String(step)} of ${String(stepCount)}`, children: [
+      step,
+      "/",
+      stepCount
+    ] })
+  ] });
+};
+const styles$6 = {
+  pill: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.4rem",
+    padding: "0.25rem 0.6rem",
+    background: "#1a1500",
+    border: "1px solid #ffcc00",
+    borderRadius: "999px",
     fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
     fontSize: "0.7rem",
-    color: "#3e3e46",
-    letterSpacing: "0.04em"
+    color: "#ffcc00",
+    whiteSpace: "nowrap"
+  },
+  icon: {
+    fontSize: "0.85rem",
+    lineHeight: 1
+  },
+  label: {
+    fontWeight: 600
+  },
+  progress: {
+    opacity: 0.65,
+    fontSize: "0.65rem",
+    marginLeft: "0.1rem"
+  }
+};
+const findTrackPositions = (code) => {
+  const re2 = /(?:Track\(|=\s*)([A-Z][A-Za-z0-9]*)\s*\(/g;
+  return Array.from(code.matchAll(re2)).filter((m2) => {
+    const instrName = m2[1] ?? "";
+    return instrName !== "Song" && instrName !== "Track";
+  }).map((m2) => {
+    const fullMatch = m2[0];
+    const instrName = m2[1] ?? "";
+    const nameOffset = fullMatch.lastIndexOf(instrName);
+    return m2.index + nameOffset;
+  });
+};
+const trackSlice = (code, trackIndex) => {
+  const positions = findTrackPositions(code);
+  const start = positions[trackIndex];
+  if (start === void 0) return null;
+  const end = positions[trackIndex + 1] ?? code.length;
+  return { start, end };
+};
+const parseTrackModel = (code, trackIndex) => {
+  const positions = findTrackPositions(code);
+  const start = positions[trackIndex];
+  if (start === void 0) return "";
+  const m2 = /^([A-Z][A-Za-z0-9]*)/.exec(code.slice(start));
+  return m2?.[1] ?? "";
+};
+const patchInstrumentModel = (code, trackIndex, newModel) => {
+  const positions = findTrackPositions(code);
+  const start = positions[trackIndex];
+  if (start === void 0) return code;
+  const m2 = /^([A-Z][A-Za-z0-9]*)/.exec(code.slice(start));
+  if (!m2) return code;
+  return code.slice(0, start) + newModel + code.slice(start + m2[0].length);
+};
+const patchBpm = (code, newBpm) => code.replace(/\bbpm:\s*\d+(?:\.\d+)?/, `bpm: ${String(newBpm)}`);
+const patchTrackPattern = (code, trackIndex, stepIndex, value) => {
+  const region = trackSlice(code, trackIndex);
+  if (!region) return code;
+  const { start, end } = region;
+  const slice = code.slice(start, end);
+  const mProp = /pattern:\s*\[([^\]]*)\]/.exec(slice);
+  const mChain = /\.pattern\(\[([^\]]*)\]\)/.exec(slice);
+  const m2 = mProp ?? mChain;
+  if (!m2) return code;
+  const items = (m2[1] ?? "").split(",").map((s) => s.trim());
+  if (stepIndex < 0 || stepIndex >= items.length) return code;
+  items[stepIndex] = String(value);
+  const isChain = !mProp && Boolean(mChain);
+  const newChunk = isChain ? `.pattern([${items.join(", ")}])` : `pattern: [${items.join(", ")}]`;
+  const newSlice = slice.slice(0, m2.index) + newChunk + slice.slice(m2.index + m2[0].length);
+  return code.slice(0, start) + newSlice + code.slice(end);
+};
+const patchTrackVolume = (code, trackIndex, volume) => {
+  const region = trackSlice(code, trackIndex);
+  if (!region) return code;
+  const { start, end } = region;
+  const slice = code.slice(start, end);
+  const formatted = String(Math.round(volume * 100) / 100);
+  const mChain = /\.volume\(\s*\d+(?:\.\d+)?\s*\)/.exec(slice);
+  if (mChain) {
+    const newSlice2 = slice.slice(0, mChain.index) + `.volume(${formatted})` + slice.slice(mChain.index + mChain[0].length);
+    return code.slice(0, start) + newSlice2 + code.slice(end);
+  }
+  const mProp = /\bvolume:\s*\d+(?:\.\d+)?/.exec(slice);
+  if (!mProp) return code;
+  const newSlice = slice.slice(0, mProp.index) + `volume: ${formatted}` + slice.slice(mProp.index + mProp[0].length);
+  return code.slice(0, start) + newSlice + code.slice(end);
+};
+const patchTrackNote = (code, trackIndex, noteIndex, note) => {
+  const region = trackSlice(code, trackIndex);
+  if (!region) return code;
+  const { start, end } = region;
+  const slice = code.slice(start, end);
+  const m2 = /notes:\s*\[([^\]]*)\]/.exec(slice);
+  if (!m2) return code;
+  const items = (m2[1] ?? "").split(",").map((s) => s.trim());
+  if (noteIndex < 0 || noteIndex >= items.length) return code;
+  items[noteIndex] = `'${note}'`;
+  const newChunk = `notes: [${items.join(", ")}]`;
+  const newSlice = slice.slice(0, m2.index) + newChunk + slice.slice(m2.index + m2[0].length);
+  return code.slice(0, start) + newSlice + code.slice(end);
+};
+const patchChainMethod = (code, trackIndex, method, value) => {
+  const region = trackSlice(code, trackIndex);
+  if (!region) return code;
+  const { start, end } = region;
+  const slice = code.slice(start, end);
+  const formatted = typeof value === "string" ? `'${value}'` : String(Math.round(value * 1e3) / 1e3);
+  const methodRe = new RegExp(`\\.${method}\\([^)]*\\)`);
+  if (methodRe.test(slice)) {
+    const newSlice = slice.replace(methodRe, `.${method}(${formatted})`);
+    return code.slice(0, start) + newSlice + code.slice(end);
+  }
+  const lines = slice.split("\n");
+  const stopIdx = lines.findIndex((ln) => ln.trim().startsWith("const ") || ln.trim().startsWith("export "));
+  const regionLines = stopIdx === -1 ? lines : lines.slice(0, stopIdx);
+  const insertLineIdx = regionLines.reduce((acc, ln, i) => ln.trim().length > 0 ? i : acc, 0);
+  const patched = lines.map((ln, i) => i === insertLineIdx ? ln + `.${method}(${formatted})` : ln);
+  return code.slice(0, start) + patched.join("\n") + code.slice(end);
+};
+const parseTrackChainParams = (code, trackIndex) => {
+  const region = trackSlice(code, trackIndex);
+  if (!region) return {};
+  const slice = code.slice(region.start, region.end);
+  const result = {};
+  const re2 = /\.([a-zA-Z]\w*)\(\s*(-?\d+(?:\.\d+)?)\s*\)/g;
+  for (const m2 of slice.matchAll(re2)) {
+    const method = m2[1];
+    const val = parseFloat(m2[2] ?? "");
+    if (method !== void 0 && !isNaN(val)) result[method] = val;
+  }
+  return result;
+};
+const uniqueVarName = (code, base) => {
+  if (!new RegExp(`\\bconst\\s+${base}\\b`).test(code)) return base;
+  for (let n2 = 2; n2 < 20; n2++) {
+    const candidate = `${base}${String(n2)}`;
+    if (!new RegExp(`\\bconst\\s+${candidate}\\b`).test(code)) return candidate;
+  }
+  return `${base}${String(Date.now())}`;
+};
+const patchAddInstrument = (code, varName, instrumentLine) => {
+  const exportIdx = code.indexOf("export default Song(");
+  if (exportIdx === -1) return code;
+  const newConst = `const ${varName} = ${instrumentLine}
+`;
+  const withConst = code.slice(0, exportIdx) + newConst + code.slice(exportIdx);
+  const tracksMatch = /\btracks\s*:\s*\[([^\]]*)\]/s.exec(withConst);
+  if (!tracksMatch) return withConst;
+  const inner = tracksMatch[1] ?? "";
+  const trimmed = inner.trimEnd();
+  const lastCommaOrBracket = trimmed.lastIndexOf("\n");
+  const indent = lastCommaOrBracket !== -1 ? trimmed.slice(lastCommaOrBracket + 1).match(/^\s*/)?.[0] ?? "  " : " ";
+  const hasNewlines = inner.includes("\n");
+  const trailingComma = trimmed.endsWith(",");
+  const newInner = hasNewlines ? trailingComma ? `${trimmed}
+${indent}${varName},
+` : `${trimmed},
+${indent}${varName}
+` : `${trimmed}, ${varName}`;
+  const matchStart = tracksMatch.index + tracksMatch[0].indexOf("[") + 1;
+  const matchEnd = matchStart + inner.length;
+  return withConst.slice(0, matchStart) + newInner + withConst.slice(matchEnd);
+};
+const parseMuteState = (code, trackIndex) => {
+  const region = trackSlice(code, trackIndex);
+  if (!region) return false;
+  return /\.mute\(\)/.test(code.slice(region.start, region.end));
+};
+const patchMute = (code, trackIndex, muted) => {
+  const region = trackSlice(code, trackIndex);
+  if (!region) return code;
+  const { start, end } = region;
+  const slice = code.slice(start, end);
+  if (!muted) {
+    const cleaned = slice.replace(/\.mute\(\)/g, "");
+    return code.slice(0, start) + cleaned + code.slice(end);
+  }
+  if (/\.mute\(\)/.test(slice)) return code;
+  const lines = slice.split("\n");
+  const stopIdx = lines.findIndex((ln) => ln.trim().startsWith("const ") || ln.trim().startsWith("export "));
+  const regionLines = stopIdx === -1 ? lines : lines.slice(0, stopIdx);
+  const insertLineIdx = regionLines.reduce((acc, ln, i) => ln.trim().length > 0 ? i : acc, 0);
+  const patched = lines.map((ln, i) => i === insertLineIdx ? ln + ".mute()" : ln);
+  return code.slice(0, start) + patched.join("\n") + code.slice(end);
+};
+const slider = (label, method, min, max, step, def) => ({ kind: "slider", label, method, min, max, step, default: def });
+const select = (label, method, options) => ({ kind: "select", label, method, options });
+const FALLBACK_CONTROLS = [
+  slider("Volume", "volume", 0, 1, 0.01, 0.8),
+  slider("Reverb", "reverb", 0, 1, 0.01, 0)
+];
+const KICK_MODELS = [{ value: "Kick808", label: "808" }, { value: "Kick909", label: "909" }, { value: "Kick", label: "Generic" }];
+const SNARE_MODELS = [{ value: "Snare909", label: "909" }, { value: "Snare", label: "Generic" }];
+const HIHAT_MODELS = [{ value: "Hihat808", label: "808" }, { value: "HiHat", label: "Generic" }];
+const CONTROLS = {
+  kick: [select("Model", "_model", KICK_MODELS), slider("Volume", "volume", 0, 1, 0.01, 0.85), slider("Tune", "pitch", -24, 24, 1, 0), slider("Decay", "decay", 0.1, 2, 0.01, 0.5), slider("Reverb", "reverb", 0, 1, 0.01, 0)],
+  kick808: [select("Model", "_model", KICK_MODELS), slider("Volume", "volume", 0, 1, 0.01, 0.85), slider("Tune", "pitch", -24, 24, 1, 0), slider("Decay", "decay", 0.1, 2, 0.01, 0.5), slider("Reverb", "reverb", 0, 1, 0.01, 0)],
+  kick909: [select("Model", "_model", KICK_MODELS), slider("Volume", "volume", 0, 1, 0.01, 0.85), slider("Tune", "pitch", -24, 24, 1, 0), slider("Decay", "decay", 0.1, 2, 0.01, 0.5), slider("Reverb", "reverb", 0, 1, 0.01, 0)],
+  snare: [select("Model", "_model", SNARE_MODELS), slider("Volume", "volume", 0, 1, 0.01, 0.7), slider("Tune", "pitch", -24, 24, 1, 0), slider("Snappy", "sustain", 0, 1, 0.01, 0.5), slider("Reverb", "reverb", 0, 1, 0.01, 0)],
+  snare909: [select("Model", "_model", SNARE_MODELS), slider("Volume", "volume", 0, 1, 0.01, 0.7), slider("Tune", "pitch", -24, 24, 1, 0), slider("Snappy", "sustain", 0, 1, 0.01, 0.5), slider("Reverb", "reverb", 0, 1, 0.01, 0)],
+  hihat: [select("Model", "_model", HIHAT_MODELS), slider("Volume", "volume", 0, 1, 0.01, 0.4), slider("Tune", "pitch", -24, 24, 1, 0), slider("Decay", "decay", 0.05, 2, 0.01, 0.1), slider("Reverb", "reverb", 0, 1, 0.01, 0)],
+  hihat808: [select("Model", "_model", HIHAT_MODELS), slider("Volume", "volume", 0, 1, 0.01, 0.4), slider("Tune", "pitch", -24, 24, 1, 0), slider("Decay", "decay", 0.05, 2, 0.01, 0.1), slider("Reverb", "reverb", 0, 1, 0.01, 0)],
+  bass303: [slider("Volume", "volume", 0, 1, 0.01, 0.8), slider("Cutoff", "cutoff", 100, 8e3, 10, 600), slider("Resonance", "resonance", 0, 30, 0.1, 0.5), slider("Wobble", "wobble", 0, 1, 0.01, 0)],
+  synth: [slider("Volume", "volume", 0, 1, 0.01, 0.6), slider("Filter", "filter", 100, 8e3, 10, 2e3), slider("Attack", "attack", 0.01, 2, 0.01, 0.01), slider("Release", "release", 0.1, 4, 0.01, 0.3), slider("Reverb", "reverb", 0, 1, 0.01, 0)],
+  subsynth: [slider("Volume", "volume", 0, 1, 0.01, 0.6), slider("Filter", "filter", 100, 8e3, 10, 2e3), slider("Attack", "attack", 0.01, 2, 0.01, 0.01), slider("Release", "release", 0.1, 4, 0.01, 0.3), slider("Reverb", "reverb", 0, 1, 0.01, 0)],
+  fmsynth: [slider("Volume", "volume", 0, 1, 0.01, 0.6), slider("Filter", "filter", 100, 8e3, 10, 2e3), slider("Attack", "attack", 0.01, 2, 0.01, 0.01), slider("Release", "release", 0.1, 4, 0.01, 0.3), slider("Reverb", "reverb", 0, 1, 0.01, 0)],
+  pad: [slider("Volume", "volume", 0, 1, 0.01, 0.6), slider("Filter", "filter", 100, 8e3, 10, 2e3), slider("Attack", "attack", 0.01, 2, 0.01, 0.3), slider("Release", "release", 0.1, 4, 0.01, 1), slider("Reverb", "reverb", 0, 1, 0.01, 0.2)],
+  pluck: [slider("Volume", "volume", 0, 1, 0.01, 0.6), slider("Filter", "filter", 100, 8e3, 10, 2e3), slider("Attack", "attack", 0.01, 2, 0.01, 5e-3), slider("Release", "release", 0.1, 4, 0.01, 0.4), slider("Reverb", "reverb", 0, 1, 0.01, 0)]
+};
+const styles$5 = {
+  panel: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: "6px 10px",
+    background: "#111",
+    borderTop: "1px solid #222",
+    minHeight: 48
+  },
+  nameSection: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 4,
+    minWidth: 64
+  },
+  trackName: {
+    fontSize: 10,
+    color: "#aaa",
+    fontFamily: "monospace",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    maxWidth: 60
+  },
+  muteBtn: (muted) => ({
+    width: 28,
+    height: 18,
+    fontSize: 9,
+    fontFamily: "monospace",
+    background: muted ? "#ffcc00" : "#222",
+    color: muted ? "#000" : "#aaa",
+    border: "1px solid #333",
+    borderRadius: 2,
+    cursor: "pointer",
+    padding: 0
+  }),
+  controlsRow: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flexWrap: "wrap"
+  },
+  control: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 2
+  },
+  label: { fontSize: 9, color: "#666", fontFamily: "monospace", userSelect: "none" },
+  value: { fontSize: 9, color: "#888", fontFamily: "monospace", minWidth: 32 },
+  slider: {
+    width: 60,
+    height: 16,
+    accentColor: "#4a8fff"
+  },
+  checkboxRow: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4
+  },
+  select: {
+    fontSize: 9,
+    fontFamily: "monospace",
+    background: "#181818",
+    color: "#aaa",
+    border: "1px solid #333",
+    borderRadius: 2,
+    padding: "1px 2px",
+    cursor: "pointer"
+  }
+};
+const InstrumentPanel = (props) => {
+  const { trackIndex, instrumentType, trackName, params, muted, onChange, onMute } = props;
+  const controls = CONTROLS[instrumentType] ?? FALLBACK_CONTROLS;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$5.panel, "data-testid": `instrument-panel-${String(trackIndex)}`, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$5.nameSection, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$5.trackName, children: trackName }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          style: styles$5.muteBtn(muted),
+          "aria-label": `Mute ${trackName}`,
+          "aria-pressed": muted,
+          onClick: onMute,
+          children: muted ? "M" : "m"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$5.controlsRow, children: controls.map((ctrl) => {
+      const inputId = `panel-${String(trackIndex)}-${ctrl.method}`;
+      if (ctrl.kind === "select") {
+        const current = typeof params[ctrl.method] === "string" ? params[ctrl.method] : ctrl.options[0]?.value ?? "";
+        return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$5.control, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("label", { htmlFor: inputId, style: styles$5.label, children: ctrl.label }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "select",
+            {
+              id: inputId,
+              "aria-label": ctrl.label,
+              style: styles$5.select,
+              value: current,
+              onChange: (e) => {
+                onChange(ctrl.method, e.target.value);
+              },
+              children: ctrl.options.map((opt) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: opt.value, children: opt.label }, opt.value))
+            }
+          )
+        ] }, ctrl.method);
+      }
+      if (ctrl.kind === "checkbox") {
+        const checked = Boolean(params[ctrl.method] ?? 0);
+        return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$5.control, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$5.checkboxRow, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "input",
+            {
+              id: inputId,
+              type: "checkbox",
+              "aria-label": ctrl.label,
+              checked,
+              onChange: (e) => {
+                onChange(ctrl.method, e.target.checked ? 1 : 0);
+              }
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("label", { htmlFor: inputId, style: styles$5.label, children: ctrl.label })
+        ] }) }, ctrl.method);
+      }
+      const val = typeof params[ctrl.method] === "number" ? params[ctrl.method] : ctrl.default;
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$5.control, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "row", gap: 4 }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("label", { htmlFor: inputId, style: styles$5.label, children: ctrl.label }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$5.value, children: val.toFixed(ctrl.step < 1 ? 2 : 0) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            id: inputId,
+            type: "range",
+            "aria-label": ctrl.label,
+            style: styles$5.slider,
+            min: ctrl.min,
+            max: ctrl.max,
+            step: ctrl.step,
+            value: val,
+            onChange: (e) => {
+              onChange(ctrl.method, parseFloat(e.target.value));
+            }
+          }
+        )
+      ] }, ctrl.method);
+    }) })
+  ] });
+};
+const STARTER$1 = `import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
+
+// Click a track in the mixer to open its instrument panel (model, decay, reverb…)
+// Click a step in the punchcard to toggle it on/off
+const kick  = Kick808(4).decay(0.7).volume(0.8)
+const snare = Snare909(2).decay(0.2).volume(0.55)
+const hihat = Hihat808(8).decay(0.08).volume(0.25)
+const bass  = Bass303('A2').cutoff(600).resonance(0.4)
+  .pattern(['A2', 0, 0, 0,  'D3', 0, 0, 0,  'A2', 0, 0, 0,  'D3', 0, 0, 0])
+  .volume(0.6)
+
+export default Song({ bpm: 128, tracks: [kick, snare, hihat, bass] })`;
+const mkEntry = (level, message) => ({
+  id: Date.now() + Math.random(),
+  level,
+  message,
+  time: Date.now()
+});
+const updateStrip = (prev, index2, patch) => prev.map((s, i) => i === index2 ? { ...s, ...patch } : s);
+const PanelToggle = ({ label, active, onClick }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+  "button",
+  {
+    "aria-pressed": active,
+    onClick,
+    style: {
+      padding: "0.2rem 0.5rem",
+      background: active ? "#152035" : "none",
+      border: active ? "1px solid #2a4a7a" : "1px solid #1e1e22",
+      borderRadius: "2px",
+      color: active ? "#6a9fff" : "#3a3a46",
+      fontSize: "0.65rem",
+      fontFamily: "system-ui, sans-serif",
+      letterSpacing: "0.06em",
+      cursor: "pointer"
+    },
+    children: label
+  }
+);
+const LiveCode = ({ hardware, onHome }) => {
+  const [code, setCode] = reactExports.useState(STARTER$1);
+  const [error, setError] = reactExports.useState(null);
+  const [tracks, setTracks] = reactExports.useState([]);
+  const [waveform, setWaveform] = reactExports.useState([]);
+  const [engineState, setEngineState] = reactExports.useState({
+    playing: false,
+    bpm: 128,
+    bars: 0
+  });
+  const [currentStep, setCurrentStep] = reactExports.useState(0);
+  const [currentStepCount, setCurrentStepCount] = reactExports.useState(8);
+  const [evalStatus, setEvalStatus] = reactExports.useState("idle");
+  const [evalTimestamp, setEvalTimestamp] = reactExports.useState(void 0);
+  const [pendingSwap, setPendingSwap] = reactExports.useState(false);
+  const [stripStates, setStripStates] = reactExports.useState([]);
+  const [fftBins, setFftBins] = reactExports.useState([]);
+  const [logEntries, setLogEntries] = reactExports.useState([]);
+  const [pianoNotes, setPianoNotes] = reactExports.useState([]);
+  const [importsVisible, setImportsVisible] = reactExports.useState(false);
+  const [selectedTrack, setSelectedTrack] = reactExports.useState(null);
+  const [addTrackOpen, setAddTrackOpen] = reactExports.useState(false);
+  const autoPlayRef = reactExports.useRef(false);
+  const evalDebounceRef = reactExports.useRef(null);
+  const codeRef = reactExports.useRef(STARTER$1);
+  codeRef.current = code;
+  const [splitPct, setSplitPct] = reactExports.useState(50);
+  const bodyRef = reactExports.useRef(null);
+  const dragRef = reactExports.useRef({
+    active: false,
+    startX: 0,
+    startPct: 50
+  });
+  const onSplitterMouseDown = reactExports.useCallback((e) => {
+    e.preventDefault();
+    dragRef.current.active = true;
+    dragRef.current.startX = e.clientX;
+    dragRef.current.startPct = splitPct;
+  }, [splitPct]);
+  reactExports.useEffect(() => {
+    const onMouseMove = (e) => {
+      if (!dragRef.current.active) return;
+      const containerW = bodyRef.current?.offsetWidth ?? 1;
+      const dx = e.clientX - dragRef.current.startX;
+      const newPct = dragRef.current.startPct + dx / containerW * 100;
+      setSplitPct(Math.min(80, Math.max(20, newPct)));
+    };
+    const onMouseUp = () => {
+      dragRef.current.active = false;
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, []);
+  const [savedLayout, setSavedLayout] = reactExports.useState({});
+  const [layoutGen, setLayoutGen] = reactExports.useState(0);
+  const layoutAccRef = reactExports.useRef({});
+  const editorDecorations = reactExports.useMemo(() => {
+    if (!engineState.playing) return [];
+    const activeLines = getActiveLines(code, tracks, currentStep);
+    return activeLines.map((zeroIdx) => ({
+      startLine: zeroIdx + 1,
+      // Monaco is 1-based
+      endLine: zeroIdx + 1,
+      className: "score-beat-active",
+      isWholeLine: true
+    }));
+  }, [engineState.playing, code, tracks, currentStep]);
+  const stepBadges = reactExports.useMemo(
+    () => engineState.playing ? getStepBadges(code, tracks, currentStep, currentStepCount) : [],
+    [engineState.playing, code, tracks, currentStep, currentStepCount]
+  );
+  const [panels, setPanels] = reactExports.useState({
+    punchcard: true,
+    scope: false,
+    spectrum: false,
+    piano: false,
+    mixer: true,
+    console: true,
+    reference: false
+  });
+  const togglePanel = reactExports.useCallback((key) => {
+    setPanels((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+  const addLog = reactExports.useCallback((level, message) => {
+    setLogEntries((prev) => [...prev.slice(-199), mkEntry(level, message)]);
+  }, []);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("error:report", ({ message }) => {
+      autoPlayRef.current = false;
+      setError(message);
+      setEvalStatus("error");
+      addLog("error", message);
+    });
+    return unsub;
+  }, [addLog]);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("song:error", ({ message, fix }) => {
+      autoPlayRef.current = false;
+      setError(message);
+      setEvalStatus("error");
+      addLog("error", message);
+      if (fix) addLog("info", `💡 ${fix}`);
+    });
+    return unsub;
+  }, [addLog]);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("song:update", ({ tracks: t2 }) => {
+      setTracks(t2);
+      setStripStates((prev) => t2.map((track, i) => prev[i] ?? { volume: track.volume ?? 1, muted: parseMuteState(codeRef.current, i) }));
+      setEvalStatus("ok");
+      setEvalTimestamp(Date.now());
+      addLog("ok", `Song loaded — ${String(t2.length)} track${t2.length === 1 ? "" : "s"}`);
+      if (autoPlayRef.current) {
+        autoPlayRef.current = false;
+        window.scoreBridge.send("transport:play", void 0);
+      }
+    });
+    return unsub;
+  }, [addLog]);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("engine:analysis", ({ waveform: w2 }) => {
+      setWaveform(w2);
+      const binCount = 32;
+      const chunkSize = Math.floor(w2.length / binCount);
+      const bins = Array.from({ length: binCount }, (_2, b) => {
+        const start = b * chunkSize;
+        const chunk = w2.slice(start, start + chunkSize);
+        return Math.sqrt(chunk.reduce((s, v2) => s + v2 * v2, 0) / Math.max(chunk.length, 1));
+      });
+      setFftBins(bins);
+    });
+    return unsub;
+  }, []);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("engine:state", ({ playing, bpm, bars }) => {
+      setEngineState((prev) => {
+        if (prev.playing !== playing) {
+          addLog("info", playing ? "▶ Playing" : "■ Stopped");
+        }
+        return { playing, bpm, bars };
+      });
+    });
+    return unsub;
+  }, [addLog]);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("engine:step", ({ step, stepCount }) => {
+      setCurrentStep(step);
+      setCurrentStepCount(stepCount);
+    });
+    return unsub;
+  }, []);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("engine:pending", ({ pending }) => {
+      setPendingSwap(pending);
+      if (pending) addLog("warn", "Swap queued — applying at next bar boundary");
+    });
+    return unsub;
+  }, [addLog]);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("engine:notes", ({ notes }) => {
+      setPianoNotes(notes.map((n2) => ({
+        pitch: n2.pitch,
+        step: n2.step,
+        velocity: n2.velocity,
+        duration: 1
+      })));
+    });
+    return unsub;
+  }, []);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("debug:pop", ({ maxDelta, bars }) => {
+      addLog("warn", `POP detected at bar ${String(bars)} — max delta ${maxDelta.toFixed(3)} (threshold 0.25). Likely gain staging or scheduling jitter.`);
+    });
+    return unsub;
+  }, [addLog]);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("layout:load", (layout) => {
+      layoutAccRef.current = layout;
+      setSavedLayout(layout);
+      setLayoutGen((g) => g + 1);
+    });
+    return unsub;
+  }, []);
+  reactExports.useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === "." && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        window.scoreBridge.send("transport:stop", void 0);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+  reactExports.useEffect(() => {
+    const unsub = window.scoreBridge.on("file:opened", ({ code: loadedCode }) => {
+      setCode(loadedCode);
+      setError(null);
+      setEvalStatus("idle");
+      addLog("info", "File opened");
+    });
+    return unsub;
+  }, [addLog]);
+  reactExports.useEffect(() => () => {
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current);
+  }, []);
+  const onPanelMoved = reactExports.useCallback((panelId, x2, y2, w2, h2) => {
+    layoutAccRef.current = { ...layoutAccRef.current, [panelId]: { x: x2, y: y2, w: w2, h: h2 } };
+    window.scoreBridge.send("layout:save", layoutAccRef.current);
+  }, []);
+  const onEval = reactExports.useCallback(() => {
+    setError(null);
+    setEvalStatus("pending");
+    addLog("info", "Evaluating…");
+    window.scoreBridge.send("engine:eval", { code });
+  }, [code, addLog]);
+  const onPlay = reactExports.useCallback(() => {
+    autoPlayRef.current = true;
+    setError(null);
+    setEvalStatus("pending");
+    addLog("info", "Evaluating…");
+    window.scoreBridge.send("engine:eval", { code });
+  }, [code, addLog]);
+  const onStop = reactExports.useCallback(() => {
+    autoPlayRef.current = false;
+    setPianoNotes([]);
+    window.scoreBridge.send("transport:stop", void 0);
+  }, []);
+  const onRun = reactExports.useCallback(() => {
+    setError(null);
+    setEvalStatus("pending");
+    addLog("info", "Evaluating…");
+    if (!engineState.playing) {
+      autoPlayRef.current = true;
+    }
+    window.scoreBridge.send("engine:eval", { code });
+  }, [code, addLog, engineState.playing]);
+  const onMixerVolume = reactExports.useCallback((index2, volume) => {
+    setStripStates((prev) => updateStrip(prev, index2, { volume }));
+    window.scoreBridge.send("engine:patch", { tracks: [{ index: index2, volume }] });
+    setCode((prev) => patchTrackVolume(prev, index2, volume));
+  }, []);
+  const onMixerMute = reactExports.useCallback((index2) => {
+    const mute = !(stripStates[index2]?.muted ?? false);
+    setStripStates((prev) => updateStrip(prev, index2, { muted: mute }));
+    window.scoreBridge.send("engine:patch", { tracks: [{ index: index2, mute }] });
+    setCode((prev) => patchMute(prev, index2, mute));
+  }, [stripStates]);
+  const onInstrumentChange = reactExports.useCallback((trackIndex, method, value) => {
+    if (method === "_model" && typeof value === "string") {
+      setCode((prev) => patchInstrumentModel(prev, trackIndex, value));
+    } else {
+      setCode((prev) => patchChainMethod(prev, trackIndex, method, value));
+      if (method === "volume" && typeof value === "number") {
+        setStripStates((prev) => updateStrip(prev, trackIndex, { volume: value }));
+        window.scoreBridge.send("engine:patch", { tracks: [{ index: trackIndex, volume: value }] });
+      }
+    }
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current);
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null);
+      setEvalStatus("pending");
+      addLog("info", "Evaluating…");
+      setCode((latest) => {
+        window.scoreBridge.send("engine:eval", { code: latest });
+        return latest;
+      });
+    }, 300);
+  }, [addLog]);
+  const onInstrumentMute = reactExports.useCallback((trackIndex) => {
+    onMixerMute(trackIndex);
+  }, [onMixerMute]);
+  const onBpmChange = reactExports.useCallback((bpm) => {
+    setCode((prev) => patchBpm(prev, bpm));
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current);
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null);
+      setEvalStatus("pending");
+      addLog("info", "Evaluating…");
+      setCode((latest) => {
+        window.scoreBridge.send("engine:eval", { code: latest });
+        return latest;
+      });
+    }, 300);
+  }, [addLog]);
+  const onStepClick = reactExports.useCallback((trackIndex, stepIndex) => {
+    const track = tracks[trackIndex];
+    if (!track) return;
+    const len = track.pattern.length;
+    if (len === 0) return;
+    const currentVal = track.pattern[stepIndex % len];
+    const newVal = currentVal ? 0 : 1;
+    setTracks((prev) => prev.map((t2, i) => {
+      if (i !== trackIndex) return t2;
+      const pat = [...t2.pattern];
+      pat[stepIndex % len] = newVal;
+      return { ...t2, pattern: pat };
+    }));
+    setCode((prev) => patchTrackPattern(prev, trackIndex, stepIndex, newVal));
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current);
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null);
+      setEvalStatus("pending");
+      addLog("info", "Evaluating…");
+      setCode((latest) => {
+        window.scoreBridge.send("engine:eval", { code: latest });
+        return latest;
+      });
+    }, 300);
+  }, [tracks, addLog]);
+  const onNoteClick = reactExports.useCallback((pitch, step) => {
+    const arpIndex = tracks.findIndex((t2) => t2.type === "arp");
+    if (arpIndex === -1) return;
+    const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const octave = Math.floor(pitch / 12) - 1;
+    const noteName = `${noteNames[pitch % 12] ?? "C"}${String(octave)}`;
+    setCode((prev) => patchTrackNote(prev, arpIndex, step, noteName));
+  }, [tracks]);
+  const onAddTrack = reactExports.useCallback((instrumentType) => {
+    setAddTrackOpen(false);
+    const DEFAULTS = {
+      kick808: "Kick808(4).decay(0.7).volume(0.8)",
+      kick909: "Kick909(4).decay(0.6).volume(0.8)",
+      kick: "Kick(4).volume(0.8)",
+      snare909: "Snare909(2).decay(0.2).volume(0.6)",
+      snare: "Snare(2).volume(0.6)",
+      hihat808: "Hihat808(8).decay(0.08).volume(0.3)",
+      hihat: "HiHat(8).volume(0.3)",
+      bass303: "Bass303('A2').cutoff(600).resonance(0.4).volume(0.6)",
+      synth: "Synth('C3').attack(0.01).release(0.4).volume(0.6)",
+      subsynth: "SubSynth('C3').filter(1200).volume(0.6)",
+      fmsynth: "FMSynth('C3').attack(0.01).release(0.4).volume(0.6)",
+      pad: "Pad('Am').attack(0.3).reverb(0.3).volume(0.5)",
+      pluck: "Pluck('C3').volume(0.6)"
+    };
+    const snippet = DEFAULTS[instrumentType] ?? `Synth('C3').volume(0.6)`;
+    const base = instrumentType.replace(/\d+$/, "").replace(/[^a-z]/g, "");
+    setCode((prev) => {
+      const varName = uniqueVarName(prev, base);
+      return patchAddInstrument(prev, varName, snippet);
+    });
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current);
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null);
+      setEvalStatus("pending");
+      addLog("info", "Evaluating…");
+      setCode((latest) => {
+        window.scoreBridge.send("engine:eval", { code: latest });
+        return latest;
+      });
+    }, 80);
+  }, [addLog]);
+  const onInsert = reactExports.useCallback((snippet) => {
+    setCode((prev) => {
+      const tracksIdx = prev.indexOf("tracks:");
+      if (tracksIdx === -1) return prev + "\n" + snippet;
+      const openBracket = prev.indexOf("[", tracksIdx);
+      if (openBracket === -1) return prev + "\n" + snippet;
+      const closeBracket = Array.from(prev.slice(openBracket + 1)).reduce(
+        (acc, ch2, idx) => acc.pos !== -1 ? acc : (() => {
+          const d = acc.depth + (ch2 === "[" ? 1 : ch2 === "]" ? -1 : 0);
+          return { depth: d, pos: d === 0 ? openBracket + 1 + idx : -1 };
+        })(),
+        { depth: 1, pos: -1 }
+      ).pos;
+      const beforeClose = prev.slice(0, closeBracket);
+      const lastNewline = beforeClose.lastIndexOf("\n");
+      const lineContent = lastNewline !== -1 ? beforeClose.slice(lastNewline + 1) : "";
+      const indentMatch = lineContent.match(/^(\s+)/);
+      const indent = indentMatch?.[1] ?? "    ";
+      return `${prev.slice(0, closeBracket)},
+${indent}${snippet}${prev.slice(closeBracket)}`;
+    });
+  }, []);
+  const onNew = reactExports.useCallback(() => {
+    if (!window.confirm("Start a new song? Current code will be lost.")) return;
+    window.scoreBridge.send("transport:stop", void 0);
+    setCode(STARTER$1);
+    setError(null);
+    setEvalStatus("idle");
+    setTracks([]);
+    setPianoNotes([]);
+    setStripStates([]);
+    setLogEntries([]);
+    setSelectedTrack(null);
+  }, []);
+  const onSave = reactExports.useCallback(() => {
+    window.scoreBridge.send("file:save", { code });
+  }, [code]);
+  const onOpen = reactExports.useCallback(() => {
+    window.scoreBridge.send("file:open", void 0);
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.root, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(TransportBar, { hardware, onHome, onPlay, onStop, onBpmChange }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.statusBar, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        BarCounter,
+        {
+          bars: engineState.bars,
+          step: currentStep,
+          stepCount: currentStepCount,
+          bpm: engineState.bpm,
+          playing: engineState.playing
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.statusRight, children: [
+        pendingSwap && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          PendingSwapBadge,
+          {
+            pending: pendingSwap,
+            step: currentStep,
+            stepCount: currentStepCount
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          EvalStatus,
+          {
+            status: evalStatus,
+            ...error !== null ? { message: error } : {},
+            ...evalTimestamp !== void 0 ? { timestamp: evalTimestamp } : {}
+          }
+        )
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.body, ref: bodyRef, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { ...styles$4.editorPane, flex: `0 0 ${String(splitPct)}%` }, children: [
+        error !== null && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$4.errorBanner, role: "alert", children: error }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.editorArea, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            CodeWaveform,
+            {
+              waveform,
+              playing: engineState.playing,
+              currentStep,
+              stepCount: currentStepCount
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$4.monacoWrapper, "aria-label": "Song code editor", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            CodeEditorPanel,
+            {
+              value: code,
+              onChange: setCode,
+              onEval,
+              decorations: editorDecorations,
+              stepBadges,
+              importsVisible
+            }
+          ) })
+        ] }),
+        panels.console && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.consolePane, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.consoleHeader, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$4.consoleLabel, children: "Console" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                style: styles$4.consoleClose,
+                onClick: () => {
+                  togglePanel("console");
+                },
+                "aria-label": "Close console",
+                children: "×"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(ConsoleLog, { entries: logEntries })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.editorFooter, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(MasterLevel, { waveform, playing: engineState.playing }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.footerBtns, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$4.fileBtn, onClick: onNew, "aria-label": "New song", children: "New" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$4.fileBtn, onClick: onOpen, "aria-label": "Open song", children: "Open" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$4.fileBtn, onClick: onSave, "aria-label": "Save song", children: "Save" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$4.fileBtn, onClick: onEval, "aria-label": "Eval song (load without playing)", children: "Eval" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$4.evalBtn, onClick: onRun, "aria-label": "Run song", children: "▶ Run" })
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          role: "separator",
+          "aria-label": "Resize editor pane",
+          "aria-orientation": "vertical",
+          style: styles$4.splitter,
+          onMouseDown: onSplitterMouseDown
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.canvas, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.panelToolbar, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(PanelToggle, { label: "Grid", active: panels.punchcard, onClick: () => {
+            togglePanel("punchcard");
+          } }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(PanelToggle, { label: "Scope", active: panels.scope, onClick: () => {
+            togglePanel("scope");
+          } }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(PanelToggle, { label: "FFT", active: panels.spectrum, onClick: () => {
+            togglePanel("spectrum");
+          } }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(PanelToggle, { label: "Piano", active: panels.piano, onClick: () => {
+            togglePanel("piano");
+          } }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(PanelToggle, { label: "Mixer", active: panels.mixer, onClick: () => {
+            togglePanel("mixer");
+          } }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(PanelToggle, { label: "Console", active: panels.console, onClick: () => {
+            togglePanel("console");
+          } }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(PanelToggle, { label: "Ref", active: panels.reference, onClick: () => {
+            togglePanel("reference");
+          } }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(PanelToggle, { label: "Imports", active: importsVisible, onClick: () => {
+            setImportsVisible((v2) => !v2);
+          } })
+        ] }),
+        panels.punchcard && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          DraggablePanel,
+          {
+            title: "Step Grid",
+            defaultX: savedLayout["punchcard"]?.x ?? 8,
+            defaultY: savedLayout["punchcard"]?.y ?? 48,
+            defaultWidth: savedLayout["punchcard"]?.w ?? 560,
+            defaultHeight: savedLayout["punchcard"]?.h ?? 160,
+            onClose: () => {
+              togglePanel("punchcard");
+            },
+            panelId: "punchcard",
+            onMoved: onPanelMoved,
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              PunchcardGrid,
+              {
+                tracks,
+                currentStep,
+                stepCount: currentStepCount,
+                onStepClick,
+                onLabelClick: (i) => {
+                  setSelectedTrack((prev) => prev === i ? null : i);
+                  if (!panels.mixer) togglePanel("mixer");
+                },
+                selectedTrack
+              }
+            )
+          },
+          `punchcard-${String(layoutGen)}`
+        ),
+        panels.scope && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          DraggablePanel,
+          {
+            title: "Waveform",
+            defaultX: savedLayout["scope"]?.x ?? 8,
+            defaultY: savedLayout["scope"]?.y ?? 240,
+            defaultWidth: savedLayout["scope"]?.w ?? 420,
+            defaultHeight: savedLayout["scope"]?.h ?? 160,
+            onClose: () => {
+              togglePanel("scope");
+            },
+            panelId: "scope",
+            onMoved: onPanelMoved,
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(Scope, { waveform, playing: engineState.playing })
+          },
+          `scope-${String(layoutGen)}`
+        ),
+        panels.spectrum && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          DraggablePanel,
+          {
+            title: "Spectrum",
+            defaultX: savedLayout["spectrum"]?.x ?? 440,
+            defaultY: savedLayout["spectrum"]?.y ?? 48,
+            defaultWidth: savedLayout["spectrum"]?.w ?? 260,
+            defaultHeight: savedLayout["spectrum"]?.h ?? 200,
+            onClose: () => {
+              togglePanel("spectrum");
+            },
+            panelId: "spectrum",
+            onMoved: onPanelMoved,
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(SpectrumAnalyser, { bins: fftBins, playing: engineState.playing })
+          },
+          `spectrum-${String(layoutGen)}`
+        ),
+        panels.piano && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          DraggablePanel,
+          {
+            title: "Piano Roll",
+            defaultX: savedLayout["piano"]?.x ?? 440,
+            defaultY: savedLayout["piano"]?.y ?? 260,
+            defaultWidth: savedLayout["piano"]?.w ?? 260,
+            defaultHeight: savedLayout["piano"]?.h ?? 180,
+            onClose: () => {
+              togglePanel("piano");
+            },
+            panelId: "piano",
+            onMoved: onPanelMoved,
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              PianoRoll,
+              {
+                notes: pianoNotes,
+                currentStep,
+                stepCount: currentStepCount,
+                onNoteClick
+              }
+            )
+          },
+          `piano-${String(layoutGen)}`
+        ),
+        panels.mixer && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          DraggablePanel,
+          {
+            title: "Mixer",
+            defaultX: savedLayout["mixer"]?.x ?? 8,
+            defaultY: savedLayout["mixer"]?.y ?? 320,
+            defaultWidth: savedLayout["mixer"]?.w ?? 560,
+            defaultHeight: savedLayout["mixer"]?.h ?? 260,
+            onClose: () => {
+              togglePanel("mixer");
+            },
+            panelId: "mixer",
+            onMoved: onPanelMoved,
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$4.mixerInner, children: [
+                tracks.map((track, i) => {
+                  const isSelected = selectedTrack === i;
+                  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "div",
+                    {
+                      style: {
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        borderRadius: 3,
+                        border: isSelected ? "2px solid #4a8fff" : "2px solid transparent",
+                        background: isSelected ? "rgba(74,143,255,0.08)" : "transparent"
+                      },
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          MixerStrip,
+                          {
+                            name: track.name,
+                            type: track.type,
+                            volume: stripStates[i]?.volume ?? 1,
+                            muted: stripStates[i]?.muted ?? false,
+                            level: 0,
+                            onVolume: (v2) => {
+                              onMixerVolume(i, v2);
+                            },
+                            onMute: () => {
+                              onMixerMute(i);
+                            }
+                          }
+                        ),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          "button",
+                          {
+                            style: {
+                              fontSize: 8,
+                              fontFamily: "monospace",
+                              color: isSelected ? "#4a8fff" : "#3a3a4a",
+                              letterSpacing: "0.08em",
+                              paddingBottom: 3,
+                              userSelect: "none",
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              width: "100%"
+                            },
+                            "aria-label": `${isSelected ? "Close" : "Open"} ${track.name} instrument editor`,
+                            title: isSelected ? `Close ${track.name} editor` : `Click to edit ${track.name}`,
+                            onClick: () => {
+                              setSelectedTrack((prev) => prev === i ? null : i);
+                            },
+                            children: isSelected ? "▲ EDIT" : "▼ EDIT"
+                          }
+                        )
+                      ]
+                    },
+                    `${track.name}-${String(i)}`
+                  );
+                }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 2, alignSelf: "flex-start", paddingTop: 4, position: "relative" }, children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      style: styles$4.addTrackBtn,
+                      "aria-label": "Add track",
+                      title: "Add a new instrument track",
+                      onClick: () => {
+                        setAddTrackOpen((v2) => !v2);
+                      },
+                      children: "+"
+                    }
+                  ),
+                  addTrackOpen && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$4.addTrackPicker, children: [
+                    ["kick808", "Kick 808"],
+                    ["kick909", "Kick 909"],
+                    ["snare909", "Snare 909"],
+                    ["hihat808", "HiHat 808"],
+                    ["bass303", "Bass 303"],
+                    ["synth", "Synth"],
+                    ["subsynth", "SubSynth"],
+                    ["fmsynth", "FM Synth"],
+                    ["pad", "Pad"],
+                    ["pluck", "Pluck"]
+                  ].map(([type, label]) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      style: styles$4.addTrackPickerBtn,
+                      onClick: () => {
+                        onAddTrack(type);
+                      },
+                      children: label
+                    },
+                    type
+                  )) })
+                ] }),
+                tracks.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$4.mixerEmpty, children: "No tracks — eval a song first" })
+              ] }),
+              selectedTrack === null && tracks.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: 9, color: "#3a3a52", fontFamily: "monospace", padding: "4px 8px", textAlign: "center", letterSpacing: "0.06em" }, children: "▼ EDIT — click a strip above" }),
+              selectedTrack !== null && tracks[selectedTrack] !== void 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                InstrumentPanel,
+                {
+                  trackIndex: selectedTrack,
+                  instrumentType: tracks[selectedTrack].type,
+                  trackName: tracks[selectedTrack].name,
+                  params: { ...parseTrackChainParams(code, selectedTrack), _model: parseTrackModel(code, selectedTrack), volume: stripStates[selectedTrack]?.volume ?? 1 },
+                  muted: stripStates[selectedTrack]?.muted ?? false,
+                  onChange: (method, value) => {
+                    onInstrumentChange(selectedTrack, method, value);
+                  },
+                  onMute: () => {
+                    onInstrumentMute(selectedTrack);
+                  }
+                }
+              )
+            ]
+          },
+          `mixer-${String(layoutGen)}`
+        ),
+        panels.reference && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          DraggablePanel,
+          {
+            title: "Reference",
+            defaultX: savedLayout["reference"]?.x ?? 440,
+            defaultY: savedLayout["reference"]?.y ?? 48,
+            defaultWidth: savedLayout["reference"]?.w ?? 260,
+            defaultHeight: savedLayout["reference"]?.h ?? 380,
+            onClose: () => {
+              togglePanel("reference");
+            },
+            panelId: "reference",
+            onMoved: onPanelMoved,
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(ReferencePanel, { onInsert })
+          },
+          `reference-${String(layoutGen)}`
+        )
+      ] })
+    ] })
+  ] });
+};
+const styles$4 = {
+  root: { display: "flex", flexDirection: "column", height: "100vh", background: "#0c0c0e" },
+  statusBar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0 0.75rem",
+    height: "36px",
+    flexShrink: 0,
+    borderBottom: "1px solid #1e1e22",
+    background: "#0a0a0d"
+  },
+  statusRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem"
+  },
+  body: { display: "flex", flex: 1, overflow: "hidden" },
+  editorPane: {
+    // flex is overridden inline with splitPct state — this value acts as fallback only
+    flex: "0 0 50%",
+    display: "flex",
+    flexDirection: "column",
+    background: "#0d0d10",
+    overflow: "hidden"
+  },
+  splitter: {
+    width: "6px",
+    cursor: "col-resize",
+    background: "#1e1e22",
+    flexShrink: 0,
+    transition: "background 0.15s",
+    userSelect: "none"
+  },
+  errorBanner: {
+    background: "#3a1a1a",
+    color: "#ff6b6b",
+    padding: "0.4rem 0.75rem",
+    fontSize: "0.75rem",
+    borderBottom: "1px solid #5a2a2a",
+    flexShrink: 0,
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace"
+  },
+  // Container for waveform + textarea stacked absolutely
+  editorArea: {
+    flex: 1,
+    position: "relative",
+    display: "flex"
+  },
+  monacoWrapper: {
+    flex: 1,
+    position: "relative",
+    zIndex: 1,
+    // Monaco needs an explicit height to fill flex container
+    minHeight: 0
+  },
+  consolePane: {
+    flexShrink: 0,
+    height: "120px",
+    borderTop: "1px solid #1e1e22",
+    display: "flex",
+    flexDirection: "column",
+    background: "#080809"
+  },
+  consoleHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0 0.5rem",
+    height: "22px",
+    flexShrink: 0,
+    borderBottom: "1px solid #141418",
+    background: "#0a0a0d"
+  },
+  consoleLabel: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: "0.6rem",
+    color: "#3a3a46",
+    textTransform: "uppercase",
+    letterSpacing: "0.1em"
+  },
+  consoleClose: {
+    background: "none",
+    border: "none",
+    color: "#3a3a46",
+    cursor: "pointer",
+    fontSize: "1rem",
+    lineHeight: 1,
+    padding: "0"
+  },
+  editorFooter: {
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "4px 8px",
+    borderTop: "1px solid #1e1e22",
+    background: "#0a0a0d"
+  },
+  footerBtns: {
+    display: "flex",
+    gap: "6px",
+    alignItems: "center"
+  },
+  fileBtn: {
+    height: "28px",
+    background: "none",
+    border: "1px solid #1e1e28",
+    borderRadius: "2px",
+    color: "#3a3a50",
+    fontSize: "0.68rem",
+    letterSpacing: "0.06em",
+    cursor: "pointer",
+    padding: "0 0.6rem"
   },
   evalBtn: {
-    fontFamily: "system-ui, sans-serif",
-    fontSize: "0.7rem",
+    height: "28px",
+    background: "#152035",
+    border: "1px solid #2a4a7a",
+    borderRadius: "2px",
+    color: "#6a9fff",
+    fontSize: "0.75rem",
     fontWeight: 600,
     letterSpacing: "0.08em",
     textTransform: "uppercase",
-    padding: "0.2rem 0.65rem",
-    background: "#152035",
-    color: "#6a9fff",
-    border: "1px solid #2a4a7a",
-    borderRadius: "2px",
-    cursor: "pointer"
+    cursor: "pointer",
+    padding: "0 1rem"
   },
-  editor: {
+  canvas: {
     flex: 1,
-    width: "100%",
-    background: "#080809",
-    color: "#c8d8f8",
-    border: "none",
-    outline: "none",
-    padding: "0.75rem",
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-    fontSize: "0.8rem",
-    lineHeight: 1.65,
-    resize: "none",
-    tabSize: 2
+    position: "relative",
+    overflow: "hidden",
+    background: "#090909"
   },
-  repl: {
-    borderTop: "1px solid #1e1e22",
-    background: "#060607",
-    padding: "0.4rem 0.65rem",
-    maxHeight: "100px",
-    overflowY: "auto",
-    flexShrink: 0
-  },
-  replLine: {
-    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-    fontSize: "0.7rem",
-    color: "#4a6a9f",
-    lineHeight: 1.6,
-    letterSpacing: "0.02em"
-  },
-  visualizerPane: {
-    flex: 1,
+  panelToolbar: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    zIndex: 200,
     display: "flex",
-    flexDirection: "column",
+    gap: "4px"
+  },
+  mixerInner: {
+    display: "flex",
+    flexWrap: "nowrap",
+    gap: "4px",
+    padding: "6px",
+    overflowX: "auto",
+    alignItems: "flex-start"
+  },
+  mixerEmpty: {
+    color: "#3a3a46",
+    fontSize: "0.75rem",
+    fontFamily: "'JetBrains Mono', monospace",
+    padding: "8px"
+  },
+  addTrackBtn: {
+    width: "32px",
+    height: "32px",
+    background: "#141420",
+    border: "1px solid #2a2a42",
+    borderRadius: "3px",
+    color: "#4a8fff",
+    fontSize: "1.2rem",
+    cursor: "pointer",
+    display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#0c0c0e"
+    flexShrink: 0,
+    padding: 0,
+    lineHeight: 1
   },
-  placeholder: { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", color: "#2e2e36" },
-  placeholderIcon: { fontFamily: "monospace", fontSize: "2rem", color: "#1e2e3e" },
-  sub: { fontFamily: "system-ui, sans-serif", fontSize: "0.68rem", color: "#2a2a32", letterSpacing: "0.06em" }
+  addTrackPicker: {
+    position: "absolute",
+    bottom: "38px",
+    // opens upward above the + button
+    left: 0,
+    zIndex: 300,
+    background: "#0e0e14",
+    border: "1px solid #2a2a42",
+    borderRadius: "4px",
+    display: "flex",
+    flexDirection: "column",
+    minWidth: "90px",
+    maxHeight: "260px",
+    overflowY: "auto",
+    boxShadow: "0 -4px 16px #0006"
+  },
+  addTrackPickerBtn: {
+    background: "none",
+    border: "none",
+    borderBottom: "1px solid #1a1a28",
+    color: "#8a9ab0",
+    fontSize: "0.65rem",
+    fontFamily: "monospace",
+    letterSpacing: "0.05em",
+    padding: "5px 10px",
+    cursor: "pointer",
+    textAlign: "left"
+  }
 };
-const Produce = ({ hardware, onHome }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.root, children: [
+const Produce = ({ hardware, onHome }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$3.root, children: [
   /* @__PURE__ */ jsxRuntimeExports.jsx(TransportBar, { hardware, onHome }),
-  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.body, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$2.trackHeaders, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$2.trackLanes, children: ["Kick", "Bass", "Lead", "Pad", "FX"].map((name, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.trackLane, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { ...styles$2.trackLaneStrip, background: TRACK_COLORS[i] } }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.trackLaneName, children: name }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$2.trackLaneMute, children: "M" })
+  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$3.body, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$3.trackHeaders, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$3.trackLanes, children: ["Kick", "Bass", "Lead", "Pad", "FX"].map((name, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$3.trackLane, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { ...styles$3.trackLaneStrip, background: TRACK_COLORS[i] } }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$3.trackLaneName, children: name }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$3.trackLaneMute, children: "M" })
     ] }, name)) }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.timeline, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$2.timelineRuler, children: [1, 2, 3, 4, 5, 6, 7, 8].map((bar) => /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { ...styles$2.timelineRulerLabel, marginRight: "3rem" }, children: bar }, bar)) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$2.timelineBody, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.placeholder, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.placeholderIcon, children: "▦" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.sub, children: "Clip timeline — Phase 13c" })
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$3.timeline, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$3.timelineRuler, children: [1, 2, 3, 4, 5, 6, 7, 8].map((bar) => /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { ...styles$3.timelineRulerLabel, marginRight: "3rem" }, children: bar }, bar)) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$3.timelineBody, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$3.placeholder, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$3.placeholderIcon, children: "▦" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$3.sub, children: "Clip timeline — Phase 13c" })
       ] }) })
     ] })
   ] }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$2.mixerStrip, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$2.placeholder, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.sub, children: "Mixer — Phase 13" }) }) })
+  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$3.mixerStrip, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$3.placeholder, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$3.sub, children: "Mixer — Phase 13" }) }) })
 ] });
-const styles$2 = {
+const styles$3 = {
   root: { display: "flex", flexDirection: "column", height: "100vh", background: "#0c0c0e" },
   body: { display: "flex", flex: 1, overflow: "hidden" },
   trackHeaders: {
@@ -7645,16 +11582,16 @@ export default Song({
 const DJSet = ({ hardware, onHome }) => {
   const [codeOpen, setCodeOpen] = reactExports.useState(false);
   const [code, setCode] = reactExports.useState(STARTER);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.root, children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.root, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(TransportBar, { hardware, onHome }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.body, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { ...styles$1.codePanel, width: codeOpen ? "280px" : "0" }, children: codeOpen && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.codePanelHeader, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.codePanelTitle, children: "song.ts" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.body, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { ...styles$2.codePanel, width: codeOpen ? "280px" : "0" }, children: codeOpen && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.codePanelHeader, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.codePanelTitle, children: "song.ts" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             "button",
             {
-              style: styles$1.codeToggleBtn,
+              style: styles$2.codeToggleBtn,
               onClick: () => {
                 setCodeOpen(false);
               },
@@ -7666,7 +11603,7 @@ const DJSet = ({ hardware, onHome }) => {
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           "textarea",
           {
-            style: styles$1.codeEditor,
+            style: styles$2.codeEditor,
             value: code,
             onChange: (e) => {
               setCode(e.target.value);
@@ -7679,7 +11616,7 @@ const DJSet = ({ hardware, onHome }) => {
       !codeOpen && /* @__PURE__ */ jsxRuntimeExports.jsx(
         "button",
         {
-          style: styles$1.codeTab,
+          style: styles$2.codeTab,
           onClick: () => {
             setCodeOpen(true);
           },
@@ -7688,41 +11625,41 @@ const DJSet = ({ hardware, onHome }) => {
           children: "{ }"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.deck, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.deckHeader, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.deckLabel, children: "A" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.deckSub, children: "Deck A" })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.deck, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.deckHeader, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.deckLabel, children: "A" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.deckSub, children: "Deck A" })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.placeholder, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.placeholderIcon, children: "⊙" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.placeholderText, children: "Waveform · Beat grid · Hot cues" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.sub, children: "Phase 12e" })
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.placeholder, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.placeholderIcon, children: "⊙" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.placeholderText, children: "Waveform · Beat grid · Hot cues" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.sub, children: "Phase 12e" })
         ] })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$1.centreStrip, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.placeholder, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.sub, children: "FX" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$1.crossfaderTrack, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$1.crossfaderThumb }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.sub, children: "Phase 12e" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$2.centreStrip, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.placeholder, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.sub, children: "FX" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$2.crossfaderTrack, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$2.crossfaderThumb }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.sub, children: "Phase 12e" })
       ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.deck, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.deckHeader, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.deckLabel, children: "B" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.deckSub, children: "Deck B" })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.deck, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.deckHeader, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.deckLabel, children: "B" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.deckSub, children: "Deck B" })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.placeholder, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.placeholderIcon, children: "⊙" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.placeholderText, children: "Waveform · Beat grid · Hot cues" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.sub, children: "Phase 12e" })
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.placeholder, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.placeholderIcon, children: "⊙" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.placeholderText, children: "Waveform · Beat grid · Hot cues" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.sub, children: "Phase 12e" })
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$1.library, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.libraryHeader, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.libraryLabel, children: "Library" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.sub, children: hardware === "aio" ? "AIO display mirrors library" : "Drag tracks to decks · Phase 12e" })
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$2.library, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$2.libraryHeader, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.libraryLabel, children: "Library" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$2.sub, children: hardware === "aio" ? "AIO display mirrors library" : "Drag tracks to decks · Phase 12e" })
     ] }) })
   ] });
 };
-const styles$1 = {
+const styles$2 = {
   root: { display: "flex", flexDirection: "column", height: "100vh", background: "#0c0c0e" },
   body: { display: "flex", flex: 1, overflow: "hidden", position: "relative" },
   // Code panel
@@ -7888,31 +11825,31 @@ const JamSession = ({ hardware, onHome }) => {
   const handleConnectMidi = () => {
     window.scoreBridge.send("midi:connect", void 0);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles.root, children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.root, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(TransportBar, { hardware, onHome }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles.body, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles.midiPanel, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles.placeholder, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles.placeholderIcon, children: "⊕" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.body, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$1.midiPanel, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.placeholder, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.placeholderIcon, children: "⊕" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "MIDI Controller" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
-          ...styles.statusBadge,
-          ...midiConnected ? styles.statusBadgeOn : styles.statusBadgeOff
+          ...styles$1.statusBadge,
+          ...midiConnected ? styles$1.statusBadgeOn : styles$1.statusBadgeOff
         }, children: midiConnected ? "CONNECTED" : "NOT CONNECTED" }),
-        !midiConnected && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles.connectBtn, onClick: handleConnectMidi, children: "Connect MIDI" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles.sub, children: hardware === "aio" ? "Pioneer XDJ — mapping loaded" : hardware === "controller" ? "Generic MIDI controller" : "No hardware — keyboard + mouse only" })
+        !midiConnected && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles$1.connectBtn, onClick: handleConnectMidi, children: "Connect MIDI" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.sub, children: hardware === "aio" ? "Pioneer XDJ — mapping loaded" : hardware === "controller" ? "Generic MIDI controller" : "No hardware — keyboard + mouse only" })
       ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles.muteMatrix, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles.placeholder, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$1.muteMatrix, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.placeholder, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Track mute matrix — Phase 13b" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles.sub, children: "Per-track mute · Volume · FX send" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.sub, children: "Per-track mute · Volume · FX send" })
       ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles.mappingPanel, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles.placeholder, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles$1.mappingPanel, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles$1.placeholder, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "MIDI mapping — Phase 13b" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles.sub, children: "Controller → engine parameter visualiser" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles$1.sub, children: "Controller → engine parameter visualiser" })
       ] }) })
     ] })
   ] });
 };
-const styles = {
+const styles$1 = {
   root: { display: "flex", flexDirection: "column", height: "100vh", background: "#0c0c0e" },
   body: { display: "flex", flex: 1, overflow: "hidden" },
   midiPanel: {
@@ -7963,10 +11900,850 @@ const styles = {
     cursor: "pointer"
   }
 };
+const darkPulseAppTheme = {
+  name: "dark-pulse",
+  background: "#0e0e11",
+  surface: "#111318",
+  border: "#1e1e22",
+  text: "#c8d8f8",
+  textMuted: "#556688",
+  accent: "#4a8fff",
+  accentMuted: "#1a2035",
+  error: "#ff4a4a",
+  tracks: ["#4a8fff", "#ff6b35", "#44cc88", "#cc44aa", "#ffcc00", "#44cccc", "#ff4a4a", "#88cc44"]
+};
+const lorenzAppTheme = {
+  name: "lorenz",
+  background: "#050008",
+  surface: "#0d0012",
+  border: "#1a0025",
+  text: "#e8d8ff",
+  textMuted: "#664488",
+  accent: "#cc44ff",
+  accentMuted: "#220033",
+  error: "#ff4466",
+  tracks: ["#cc44ff", "#ff44cc", "#8844ff", "#ff6688", "#aa66ff", "#ff88aa", "#6688ff", "#ffaa66"]
+};
+const neonGridAppTheme = {
+  name: "neon-grid",
+  background: "#000510",
+  surface: "#000c1a",
+  border: "#001830",
+  text: "#ccffee",
+  textMuted: "#224466",
+  accent: "#00ff88",
+  accentMuted: "#002211",
+  error: "#ff4466",
+  tracks: ["#00ff88", "#00ccff", "#88ff00", "#ffcc00", "#ff8800", "#ff0088", "#8800ff", "#00ffcc"]
+};
+const logisticAppTheme = {
+  name: "logistic",
+  background: "#0a0800",
+  surface: "#150f00",
+  border: "#2a1e00",
+  text: "#ffe8cc",
+  textMuted: "#886633",
+  accent: "#ffaa00",
+  accentMuted: "#332200",
+  error: "#ff4444",
+  tracks: ["#ffaa00", "#ff6600", "#ffcc44", "#ff3300", "#ffee88", "#ff8800", "#ffdd00", "#ff4400"]
+};
+const euclideanAppTheme = {
+  name: "euclidean-mandala",
+  background: "#00080a",
+  surface: "#001015",
+  border: "#001820",
+  text: "#ccffff",
+  textMuted: "#226688",
+  accent: "#00ccff",
+  accentMuted: "#001122",
+  error: "#ff4455",
+  tracks: ["#00ccff", "#00ffcc", "#0088ff", "#00ffaa", "#44aaff", "#00ddaa", "#22aaff", "#00cc88"]
+};
+const probabilityAppTheme = {
+  name: "probability-storm",
+  background: "#020a02",
+  surface: "#051005",
+  border: "#0a1a0a",
+  text: "#ccffcc",
+  textMuted: "#336633",
+  accent: "#44ff44",
+  accentMuted: "#0a1a0a",
+  error: "#ff4444",
+  tracks: ["#44ff44", "#88ff44", "#44ff88", "#aaff22", "#66ff66", "#ccff44", "#33ff33", "#99ff55"]
+};
+const minimalAppTheme = {
+  name: "minimal",
+  background: "#080808",
+  surface: "#101010",
+  border: "#1c1c1c",
+  text: "#e0e0e0",
+  textMuted: "#505050",
+  accent: "#a0a0a0",
+  accentMuted: "#1c1c1c",
+  error: "#ff4444",
+  tracks: ["#ffffff", "#cccccc", "#aaaaaa", "#888888", "#dddddd", "#bbbbbb", "#999999", "#eeeeee"]
+};
+const cycleRingsAppTheme = {
+  name: "cycle-rings",
+  background: "#0a0805",
+  surface: "#130f08",
+  border: "#221a0e",
+  text: "#fff0cc",
+  textMuted: "#776644",
+  accent: "#ffaa44",
+  accentMuted: "#221505",
+  error: "#ff4455",
+  tracks: ["#ffaa44", "#ff6688", "#88ffaa", "#ffcc22", "#44ccff", "#ff88cc", "#aaff44", "#ff4488"]
+};
+const eventCascadeAppTheme = {
+  name: "event-cascade",
+  background: "#060606",
+  surface: "#0e0e0e",
+  border: "#1a1a1a",
+  text: "#f0f0f0",
+  textMuted: "#606060",
+  accent: "#ff6644",
+  accentMuted: "#1a0a08",
+  error: "#ff3333",
+  tracks: ["#ff6644", "#44aaff", "#44ff88", "#ffcc00", "#ff44aa", "#88ff44", "#ff8800", "#44ffcc"]
+};
+const tidalStreamAppTheme = {
+  name: "tidal-stream",
+  background: "#00060a",
+  surface: "#000c14",
+  border: "#001520",
+  text: "#cceeff",
+  textMuted: "#336688",
+  accent: "#44aaff",
+  accentMuted: "#001122",
+  error: "#ff4466",
+  tracks: ["#44aaff", "#00ccdd", "#6688ff", "#00eebb", "#4488ff", "#22ccff", "#8866ff", "#00ffdd"]
+};
+const VisualsError = (message) => {
+  const err = new Error(message);
+  err.name = "ScoreError";
+  return err;
+};
+const themeRegistry = /* @__PURE__ */ new Map();
+const defineTheme = (bundle) => bundle;
+const registerTheme = (bundle) => {
+  themeRegistry.set(bundle.name, bundle);
+};
+const getTheme = (name) => {
+  const bundle = themeRegistry.get(name);
+  if (bundle === void 0) {
+    throw VisualsError(`@score/visuals: theme '${name}' is not registered. Available themes: [${listThemes().join(", ")}]. Did you forget to import '@score/visuals'?`);
+  }
+  return bundle;
+};
+const listThemes = () => [...themeRegistry.keys()];
+const annotationRegistry = /* @__PURE__ */ new Map();
+const defineAnnotationSource = (fn) => fn;
+const registerAnnotationSource = (name, fn) => {
+  annotationRegistry.set(name, fn);
+};
+const waveformLayer = (waveform, color, alpha = 0.8) => ({
+  kind: "waveform",
+  color,
+  alpha,
+  data: { waveform }
+});
+const spectrumLayer = (bins, color, alpha = 0.7) => ({
+  kind: "spectrum",
+  color,
+  alpha,
+  data: { bins }
+});
+const radialGlowLayer = (rms, color, alpha = 0.6) => ({
+  kind: "radial-glow",
+  color,
+  alpha,
+  data: { rms }
+});
+const stepBarLayer = (step, stepCount, color, alpha = 0.5) => ({
+  kind: "step-bar",
+  color,
+  alpha,
+  data: { step, stepCount }
+});
+const euclideanRingLayer = (pattern, step, color, radius, alpha = 0.9) => ({
+  kind: "euclidean-ring",
+  color,
+  alpha,
+  data: { pattern, step, radius }
+});
+const gridLayer = (bins, color, alpha = 0.85) => ({
+  kind: "grid",
+  color,
+  alpha,
+  data: { bins }
+});
+const attractorPointsLayer = (points, color, alpha = 0.7) => ({
+  kind: "attractor-points",
+  color,
+  alpha,
+  data: { points }
+});
+const probabilityFieldLayer = (probs, color, alpha = 0.6) => ({
+  kind: "probability-field",
+  color,
+  alpha,
+  data: { probs }
+});
+const particleBurstLayer = (active, color, alpha = 0.9) => ({
+  kind: "particle-burst",
+  color,
+  alpha,
+  data: { active }
+});
+const RING_BASE_R = 160;
+const RING_SPACING = 48;
+const darkPulseCanvas = (state) => {
+  const { waveform, rms, tick, tracks } = state;
+  const { step } = tick;
+  const theme = darkPulseAppTheme;
+  const glow = radialGlowLayer(rms, theme.accent, 0.55);
+  const wave = waveformLayer(waveform, theme.textMuted, 0.45);
+  const rings = tracks.filter((t2) => t2.pattern !== void 0 && t2.pattern.length > 0).slice(0, 6).map((t2, i) => euclideanRingLayer(t2.pattern, step, theme.tracks[i % theme.tracks.length] ?? theme.accent, RING_BASE_R + i * RING_SPACING, t2.active ? 0.95 : 0.55));
+  const bar = stepBarLayer(step, 16, theme.accentMuted, 0.35);
+  return {
+    _type: "VisualSceneDescriptor",
+    background: theme.background,
+    layers: [bar, wave, glow, ...rings]
+  };
+};
+const darkPulseBundle = defineTheme({
+  name: "dark-pulse",
+  appTheme: darkPulseAppTheme,
+  canvasTheme: darkPulseCanvas
+});
+const rk4 = (state, t2, dt, deriv, add, scale) => {
+  const k1 = deriv(state, t2);
+  const k2 = deriv(add(state, scale(k1, dt / 2)), t2 + dt / 2);
+  const k3 = deriv(add(state, scale(k2, dt / 2)), t2 + dt / 2);
+  const k4 = deriv(add(state, scale(k3, dt)), t2 + dt);
+  return add(state, scale(add(add(add(k1, scale(k2, 2)), scale(k3, 2)), k4), dt / 6));
+};
+const lorenzDeriv = (sigma, rho, beta) => (state, _t) => ({
+  x: sigma * (state.y - state.x),
+  y: state.x * (rho - state.z) - state.y,
+  z: state.x * state.y - beta * state.z
+});
+const lorenzAdd = (a, b) => ({
+  x: a.x + b.x,
+  y: a.y + b.y,
+  z: a.z + b.z
+});
+const lorenzScale = (a, k2) => ({
+  x: a.x * k2,
+  y: a.y * k2,
+  z: a.z * k2
+});
+const createLorenz = (params) => {
+  const sigma = params?.sigma;
+  const rho = params?.rho;
+  const beta = params?.beta;
+  const initial = { x: 0.1, y: 0, z: 0 };
+  const deriv = lorenzDeriv(sigma, rho, beta);
+  const sim = { current: { ...initial }, t: 0 };
+  return {
+    /**
+     * Advance the simulation one RK4 step and return the new state.
+     *
+     * @param dt - Time step size. Default `0.01`.
+     * @returns New `LorenzState` after advancing by `dt`.
+     */
+    next(dt = 0.01) {
+      sim.current = rk4(sim.current, sim.t, dt, deriv, lorenzAdd, lorenzScale);
+      sim.t += dt;
+      return { ...sim.current };
+    },
+    /**
+     * Reset the simulation to the initial state and time.
+     */
+    reset() {
+      sim.current = { ...initial };
+      sim.t = 0;
+    },
+    /**
+     * The current state of the Lorenz system.
+     */
+    get state() {
+      return { ...sim.current };
+    }
+  };
+};
+const TRAIL_LENGTH = 512;
+const DT_BASE = 8e-3;
+const trail = [];
+const lorenz = createLorenz({ sigma: 10, rho: 28, beta: 8 / 3 });
+const normalise = (v2, min, max) => Math.max(0, Math.min(1, (v2 - min) / (max - min)));
+const lorenzCanvas = (state) => {
+  const { rms, waveform, tracks, tick, math } = state;
+  const theme = lorenzAppTheme;
+  const dt = DT_BASE * (1 + (tick.bpm / 128 - 1) * 0.3);
+  if (math?.lorenz !== void 0) {
+    const { x: x2, y: y2 } = math.lorenz;
+    const nx = normalise(x2, -25, 25);
+    const ny = normalise(y2, -30, 30);
+    trail.push([nx, ny]);
+  } else {
+    const next = lorenz.next(dt);
+    const nx = normalise(next.x, -25, 25);
+    const ny = normalise(next.y, -30, 30);
+    trail.push([nx, ny]);
+  }
+  if (trail.length > TRAIL_LENGTH)
+    trail.splice(0, trail.length - TRAIL_LENGTH);
+  const trailColor = tracks[0]?.active ? theme.accent : theme.textMuted;
+  const attractor = attractorPointsLayer(trail, trailColor, 0.8);
+  const glow = radialGlowLayer(rms, theme.accent, 0.4);
+  const wave = waveformLayer(waveform, theme.border, 0.25);
+  const rings = tracks.filter((t2) => t2.pattern !== void 0 && t2.pattern.length > 0).slice(0, 3).map((t2, i) => euclideanRingLayer(t2.pattern, tick.step, theme.tracks[i % theme.tracks.length] ?? theme.accent, 120 + i * 40, t2.active ? 0.7 : 0.3));
+  return {
+    _type: "VisualSceneDescriptor",
+    background: theme.background,
+    layers: [wave, ...rings, glow, attractor]
+  };
+};
+const lorenzBundle = defineTheme({
+  name: "lorenz",
+  appTheme: lorenzAppTheme,
+  canvasTheme: lorenzCanvas
+});
+const neonGridCanvas = (state) => ({
+  _type: "VisualSceneDescriptor",
+  background: neonGridAppTheme.background,
+  layers: [
+    waveformLayer(state.waveform, neonGridAppTheme.textMuted, 0.4),
+    gridLayer(state.bins, neonGridAppTheme.accent, 0.8)
+  ]
+});
+const neonGridBundle = defineTheme({
+  name: "neon-grid",
+  appTheme: neonGridAppTheme,
+  canvasTheme: neonGridCanvas
+});
+const logisticCanvas = (state) => ({
+  _type: "VisualSceneDescriptor",
+  background: logisticAppTheme.background,
+  layers: [
+    waveformLayer(state.waveform, logisticAppTheme.textMuted, 0.4),
+    spectrumLayer(state.bins, logisticAppTheme.accent, 0.7)
+  ]
+});
+const logisticBundle = defineTheme({
+  name: "logistic",
+  appTheme: logisticAppTheme,
+  canvasTheme: logisticCanvas
+});
+const euclideanMandalaCanvas = (state) => ({
+  _type: "VisualSceneDescriptor",
+  background: euclideanAppTheme.background,
+  layers: [
+    radialGlowLayer(state.rms, euclideanAppTheme.accent, 0.5),
+    ...state.tracks.filter((t2) => t2.pattern !== void 0).slice(0, 5).map((t2, i) => euclideanRingLayer(t2.pattern, state.tick.step, euclideanAppTheme.tracks[i % euclideanAppTheme.tracks.length] ?? euclideanAppTheme.accent, 100 + i * 50, 0.8))
+  ]
+});
+const euclideanMandalaBundle = defineTheme({
+  name: "euclidean-mandala",
+  appTheme: euclideanAppTheme,
+  canvasTheme: euclideanMandalaCanvas
+});
+const probabilityStormCanvas = (state) => ({
+  _type: "VisualSceneDescriptor",
+  background: probabilityAppTheme.background,
+  layers: [
+    waveformLayer(state.waveform, probabilityAppTheme.textMuted, 0.3),
+    ...state.tracks.filter((t2) => t2.pattern !== void 0 && t2.pattern.length > 0).slice(0, 3).map((t2) => probabilityFieldLayer(t2.pattern, probabilityAppTheme.accent, 0.6))
+  ]
+});
+const probabilityStormBundle = defineTheme({
+  name: "probability-storm",
+  appTheme: probabilityAppTheme,
+  canvasTheme: probabilityStormCanvas
+});
+const minimalCanvas = (state) => ({
+  _type: "VisualSceneDescriptor",
+  background: minimalAppTheme.background,
+  layers: [
+    waveformLayer(state.waveform, minimalAppTheme.accent, 0.7),
+    stepBarLayer(state.tick.step, 16, minimalAppTheme.textMuted, 0.4)
+  ]
+});
+const minimalBundle = defineTheme({
+  name: "minimal",
+  appTheme: minimalAppTheme,
+  canvasTheme: minimalCanvas
+});
+const cycleRingsCanvas = (state) => ({
+  _type: "VisualSceneDescriptor",
+  background: cycleRingsAppTheme.background,
+  layers: [
+    radialGlowLayer(state.rms, cycleRingsAppTheme.accent, 0.4),
+    ...state.tracks.filter((t2) => t2.pattern !== void 0).slice(0, 6).map((t2, i) => euclideanRingLayer(t2.pattern, state.tick.step, cycleRingsAppTheme.tracks[i % cycleRingsAppTheme.tracks.length] ?? cycleRingsAppTheme.accent, 80 + i * 44, t2.active ? 1 : 0.5))
+  ]
+});
+const cycleRingsBundle = defineTheme({
+  name: "cycle-rings",
+  appTheme: cycleRingsAppTheme,
+  canvasTheme: cycleRingsCanvas
+});
+const eventCascadeCanvas = (state) => ({
+  _type: "VisualSceneDescriptor",
+  background: eventCascadeAppTheme.background,
+  layers: [
+    waveformLayer(state.waveform, eventCascadeAppTheme.textMuted, 0.3),
+    ...state.tracks.filter((t2) => t2.active).slice(0, 4).map((t2, i) => particleBurstLayer(t2.active, eventCascadeAppTheme.tracks[i % eventCascadeAppTheme.tracks.length] ?? eventCascadeAppTheme.accent, 0.9))
+  ]
+});
+const eventCascadeBundle = defineTheme({
+  name: "event-cascade",
+  appTheme: eventCascadeAppTheme,
+  canvasTheme: eventCascadeCanvas
+});
+const tidalStreamCanvas = (state) => ({
+  _type: "VisualSceneDescriptor",
+  background: tidalStreamAppTheme.background,
+  layers: [
+    spectrumLayer(state.bins, tidalStreamAppTheme.accentMuted, 0.5),
+    waveformLayer(state.waveform, tidalStreamAppTheme.accent, 0.8),
+    stepBarLayer(state.tick.step, 16, tidalStreamAppTheme.textMuted, 0.3)
+  ]
+});
+const tidalStreamBundle = defineTheme({
+  name: "tidal-stream",
+  appTheme: tidalStreamAppTheme,
+  canvasTheme: tidalStreamCanvas
+});
+const defaultAnnotationSource = defineAnnotationSource((state, varMap) => {
+  if (varMap.length === 0)
+    return [];
+  const varIndex = new Map(varMap.map((v2) => [v2.name, v2.lineNumber]));
+  return state.tracks.filter((t2) => t2.pattern !== void 0 && t2.pattern.length > 0).flatMap((t2, i) => {
+    const lineNumber = varIndex.get(t2.name);
+    if (lineNumber === void 0)
+      return [];
+    return [{
+      variableName: t2.name,
+      lineNumber,
+      trackIndex: i,
+      pattern: t2.pattern,
+      step: state.tick.step,
+      color: darkPulseAppTheme.tracks[i % darkPulseAppTheme.tracks.length] ?? darkPulseAppTheme.accent
+    }];
+  });
+});
+registerTheme(darkPulseBundle);
+registerTheme(lorenzBundle);
+registerTheme(neonGridBundle);
+registerTheme(logisticBundle);
+registerTheme(euclideanMandalaBundle);
+registerTheme(probabilityStormBundle);
+registerTheme(minimalBundle);
+registerTheme(cycleRingsBundle);
+registerTheme(eventCascadeBundle);
+registerTheme(tidalStreamBundle);
+registerAnnotationSource("default", defaultAnnotationSource);
+const drawWaveform = (ctx, w2, h2, layer) => {
+  const waveform = layer.data["waveform"];
+  if (!waveform || waveform.length === 0) return;
+  ctx.globalAlpha = layer.alpha;
+  ctx.strokeStyle = layer.color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const sliceW = w2 / waveform.length;
+  waveform.forEach((s, i) => {
+    const x2 = i * sliceW;
+    const y2 = h2 / 2 + s * (h2 / 2) * 0.8;
+    if (i === 0) ctx.moveTo(x2, y2);
+    else ctx.lineTo(x2, y2);
+  });
+  ctx.stroke();
+};
+const drawSpectrum = (ctx, w2, h2, layer) => {
+  const bins = layer.data["bins"];
+  if (!bins || bins.length === 0) return;
+  ctx.globalAlpha = layer.alpha;
+  ctx.fillStyle = layer.color;
+  const barW = w2 / bins.length;
+  bins.forEach((mag, i) => {
+    const barH = mag * h2 * 0.8;
+    ctx.fillRect(i * barW, h2 - barH, barW - 1, barH);
+  });
+};
+const drawRadialGlow = (ctx, w2, h2, layer) => {
+  const rms = layer.data["rms"] ?? 0;
+  const cx = w2 / 2;
+  const cy = h2 / 2;
+  const radius = 80 + rms * 180;
+  const blur = 20 + rms * 60;
+  ctx.globalAlpha = layer.alpha;
+  const gradient = ctx.createRadialGradient(cx, cy, radius * 0.5, cx, cy, radius + blur);
+  gradient.addColorStop(0, layer.color + "aa");
+  gradient.addColorStop(0.5, layer.color + "44");
+  gradient.addColorStop(1, layer.color + "00");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius + blur, 0, Math.PI * 2);
+  ctx.fill();
+};
+const drawStepBar = (ctx, w2, h2, layer) => {
+  const step = layer.data["step"] ?? 0;
+  const stepCount = layer.data["stepCount"] ?? 16;
+  const x2 = step / stepCount * w2;
+  ctx.globalAlpha = layer.alpha;
+  ctx.strokeStyle = layer.color;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x2, 0);
+  ctx.lineTo(x2, h2);
+  ctx.stroke();
+};
+const drawEuclideanRing = (ctx, w2, h2, layer) => {
+  const pattern = layer.data["pattern"];
+  const step = layer.data["step"] ?? 0;
+  const radius = layer.data["radius"] ?? 120;
+  if (!pattern || pattern.length === 0) return;
+  const cx = w2 / 2;
+  const cy = h2 / 2;
+  const total = pattern.length;
+  const arcW = 2 * Math.PI / total;
+  pattern.forEach((active, i) => {
+    const angle = i / total * 2 * Math.PI - Math.PI / 2;
+    const isCurrent = i === step % total;
+    const glow = isCurrent ? 1 : active ? 0.6 : 0.15;
+    ctx.globalAlpha = layer.alpha * glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, angle, angle + arcW * 0.85);
+    ctx.strokeStyle = layer.color;
+    ctx.lineWidth = isCurrent ? 4 : 2;
+    ctx.stroke();
+    if (active) {
+      const dotX = cx + Math.cos(angle + arcW / 2) * radius;
+      const dotY = cy + Math.sin(angle + arcW / 2) * radius;
+      ctx.globalAlpha = layer.alpha * glow;
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, isCurrent ? 5 : 3, 0, Math.PI * 2);
+      ctx.fillStyle = layer.color;
+      ctx.fill();
+    }
+  });
+};
+const drawAttractorPoints = (ctx, w2, h2, layer) => {
+  const points = layer.data["points"];
+  if (!points || points.length === 0) return;
+  ctx.globalAlpha = layer.alpha * 0.7;
+  ctx.fillStyle = layer.color;
+  points.forEach(([px, py]) => {
+    ctx.beginPath();
+    ctx.arc(px * w2, py * h2, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+};
+const drawLayer = (ctx, w2, h2, layer) => {
+  ctx.save();
+  switch (layer.kind) {
+    case "waveform":
+      drawWaveform(ctx, w2, h2, layer);
+      break;
+    case "spectrum":
+      drawSpectrum(ctx, w2, h2, layer);
+      break;
+    case "radial-glow":
+      drawRadialGlow(ctx, w2, h2, layer);
+      break;
+    case "step-bar":
+      drawStepBar(ctx, w2, h2, layer);
+      break;
+    case "euclidean-ring":
+      drawEuclideanRing(ctx, w2, h2, layer);
+      break;
+    case "attractor-points":
+      drawAttractorPoints(ctx, w2, h2, layer);
+      break;
+  }
+  ctx.restore();
+};
+const PerformanceCanvas = ({
+  state,
+  theme,
+  editorVisible: _editorVisible
+}) => {
+  const canvasRef = reactExports.useRef(null);
+  const containerRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    const { width, height } = container.getBoundingClientRect();
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const w2 = canvas.width;
+    const h2 = canvas.height;
+    let bundle = null;
+    try {
+      bundle = getTheme(theme);
+    } catch {
+      try {
+        bundle = getTheme("dark-pulse");
+      } catch {
+        return;
+      }
+    }
+    const scene = bundle.canvasTheme(state);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = scene.background;
+    ctx.fillRect(0, 0, w2, h2);
+    scene.layers.forEach((layer) => {
+      drawLayer(ctx, w2, h2, layer);
+    });
+  }, [state, theme]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      ref: containerRef,
+      style: {
+        flex: 1,
+        display: "flex",
+        overflow: "hidden",
+        position: "relative"
+      },
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "canvas",
+        {
+          ref: canvasRef,
+          "data-testid": "performance-canvas",
+          style: { display: "block", width: "100%", height: "100%" }
+        }
+      )
+    }
+  );
+};
+const ZERO_TICK = {
+  step: 0,
+  bar: 0,
+  beat: 0,
+  bpm: 120,
+  time: 0,
+  stepCount: 16
+};
+const EMPTY_STATE = {
+  waveform: [],
+  bins: [],
+  tick: ZERO_TICK,
+  rms: 0,
+  tracks: []
+};
+const computeRms = (waveform) => {
+  if (waveform.length === 0) return 0;
+  const sumSq = waveform.reduce((acc, s) => acc + s * s, 0);
+  return Math.sqrt(sumSq / waveform.length);
+};
+const useAudioVisualState = (audioRef, stepRef, bpmRef, tracksRef) => {
+  const [state, setState2] = reactExports.useState(EMPTY_STATE);
+  const rafRef = reactExports.useRef(0);
+  const startTime = reactExports.useRef(performance.now());
+  reactExports.useEffect(() => {
+    const tick = () => {
+      rafRef.current = requestAnimationFrame(tick);
+      const waveform = audioRef.current?.waveform ?? [];
+      const rms = computeRms(waveform);
+      const { step = 0, stepCount = 16 } = stepRef.current ?? {};
+      const bpm = bpmRef.current ?? 120;
+      const elapsed = (performance.now() - startTime.current) / 1e3;
+      const temporalTick = {
+        step,
+        stepCount,
+        bpm,
+        bar: Math.floor(step / 4),
+        beat: step % 4,
+        time: elapsed
+      };
+      setState2({
+        waveform,
+        bins: [],
+        // engine:analysis does not send FFT bins; extend when engine exposes them
+        tick: temporalTick,
+        rms,
+        tracks: tracksRef.current ?? []
+      });
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [audioRef, stepRef, bpmRef, tracksRef]);
+  return state;
+};
+const PERFORMANCE_STARTER = `import { Song, Kick808, Bass303 } from '@score/dsl'
+
+const kick = Kick808().pattern([1,0,0,0,1,0,0,0]).volume(0.7)
+const bass = Bass303('C2').cutoff(500).volume(0.6)
+
+export default Song({ bpm: 130, tracks: [kick, bass] })`;
+const styles = {
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    width: "100vw",
+    height: "100vh",
+    background: "#050506",
+    overflow: "hidden"
+  },
+  body: {
+    display: "flex",
+    flex: 1,
+    overflow: "hidden"
+  },
+  editorStrip: {
+    width: "30%",
+    minWidth: "240px",
+    display: "flex",
+    flexDirection: "column",
+    borderRight: "1px solid #111116",
+    overflow: "hidden"
+  },
+  toolbar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0.3rem 0.6rem",
+    background: "#080809",
+    borderBottom: "1px solid #111116",
+    flexShrink: 0
+  },
+  toolbarLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem"
+  },
+  homeBtn: {
+    background: "none",
+    border: "1px solid #1e1e22",
+    color: "#3a3a46",
+    fontSize: "0.65rem",
+    fontFamily: "system-ui, sans-serif",
+    letterSpacing: "0.06em",
+    padding: "0.2rem 0.45rem",
+    borderRadius: "2px",
+    cursor: "pointer"
+  },
+  modeLabel: {
+    fontSize: "0.6rem",
+    fontFamily: "'JetBrains Mono', monospace",
+    letterSpacing: "0.1em",
+    color: "#2a3a52",
+    textTransform: "uppercase"
+  },
+  tabHint: {
+    fontSize: "0.55rem",
+    fontFamily: "system-ui, sans-serif",
+    letterSpacing: "0.06em",
+    color: "#1e2a3a"
+  },
+  editorContainer: {
+    flex: 1,
+    overflow: "hidden"
+  },
+  canvasArea: {
+    flex: 1,
+    overflow: "hidden",
+    display: "flex"
+  }
+};
+const PerformanceMode = ({ hardware: _hardware, onHome }) => {
+  const [code, setCode] = reactExports.useState(PERFORMANCE_STARTER);
+  const [editorVisible, setEditorVisible] = reactExports.useState(true);
+  const [theme, setTheme] = reactExports.useState("dark-pulse");
+  const audioRef = reactExports.useRef({ waveform: [] });
+  const stepRef = reactExports.useRef({ step: 0, stepCount: 16 });
+  const bpmRef = reactExports.useRef(120);
+  const tracksRef = reactExports.useRef([]);
+  reactExports.useEffect(() => {
+    const unsubAnalysis = window.scoreBridge.on("engine:analysis", ({ waveform }) => {
+      audioRef.current = { waveform };
+    });
+    const unsubStep = window.scoreBridge.on("engine:step", ({ step, stepCount }) => {
+      stepRef.current = { step, stepCount };
+    });
+    const unsubState = window.scoreBridge.on("engine:state", ({ bpm }) => {
+      bpmRef.current = bpm;
+    });
+    const unsubSong = window.scoreBridge.on("song:update", (payload) => {
+      if (payload.theme !== void 0) setTheme(payload.theme);
+      tracksRef.current = payload.tracks.map((t2) => ({
+        name: t2.name,
+        type: t2.type,
+        active: false,
+        rms: 0,
+        pattern: t2.pattern.filter((v2) => typeof v2 === "number")
+      }));
+    });
+    return () => {
+      unsubAnalysis();
+      unsubStep();
+      unsubState();
+      unsubSong();
+    };
+  }, []);
+  reactExports.useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === "Tab" && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        const tag = e.target.tagName;
+        if (tag !== "TEXTAREA" && tag !== "INPUT") {
+          e.preventDefault();
+          setEditorVisible((v2) => !v2);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+  const handleEval = reactExports.useCallback(() => {
+    window.scoreBridge.send("engine:eval", { code });
+  }, [code]);
+  const visualState = useAudioVisualState(audioRef, stepRef, bpmRef, tracksRef);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles.root, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles.body, children: [
+    editorVisible && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles.editorStrip, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles.toolbar, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: styles.toolbarLeft, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { style: styles.homeBtn, onClick: onHome, children: "← Home" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles.modeLabel, children: "Performance" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: styles.tabHint, children: "Tab — hide editor" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles.editorContainer, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        CodeEditorPanel,
+        {
+          value: code,
+          onChange: setCode,
+          onEval: handleEval
+        }
+      ) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: styles.canvasArea, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      PerformanceCanvas,
+      {
+        state: visualState,
+        theme,
+        editorVisible
+      }
+    ) })
+  ] }) });
+};
 const App = () => {
-  const [state, setState] = reactExports.useState({ screen: "splash" });
+  const [state, setState2] = reactExports.useState({ screen: "splash" });
   const goHome = () => {
-    setState({ screen: "splash" });
+    window.scoreBridge.send("transport:stop", void 0);
+    setState2({ screen: "splash" });
   };
   if (state.screen === "splash") {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -7974,7 +12751,7 @@ const App = () => {
       {
         onSelect: (mode2, hardware2) => {
           window.scoreBridge.send("mode:selected", { mode: mode2, hardware: hardware2 });
-          setState({ screen: "mode", mode: mode2, hardware: hardware2 });
+          setState2({ screen: "mode", mode: mode2, hardware: hardware2 });
         }
       }
     );
@@ -7984,11 +12761,32 @@ const App = () => {
     mode === "live-code" && /* @__PURE__ */ jsxRuntimeExports.jsx(LiveCode, { hardware, onHome: goHome }),
     mode === "produce" && /* @__PURE__ */ jsxRuntimeExports.jsx(Produce, { hardware, onHome: goHome }),
     mode === "dj-set" && /* @__PURE__ */ jsxRuntimeExports.jsx(DJSet, { hardware, onHome: goHome }),
-    mode === "jam-session" && /* @__PURE__ */ jsxRuntimeExports.jsx(JamSession, { hardware, onHome: goHome })
+    mode === "jam-session" && /* @__PURE__ */ jsxRuntimeExports.jsx(JamSession, { hardware, onHome: goHome }),
+    mode === "performance" && /* @__PURE__ */ jsxRuntimeExports.jsx(PerformanceMode, { hardware, onHome: goHome })
   ] });
 };
+class DevErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  render() {
+    const { error } = this.state;
+    if (error) {
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "2rem", fontFamily: "monospace", color: "#ff6b6b", background: "#0d0d0f", height: "100vh" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: { color: "#ff6b6b", marginBottom: "1rem" }, children: "Renderer crash" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { style: { whiteSpace: "pre-wrap", fontSize: "0.85rem" }, children: error.message }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { style: { whiteSpace: "pre-wrap", fontSize: "0.75rem", color: "#888", marginTop: "1rem" }, children: error.stack })
+      ] });
+    }
+    return this.props.children;
+  }
+}
 const root = document.getElementById("root");
 if (!root) throw new Error("root element not found");
 createRoot(root).render(
-  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) })
+  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(DevErrorBoundary, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) })
 );
