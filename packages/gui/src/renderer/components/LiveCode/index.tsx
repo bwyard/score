@@ -143,6 +143,38 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   // Debounce timer for re-eval after instrument param changes
   const evalDebounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // t152 — resizable editor/canvas split
+  const [splitPct, setSplitPct] = useState(50)
+  const bodyRef = useRef<HTMLDivElement | null>(null)
+  // HARDWARE BOUNDARY — drag state: append-only transitions during pointer lifecycle
+  const dragRef = useRef<{ active: boolean; startX: number; startPct: number }>({
+    active: false, startX: 0, startPct: 50,
+  })
+
+  const onSplitterMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    dragRef.current.active  = true
+    dragRef.current.startX  = e.clientX
+    dragRef.current.startPct = splitPct
+  }, [splitPct])
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent): void => {
+      if (!dragRef.current.active) return
+      const containerW = bodyRef.current?.offsetWidth ?? 1
+      const dx = e.clientX - dragRef.current.startX
+      const newPct = dragRef.current.startPct + (dx / containerW) * 100
+      setSplitPct(Math.min(80, Math.max(20, newPct)))
+    }
+    const onMouseUp = (): void => { dragRef.current.active = false }
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup',   onMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup',   onMouseUp)
+    }
+  }, [])
+
   // t218 — panel layout persistence
   const [savedLayout, setSavedLayout] = useState<PanelLayoutMap>({})
   // Track layout generation so DraggablePanels remount once when saved layout loads
@@ -522,9 +554,9 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
         </div>
       </div>
 
-      <div style={styles.body}>
+      <div style={styles.body} ref={bodyRef}>
         {/* Editor pane — CodeWaveform behind textarea, Strudl aesthetic */}
-        <div style={styles.editorPane}>
+        <div style={{ ...styles.editorPane, flex: `0 0 ${splitPct}%` }}>
           {error !== null && (
             <div style={styles.errorBanner} role="alert">
               {error}
@@ -577,6 +609,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
             </div>
           </div>
         </div>
+
+        {/* Drag splitter — resize editor/canvas split */}
+        <div
+          role="separator"
+          aria-label="Resize editor pane"
+          aria-orientation="vertical"
+          style={styles.splitter}
+          onMouseDown={onSplitterMouseDown}
+        />
 
         {/* Floating panel canvas */}
         <div style={styles.canvas}>
@@ -759,11 +800,20 @@ const styles = {
   },
   body: { display: 'flex', flex: 1, overflow: 'hidden' },
   editorPane: {
+    // flex is overridden inline with splitPct state — this value acts as fallback only
     flex:          '0 0 50%',
-    borderRight:   '1px solid #1e1e22',
     display:       'flex',
     flexDirection: 'column' as const,
     background:    '#0d0d10',
+    overflow:      'hidden',
+  },
+  splitter: {
+    width:          '6px',
+    cursor:         'col-resize',
+    background:     '#1e1e22',
+    flexShrink:     0,
+    transition:     'background 0.15s',
+    userSelect:     'none' as const,
   },
   errorBanner: {
     background:   '#3a1a1a',
