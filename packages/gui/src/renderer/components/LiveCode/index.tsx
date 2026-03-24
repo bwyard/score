@@ -1069,7 +1069,6 @@ const styles = {
     gap:        '4px',
     padding:    '6px',
     overflowX:  'auto' as const,
-    overflowY:  'hidden' as const,
     alignItems: 'flex-start',
   },
   mixerEmpty: {
@@ -1096,7 +1095,7 @@ const styles = {
   },
   addTrackPicker: {
     position:      'absolute' as const,
-    top:           '40px',
+    bottom:        '38px',   // opens upward above the + button
     left:          0,
     zIndex:        300,
     background:    '#0e0e14',
@@ -1105,8 +1104,9 @@ const styles = {
     display:       'flex',
     flexDirection: 'column' as const,
     minWidth:      '90px',
-    boxShadow:     '0 4px 16px #0006',
-    overflow:      'hidden',
+    maxHeight:     '260px',
+    overflowY:     'auto' as const,
+    boxShadow:     '0 -4px 16px #0006',
   },
   addTrackPickerBtn: {
     background:    'none',
