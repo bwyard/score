@@ -132,12 +132,20 @@ export const patchTrackVolume = (
   const { start, end } = region
   const slice = code.slice(start, end)
 
-  const m = /\bvolume:\s*\d+(?:\.\d+)?/.exec(slice)
-  if (!m) return code
-
-  // Round to 2 decimal places, strip trailing zeros
+  // Round to 2 decimal places
   const formatted = String(Math.round(volume * 100) / 100)
-  const newSlice = slice.slice(0, m.index) + `volume: ${formatted}` + slice.slice(m.index + m[0].length)
+
+  // Try chain API style first: .volume(0.7)
+  const mChain = /\.volume\(\s*\d+(?:\.\d+)?\s*\)/.exec(slice)
+  if (mChain) {
+    const newSlice = slice.slice(0, mChain.index) + `.volume(${formatted})` + slice.slice(mChain.index + mChain[0].length)
+    return code.slice(0, start) + newSlice + code.slice(end)
+  }
+
+  // Fall back to object prop style: volume: 0.7
+  const mProp = /\bvolume:\s*\d+(?:\.\d+)?/.exec(slice)
+  if (!mProp) return code
+  const newSlice = slice.slice(0, mProp.index) + `volume: ${formatted}` + slice.slice(mProp.index + mProp[0].length)
   return code.slice(0, start) + newSlice + code.slice(end)
 }
 
