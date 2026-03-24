@@ -25,12 +25,21 @@ export type MixerStripProps = {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const STRIP_COLOR: Record<string, string> = {
-  kick:   '#c05a20',
-  snare:  '#c02040',
-  hihat:  '#208060',
-  synth:  '#2060a0',
-  arp:    '#6040a0',
-  sample: '#606060',
+  kick:    '#c05a20',
+  kick808: '#c05a20',
+  kick909: '#d04010',
+  snare:   '#c02040',
+  snare909:'#c02040',
+  hihat:   '#208060',
+  hihat808:'#208060',
+  bass303: '#9040c0',
+  synth:   '#2060a0',
+  subsynth:'#2060a0',
+  fmsynth: '#1a50c0',
+  pad:     '#206080',
+  pluck:   '#208060',
+  arp:     '#6040a0',
+  sample:  '#606060',
 }
 const STRIP_DEFAULT = '#404040'
 

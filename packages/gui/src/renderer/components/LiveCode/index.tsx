@@ -726,28 +726,55 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               onMoved={onPanelMoved}
             >
               <div style={styles.mixerInner}>
-                {tracks.map((track, i) => (
-                  <div
-                    key={`${track.name}-${String(i)}`}
-                    style={{ outline: selectedTrack === i ? '1px solid #4a8fff' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setSelectedTrack(prev => prev === i ? null : i) }}
-                    aria-label={`Select ${track.name} track`}
-                  >
-                    <MixerStrip
-                      name={track.name}
-                      type={track.type}
-                      volume={stripStates[i]?.volume ?? 1}
-                      muted={stripStates[i]?.muted ?? false}
-                      level={0}
-                      onVolume={v => { onMixerVolume(i, v) }}
-                      onMute={() => { onMixerMute(i) }}
-                    />
-                  </div>
-                ))}
+                {tracks.map((track, i) => {
+                  const isSelected = selectedTrack === i
+                  return (
+                    <div
+                      key={`${track.name}-${String(i)}`}
+                      style={{
+                        display:       'flex',
+                        flexDirection: 'column',
+                        alignItems:    'center',
+                        cursor:        'pointer',
+                        borderRadius:  3,
+                        border:        isSelected ? '2px solid #4a8fff' : '2px solid transparent',
+                        background:    isSelected ? 'rgba(74,143,255,0.08)' : 'transparent',
+                      }}
+                      onClick={() => { setSelectedTrack(prev => prev === i ? null : i) }}
+                      aria-label={`${isSelected ? 'Close' : 'Open'} ${track.name} instrument editor`}
+                      title={isSelected ? `Close ${track.name} editor` : `Click to edit ${track.name}`}
+                    >
+                      <MixerStrip
+                        name={track.name}
+                        type={track.type}
+                        volume={stripStates[i]?.volume ?? 1}
+                        muted={stripStates[i]?.muted ?? false}
+                        level={0}
+                        onVolume={v => { onMixerVolume(i, v) }}
+                        onMute={() => { onMixerMute(i) }}
+                      />
+                      <div style={{
+                        fontSize:      8,
+                        fontFamily:    'monospace',
+                        color:         isSelected ? '#4a8fff' : '#3a3a4a',
+                        letterSpacing: '0.08em',
+                        paddingBottom: 3,
+                        userSelect:    'none',
+                      }}>
+                        {isSelected ? '▲ EDIT' : '▼ EDIT'}
+                      </div>
+                    </div>
+                  )
+                })}
                 {tracks.length === 0 && (
                   <span style={styles.mixerEmpty}>No tracks — eval a song first</span>
                 )}
               </div>
+              {selectedTrack === null && tracks.length > 0 && (
+                <div style={{ fontSize: 9, color: '#3a3a52', fontFamily: 'monospace', padding: '4px 8px', textAlign: 'center', letterSpacing: '0.06em' }}>
+                  ▼ EDIT — click a strip above
+                </div>
+              )}
               {selectedTrack !== null && tracks[selectedTrack] !== undefined && (
                 <InstrumentPanel
                   trackIndex={selectedTrack}
