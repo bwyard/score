@@ -401,27 +401,60 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
 
     switch (comp.instrumentType) {
       case 'kick': {
-        const props = comp.props as KickProps
+        // model: '808' → createKick808, model: '909' → createKick909, else → triggerKick
+        const props   = comp.props as KickProps & { model?: string }
         const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
-        createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
-          if (hit) triggerKick(ctx, pos.time, props, dest)
-        })
+        if (props.model === '808') {
+          const kick808 = createKick808(ctx, { gain: props.volume ?? 0.85 })
+          kick808.connect(dest)
+          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+            if (hit) kick808.trigger(pos.time)
+          })
+        } else if (props.model === '909') {
+          const kick909 = createKick909(ctx, { gain: props.volume ?? 0.85 })
+          kick909.connect(dest)
+          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+            if (hit) kick909.trigger(pos.time)
+          })
+        } else {
+          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+            if (hit) triggerKick(ctx, pos.time, props, dest)
+          })
+        }
         break
       }
       case 'snare': {
-        const props = comp.props as SnareProps
+        // model: '909' → createSnare909, else → triggerSnare
+        const props   = comp.props as SnareProps & { model?: string }
         const pattern = props.pattern ?? DEFAULT_SNARE_PATTERN
-        createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
-          if (hit) triggerSnare(ctx, pos.time, props, dest)
-        })
+        if (props.model === '909') {
+          const snare909 = createSnare909(ctx, { gain: props.volume ?? 0.8 })
+          snare909.connect(dest)
+          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+            if (hit) snare909.trigger(pos.time)
+          })
+        } else {
+          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+            if (hit) triggerSnare(ctx, pos.time, props, dest)
+          })
+        }
         break
       }
       case 'hihat': {
-        const props = comp.props as HiHatProps
+        // model: '808' → createHihat808, else → triggerHiHat
+        const props   = comp.props as HiHatProps & { model?: string }
         const pattern = props.pattern ?? DEFAULT_HIHAT_PATTERN
-        createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
-          if (hit) triggerHiHat(ctx, pos.time, props, dest)
-        })
+        if (props.model === '808') {
+          const hat808 = createHihat808(ctx, { gain: props.volume ?? 0.4, ...(props.open !== undefined ? { open: props.open } : {}) })
+          hat808.connect(dest)
+          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+            if (hit) hat808.trigger(pos.time)
+          })
+        } else {
+          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+            if (hit) triggerHiHat(ctx, pos.time, props, dest)
+          })
+        }
         break
       }
       case 'synth': {
