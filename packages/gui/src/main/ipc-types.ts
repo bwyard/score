@@ -57,8 +57,12 @@ export type RendererToMain = {
 /** Channels from main → renderer (via ipcRenderer.on). */
 export type MainToRenderer = {
   'engine:state':    { playing: boolean; bpm: number; bars: number }
-  /** Fires every sequencer step — use for punchcard cursor and visualiser sync. */
-  'engine:step':     { step: number; stepCount: number }
+  /**
+   * Fires every sequencer step. Carries the full temporal coordinate for all consumers.
+   * `time` (audioContext.currentTime) is not included — it is only available in the renderer.
+   * Replaces the former `engine:step` channel (ADR 027).
+   */
+  'engine:tick':     { step: number; stepCount: number; bar: number; beat: number; bpm: number }
   'midi:status':     { connected: boolean }
   'error:report':    { message: string }
   /** Fires when song eval throws — message + optional stack + optional fix hint. Transport is NOT stopped. */

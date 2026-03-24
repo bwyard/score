@@ -50,7 +50,7 @@ const BeatClock = ({ step, stepCount }: { step: number; stepCount: number }) => 
  * The beat clock shows each quarter note as a group of 4 16th-note pips.
  *
  * @param bars      - Total bar count from engine:state (0-indexed)
- * @param step      - Current step 0–(stepCount-1) from engine:step
+ * @param step      - Current step 0–(stepCount-1) from engine:tick
  * @param stepCount - Total steps in the cursor pattern (max across all tracks)
  * @param bpm       - Beats per minute
  * @param playing   - Whether the transport is rolling

@@ -2,7 +2,7 @@
 
 > This document captures the current roadmap, ecosystem scope, and key architectural decisions.
 > Read this alongside the ADRs in `docs/adr/` before making structural changes.
-> Last updated: 2026-03-23
+> Last updated: 2026-03-24
 
 ---
 
@@ -110,11 +110,80 @@ Score is one tool in a larger temporal architecture ecosystem. All tools share t
 
 ## Post-Phase 13 Roadmap
 
+### Phase 13f — Live Demo Editor (Monaco IDE integration)
+
+The live coding editor is the core of Score Studio. This phase makes it DAW-competitive.
+
+**Core editor hardening (pre-demo):**
+- t296 — Replace `fireEvent` with `userEvent` in all slider tests (testing accuracy)
+- t295 — Step pad: clicking a step updates the pattern in the code editor, not just the visual grid
+- t300 — DSL `index.ts` barrel cleanup — cleaner import paths for song authors
+- t297 — HiHat open/closed — add `.open()` DSL method (requires DSL work first)
+
+**Monaco IDE integration (Phase 13f):**
+- IntelliSense for all `@score/dsl` exports — autocomplete `Kick`, `Bass303`, chain methods
+- Error underlining — parse ScoreError from engine, map to line/column in the editor
+- Pattern gutter — show active step as a decoration in the left gutter alongside line numbers
+- Live eval indicator — "evaluating…" flash on hot-reload, "error" state on failure
+- REPL panel — split view: editor top, eval output / error log bottom
+- Multiple file support — `import` from local files within the project (sandbox-safe)
+
+**Bidirectional wiring completeness:**
+- Instrument add → auto-appends code line to editor (currently appends a fixed template)
+- Track mute/unmute → inserts `.mute()`/removes `.mute()` at correct column in code
+- Track delete → removes the corresponding `const` line from code (t298)
+- BPM slider → syncs to `Song({ bpm: X })` prop in code
+- Step click → updates pattern array at correct index in code (t295)
+
+---
+
 ### Phase 14 — DSL Completeness
+
+Goal: every chain method listed in ADR 014 is implemented, validated, and documented.
+
+**Pattern system:**
 - t245/t246 — Pattern utilities re-exported from `@score/dsl` + `.pattern(p)` chain method
-- t240 — theory.ts expansion (transpose, relativeMinor, dominantOf, etc.)
-- t244 — `dsl/src/math.ts` adapter layer (musical names, curried transforms)
+- t254 (planning) — Pattern streams / `set()` — multiple pattern variations, switched at bar boundaries
+- Missing: `.swing(n)`, `.humanize(n)`, `.shift(n)` as first-class chain methods on all instruments
+
+**Theory expansion:**
+- t240 — theory.ts: `transpose()`, `relativeMinor()`, `dominantOf()`, `parallelMajor()`, `modeOf()`
+- t244 — `dsl/src/math.ts` adapter — musical names wrapping `@score/math` chaos functions (`drift()`, `scatter()`, `pulse()`)
+- Missing: chord voicings (e.g. `chord('Am7', 'drop2')`) as note arrays for melodic instruments
+
+**Effects and modulation chain:**
 - t247 — `.phaser()/.gate()/.multiband()` chain methods
+- Missing: `.tremolo(rate, depth)`, `.chorus(rate, depth, delay)`, `.pitchShift(semitones)` as chain methods
+- `.wobble(rate)` — LFO on filter cutoff, BPM-synced (core for dubstep/future bass)
+- `.autopan(rate)` — LFO on pan position
+
+**Input validation (pre-ship blocker):**
+- t301 — validators.ts: 35 chain methods need range checking with `ScoreError` on invalid input
+  - e.g. `volume(0-1)`, `reverb(0-1)`, `attack(>0)`, `detune(-1200 to 1200)`, `filter(20-20000)`
+  - Full plan in `claude-resources/DECISION-input-validation.md`
+
+**DSL hygiene:**
+- t300 — `index.ts` barrel cleanup — consider re-exporting by category (percussion, melodic, fx, theory)
+- t303 — Import blocklist: song files should not `import fs`, `import child_process`, etc.
+- t221 — Shared instrument name registry (auto-generates track names, prevents collisions)
+
+**Advanced DSL (planning required):**
+- t222 — Mini-notation tagged template: `score\`k..s...hhhh\`` → pattern array
+- t223 — Natural language `defineLanguage()` / `parse()` API (post-v1.0)
+- t252/t253 (planning) — Undo/redo + file format + autosave
+
+---
+
+### Phase 14b — Pre-Ship Blockers (v0.1.0)
+
+Four hard blockers before any tester receives the app (from `claude-resources/SCORE-PRE-SHIP-CHECKLIST.md`):
+
+| # | Issue | Severity | Fix |
+|---|-------|----------|-----|
+| t302 | `Math.random()` in noise generators — thesis violation | Critical | Replace with `PrimeRng` seeded from song seed |
+| t301 | 35 chain method validators missing | Critical | Add validators.ts with range checks |
+| t303 | No import blocklist for song files | High | Blocklist `fs`, `child_process`, `net`, etc. |
+| — | Electron security audit | High | CSP headers, sandbox enforcement, `nodeIntegration: false` |
 
 ### Planning Sessions Required Before Starting
 These areas require a dedicated planning session before any window touches them:
@@ -148,6 +217,46 @@ Dual-license business model (Red Hat/MongoDB pattern) remains viable if desired 
 2. GitHub ADRs are prior art with commit timestamps — **do not modify existing ADRs**
 3. Publish thesis MVP to arXiv when ready (pseudonymous release works there)
 4. US Copyright Office registration when paper is developed
+
+---
+
+## Contributing
+
+Score is designed to be contributable by following this roadmap. Here's how to pick up work:
+
+### Picking up a task
+
+1. Find a task in this doc or the todo CLI: `node ../claude-resources/todos/todo.js list --project score`
+2. Check if it needs a planning session first (marked `t###` with "planning" note above)
+3. Read the relevant ADR before changing any system it covers (`docs/adr/`)
+4. All code must follow CLAUDE.md style: factory functions, `const`, no `let`, no classes
+5. Every new export needs TSDoc. Every new component needs tests shipped with it.
+6. Branch off `dev`, PR back into `dev`. CI must pass: typecheck → lint → test → coverage.
+
+### Where to find what
+
+| What | Where |
+|------|-------|
+| All instruments | `packages/dsl/src/melodic.ts`, `percussion.ts`, `instruments.ts` |
+| Chain API types | `packages/dsl/src/chain.ts` |
+| Engine (hot-reload) | `packages/gui/src/main/index.ts` |
+| Audio backend | `packages/components/src/WebAudioBackend.ts` |
+| Synthesis components | `packages/components/src/` |
+| Effects | `packages/effects/src/` |
+| Music theory | `packages/dsl/src/theory.ts` |
+| Noise / math | `packages/math/src/` |
+| GUI live editor | `packages/gui/src/renderer/components/LiveCode/` |
+| GUI instrument panels | `packages/gui/src/renderer/components/InstrumentPanel/` |
+| GUI mixer | `packages/gui/src/renderer/components/Mixer/` |
+| IPC bridge | `packages/gui/src/main/ipc-types.ts` |
+
+### Good first tasks
+
+- Add a new chain method (e.g. `.tremolo(rate, depth)`) — follow the pattern in `packages/dsl/src/chain.ts`
+- Add input validation to an existing chain method — see `claude-resources/DECISION-input-validation.md`
+- Write a missing test for an instrument — check coverage with `pnpm test --coverage`
+- Fix a thesis violation (see Thesis Violations list above)
+- Add a missing effect — follow `packages/effects/src/reverb.ts` as the pattern
 
 ---
 

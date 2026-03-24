@@ -2,7 +2,7 @@
 //
 // Assembles the AudioVisualState expected by @score/visuals themes at ~60fps via
 // requestAnimationFrame. Audio data is sourced from IPC refs (engine:analysis,
-// engine:step, engine:state, song:update) — no renderer AudioContext is needed
+// engine:tick, engine:state, song:update) — no renderer AudioContext is needed
 // since the audio engine runs in the main process via node-web-audio-api.
 //
 // All input refs are populated by IPC handlers in the parent component. The rAF
@@ -55,7 +55,7 @@ export type IpcAudioData = {
  * each animation frame — no re-subscriptions on every state change.
  *
  * @param audioRef  - Ref to latest `{ waveform }` from `engine:analysis` IPC.
- * @param stepRef   - Ref to `{ step, stepCount }` from `engine:step` IPC.
+ * @param stepRef   - Ref to `{ step, stepCount }` from `engine:tick` IPC.
  * @param bpmRef    - Ref to current BPM from `engine:state` IPC.
  * @param tracksRef - Ref to track visual states from `song:update` IPC.
  * @returns Latest {@link AudioVisualState} updated at animation frame rate.

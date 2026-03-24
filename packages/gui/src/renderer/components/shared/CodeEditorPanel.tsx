@@ -39,7 +39,7 @@ type Props = {
   readonly decorations?: ReadonlyArray<EditorDecoration>
   /**
    * Per-track step badges — displayed at the end of each instrument line
-   * as a `STEP/TOTAL` pill. Updated on every engine:step tick.
+   * as a `STEP/TOTAL` pill. Updated on every engine:tick tick.
    */
   readonly stepBadges?:  ReadonlyArray<StepBadge>
   /**
@@ -187,7 +187,7 @@ const injectDecorationCss = (): void => {
  * theme, and beat-highlighting decoration infrastructure.
  *
  * Signal path for beat highlighting:
- *   engine:step → LiveCode.currentStep → getActiveLines() → decorations prop
+ *   engine:tick → LiveCode.currentStep → getActiveLines() → decorations prop
  *   → CodeEditorPanel → editor.deltaDecorations()
  *
  * @param value       - Current code string (controlled).

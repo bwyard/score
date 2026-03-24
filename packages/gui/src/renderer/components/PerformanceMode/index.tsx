@@ -105,7 +105,7 @@ const styles = {
  *
  * IPC wiring:
  * - `engine:analysis` → `audioRef` (waveform samples)
- * - `engine:step`     → `stepRef`  (step + stepCount)
+ * - `engine:tick`     → `stepRef`  (step + stepCount + bar + beat + bpm)
  * - `engine:state`    → `bpmRef`   (BPM)
  * - `song:update`     → `tracksRef` + `theme` state
  *
@@ -128,7 +128,7 @@ export const PerformanceMode = ({ hardware: _hardware, onHome }: Props): React.J
     const unsubAnalysis = window.scoreBridge.on('engine:analysis', ({ waveform }) => {
       audioRef.current = { waveform }
     })
-    const unsubStep = window.scoreBridge.on('engine:step', ({ step, stepCount }) => {
+    const unsubStep = window.scoreBridge.on('engine:tick', ({ step, stepCount }) => {
       stepRef.current = { step, stepCount }
     })
     const unsubState = window.scoreBridge.on('engine:state', ({ bpm }) => {
