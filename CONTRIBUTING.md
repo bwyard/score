@@ -119,7 +119,7 @@ Always welcome. Include a failing test that the fix makes pass.
 
 ## Reporting issues
 
-Open an issue on GitHub. For security vulnerabilities, email bree@breeyard.com directly — do not open a public issue.
+Open an issue on GitHub. For security vulnerabilities, email byard29@gmail.com directly — do not open a public issue.
 
 ---
 
