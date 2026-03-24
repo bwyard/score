@@ -33,7 +33,15 @@ export default defineConfig({
     build:    { externalizeDeps: true },
   },
   renderer: {
+    // BOUNDARY — renderer: Chromium/browser environment, no Node.js APIs
+    // Only alias packages that are imported as values (not type-only) in renderer source.
+    // @score/visuals pulls in @score/math (lorenz theme) — both must be aliased together.
+    // @score/sequencer / @score/dsl etc. are type-only in renderer — no alias needed.
     root:    'src/renderer',
     plugins: [react()],
+    resolve: { alias: {
+      '@score/visuals': ws('visuals/src/index.ts'),
+      '@score/math':    ws('math/src/index.ts'),
+    }},
   },
 })
