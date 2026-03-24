@@ -35,7 +35,7 @@ const bass = Bass303('A2')
   .pattern(['A2', 0, 0, 0, 'D3', 0, 0, 0])
   .volume(0.7)
 
-const pad = Pad('Am')
+const pad = Pad('A3')
   .attack(0.3)
   .release(1.2)
   .reverb(0.3)
