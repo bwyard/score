@@ -556,7 +556,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
       <div style={styles.body} ref={bodyRef}>
         {/* Editor pane — CodeWaveform behind textarea, Strudl aesthetic */}
-        <div style={{ ...styles.editorPane, flex: `0 0 ${splitPct}%` }}>
+        <div style={{ ...styles.editorPane, flex: `0 0 ${String(splitPct)}%` }}>
           {error !== null && (
             <div style={styles.errorBanner} role="alert">
               {error}
