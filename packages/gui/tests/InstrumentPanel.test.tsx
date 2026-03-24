@@ -131,8 +131,8 @@ describe('InstrumentPanel — interactions', () => {
     const onChange = vi.fn()
     setup({ instrumentType: 'hihat', trackName: 'HiHat', onChange })
     const slider = screen.getByRole('slider', { name: /decay/i })
-    fireEvent.change(slider, { target: { value: '0.1' } })
-    expect(onChange).toHaveBeenCalledWith('decay', 0.1)
+    fireEvent.change(slider, { target: { value: '0.5' } })
+    expect(onChange).toHaveBeenCalledWith('decay', 0.5)
   })
 
   it('calls onChange with method "cutoff" when Cutoff slider changes for bass303', () => {
