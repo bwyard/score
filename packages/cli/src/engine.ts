@@ -110,7 +110,7 @@ const MELODIC_INSTRUMENT_TYPES = new Set([
 ])
 
 /** Convert a chain-API {@link PartDescriptor} to an {@link InstrumentDescriptor} the engine can hydrate. */
-const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDescriptor => ({
+export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDescriptor => ({
   _type: 'InstrumentDescriptor',
   instrumentType: part.instrumentType as InstrumentDescriptor['instrumentType'],
   id: part.id,
@@ -361,9 +361,9 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
   mixer.connect(analyser)
   analyser.connect(ctx.destination)
 
-  // Resolve track descriptors
+  // Resolve track descriptors — handles InstrumentDescriptor, ChainablePart, and TrackComponent
   const descriptors = song.tracks
-    .map(t => isInstrumentDescriptor(t) ? t : t.component)
+    .map(t => isInstrumentDescriptor(t) ? t : isPartDescriptor(t) ? partToInstrumentDescriptor(t) : t.component)
     .filter(isInstrumentDescriptor)
 
   // Pre-decode all sample buffers before wiring sequencers
