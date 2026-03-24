@@ -46,6 +46,8 @@ type PanelVisibility = {
 
 const STARTER = `import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
 
+// Click a track in the mixer to open its instrument panel (model, decay, reverb…)
+// Click a step in the punchcard to toggle it on/off
 const kick  = Kick808(4).decay(0.7).volume(0.8)
 const snare = Snare909(2).decay(0.2).volume(0.55)
 const hihat = Hihat808(8).decay(0.08).volume(0.25)
