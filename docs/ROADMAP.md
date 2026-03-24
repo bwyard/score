@@ -270,3 +270,41 @@ Score is designed to be contributable by following this roadmap. Here's how to p
 - Zero `let`, zero `class`, zero `new` (except Web Audio API internals)
 - Every public export gets TSDoc
 - Tests and error handling ship with the component — never backfilled
+
+---
+
+## Open Architecture Decisions (require planning session)
+
+### Math DSL bridge — @score/math in song files
+
+**Question:** Should `@score/math` primitives (Lorenz attractor, logistic map, OUProcess) be usable directly as chain modifiers in song files?
+
+**Option A — `@score/dsl` adapter:** Add `.drift(amount)`, `.scatter(seed)`, `.chaos(fn)` chain methods to ChainMethods. These call into `@score/math` under the hood. Song authors import only `@score/dsl`.
+
+**Option B — new `@score/math-dsl` package:** A thin adapter package that wraps `@score/math` in DSL-friendly named functions. Song authors can `import { drift, lorenz } from '@score/math-dsl'` as pattern generators.
+
+**Option C — direct `@score/math` import in songs:** Song authors import `@score/math` directly and use it in pattern generator functions: `Kick(step => lorenz(step) > 0.5 ? 1 : 0)`.
+
+Tracked as planning item — do not implement until decided. W3 to produce recommendation in `docs/design/dsl-math-bridge.md`.
+
+### Prime (Rust + WASM) integration
+
+**Question:** How does Prime (the Rust math primitives library) connect to Score's synthesis pipeline?
+
+- Prime is currently standalone Rust + WASM, pure functions
+- The thesis requires a `prime-render` function that proves temporal assembly at the sample level  
+- Score's noise generators (fillWhiteNoise/fillPinkNoise/fillBrownNoise) currently use `Math.random()` — thesis violation (t302)
+- Replacing `Math.random()` with `PrimeRng` (seeded, deterministic) is the bridge point
+
+**Open:** How does `@score/prime` expose the Rust WASM module to the TypeScript engine? Via `@score/math` as an optional backend? Tracked as pre-ship blocker t302.
+
+### Docs freshness system
+
+**Decision needed:** How do we keep docs current as the API evolves?
+
+Options:
+- CI check: a script that verifies every `export const` in `@score/dsl/src/chain.ts` is mentioned in INSTRUMENTS.md/EFFECTS.md (failing CI blocks merge with missing docs)
+- TSDoc extraction: generate docs from TSDoc comments via `typedoc` — source of truth shifts to code comments, not markdown files
+- Checklist in PR template: "If you changed a public API, update the relevant doc file" — low-tech, relies on humans
+
+Tracked as a todo. Recommendation: TSDoc extraction long-term, PR checklist short-term.
