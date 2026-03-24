@@ -515,7 +515,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       synth:    "Synth('C3').attack(0.01).release(0.4).volume(0.6)",
       subsynth: "SubSynth('C3').filter(1200).volume(0.6)",
       fmsynth:  "FMSynth('C3').attack(0.01).release(0.4).volume(0.6)",
-      pad:      "Pad('Am').attack(0.3).reverb(0.3).volume(0.5)",
+      pad:      "Pad('A3').attack(0.3).reverb(0.3).volume(0.5)",
       pluck:    "Pluck('C3').volume(0.6)",
     }
     const snippet = DEFAULTS[instrumentType] ?? `Synth('C3').volume(0.6)`
