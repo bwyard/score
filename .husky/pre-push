@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+echo "Running pre-push checks (typecheck + lint)…"
+pnpm typecheck && pnpm lint

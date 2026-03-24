@@ -63,7 +63,8 @@ const slider = (
   label: string, method: string, min: number, max: number, step: number, def: number,
 ): SliderControl => ({ kind: 'slider', label, method, min, max, step, default: def })
 
-const checkbox = (label: string, method: string): CheckboxControl =>
+// _checkbox available for future controls (e.g. HiHat open, gate mode)
+const _checkbox = (label: string, method: string): CheckboxControl =>
   ({ kind: 'checkbox', label, method })
 
 const select = (

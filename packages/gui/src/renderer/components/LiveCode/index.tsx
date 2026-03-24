@@ -794,6 +794,43 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               panelId="mixer"
               onMoved={onPanelMoved}
             >
+              {/* Add Track toolbar — outside mixerInner so picker isn't clipped by overflow:auto */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '4px 6px 0', gap: 6, position: 'relative' }}>
+                <button
+                  style={styles.addTrackBtn}
+                  aria-label="Add track"
+                  title="Add a new instrument track"
+                  onClick={() => { setAddTrackOpen(v => !v) }}
+                >
+                  +
+                </button>
+                <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#3a3a52', letterSpacing: '0.06em' }}>ADD TRACK</span>
+                {addTrackOpen && (
+                  <div style={styles.addTrackPicker}>
+                    {([
+                      ['kick808',  'Kick 808'],
+                      ['kick909',  'Kick 909'],
+                      ['snare909', 'Snare 909'],
+                      ['hihat808', 'HiHat 808'],
+                      ['bass303',  'Bass 303'],
+                      ['synth',    'Synth'],
+                      ['subsynth', 'SubSynth'],
+                      ['fmsynth',  'FM Synth'],
+                      ['pad',      'Pad'],
+                      ['pluck',    'Pluck'],
+                    ] as const).map(([type, label]) => (
+                      <button
+                        key={type}
+                        style={styles.addTrackPickerBtn}
+                        onClick={() => { onAddTrack(type) }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div style={styles.mixerInner}>
                 {tracks.map((track, i) => {
                   const isSelected = selectedTrack === i
@@ -840,41 +877,6 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                     </div>
                   )
                 })}
-                {/* Add Track button */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, alignSelf: 'flex-start', paddingTop: 4, position: 'relative' }}>
-                  <button
-                    style={styles.addTrackBtn}
-                    aria-label="Add track"
-                    title="Add a new instrument track"
-                    onClick={() => { setAddTrackOpen(v => !v) }}
-                  >
-                    +
-                  </button>
-                  {addTrackOpen && (
-                    <div style={styles.addTrackPicker}>
-                      {([
-                        ['kick808',  'Kick 808'],
-                        ['kick909',  'Kick 909'],
-                        ['snare909', 'Snare 909'],
-                        ['hihat808', 'HiHat 808'],
-                        ['bass303',  'Bass 303'],
-                        ['synth',    'Synth'],
-                        ['subsynth', 'SubSynth'],
-                        ['fmsynth',  'FM Synth'],
-                        ['pad',      'Pad'],
-                        ['pluck',    'Pluck'],
-                      ] as const).map(([type, label]) => (
-                        <button
-                          key={type}
-                          style={styles.addTrackPickerBtn}
-                          onClick={() => { onAddTrack(type) }}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
                 {tracks.length === 0 && (
                   <span style={styles.mixerEmpty}>No tracks — eval a song first</span>
                 )}
@@ -1095,7 +1097,7 @@ const styles = {
   },
   addTrackPicker: {
     position:      'absolute' as const,
-    bottom:        '38px',   // opens upward above the + button
+    top:           '36px',
     left:          0,
     zIndex:        300,
     background:    '#0e0e14',
