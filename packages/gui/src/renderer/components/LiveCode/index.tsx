@@ -71,8 +71,6 @@ type StripState = {
   readonly muted:  boolean
 }
 
-const defaultStripState = (): StripState => ({ volume: 1, muted: false })
-
 const updateStrip = (
   prev: ReadonlyArray<StripState>,
   index: number,
