@@ -109,6 +109,11 @@ const MELODIC_INSTRUMENT_TYPES = new Set([
   'pad', 'rhodes', 'pluck', 'bass-303',
 ])
 
+// Percussion types — chain .decay() maps directly to props.decay (not envelope)
+const PERCUSSION_TYPES = new Set([
+  'kick', 'kick808', 'kick909', 'snare', 'snare909', 'hihat', 'hihat808',
+])
+
 /** Convert a chain-API {@link PartDescriptor} to an {@link InstrumentDescriptor} the engine can hydrate. */
 export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDescriptor => ({
   _type: 'InstrumentDescriptor',
@@ -127,6 +132,9 @@ export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDesc
     ...(part._pattern  !== undefined ? { pattern:  part._pattern  } : {}),
     ...(part._notes    !== undefined ? { notes:    part._notes    } : {}),
     ...(part._adsr     !== undefined ? { envelope: part._adsr     } : {}),
+    // For percussion, also spread _adsr fields directly into props so .decay() / .pitch() etc.
+    // from the chain API reach the component factory (which reads props.decay, not props.envelope.decay).
+    ...(part._adsr !== undefined && PERCUSSION_TYPES.has(part.instrumentType) ? part._adsr : {}),
     ...(part._effects  !== undefined ? { effects:  part._effects  } : {}),
     ...(part._swing    !== undefined ? { swing:    part._swing    } : {}),
     ...(part._humanize !== undefined ? { humanize: part._humanize } : {}),

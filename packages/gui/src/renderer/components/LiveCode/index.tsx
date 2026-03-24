@@ -46,9 +46,9 @@ type PanelVisibility = {
 
 const STARTER = `import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
 
-const kick  = Kick808(4).volume(0.8)
-const snare = Snare909(2).volume(0.55)
-const hihat = Hihat808(8).volume(0.25)
+const kick  = Kick808(4).decay(0.7).volume(0.8)
+const snare = Snare909(2).decay(0.2).volume(0.55)
+const hihat = Hihat808(8).decay(0.08).volume(0.25)
 const bass  = Bass303('A2').cutoff(600).resonance(0.4)
   .pattern(['A2', 0, 0, 0,  'D3', 0, 0, 0,  'A2', 0, 0, 0,  'D3', 0, 0, 0])
   .volume(0.6)
