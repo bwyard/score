@@ -152,6 +152,11 @@ export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDesc
   connect: part.connect,
   disconnect: part.disconnect,
   dispose: part.dispose,
+  ...(part._fromBar    !== undefined ? { _fromBar:    part._fromBar    } : {}),
+  ...(part._untilBar   !== undefined ? { _untilBar:   part._untilBar   } : {}),
+  ...(part._fadeInBars !== undefined ? { _fadeInBars: part._fadeInBars } : {}),
+  ...(part._fadeOutBars !== undefined ? { _fadeOutBars: part._fadeOutBars } : {}),
+  ...(part._chokeGroup !== undefined ? { _chokeGroup: part._chokeGroup } : {}),
   props: {
     ...(part._volume !== undefined
       ? MELODIC_INSTRUMENT_TYPES.has(part.instrumentType)
@@ -489,6 +494,26 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
     return channel.input as unknown as GainNode
   })
 
+  // ── Choke group registry ─────────────────────────────────────────────────────
+  // Hardware-boundary exception: mutable Map — built once at engine startup, never replaced.
+  // Maps chokeGroup name → array of channel indices in that group.
+  const chokeGroupMap = new Map<string, number[]>()
+  descriptors.forEach((desc, i) => {
+    if (!desc._chokeGroup) return
+    const peers = chokeGroupMap.get(desc._chokeGroup) ?? []
+    chokeGroupMap.set(desc._chokeGroup, [...peers, i])
+  })
+
+  // When a track in a choke group fires: mute all peers, unmute self.
+  // This cuts off the current decay of any peer that is sustaining (e.g. open → closed hihat).
+  const applyChoke = (myIndex: number, groupName: string): void => {
+    for (const idx of chokeGroupMap.get(groupName) ?? []) {
+      if (idx === myIndex) continue
+      mixer.getChannel(idx)?.setMute(true)
+    }
+    mixer.getChannel(myIndex)?.setMute(false)
+  }
+
   // Wire step sequencers per track
   descriptors.forEach((comp, i) => {
     const dest = channelInputs[i]
@@ -501,18 +526,23 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         // model: '808' → createKick808, model: '909' → createKick909, else → triggerKick
         const props   = comp.props as KickProps & { model?: string; seed?: number }
         const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
-        const trackSeed = props.seed ?? song.seed
         if (props.model === '808') {
           const kick808 = createKick808(ctx, { gain: props.volume ?? 0.85 })
           kick808.connect(dest)
           createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
-            if (hit) kick808.trigger(pos.time)
+            if (hit) {
+              if (comp._chokeGroup) applyChoke(i, comp._chokeGroup)
+              kick808.trigger(pos.time)
+            }
           })
         } else if (props.model === '909') {
           const kick909 = createKick909(ctx, { gain: props.volume ?? 0.85 })
           kick909.connect(dest)
           createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
-            if (hit) kick909.trigger(pos.time)
+            if (hit) {
+              if (comp._chokeGroup) applyChoke(i, comp._chokeGroup)
+              kick909.trigger(pos.time)
+            }
           })
         } else {
           createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
@@ -525,12 +555,14 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         // model: '909' → createSnare909, else → triggerSnare
         const props   = comp.props as SnareProps & { model?: string; seed?: number }
         const pattern = props.pattern ?? DEFAULT_SNARE_PATTERN
-        const trackSeed = props.seed ?? song.seed
         if (props.model === '909') {
           const snare909 = createSnare909(ctx, { gain: props.volume ?? 0.8 })
           snare909.connect(dest)
           createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
-            if (hit) snare909.trigger(pos.time)
+            if (hit) {
+              if (comp._chokeGroup) applyChoke(i, comp._chokeGroup)
+              snare909.trigger(pos.time)
+            }
           })
         } else {
           createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
@@ -543,12 +575,14 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         // model: '808' → createHihat808, else → triggerHiHat
         const props   = comp.props as HiHatProps & { model?: string; seed?: number }
         const pattern = props.pattern ?? DEFAULT_HIHAT_PATTERN
-        const trackSeed = props.seed ?? song.seed
         if (props.model === '808') {
           const hat808 = createHihat808(ctx, { gain: props.volume ?? 0.4, ...(props.open !== undefined ? { open: props.open } : {}) })
           hat808.connect(dest)
           createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
-            if (hit) hat808.trigger(pos.time)
+            if (hit) {
+              if (comp._chokeGroup) applyChoke(i, comp._chokeGroup)
+              hat808.trigger(pos.time)
+            }
           })
         } else {
           createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
@@ -580,7 +614,10 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         player.connect(dest)
         const pattern = props.pattern ?? [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
-          if (hit) player.start(pos.time)
+          if (hit) {
+            if (comp._chokeGroup) applyChoke(i, comp._chokeGroup)
+            player.start(pos.time)
+          }
         })
         break
       }
@@ -676,7 +713,10 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         kick.connect(dest)
         const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
         createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
-          if (hit) kick.trigger(pos.time)
+          if (hit) {
+            if (comp._chokeGroup) applyChoke(i, comp._chokeGroup)
+            kick.trigger(pos.time)
+          }
         })
         break
       }
@@ -694,7 +734,10 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         kick.connect(dest)
         const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
         createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
-          if (hit) kick.trigger(pos.time)
+          if (hit) {
+            if (comp._chokeGroup) applyChoke(i, comp._chokeGroup)
+            kick.trigger(pos.time)
+          }
         })
         break
       }
@@ -708,7 +751,10 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         hat.connect(dest)
         const pattern = props.pattern ?? DEFAULT_HIHAT_PATTERN
         createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
-          if (hit) hat.trigger(pos.time)
+          if (hit) {
+            if (comp._chokeGroup) applyChoke(i, comp._chokeGroup)
+            hat.trigger(pos.time)
+          }
         })
         break
       }
@@ -723,7 +769,10 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         snare.connect(dest)
         const pattern = props.pattern ?? DEFAULT_SNARE_PATTERN
         createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
-          if (hit) snare.trigger(pos.time)
+          if (hit) {
+            if (comp._chokeGroup) applyChoke(i, comp._chokeGroup)
+            snare.trigger(pos.time)
+          }
         })
         break
       }
@@ -906,6 +955,50 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
     })
   }
 
+  // ── Per-track bar gating: fromBar / untilBar / fadeIn / fadeOut ──────────────
+  // Independent of arrangement sections — applies per-track timing constraints
+  // threaded from chain API (_fromBar / _untilBar / _fadeInBars / _fadeOutBars).
+  // barDuration = (60 / bpm) * 4 beats/bar (assumes 4/4 time signature).
+
+  const tracksWithGating = descriptors.filter(
+    d => d._fromBar !== undefined || d._untilBar !== undefined,
+  )
+  if (tracksWithGating.length > 0) {
+    transport.onBar(position => {
+      const barDuration = (60 / transport.bpm) * 4
+      descriptors.forEach((desc, i) => {
+        if (desc._fromBar === undefined && desc._untilBar === undefined) return
+        const channel = mixer.getChannel(i)
+        if (!channel) return
+
+        const fromBar  = desc._fromBar  ?? 0
+        const untilBar = desc._untilBar ?? Infinity
+        const inRange  = position.bar >= fromBar && position.bar < untilBar
+
+        channel.setMute(!inRange)
+
+        if (inRange && position.bar === fromBar) {
+          // Track enters active range — handle fade-in or restore volume
+          if (desc._fadeInBars !== undefined) {
+            channel.scheduleFade(0, 1, position.time, position.time + desc._fadeInBars * barDuration)
+          } else {
+            // Restore volume to 1 in case a previous fade-out left it at 0
+            channel.setVolume(1, position.time)
+          }
+        }
+
+        if (
+          desc._untilBar !== undefined &&
+          desc._fadeOutBars !== undefined &&
+          position.bar === desc._untilBar - desc._fadeOutBars
+        ) {
+          // Track is approaching its end — schedule fade-out
+          channel.scheduleFade(1, 0, position.time, position.time + desc._fadeOutBars * barDuration)
+        }
+      })
+    })
+  }
+
   // ── Cursor step sequencer — fires per step for punchcard + visualiser sync ───
   // Uses max pattern length across tracks (min 8) so the cursor covers all tracks.
   // All-ones pattern means every step triggers the callback regardless of track hits.
@@ -955,6 +1048,13 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
     update: (nextSong: SongDefinition): void => {
       // Apply BPM diff
       if (nextSong.bpm !== transport.bpm) transport.setBPM(nextSong.bpm)
+
+      // Cancel any in-progress fade ramps before applying the new song's parameters.
+      // Without this, a stale linearRampToValueAtTime from a previous fadeIn/fadeOut
+      // persists on the channel's volumeGain AudioParam and overrides the new volume.
+      descriptors.forEach((_desc, i) => {
+        mixer.getChannel(i)?.cancelFade()
+      })
 
       // Apply per-track volume/mute diffs
       const nextDescriptors = nextSong.tracks

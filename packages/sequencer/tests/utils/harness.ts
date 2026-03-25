@@ -43,6 +43,8 @@ export const mockContext = (): MockContext => {
       gainParam: { connectModulator: (_source: unknown) => {}, disconnectModulator: () => {} },
       gain: _props?.gain ?? 1.0,
       setGain: (_value: number, _time?: number) => {},
+      cancelScheduledValues: (_atTime: number) => {},
+      scheduleFade: (_from: number, _to: number, _startTime: number, _endTime: number) => {},
       scheduleEnvelope: (_opts: { peak: number; attack: number; decay: number; sustain: number; release: number; startTime: number; duration: number }) => {},
     }),
     createNoise: (_props?: { type?: 'white' | 'pink' | 'brown' }) => ({

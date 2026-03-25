@@ -280,6 +280,17 @@ export type InstrumentDescriptor = {
   readonly connect: AudioComponent['connect']
   readonly disconnect: AudioComponent['disconnect']
   readonly dispose: AudioComponent['dispose']
+  // ── Arrangement-timing fields — set via chain API, hydrated by engine ───────
+  /** Bar on which the track starts playing (inclusive). */
+  readonly _fromBar?: number
+  /** Bar on which the track stops playing (exclusive). */
+  readonly _untilBar?: number
+  /** Linear gain fade-in duration in bars, starting at `_fromBar`. */
+  readonly _fadeInBars?: number
+  /** Linear gain fade-out duration in bars, ending at `_untilBar`. */
+  readonly _fadeOutBars?: number
+  /** Choke group name — triggers in the same group cut off each other's decay. */
+  readonly _chokeGroup?: string
 }
 
 /**
