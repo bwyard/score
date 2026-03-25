@@ -14,6 +14,8 @@ export type { PartDescriptor, ChainablePart, ChainMethods } from './chain.js'
 export { createPart } from './chain.js'
 export { noteHz, resolveFreq } from './notes.js'
 export { drift, keepFor } from './modifiers.js'
+export { lfo, sine, ramp, lorenz, ou, logistic } from './modulation.js'
+export type { ModulationDescriptor } from './modulation.js'
 export type {
   SongDefinition,
   SongProps,
