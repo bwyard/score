@@ -90,7 +90,17 @@ const buildEffectsChain = (
   descriptors: ReadonlyArray<EffectDescriptor> | undefined,
 ): AudioComponent[] => {
   if (!descriptors || descriptors.length === 0) return []
-  return descriptors.map(d => hydrateEffect(ctx, d))
+  return descriptors.flatMap(d => {
+    try {
+      return [hydrateEffect(ctx, d)]
+    } catch (err) {
+      // Effect hydration failure — log and skip. One bad effect must not crash
+      // the whole song boot. The channel will have a gap in its effects chain
+      // but audio continues uninterrupted.
+      console.error(`[score-engine] effect '${d.effectType}' failed to hydrate — skipped`, err)
+      return []
+    }
+  })
 }
 
 // ── Type guard ────────────────────────────────────────────────────────────────

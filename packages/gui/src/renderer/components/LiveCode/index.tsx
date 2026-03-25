@@ -133,6 +133,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [fftBins,     setFftBins]     = useState<readonly number[]>([])
   const [logEntries,  setLogEntries]  = useState<ReadonlyArray<LogEntry>>([])
   const [pianoNotes,  setPianoNotes]  = useState<ReadonlyArray<PianoRollNote>>([])
+  // t184/t133 — engine:error history (last 5 unexpected errors, separate from song eval errors)
+  const [engineErrors, setEngineErrors] = useState<readonly string[]>([])
   // t220 — import visibility toggle (stub: fold/unfold in Monaco; auto-inject deferred for DSL chain API)
   const [importsVisible, setImportsVisible] = useState(false)
   // Instrument panel — which track is currently selected (null = none)
@@ -243,6 +245,16 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       setEvalStatus('error')
       addLog('error', message)
       if (fix) addLog('info', `💡 ${fix}`)
+    })
+    return unsub
+  }, [addLog])
+
+  useEffect(() => {
+    const unsub = window.scoreBridge.on('engine:error', ({ message }) => {
+      // Keep last 5 unexpected engine errors — distinct from song eval errors.
+      // Previous engine stays running; this overlay is purely informational.
+      setEngineErrors(prev => [...prev.slice(-4), message])
+      addLog('error', `[engine] ${message}`)
     })
     return unsub
   }, [addLog])
@@ -630,6 +642,24 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
             </div>
           )}
 
+          {engineErrors.length > 0 && (
+            <div style={styles.engineErrorOverlay} role="alert" aria-live="assertive">
+              <div style={styles.engineErrorHeader}>
+                <span>Engine error</span>
+                <button
+                  style={styles.engineErrorDismiss}
+                  onClick={() => { setEngineErrors([]) }}
+                  aria-label="Dismiss engine errors"
+                >
+                  ✕
+                </button>
+              </div>
+              {engineErrors.map((msg, i) => (
+                <div key={i} style={styles.engineErrorEntry}>{msg}</div>
+              ))}
+            </div>
+          )}
+
           {/* Monaco editor + waveform overlay stacked */}
           {/* z-index 0: CodeWaveform (canvas behind)  1: Monaco editor */}
           <div style={styles.editorArea}>
@@ -948,6 +978,7 @@ const styles = {
     flexDirection: 'column' as const,
     background:    '#0d0d10',
     overflow:      'hidden',
+    position:      'relative' as const,
   },
   splitter: {
     width:          '6px',
@@ -965,6 +996,43 @@ const styles = {
     borderBottom: '1px solid #5a2a2a',
     flexShrink:   0,
     fontFamily:   "'JetBrains Mono', 'Fira Code', monospace",
+  },
+  engineErrorOverlay: {
+    position:     'absolute' as const,
+    top:          '0.5rem',
+    right:        '0.5rem',
+    zIndex:       100,
+    background:   '#2a1a0a',
+    border:       '1px solid #7a3a1a',
+    borderRadius: '4px',
+    padding:      '0.5rem 0.75rem',
+    maxWidth:     '380px',
+    fontFamily:   "'JetBrains Mono', 'Fira Code', monospace",
+    fontSize:     '0.7rem',
+    color:        '#ffaa55',
+    boxShadow:    '0 2px 8px rgba(0,0,0,0.6)',
+  },
+  engineErrorHeader: {
+    display:        'flex',
+    justifyContent: 'space-between',
+    alignItems:     'center',
+    marginBottom:   '0.3rem',
+    fontWeight:     700 as const,
+    color:          '#ffcc88',
+  },
+  engineErrorDismiss: {
+    background:  'none',
+    border:      'none',
+    color:       '#ffaa55',
+    cursor:      'pointer',
+    fontSize:    '0.8rem',
+    padding:     '0 0.2rem',
+    lineHeight:  1,
+  },
+  engineErrorEntry: {
+    marginTop:  '0.2rem',
+    lineHeight: 1.4,
+    wordBreak:  'break-word' as const,
   },
   // Container for waveform + textarea stacked absolutely
   editorArea: {

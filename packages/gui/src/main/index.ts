@@ -3,7 +3,7 @@ import path                                          from 'node:path'
 import { readFileSync, writeFileSync }               from 'node:fs'
 import vm                                            from 'node:vm'
 import { createScoreEngine, isPartDescriptor, partToInstrumentDescriptor } from '@score/cli/engine'
-import type { PatchProps }                           from '@score/cli/engine'
+import type { PatchProps, ScoreEngine }              from '@score/cli/engine'
 import {
   Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp,
   Kick808, Kick909, Snare909, Hihat808, SubSynth, FMSynth,
@@ -13,7 +13,6 @@ import {
   Track, Song, resolveFreq,
 }                                                    from '@score/dsl'
 import type { SongDefinition, InstrumentDescriptor } from '@score/dsl'
-import type { ScoreEngine }                          from '@score/cli/engine'
 import {
   Delay, Reverb, Filter, Compressor, EQ, Distortion, Limiter,
   BitCrusher, Chorus, Phaser, Flanger, StereoWidener, Gate,
@@ -212,8 +211,19 @@ const panicStop = (): void => {
 }
 
 const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
+  // t184 — Try to boot the new engine BEFORE tearing down the current one.
+  // If createScoreEngine throws, the previous engine keeps running uninterrupted.
+  let engine: ScoreEngine
+  try {
+    engine = await createScoreEngine(song)
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    const stack   = err instanceof Error ? err.stack : undefined
+    console.error('[score-studio] engine boot failed — keeping previous engine running', err)
+    send('engine:error', { message, ...(stack !== undefined ? { stack } : {}) })
+    return
+  }
   teardown()
-  const engine = await createScoreEngine(song)
   slotRef.value = { engine, playing: false, bpm: song.bpm, bars: barOffset }
   // Per-step IPC — fires every sequencer step carrying the full temporal coordinate.
   // bar and beat are derived from the engine state; time (audioContext.currentTime)
@@ -320,13 +330,14 @@ const writeLayout = (layout: PanelLayoutMap): void => {
 
 process.on('uncaughtException', (err: Error) => {
   console.error('[score-studio] uncaughtException', err)
-  send('error:report', { message: `Uncaught: ${err.message}` })
+  send('engine:error', { message: `Uncaught: ${err.message}`, ...(err.stack !== undefined ? { stack: err.stack } : {}) })
 })
 
 process.on('unhandledRejection', (reason: unknown) => {
   const message = reason instanceof Error ? reason.message : String(reason)
+  const stack   = reason instanceof Error ? reason.stack : undefined
   console.error('[score-studio] unhandledRejection', reason)
-  send('error:report', { message: `Unhandled rejection: ${message}` })
+  send('engine:error', { message: `Unhandled: ${message}`, ...(stack !== undefined ? { stack } : {}) })
 })
 
 // ── Lifecycle ──────────────────────────────────────────────────────────────────

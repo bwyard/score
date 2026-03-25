@@ -88,4 +88,11 @@ export type MainToRenderer = {
    * Renderer shows a brief transient flash to confirm the stop landed.
    */
   'engine:panic':    undefined
+  /**
+   * Fires when the engine throws unexpectedly — effect hydration failure,
+   * uncaught main-process exception, or a new Song boot that failed while a
+   * previous engine was running. The previous engine is kept alive on boot
+   * failure so playback is not interrupted.
+   */
+  'engine:error':    { message: string; stack?: string }
 }

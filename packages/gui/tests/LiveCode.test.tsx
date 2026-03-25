@@ -201,3 +201,36 @@ describe('LiveCode — resizable editor/canvas split (t152)', () => {
     fireEvent.mouseUp(window)
   })
 })
+
+// ── t184/t133: engine:error overlay ───────────────────────────────────────────
+
+describe('LiveCode — engine:error overlay (t184/t133)', () => {
+  it('shows overlay when engine:error fires', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    act(() => { emitBridgeEvent('engine:error', { message: 'effect hydration failed' }) })
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    // Use exact string — addLog also renders "[engine] effect hydration failed" so regex would match twice
+    expect(screen.getByText('effect hydration failed')).toBeInTheDocument()
+  })
+
+  it('dismiss button removes the overlay', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    act(() => { emitBridgeEvent('engine:error', { message: 'engine crashed' }) })
+    const dismiss = screen.getByLabelText('Dismiss engine errors')
+    act(() => { fireEvent.click(dismiss) })
+    // addLog keeps "[engine] engine crashed" in the console panel — query for the exact overlay text only
+    expect(screen.queryByText('engine crashed')).not.toBeInTheDocument()
+  })
+
+  it('keeps last 5 errors — older entries are dropped on overflow', () => {
+    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
+    act(() => {
+      for (let i = 1; i <= 6; i++) {
+        emitBridgeEvent('engine:error', { message: `error ${String(i)}` })
+      }
+    })
+    // addLog keeps "[engine] error 1" in console — query for exact overlay entry text only
+    expect(screen.queryByText('error 1')).not.toBeInTheDocument()
+    expect(screen.getByText('error 6')).toBeInTheDocument()
+  })
+})
