@@ -197,6 +197,104 @@ describe('engine — chain API hydration', () => {
     const props = partToInstrumentDescriptor(part).props as Record<string, unknown>
     expect(props['seed']).toBe(42)
   })
+  it('_phase rotates a static array pattern', () => {
+    // _phase: 0.25 on a 4-step pattern → offset 1 → [0,1,2,3] → [1,2,3,0]
+    const part = createPart({
+      instrumentType: 'kick',
+      _pattern: [1, 0, 0, 0],
+      _phase: 0.25,
+      props: {},
+    })
+    const desc = partToInstrumentDescriptor(part)
+    const props = desc.props as Record<string, unknown>
+    expect(props['pattern']).toEqual([0, 0, 0, 1])
+  })
+
+  it('_repeat stretches each step by the given factor', () => {
+    // _repeat: 2 on [1, 0] → [1, 1, 0, 0]
+    const part = createPart({
+      instrumentType: 'kick',
+      _pattern: [1, 0],
+      _repeat: 2,
+      props: {},
+    })
+    const desc = partToInstrumentDescriptor(part)
+    const props = desc.props as Record<string, unknown>
+    expect(props['pattern']).toEqual([1, 1, 0, 0])
+  })
+
+  it('_applyFn transform is applied to the pattern at startup', () => {
+    // _applyFn reverses the pattern: [1,0,0,1] → [1,0,0,1] reversed → [1,0,0,1]
+    const part = createPart({
+      instrumentType: 'kick',
+      _pattern: [1, 0, 1, 0],
+      _applyFn: (p) => [...p].reverse(),
+      props: {},
+    })
+    const desc = partToInstrumentDescriptor(part)
+    const props = desc.props as Record<string, unknown>
+    expect(props['pattern']).toEqual([0, 1, 0, 1])
+  })
+
+  it('_mapNotesFn transform is applied to notes at startup', () => {
+    const part = createPart({
+      instrumentType: 'synth',
+      _notes: ['C3', 'E3', 'G3'],
+      _mapNotesFn: (notes) => [...notes].reverse(),
+      props: {},
+    })
+    const desc = partToInstrumentDescriptor(part)
+    const props = desc.props as Record<string, unknown>
+    expect(props['notes']).toEqual(['G3', 'E3', 'C3'])
+  })
+
+  it('_mask maps to props.mask', () => {
+    const part = createPart({
+      instrumentType: 'kick',
+      _mask: [1, 0, 1, 0],
+      props: {},
+    })
+    const desc = partToInstrumentDescriptor(part)
+    const props = desc.props as Record<string, unknown>
+    expect(props['mask']).toEqual([1, 0, 1, 0])
+  })
+
+  it('_stepProb maps to props.stepProb', () => {
+    const part = createPart({
+      instrumentType: 'kick',
+      _stepProb: [1, 0.5, 1, 0.5],
+      props: {},
+    })
+    const desc = partToInstrumentDescriptor(part)
+    const props = desc.props as Record<string, unknown>
+    expect(props['stepProb']).toEqual([1, 0.5, 1, 0.5])
+  })
+
+  it('_every maps to props.every with transform field (not fn)', () => {
+    // Chain API uses _every.fn; engine maps it to props.every.transform
+    const transformFn = (p: number[]) => p
+    const part = createPart({
+      instrumentType: 'kick',
+      _every: { n: 2, fn: transformFn },
+      props: {},
+    })
+    const desc = partToInstrumentDescriptor(part)
+    const props = desc.props as Record<string, unknown>
+    const every = props['every'] as { n: number; transform: unknown }
+    expect(every.n).toBe(2)
+    expect(every.transform).toBe(transformFn)
+  })
+
+  it('_stretch maps to props.stretch', () => {
+    const part = createPart({
+      instrumentType: 'kick',
+      _stretch: 2,
+      props: {},
+    })
+    const desc = partToInstrumentDescriptor(part)
+    const props = desc.props as Record<string, unknown>
+    expect(props['stretch']).toBe(2)
+  })
 
   it('t147: onStep fires with PartDescriptor-only song (cursor advance fix)', async () => {
     // Before the fix, PartDescriptor tracks were dropped from descriptors in

@@ -5,7 +5,7 @@ import type { Transport } from '../src/transport.js'
 import type { Position } from '../src/types.js'
 import { mockContext } from './utils/harness.js'
 
-// Minimal mock transport for behavioral tick-firing tests.
+// Minimal mock transport — fires ticks synchronously for behavioral tests.
 // Only implements the subset of Transport that createStepSequencer uses.
 const makeMockTransport = (bpm = 120) => {
   const tickCallbacks: Array<(pos: Position) => void> = []
@@ -19,7 +19,10 @@ const makeMockTransport = (bpm = 120) => {
     get bpm() { return bpm },
     setBPM: () => {},
   } as unknown as Transport
-  const fireTick = (pos: Position) => { tickCallbacks.forEach(cb => { cb(pos); }) }
+  const fireTick = (pos: Partial<Position> = {}) => {
+    const p: Position = { bar: 0, beat: 0, tick: 0, time: 0, ...pos }
+    tickCallbacks.forEach(cb => { cb(p) })
+  }
   return { transport, fireTick }
 }
 
@@ -248,5 +251,188 @@ describe('createStepSequencer — humanize', () => {
       (_val, _step, pos) => { times.push(pos.time) })
     fireTick({ bar: 0, beat: 0, tick: 0, time: 0 })
     expect(times[0]).toBeGreaterThanOrEqual(0)
+  })
+})
+
+// ── Pattern extras — mask / stepProb / every / stretch ────────────────────────
+
+describe('createStepSequencer — mask', () => {
+  it('skips steps where mask is 0', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const fired: number[] = []
+    // mask = [1, 0, 1, 0] — only even steps fire
+    createStepSequencer(
+      transport,
+      { pattern: [1, 1, 1, 1], mask: [1, 0, 1, 0] },
+      (_, step) => { fired.push(step) },
+    )
+    // Fire 4 ticks (one full cycle)
+    fireTick(); fireTick(); fireTick(); fireTick()
+    expect(fired).toEqual([0, 2])
+  })
+
+  it('allows all steps when mask is all 1s', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const fired: number[] = []
+    createStepSequencer(
+      transport,
+      { pattern: [1, 1, 1, 1], mask: [1, 1, 1, 1] },
+      (_, step) => { fired.push(step) },
+    )
+    fireTick(); fireTick(); fireTick(); fireTick()
+    expect(fired).toEqual([0, 1, 2, 3])
+  })
+
+  it('mask wraps when shorter than pattern', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const fired: number[] = []
+    // mask = [1, 0] wraps over 4-step pattern → steps 0,2 fire
+    createStepSequencer(
+      transport,
+      { pattern: [1, 1, 1, 1], mask: [1, 0] },
+      (_, step) => { fired.push(step) },
+    )
+    fireTick(); fireTick(); fireTick(); fireTick()
+    expect(fired).toEqual([0, 2])
+  })
+})
+
+describe('createStepSequencer — stepProb', () => {
+  it('fires all steps when all probabilities are 1', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const fired: number[] = []
+    createStepSequencer(
+      transport,
+      { pattern: [1, 1, 1, 1], stepProb: [1, 1, 1, 1], seed: 42 },
+      (_, step) => { fired.push(step) },
+    )
+    fireTick(); fireTick(); fireTick(); fireTick()
+    expect(fired).toEqual([0, 1, 2, 3])
+  })
+
+  it('fires no steps when all probabilities are 0', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const fired: number[] = []
+    createStepSequencer(
+      transport,
+      { pattern: [1, 1, 1, 1], stepProb: [0, 0, 0, 0], seed: 99 },
+      (_, step) => { fired.push(step) },
+    )
+    fireTick(); fireTick(); fireTick(); fireTick()
+    expect(fired).toEqual([])
+  })
+
+  it('produces deterministic results for same seed', () => {
+    const run = (seed: number) => {
+      const { transport, fireTick } = makeMockTransport()
+      const fired: number[] = []
+      createStepSequencer(
+        transport,
+        { pattern: [1, 1, 1, 1, 1, 1, 1, 1], stepProb: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], seed },
+        (_, step) => { fired.push(step) },
+      )
+      for (let i = 0; i < 8; i++) fireTick()
+      return fired
+    }
+    expect(run(1234)).toEqual(run(1234))
+  })
+
+  it('produces different results for different seeds', () => {
+    const run = (seed: number) => {
+      const { transport, fireTick } = makeMockTransport()
+      const fired: number[] = []
+      createStepSequencer(
+        transport,
+        { pattern: [1, 1, 1, 1, 1, 1, 1, 1], stepProb: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], seed },
+        (_, step) => { fired.push(step) },
+      )
+      for (let i = 0; i < 8; i++) fireTick()
+      return fired
+    }
+    expect(run(1)).not.toEqual(run(9999))
+  })
+})
+
+describe('createStepSequencer — every', () => {
+  it('applies transform after every n cycles', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const patterns: number[][] = []
+    const currentPattern = [1, 0, 1, 0]
+    // every 1 cycle, reverse the pattern
+    createStepSequencer(
+      transport,
+      {
+        pattern: [1, 0, 1, 0],
+        every: { n: 1, transform: (p) => [...p].reverse() },
+      },
+      (val, step) => {
+        if (step === 0) patterns.push([])
+        patterns[patterns.length - 1]?.push(val)
+        void currentPattern
+      },
+    )
+    // Cycle 0: 4 ticks → [1, 0, 1, 0]
+    fireTick(); fireTick(); fireTick(); fireTick()
+    // Cycle 1: 4 ticks → transform applied → [0, 1, 0, 1]
+    fireTick(); fireTick(); fireTick(); fireTick()
+    expect(patterns[0]).toEqual([1, 0, 1, 0])
+    expect(patterns[1]).toEqual([0, 1, 0, 1])
+  })
+
+  it('does not apply transform before first cycle completes', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const values: number[] = []
+    createStepSequencer(
+      transport,
+      {
+        pattern: [1, 0, 1, 0],
+        every: { n: 1, transform: (p) => [...p].reverse() },
+      },
+      (val) => { values.push(val) },
+    )
+    // Only fire 4 ticks (first cycle only)
+    fireTick(); fireTick(); fireTick(); fireTick()
+    // First cycle should be the original pattern
+    expect(values).toEqual([1, 0, 1, 0])
+  })
+})
+
+describe('createStepSequencer — stretch', () => {
+  it('fires half as many steps with stretch=2', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const fired: number[] = []
+    createStepSequencer(
+      transport,
+      { pattern: [1, 0, 1, 0], stretch: 2 },
+      (_, step) => { fired.push(step) },
+    )
+    // 8 ticks with stretch=2 → 4 steps (one full cycle)
+    for (let i = 0; i < 8; i++) fireTick()
+    expect(fired).toEqual([0, 1, 2, 3])
+  })
+
+  it('fires all steps at normal speed with stretch=1', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const fired: number[] = []
+    createStepSequencer(
+      transport,
+      { pattern: [1, 0, 1, 0], stretch: 1 },
+      (_, step) => { fired.push(step) },
+    )
+    for (let i = 0; i < 4; i++) fireTick()
+    expect(fired).toEqual([0, 1, 2, 3])
+  })
+
+  it('stretch=3 fires step only on sub-tick 0 of each interval', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const fired: number[] = []
+    createStepSequencer(
+      transport,
+      { pattern: [1, 1], stretch: 3 },
+      (_, step) => { fired.push(step) },
+    )
+    // 6 ticks with stretch=3 → 2 steps
+    for (let i = 0; i < 6; i++) fireTick()
+    expect(fired).toEqual([0, 1])
   })
 })

@@ -47,6 +47,27 @@ export type StepSequencerProps<T = number> = {
    * offset calculation. Should match the transport's `ticksPerBeat`. Defaults to `4`.
    */
   readonly ticksPerBeat?: number
+  /**
+   * Boolean gate pattern — steps where `mask[step]` is falsy are silently skipped.
+   * Accepts the same `PatternInput<number>` shape as `pattern`.
+   */
+  readonly mask?: PatternInput
+  /**
+   * Per-step probability array — each element is a probability in `[0, 1]`.
+   * A seeded PRNG decides whether each step fires. Wraps if shorter than `steps`.
+   */
+  readonly stepProb?: ReadonlyArray<number>
+  /**
+   * Every-n-cycle transform — after every `n` completed cycles, `transform` is applied
+   * to the live pattern in place (only works on array patterns).
+   */
+  readonly every?: { readonly n: number; readonly transform: (p: number[]) => number[] }
+  /**
+   * Stretch factor — integer multiplier that slows the step rate.
+   * `2` plays at half speed (each step occupies 2 ticks). Non-integer values are rounded.
+   * Defaults to `1` (normal speed).
+   */
+  readonly stretch?: number
 }
 
 /**
@@ -65,9 +86,12 @@ export type StepSequencer<T = number> = {
 // HARDWARE BOUNDARY — step sequencer drives transport ticks. let is replaced with
 // const state per the no-let rule; property mutation is the boundary exception.
 type SequencerState<T> = {
-  pattern: PatternInput<T>
-  steps: number
-  step: number
+  pattern:    PatternInput<T>
+  steps:      number
+  step:       number
+  subTick:    number   // ticks within current step (stretch implementation)
+  cycleCount: number   // completed cycles (every-n implementation)
+  prbSeed:    number   // running PRNG seed (stepProb implementation)
 }
 
 /**
@@ -105,9 +129,12 @@ export const createStepSequencer = <T = number>(
   onStep: (value: T, step: number, position: Position) => void,
 ): StepSequencer<T> => {
   const state: SequencerState<T> = {
-    pattern: props.pattern,
-    steps: props.steps ?? (Array.isArray(props.pattern) ? props.pattern.length : 16),
-    step: 0,
+    pattern:    props.pattern,
+    steps:      props.steps ?? (Array.isArray(props.pattern) ? props.pattern.length : 16),
+    step:       0,
+    subTick:    0,
+    cycleCount: 0,
+    prbSeed:    props.seed ?? 0,
   }
 
   const resolvePattern = (currentStep: number, bar: number): T => {
@@ -122,7 +149,24 @@ export const createStepSequencer = <T = number>(
   }
 
   transport.onTick((position: Position): void => {
+    // Stretch — only fire on sub-tick 0 of each step interval
+    const ticksPerStep = props.stretch !== undefined ? Math.max(1, Math.round(props.stretch)) : 1
+    const isFire = state.subTick === 0
+    state.subTick = (state.subTick + 1) % ticksPerStep
+    if (!isFire) return
+
     const currentStepNumber = state.step % state.steps
+
+    // Every — at start of new cycle, apply transform if cycle count is divisible by n
+    if (
+      props.every !== undefined &&
+      currentStepNumber === 0 &&
+      state.cycleCount > 0 &&
+      state.cycleCount % props.every.n === 0 &&
+      Array.isArray(state.pattern)
+    ) {
+      state.pattern = props.every.transform(state.pattern as number[]) as unknown as PatternInput<T>
+    }
 
     // Degrade — seeded per-step probability drop. Step counter advances even when dropped.
     if (props.degrade !== undefined && props.degrade > 0) {
@@ -134,30 +178,52 @@ export const createStepSequencer = <T = number>(
       }
     }
 
-    const value = resolvePattern(currentStepNumber, position.bar)
+    // Mask gate — skip step if mask value is falsy at this step
+    const maskAllow = (() => {
+      if (props.mask === undefined) return true
+      if (Array.isArray(props.mask)) {
+        const idx = currentStepNumber % props.mask.length
+        return Boolean(props.mask[idx])
+      }
+      return Boolean(props.mask(currentStepNumber, position.bar, props.seed))
+    })()
 
-    // Swing — delay odd steps by a fraction of a tick duration
-    const ticksPerBeat = props.ticksPerBeat ?? 4
-    const swingOffset = (props.swing !== undefined && props.swing > 0 && currentStepNumber % 2 === 1)
-      ? props.swing * (60 / transport.bpm / ticksPerBeat) * 0.5
-      : 0
+    // StepProb gate — probabilistic gate; PRNG always advances for determinism
+    const probAllow = (() => {
+      if (props.stepProb === undefined) return true
+      const threshold = props.stepProb[currentStepNumber % props.stepProb.length] ?? 1
+      const [rand, nextSeed] = prngNext(state.prbSeed)
+      state.prbSeed = nextSeed  // ADVANCE — deterministic mutation
+      return rand < threshold
+    })()
 
-    // Humanize — seeded ±humanize timing jitter in seconds
-    const humanizeOffset = (props.humanize !== undefined && props.humanize > 0)
-      ? (() => {
-          const humanizeSeed = (((currentStepNumber * 7919 + position.bar * 3571) ^ (currentStepNumber << 4)) ^ (props.seed ?? 0)) >>> 0
-          const [rand] = prngNext(humanizeSeed)
-          return (rand * 2 - 1) * props.humanize
-        })()
-      : 0
+    if (maskAllow && probAllow) {
+      const value = resolvePattern(currentStepNumber, position.bar)
 
-    const rawTime = position.time + swingOffset + humanizeOffset
-    const adjustedPosition: Position = (swingOffset === 0 && humanizeOffset === 0)
-      ? position
-      : { ...position, time: rawTime < 0 ? 0 : rawTime }
+      // Swing — delay odd steps by a fraction of a tick duration
+      const ticksPerBeat = props.ticksPerBeat ?? 4
+      const swingOffset = (props.swing !== undefined && props.swing > 0 && currentStepNumber % 2 === 1)
+        ? props.swing * (60 / transport.bpm / ticksPerBeat) * 0.5
+        : 0
 
-    onStep(value, currentStepNumber, adjustedPosition)
+      // Humanize — seeded ±humanize timing jitter in seconds
+      const humanizeOffset = (props.humanize !== undefined && props.humanize > 0)
+        ? (() => {
+            const humanizeSeed = (((currentStepNumber * 7919 + position.bar * 3571) ^ (currentStepNumber << 4)) ^ (props.seed ?? 0)) >>> 0
+            const [rand] = prngNext(humanizeSeed)
+            return (rand * 2 - 1) * props.humanize
+          })()
+        : 0
+
+      const rawTime = position.time + swingOffset + humanizeOffset
+      const adjustedPosition: Position = (swingOffset === 0 && humanizeOffset === 0)
+        ? position
+        : { ...position, time: rawTime < 0 ? 0 : rawTime }
+
+      onStep(value, currentStepNumber, adjustedPosition)
+    }
     state.step += 1  // ADVANCE — the only forward-time mutation permitted
+    if (currentStepNumber + 1 >= state.steps) state.cycleCount += 1
   })
 
   const sequencer: StepSequencer<T> = {
@@ -172,7 +238,10 @@ export const createStepSequencer = <T = number>(
 
     dispose: (): void => {
       // Reset state — transport owns the tick subscription lifecycle
-      state.step = 0
+      state.step       = 0
+      state.subTick    = 0
+      state.cycleCount = 0
+      state.prbSeed    = props.seed ?? 0
     },
   }
 
