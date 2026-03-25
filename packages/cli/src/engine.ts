@@ -47,6 +47,7 @@ import {
 } from '@score/effects'
 import { createTransport, createStepSequencer } from '@score/sequencer'
 import { resolveFreq } from '@score/dsl'
+import { scaleNotes } from '@score/pattern'
 import type {
   SongDefinition, InstrumentDescriptor, PartDescriptor,
   KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps,
@@ -114,6 +115,34 @@ const PERCUSSION_TYPES = new Set([
   'kick', 'kick808', 'kick909', 'snare', 'snare909', 'hihat', 'hihat808',
 ])
 
+// ── Pitch helpers ─────────────────────────────────────────────────────────────
+
+// Snap freq to the nearest note in the given scale across 5 octaves (0–4).
+const snapFreqToScale = (freq: number, scale: { name: string; root: string }): number => {
+  // Build the key string for scaleNotes: combine root + mode indicator.
+  // Examples: { root: 'A', name: 'minor' } → 'Am', { root: 'C', name: 'major' } → 'C'
+  const isMinorish = ['minor', 'dorian', 'phrygian', 'locrian'].includes(scale.name.toLowerCase())
+  const isMajor    = scale.name.toLowerCase() === 'major'
+  const key = isMajor || isMinorish
+    ? isMinorish ? `${scale.root}m` : scale.root
+    : scale.name  // treat name as full key string (e.g. 'Am', 'F#')
+  const notes = scaleNotes(key, 0, 5)
+  return notes.reduce((best, note) => {
+    const f = resolveFreq(note)
+    return f > 0 && Math.abs(f - freq) < Math.abs(best - freq) ? f : best
+  }, resolveFreq(notes[0] ?? 'C3') || freq)
+}
+
+// Apply pitch/octave/scale transforms to a base frequency.
+const applyPitchTransforms = (
+  freq: number,
+  props: { pitchOffset?: number; octave?: number; scale?: { name: string; root: string } },
+): number => {
+  const semitones = (props.pitchOffset ?? 0) + (props.octave ?? 0) * 12
+  const shifted = semitones !== 0 ? freq * Math.pow(2, semitones / 12) : freq
+  return props.scale ? snapFreqToScale(shifted, props.scale) : shifted
+}
+
 /** Convert a chain-API {@link PartDescriptor} to an {@link InstrumentDescriptor} the engine can hydrate. */
 export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDescriptor => ({
   _type: 'InstrumentDescriptor',
@@ -140,7 +169,13 @@ export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDesc
     ...(part._humanize !== undefined ? { humanize: part._humanize } : {}),
     ...(part._degrade  !== undefined ? { degrade:  part._degrade  } : {}),
     ...(part._pan      !== undefined ? { pan:      part._pan      } : {}),
-    ...(part._model    !== undefined ? { model:    part._model    } : {}),
+    ...(part._model       !== undefined ? { model:       part._model       } : {}),
+    ...(part._pitchOffset !== undefined ? { pitchOffset: part._pitchOffset } : {}),
+    ...(part._octave      !== undefined ? { octave:      part._octave      } : {}),
+    ...(part._scale       !== undefined ? { scale:       part._scale       } : {}),
+    ...(part._glide       !== undefined ? { glide:       part._glide       } : {}),
+    ...(part._dur         !== undefined ? { dur:         part._dur         } : {}),
+    ...(part._seed        !== undefined ? { seed:        part._seed        } : {}),
     // Fix: map _filter chain method → props.filter (SubSynth, Synth, Pad, etc.)
     ...(part._filter !== undefined ? { filter: part._filter } : {}),
     // Fix: bass-303 engine reads props.cutoff/resonance not props.filter — also map for it
@@ -445,9 +480,11 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
   const channelInputs: GainNode[] = descriptors.map(comp => {
     const props = comp.props as KickProps & SnareProps & HiHatProps & SynthDSLProps & SampleProps
     const hydratedEffects = buildEffectsChain(ctx, props.effects)
+    const channelPan = (comp.props as { pan?: number }).pan
     const channel = mixer.addChannel({
       name: comp.instrumentType,
       effects: hydratedEffects,
+      ...(channelPan !== undefined ? { pan: channelPan } : {}),
     })
     return channel.input as unknown as GainNode
   })
@@ -462,8 +499,9 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
     switch (comp.instrumentType) {
       case 'kick': {
         // model: '808' → createKick808, model: '909' → createKick909, else → triggerKick
-        const props   = comp.props as KickProps & { model?: string }
+        const props   = comp.props as KickProps & { model?: string; seed?: number }
         const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
+        const trackSeed = props.seed ?? song.seed
         if (props.model === '808') {
           const kick808 = createKick808(ctx, { gain: props.volume ?? 0.85 })
           kick808.connect(dest)
@@ -485,8 +523,9 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       }
       case 'snare': {
         // model: '909' → createSnare909, else → triggerSnare
-        const props   = comp.props as SnareProps & { model?: string }
+        const props   = comp.props as SnareProps & { model?: string; seed?: number }
         const pattern = props.pattern ?? DEFAULT_SNARE_PATTERN
+        const trackSeed = props.seed ?? song.seed
         if (props.model === '909') {
           const snare909 = createSnare909(ctx, { gain: props.volume ?? 0.8 })
           snare909.connect(dest)
@@ -502,8 +541,9 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       }
       case 'hihat': {
         // model: '808' → createHihat808, else → triggerHiHat
-        const props   = comp.props as HiHatProps & { model?: string }
+        const props   = comp.props as HiHatProps & { model?: string; seed?: number }
         const pattern = props.pattern ?? DEFAULT_HIHAT_PATTERN
+        const trackSeed = props.seed ?? song.seed
         if (props.model === '808') {
           const hat808 = createHihat808(ctx, { gain: props.volume ?? 0.4, ...(props.open !== undefined ? { open: props.open } : {}) })
           hat808.connect(dest)
@@ -518,17 +558,18 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         break
       }
       case 'synth': {
-        const props = comp.props as SynthDSLProps
+        const props = comp.props as SynthDSLProps & { pitchOffset?: number; octave?: number; scale?: { name: string; root: string }; seed?: number }
         const rawPattern = props.pattern ?? props.sequence ?? DEFAULT_SYNTH_PATTERN
         const pattern: (number | string)[] = Array.isArray(rawPattern) ? rawPattern : DEFAULT_SYNTH_PATTERN
         createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
-          const freq = resolveFreq(val)
+          const baseFreq = resolveFreq(val)
+          const freq = baseFreq > 0 ? applyPitchTransforms(baseFreq, props) : 0
           if (freq > 0) triggerSynth(ctx, pos.time, props, freq, dest)
         })
         break
       }
       case 'sample': {
-        const props = comp.props as SampleProps
+        const props = comp.props as SampleProps & { seed?: number }
         const buf = sampleBuffers.get(comp.id)
         if (!buf) break
         const player = createSamplePlayer(ctx, buf, {
@@ -565,7 +606,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         break
       }
       case 'sax': {
-        const props = comp.props as SaxDSLProps
+        const props = comp.props as SaxDSLProps & { pitchOffset?: number; octave?: number; scale?: { name: string; root: string }; dur?: number; seed?: number }
         const s = SaxComponent(ctx, {
           ...(props.note !== undefined && { note: props.note }),
           ...(props.gain !== undefined && { gain: props.gain }),
@@ -574,16 +615,17 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         s.start()
         const rawPattern = props.pattern ?? ['A4', 0, 0, 0,  'A4', 0, 0, 0,  'A4', 0, 0, 0,  'A4', 0, 0, 0]
         createStepSequencer(transport, { pattern: rawPattern, ...timing }, (val: number | string, _step, pos) => {
-          const freq = resolveFreq(val)
+          const baseFreq = resolveFreq(val)
+          const freq = baseFreq > 0 ? applyPitchTransforms(baseFreq, props) : 0
           if (freq > 0) {
             s.setFrequency(freq)
-            s.trigger(pos.time, props.duration ?? 0.35)
+            s.trigger(pos.time, props.dur ?? props.duration ?? 0.35)
           }
         })
         break
       }
       case 'arp': {
-        const props = comp.props as ArpDSLProps
+        const props = comp.props as ArpDSLProps & { pitchOffset?: number; octave?: number; scale?: { name: string; root: string }; seed?: number }
         const notes = props.notes
         const mode = props.mode ?? 'up'
         const rate = props.rate ?? 1
@@ -596,7 +638,8 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
           if (active <= 0) return
           const idx = Math.floor(arpState.noteIndex / rate) % notes.length
           const note = notes[idx] ?? notes[0] ?? 'C4'
-          const freq = resolveFreq(note)
+          const baseFreq = resolveFreq(note)
+          const freq = baseFreq > 0 ? applyPitchTransforms(baseFreq, props) : 0
           if (freq > 0) triggerSynth(ctx, pos.time, {
             wave: props.wave ?? 'triangle',
             gain: props.gain ?? 0.3,
@@ -685,16 +728,17 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         break
       }
       case 'subsynth': {
-        const props = comp.props as SubSynthDSLProps
+        const props = comp.props as SubSynthDSLProps & { pitchOffset?: number; octave?: number; scale?: { name: string; root: string }; dur?: number; seed?: number }
         const rawPattern = props.pattern ?? DEFAULT_SYNTH_PATTERN
         const pattern: (number | string)[] = Array.isArray(rawPattern) ? rawPattern : DEFAULT_SYNTH_PATTERN
         const adsr = props.adsr ?? {}
         const attack  = adsr.attack  ?? 0.01
         const decay   = adsr.decay   ?? 0.1
         const release = adsr.release ?? 0.3
-        const noteDur = attack + decay + release + 0.02
+        const noteDur = props.dur ?? (attack + decay + release + 0.02)
         createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
-          const freq = resolveFreq(val)
+          const baseFreq = resolveFreq(val)
+          const freq = baseFreq > 0 ? applyPitchTransforms(baseFreq, props) : 0
           if (freq > 0) {
             const voice = createSubtractiveSynth(ctx, {
               ...(props.wave   !== undefined && { wave:   props.wave }),
@@ -711,16 +755,17 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         break
       }
       case 'fmsynth': {
-        const props = comp.props as FMSynthDSLProps
+        const props = comp.props as FMSynthDSLProps & { pitchOffset?: number; octave?: number; scale?: { name: string; root: string }; dur?: number; seed?: number }
         const rawPattern = props.pattern ?? DEFAULT_SYNTH_PATTERN
         const pattern: (number | string)[] = Array.isArray(rawPattern) ? rawPattern : DEFAULT_SYNTH_PATTERN
         const ampAdsr = props.ampAdsr ?? {}
         const attack  = ampAdsr.attack  ?? 0.01
         const decay   = ampAdsr.decay   ?? 0.2
         const release = ampAdsr.release ?? 0.4
-        const noteDur = attack + decay + release + 0.02
+        const noteDur = props.dur ?? (attack + decay + release + 0.02)
         createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
-          const freq = resolveFreq(val)
+          const baseFreq = resolveFreq(val)
+          const freq = baseFreq > 0 ? applyPitchTransforms(baseFreq, props) : 0
           if (freq > 0) {
             const voice = createFMSynth(ctx, {
               frequency: freq,
@@ -739,15 +784,16 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       }
       case 'pad': {
         // Pad — SubtractiveSynth with slow attack / long release defaults
-        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; adsr?: { attack?: number; decay?: number; release?: number }; filter?: Record<string, unknown>; volume?: number }
+        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; adsr?: { attack?: number; decay?: number; release?: number }; filter?: Record<string, unknown>; volume?: number; pitchOffset?: number; octave?: number; scale?: { name: string; root: string }; dur?: number; seed?: number }
         const pattern = (props.pattern ?? props.notes ?? DEFAULT_SYNTH_PATTERN) as (number | string)[]
         const adsr    = props.adsr ?? {}
         const attack  = adsr.attack  ?? 0.3
         const decay   = adsr.decay   ?? 0.2
         const release = adsr.release ?? 1.2
-        const noteDur = attack + decay + release + 0.02
+        const noteDur = props.dur ?? (attack + decay + release + 0.02)
         createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
-          const freq = resolveFreq(val)
+          const baseFreq = resolveFreq(val)
+          const freq = baseFreq > 0 ? applyPitchTransforms(baseFreq, props) : 0
           if (freq > 0) {
             const voice = createPad(ctx, {
               frequency: freq,
@@ -764,15 +810,16 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       }
       case 'rhodes': {
         // Rhodes — FMSynth with DX7 Rhodes defaults (modRatio 1.273, fast attack, long decay)
-        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; ampAdsr?: { attack?: number; decay?: number; release?: number }; modRatio?: number; modIndex?: number; modAdsr?: Record<string, unknown>; volume?: number }
+        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; ampAdsr?: { attack?: number; decay?: number; release?: number }; modRatio?: number; modIndex?: number; modAdsr?: Record<string, unknown>; volume?: number; pitchOffset?: number; octave?: number; scale?: { name: string; root: string }; dur?: number; seed?: number }
         const pattern = (props.pattern ?? props.notes ?? DEFAULT_SYNTH_PATTERN) as (number | string)[]
         const ampAdsr = props.ampAdsr ?? {}
         const attack  = ampAdsr.attack  ?? 0.005
         const decay   = ampAdsr.decay   ?? 0.9
         const release = ampAdsr.release ?? 0.5
-        const noteDur = attack + decay + release + 0.02
+        const noteDur = props.dur ?? (attack + decay + release + 0.02)
         createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
-          const freq = resolveFreq(val)
+          const baseFreq = resolveFreq(val)
+          const freq = baseFreq > 0 ? applyPitchTransforms(baseFreq, props) : 0
           if (freq > 0) {
             const voice = createRhodes(ctx, {
               frequency: freq,
@@ -791,10 +838,11 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       }
       case 'pluck': {
         // Pluck — Karplus-Strong: trigger on any non-zero note, natural decay
-        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; feedback?: number; burstDuration?: number; volume?: number }
+        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; feedback?: number; burstDuration?: number; volume?: number; pitchOffset?: number; octave?: number; scale?: { name: string; root: string }; seed?: number }
         const pattern = (props.pattern ?? props.notes ?? DEFAULT_SYNTH_PATTERN) as (number | string)[]
         createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
-          const freq = resolveFreq(val)
+          const baseFreq = resolveFreq(val)
+          const freq = baseFreq > 0 ? applyPitchTransforms(baseFreq, props) : 0
           if (freq > 0) {
             const voice = createPluck(ctx, {
               frequency: freq,
@@ -811,25 +859,27 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       }
       case 'bass-303': {
         // Bass303 — TB-303 acid bass: saw/sq → high-Q LP filter → MEG/VEG envelopes
-        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; wave?: 'sawtooth' | 'square'; cutoff?: number; resonance?: number; envDepth?: number; filterAdsr?: { attack?: number; decay?: number; release?: number }; ampAdsr?: { attack?: number; decay?: number; release?: number }; accentAmount?: number; volume?: number }
+        const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; wave?: 'sawtooth' | 'square'; cutoff?: number; resonance?: number; envDepth?: number; filterAdsr?: { attack?: number; decay?: number; release?: number }; ampAdsr?: { attack?: number; decay?: number; release?: number }; accentAmount?: number; volume?: number; pitchOffset?: number; octave?: number; scale?: { name: string; root: string }; glide?: number; dur?: number; seed?: number }
         const pattern = (props.pattern ?? props.notes ?? DEFAULT_SYNTH_PATTERN) as (number | string)[]
         const ampAdsr = props.ampAdsr ?? {}
         const attack  = ampAdsr.attack  ?? 0.003
         const decay   = ampAdsr.decay   ?? 0.2
         const release = ampAdsr.release ?? 0.1
-        const noteDur = attack + decay + release + 0.02
+        const noteDur = props.dur ?? (attack + decay + release + 0.02)
         createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
-          const freq = resolveFreq(val)
+          const baseFreq = resolveFreq(val)
+          const freq = baseFreq > 0 ? applyPitchTransforms(baseFreq, props) : 0
           if (freq > 0) {
             const voice = createBass303(ctx, {
               frequency: freq,
-              ...(props.wave        !== undefined && { wave:        props.wave }),
-              ...(props.cutoff      !== undefined && { cutoff:      props.cutoff }),
-              ...(props.resonance   !== undefined && { resonance:   props.resonance }),
-              ...(props.envDepth    !== undefined && { envDepth:    props.envDepth }),
-              ...(props.filterAdsr  !== undefined && { filterAdsr:  props.filterAdsr }),
-              ...(props.ampAdsr     !== undefined && { ampAdsr:     props.ampAdsr }),
+              ...(props.wave         !== undefined && { wave:         props.wave }),
+              ...(props.cutoff       !== undefined && { cutoff:       props.cutoff }),
+              ...(props.resonance    !== undefined && { resonance:    props.resonance }),
+              ...(props.envDepth     !== undefined && { envDepth:     props.envDepth }),
+              ...(props.filterAdsr   !== undefined && { filterAdsr:   props.filterAdsr }),
+              ...(props.ampAdsr      !== undefined && { ampAdsr:      props.ampAdsr }),
               ...(props.accentAmount !== undefined && { accentAmount: props.accentAmount }),
+              ...(props.glide        !== undefined && { slideTime:    props.glide }),
               gain: props.volume ?? 0.7,
             })
             voice.connect(dest)
