@@ -127,6 +127,8 @@ export const createChannel = (
     readonly setMuteGain: (value: number) => void
     /** Schedule a linear volume ramp: `from` at `startTime` → `to` at `endTime`. */
     readonly scheduleFade: (from: number, to: number, startTime: number, endTime: number) => void
+    /** Cancel any in-progress fade ramp and hold the current volume. Call before hot-swap teardown. */
+    readonly cancelFade: () => void
   } = {
     id: uid('channel'),
     type: 'channel' as const,
@@ -191,6 +193,10 @@ export const createChannel = (
 
     scheduleFade: (from: number, to: number, startTime: number, endTime: number) => {
       volumeGain.scheduleFade(from, to, startTime, endTime)
+    },
+
+    cancelFade: () => {
+      volumeGain.cancelScheduledValues(context.currentTime)
     },
 
     connect: (destination: ScoreAudioNode) => {

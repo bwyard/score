@@ -526,7 +526,6 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         // model: '808' → createKick808, model: '909' → createKick909, else → triggerKick
         const props   = comp.props as KickProps & { model?: string; seed?: number }
         const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
-        const trackSeed = props.seed ?? song.seed
         if (props.model === '808') {
           const kick808 = createKick808(ctx, { gain: props.volume ?? 0.85 })
           kick808.connect(dest)
@@ -556,7 +555,6 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         // model: '909' → createSnare909, else → triggerSnare
         const props   = comp.props as SnareProps & { model?: string; seed?: number }
         const pattern = props.pattern ?? DEFAULT_SNARE_PATTERN
-        const trackSeed = props.seed ?? song.seed
         if (props.model === '909') {
           const snare909 = createSnare909(ctx, { gain: props.volume ?? 0.8 })
           snare909.connect(dest)
@@ -577,7 +575,6 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         // model: '808' → createHihat808, else → triggerHiHat
         const props   = comp.props as HiHatProps & { model?: string; seed?: number }
         const pattern = props.pattern ?? DEFAULT_HIHAT_PATTERN
-        const trackSeed = props.seed ?? song.seed
         if (props.model === '808') {
           const hat808 = createHihat808(ctx, { gain: props.volume ?? 0.4, ...(props.open !== undefined ? { open: props.open } : {}) })
           hat808.connect(dest)
@@ -1051,6 +1048,13 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
     update: (nextSong: SongDefinition): void => {
       // Apply BPM diff
       if (nextSong.bpm !== transport.bpm) transport.setBPM(nextSong.bpm)
+
+      // Cancel any in-progress fade ramps before applying the new song's parameters.
+      // Without this, a stale linearRampToValueAtTime from a previous fadeIn/fadeOut
+      // persists on the channel's volumeGain AudioParam and overrides the new volume.
+      descriptors.forEach((_desc, i) => {
+        mixer.getChannel(i)?.cancelFade()
+      })
 
       // Apply per-track volume/mute diffs
       const nextDescriptors = nextSong.tracks

@@ -61,6 +61,12 @@ export type BackendGainNode = BackendNode & {
   readonly gain: number
   readonly setGain: (value: number, time?: number) => void
   /**
+   * Cancel all scheduled parameter automations from `atTime` onwards and anchor
+   * the gain at its current value. Use before hot-swap teardown to prevent a
+   * stale fade ramp from persisting into the next engine instance.
+   */
+  readonly cancelScheduledValues: (atTime: number) => void
+  /**
    * Schedule a linear gain ramp from `from` at `startTime` to `to` at `endTime`.
    * Cancels any conflicting scheduled values before setting the anchor.
    * Use for fade-in / fade-out that must span multiple bars.

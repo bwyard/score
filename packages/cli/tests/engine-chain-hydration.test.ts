@@ -151,6 +151,8 @@ describe('engine — chain API hydration', () => {
     const part = createPart({ instrumentType: 'snare', _pattern: [0, 0, 1, 0], _humanize: 0.005, props: {} })
     const desc = partToInstrumentDescriptor(part)
     expect((desc.props as Record<string, unknown>).humanize).toBe(0.005)
+  })
+
   it('pan: .pan(v) maps to props.pan and engine boots with pan\'d track', async () => {
     const part = createPart({ instrumentType: 'kick', _pan: -0.5, props: {} })
     const props = partToInstrumentDescriptor(part).props as Record<string, unknown>
