@@ -138,6 +138,7 @@ export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDesc
     ...(part._effects  !== undefined ? { effects:  part._effects  } : {}),
     ...(part._swing    !== undefined ? { swing:    part._swing    } : {}),
     ...(part._humanize !== undefined ? { humanize: part._humanize } : {}),
+    ...(part._degrade  !== undefined ? { degrade:  part._degrade  } : {}),
     ...(part._pan      !== undefined ? { pan:      part._pan      } : {}),
     ...(part._model    !== undefined ? { model:    part._model    } : {}),
     // Fix: map _filter chain method → props.filter (SubSynth, Synth, Pad, etc.)
@@ -148,6 +149,22 @@ export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDesc
       : {}),
     ...part.props,
   },
+})
+
+// ── Sequencer timing helper ───────────────────────────────────────────────────
+
+// Extracts swing/humanize/degrade/seed from a hydrated instrument props object
+// and returns only the fields accepted by StepSequencerProps. These fields are
+// written by partToInstrumentDescriptor from the chain-API _degrade/_humanize/_swing
+// fields, then passed through comp.props to every createStepSequencer call site.
+const seqExtras = (
+  props: Record<string, unknown>,
+  seed?: number,
+): { swing?: number; humanize?: number; degrade?: number; seed?: number } => ({
+  ...(typeof props.swing    === 'number' ? { swing:    props.swing    } : {}),
+  ...(typeof props.humanize === 'number' ? { humanize: props.humanize } : {}),
+  ...(typeof props.degrade  === 'number' ? { degrade:  props.degrade  } : {}),
+  ...(seed !== undefined ? { seed } : {}),
 })
 
 // ── Default patterns ──────────────────────────────────────────────────────────
@@ -439,6 +456,8 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
   descriptors.forEach((comp, i) => {
     const dest = channelInputs[i]
     if (!dest) return
+    // Thread swing/humanize/degrade/seed into every createStepSequencer call for this track.
+    const timing = seqExtras(comp.props as Record<string, unknown>, song.seed)
 
     switch (comp.instrumentType) {
       case 'kick': {
@@ -448,17 +467,17 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         if (props.model === '808') {
           const kick808 = createKick808(ctx, { gain: props.volume ?? 0.85 })
           kick808.connect(dest)
-          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+          createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
             if (hit) kick808.trigger(pos.time)
           })
         } else if (props.model === '909') {
           const kick909 = createKick909(ctx, { gain: props.volume ?? 0.85 })
           kick909.connect(dest)
-          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+          createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
             if (hit) kick909.trigger(pos.time)
           })
         } else {
-          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+          createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
             if (hit) triggerKick(ctx, pos.time, props, dest)
           })
         }
@@ -471,11 +490,11 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         if (props.model === '909') {
           const snare909 = createSnare909(ctx, { gain: props.volume ?? 0.8 })
           snare909.connect(dest)
-          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+          createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
             if (hit) snare909.trigger(pos.time)
           })
         } else {
-          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+          createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
             if (hit) triggerSnare(ctx, pos.time, props, dest)
           })
         }
@@ -488,11 +507,11 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         if (props.model === '808') {
           const hat808 = createHihat808(ctx, { gain: props.volume ?? 0.4, ...(props.open !== undefined ? { open: props.open } : {}) })
           hat808.connect(dest)
-          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+          createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
             if (hit) hat808.trigger(pos.time)
           })
         } else {
-          createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+          createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
             if (hit) triggerHiHat(ctx, pos.time, props, dest)
           })
         }
@@ -502,7 +521,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         const props = comp.props as SynthDSLProps
         const rawPattern = props.pattern ?? props.sequence ?? DEFAULT_SYNTH_PATTERN
         const pattern: (number | string)[] = Array.isArray(rawPattern) ? rawPattern : DEFAULT_SYNTH_PATTERN
-        createStepSequencer(transport, { pattern, seed: song.seed }, (val: number | string, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
           const freq = resolveFreq(val)
           if (freq > 0) triggerSynth(ctx, pos.time, props, freq, dest)
         })
@@ -519,7 +538,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         })
         player.connect(dest)
         const pattern = props.pattern ?? [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        createStepSequencer(transport, { pattern, seed: song.seed }, (hit, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
           if (hit) player.start(pos.time)
         })
         break
@@ -554,7 +573,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         s.connect(dest)
         s.start()
         const rawPattern = props.pattern ?? ['A4', 0, 0, 0,  'A4', 0, 0, 0,  'A4', 0, 0, 0,  'A4', 0, 0, 0]
-        createStepSequencer(transport, { pattern: rawPattern, seed: song.seed }, (val: number | string, _step, pos) => {
+        createStepSequencer(transport, { pattern: rawPattern, ...timing }, (val: number | string, _step, pos) => {
           const freq = resolveFreq(val)
           if (freq > 0) {
             s.setFrequency(freq)
@@ -572,7 +591,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         const arpState = { noteIndex: 0, pingDir: 1 }
         const defaultPattern = Array.from({ length: 16 }, () => 1)
         const rawPattern = props.pattern ?? defaultPattern
-        createStepSequencer(transport, { pattern: rawPattern, seed: song.seed }, (val: number | string, _step, pos) => {
+        createStepSequencer(transport, { pattern: rawPattern, ...timing }, (val: number | string, _step, pos) => {
           const active = typeof val === 'number' ? val : resolveFreq(val)
           if (active <= 0) return
           const idx = Math.floor(arpState.noteIndex / rate) % notes.length
@@ -613,7 +632,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         })
         kick.connect(dest)
         const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
-        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
           if (hit) kick.trigger(pos.time)
         })
         break
@@ -631,7 +650,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         })
         kick.connect(dest)
         const pattern = props.pattern ?? DEFAULT_KICK_PATTERN
-        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
           if (hit) kick.trigger(pos.time)
         })
         break
@@ -645,7 +664,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         })
         hat.connect(dest)
         const pattern = props.pattern ?? DEFAULT_HIHAT_PATTERN
-        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
           if (hit) hat.trigger(pos.time)
         })
         break
@@ -660,7 +679,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         })
         snare.connect(dest)
         const pattern = props.pattern ?? DEFAULT_SNARE_PATTERN
-        createStepSequencer(transport, { pattern }, (hit, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (hit, _step, pos) => {
           if (hit) snare.trigger(pos.time)
         })
         break
@@ -674,7 +693,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         const decay   = adsr.decay   ?? 0.1
         const release = adsr.release ?? 0.3
         const noteDur = attack + decay + release + 0.02
-        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
           const freq = resolveFreq(val)
           if (freq > 0) {
             const voice = createSubtractiveSynth(ctx, {
@@ -700,7 +719,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         const decay   = ampAdsr.decay   ?? 0.2
         const release = ampAdsr.release ?? 0.4
         const noteDur = attack + decay + release + 0.02
-        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
           const freq = resolveFreq(val)
           if (freq > 0) {
             const voice = createFMSynth(ctx, {
@@ -727,7 +746,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         const decay   = adsr.decay   ?? 0.2
         const release = adsr.release ?? 1.2
         const noteDur = attack + decay + release + 0.02
-        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
           const freq = resolveFreq(val)
           if (freq > 0) {
             const voice = createPad(ctx, {
@@ -752,7 +771,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         const decay   = ampAdsr.decay   ?? 0.9
         const release = ampAdsr.release ?? 0.5
         const noteDur = attack + decay + release + 0.02
-        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
           const freq = resolveFreq(val)
           if (freq > 0) {
             const voice = createRhodes(ctx, {
@@ -774,7 +793,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         // Pluck — Karplus-Strong: trigger on any non-zero note, natural decay
         const props = comp.props as { pattern?: readonly (number | string)[]; notes?: readonly (number | string)[]; feedback?: number; burstDuration?: number; volume?: number }
         const pattern = (props.pattern ?? props.notes ?? DEFAULT_SYNTH_PATTERN) as (number | string)[]
-        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
           const freq = resolveFreq(val)
           if (freq > 0) {
             const voice = createPluck(ctx, {
@@ -799,7 +818,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
         const decay   = ampAdsr.decay   ?? 0.2
         const release = ampAdsr.release ?? 0.1
         const noteDur = attack + decay + release + 0.02
-        createStepSequencer(transport, { pattern }, (val: number | string, _step, pos) => {
+        createStepSequencer(transport, { pattern, ...timing }, (val: number | string, _step, pos) => {
           const freq = resolveFreq(val)
           if (freq > 0) {
             const voice = createBass303(ctx, {
