@@ -74,7 +74,7 @@ When FORM and STAGE need to consume Score time, a new `@score/conductor` package
 
 ### 6. IPC channel `engine:tick` replaces `engine:step`
 
-The existing `engine:step` IPC channel (ADR 009) carries a partial payload. It is superseded by `engine:tick` which carries the full `TemporalTick`. `engine:step` is deprecated and will be removed when all consumers are migrated.
+The former `engine:step` IPC channel (ADR 009) carried a partial payload `{ step, stepCount }`. It has been replaced by `engine:tick` which carries `{ step, stepCount, bar, beat, bpm }`. `audioContext.currentTime` (`time`) is excluded from IPC — it is renderer-only and assembled into `AudioVisualState` by the `useAudioVisualState` hook. Migration completed 2026-03-24.
 
 ### 7. Audio data stays in renderer — no IPC for waveform/FFT
 

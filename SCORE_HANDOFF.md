@@ -281,7 +281,7 @@ Song files may optionally add `// @ts-check`. Never required or enforced.
 - **pnpm** — package manager, strict dependency resolution
 
 ### Audio Platform
-- **Tone.js** — Transport, Sequence, scheduling (Layer 1 — never exposed)
+- **`@score/sequencer`** — Transport, Clock, scheduling (Score-owned, never exposed to song authors)
 - **Web Audio API** — underlying audio graph (always abstracted)
 - **node-web-audio-api** — Web Audio polyfill for Node.js
 - **SuperCollider / scsynth** — professional audio backend (Phase 12c)
@@ -316,7 +316,7 @@ functions:  90%    lines:    90%
 ```
 Layer 3 — Song Files      Plain JS authored by the artist. Never compiled.
 Layer 2 — The Framework   TypeScript packages. All business logic.
-Layer 1 — The Platform    Tone.js + Web Audio API + scsynth. Never modified.
+Layer 1 — The Platform    Web Audio API + node-web-audio-api + scsynth (Phase 12c). Never modified.
 ```
 
 ### Backend Abstraction Layer

@@ -291,7 +291,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   }, [addLog])
 
   useEffect(() => {
-    const unsub = window.scoreBridge.on('engine:step', ({ step, stepCount }) => {
+    const unsub = window.scoreBridge.on('engine:tick', ({ step, stepCount }) => {
       setCurrentStep(step)
       setCurrentStepCount(stepCount)
     })

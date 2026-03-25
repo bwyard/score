@@ -67,6 +67,7 @@ All architectural decisions live in [`docs/adr/`](./adr/). Read the relevant ADR
 | [024](./adr/024-audio-midi-device-config.md) | Audio / MIDI device config |
 | [025](./adr/025-onboarding-first-run.md) | Onboarding / first run |
 | [026](./adr/026-performance-mode-visuals.md) | Performance Mode & algorave-style visuals |
+| [027](./adr/027-conductor-shared-temporal-clock.md) | Conductor — shared temporal clock (TemporalTick) |
 
 ## Session Files
 

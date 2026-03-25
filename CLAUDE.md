@@ -35,7 +35,7 @@ This is what makes SCORE a reference implementation rather than just another aud
 - **Runtime:** Node 20 LTS minimum. Song files run as plain ESM, never compiled.
 - **Package manager:** pnpm
 - **Monorepo:** Turborepo
-- **Audio:** Tone.js (Layer 1) + Web Audio API + node-web-audio-api (Node polyfill)
+- **Audio:** Web Audio API + node-web-audio-api (Node polyfill) + `@score/sequencer` (Transport / Clock)
 - **Testing:** Vitest — coverage thresholds enforced in CI (90/85/90/90)
 - **CI:** typecheck → lint → test → coverage. No merge if CI fails.
 
@@ -134,7 +134,7 @@ Score aims to cover every major electronic genre. Each genre has specific synthe
 
 ## Current Phase
 
-**Phase 1 — Scaffold** (in progress)
+**Phase 13 — Score Studio GUI** (in progress)
 See `SCORE_HANDOFF.md` for the full 17-phase build plan.
 
 ## Documentation Index
