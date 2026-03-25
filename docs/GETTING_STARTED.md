@@ -2,8 +2,6 @@
 
 Play your first song in under 5 minutes.
 
-> **Note — fluent DSL chain API pending:** The import syntax used throughout this doc (`import { Kick, Synth } from '@score/dsl'`) will be simplified to a single import in an upcoming release. Examples will be updated once the new API lands. The current syntax continues to work.
-
 ## Install
 
 ```bash
@@ -56,10 +54,7 @@ Press `Ctrl+C` to stop.
 ```js
 import { Song, Kick } from '@score/dsl'
 
-const kick = Kick({
-  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.9,
-})
+const kick = Kick(4).volume(0.9)
 
 export default Song({ bpm: 128, tracks: [kick] })
 ```
@@ -68,33 +63,23 @@ export default Song({ bpm: 128, tracks: [kick] })
 score play kick-only.js
 ```
 
+`Kick(4)` — four euclidean hits across 16 steps. `4` is the hit count, not a beat position.
+
 ## A full beat
 
 ```js
 import { Song, Kick, Snare, HiHat, Synth } from '@score/dsl'
 
-const kick = Kick({
-  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.9,
-})
+const kick = Kick(4).volume(0.9)
 
-const snare = Snare({
-  pattern: [0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.6,
-})
+const snare = Snare(2).volume(0.6)
 
-const hihat = HiHat({
-  pattern: [1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0],
-  volume: 0.25,
-})
+const hihat = HiHat(8).volume(0.25)
 
-const bass = Synth({
-  wave: 'sawtooth',
-  gain: 0.3,
-  envelope: { attack: 0.005, decay: 0.1, sustain: 0.6, release: 0.05 },
-  filter: { type: 'lowpass', frequency: 900 },
-  pattern: ['A2', 0, 'A2', 0,  0, 'A2', 0, 'D3',  'E3', 0, 'E3', 0,  0, 'A3', 0, 0],
-})
+const bass = Synth('sawtooth', 'A2')
+  .filter(900)
+  .notes(['A2', 'A2', 'D3', 'E3'])
+  .volume(0.3)
 
 export default Song({
   bpm: 128,
@@ -152,6 +137,7 @@ Every importable symbol across all packages.
 | `Synth` | `@score/dsl` | Subtractive synth with ADSR, filter, and effects |
 | `SubSynth` | `@score/dsl` | Full Juno-60/Minimoog model — unison, filter envelope |
 | `FMSynth` | `@score/dsl` | 2-operator FM — DX7 Rhodes, metallic leads, bells |
+| `Bass303` | `@score/dsl` | Roland TB-303 acid bass — squelch, resonance, accent, slide |
 | `Arp` | `@score/dsl` | Arpeggiator cycling through a note list |
 | `Theremin` | `@score/dsl` | Smooth pitch-glide melodic voice |
 | `Sax` | `@score/dsl` | Stepped melodic voice with note sequence |
@@ -174,11 +160,11 @@ Every importable symbol across all packages.
 | `beat` | `@score/pattern` | Builds a pattern from beat positions |
 | `scaleNotes` | `@score/pattern` | Returns note name array for a scale and root |
 | `chordNotes` | `@score/pattern` | Returns note name array for a chord symbol |
-| `Delay` | `@score/effects` | Repeating echo effect |
-| `Reverb` | `@score/effects` | Room/hall simulation |
-| `Filter` | `@score/effects` | Biquad filter (lowpass, highpass, bandpass, notch) |
+| `Delay` | `@score/effects` | Repeating echo effect (descriptor factory) |
+| `Reverb` | `@score/effects` | Room/hall simulation (descriptor factory) |
+| `Filter` | `@score/effects` | Biquad filter (descriptor factory) |
 | `Distortion` | `@score/effects` | Waveshaping — soft, hard, or foldback |
-| `EQ` | `@score/effects` | Three-band equalizer (low shelf, mid peak, high shelf) |
+| `EQ` | `@score/effects` | Three-band equalizer (descriptor factory) |
 | `Compressor` | `@score/effects` | Dynamic range compression |
 | `Limiter` | `@score/effects` | Brick-wall output limiter |
 | `BitCrusher` | `@score/effects` | Bit depth and sample rate reduction |
@@ -230,8 +216,8 @@ Every importable symbol across all packages.
 
 | File | Contents |
 |---|---|
-| [INSTRUMENTS.md](INSTRUMENTS.md) | All 14 instruments — Kick, Snare, HiHat, Kick808, Kick909, Snare909, Hihat808, Synth, SubSynth, FMSynth, Arp, Theremin, Sax, Sample |
-| [EFFECTS.md](EFFECTS.md) | All 14 effects — props, examples, and chain recipes |
+| [INSTRUMENTS.md](INSTRUMENTS.md) | All instruments — chain API reference |
+| [EFFECTS.md](EFFECTS.md) | Chain effects methods + advanced descriptor factories |
 | [SCALES.md](SCALES.md) | scaleNotes, chordNotes, tuning systems, circleOfFifths |
 | [ARRANGEMENT.md](ARRANGEMENT.md) | Intro/Buildup/Drop/Breakdown/Outro — section-based arrangement |
 | [SAMPLE.md](SAMPLE.md) | Sample instrument — file formats, paths, rate, looping |

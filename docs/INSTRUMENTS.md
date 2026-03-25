@@ -1,136 +1,256 @@
 # Instruments
 
-All instruments are imported from `@score/dsl`. They return descriptors — plain objects the engine hydrates at play time. No AudioContext is created in song files.
+All instruments are imported from `@score/dsl`. They return `ChainablePart` objects — immutable builders that the engine hydrates at play time. No AudioContext is created in song files.
 
 ```js
-import { Kick, Snare, HiHat, Synth, Kick808, Kick909, Snare909, Hihat808, SubSynth, FMSynth, Arp, Sample, Theremin, Sax } from '@score/dsl'
+import { Kick, Snare, HiHat, Kick808, Kick909, Snare909, Hihat808,
+         Synth, SubSynth, FMSynth, Bass303, Arp, Sample, Theremin, Sax } from '@score/dsl'
 ```
+
+Every instrument method returns a **new** instance — original is never mutated. Chain as many methods as you like:
+
+```js
+const kick = Kick(4).volume(0.9).reverb(0.1).swing(0.05)
+```
+
+---
+
+## Common chain methods
+
+All instruments share these methods.
+
+### Pattern
+
+| Method | Description |
+|---|---|
+| `.euclidean(hits, steps?)` | Replace pattern with euclidean distribution. Default steps = 16. |
+| `.pattern(arr)` | Set combined pitch+rhythm array. Strings = note names, `0` = rest. |
+| `.hits(...steps)` | Hit only at these step indices. `.hits(0, 4, 8, 12)` = four-on-floor. |
+| `.fast(n)` | Play pattern `n` times faster. |
+| `.slow(n)` | Play pattern `n` times slower. |
+| `.rev()` | Reverse the pattern. |
+| `.shift(n)` | Rotate `n` steps right (positive) or left (negative). |
+| `.degrade(p)` | Randomly drop hits at probability `p` (0–1). |
+| `.humanize(amt)` | Timing jitter in seconds. |
+| `.swing(amount)` | Swing offset on off-beats (0–1). |
+| `.every(n, fn)` | Apply `fn` every `n` bars. |
+| `.fromBar(n)` | Start playing at bar `n`. |
+| `.untilBar(n)` | Stop playing at bar `n`. |
+| `.fadeIn(bars)` | Fade in over `bars` bars. |
+| `.fadeOut(bars)` | Fade out over `bars` bars. |
+
+### Pitch and notes
+
+| Method | Description |
+|---|---|
+| `.note(pitch)` | Set a single pitch, e.g. `'C3'`. |
+| `.notes(arr)` | Set a note sequence. `0` or `'R'` = rest. |
+| `.octave(n)` | Shift `n` octaves up or down. |
+| `.pitch(semitones)` | Transpose ±N semitones. |
+| `.glide(time)` | Portamento time in seconds. |
+| `.dur(time)` | Note duration in seconds. |
+
+### Amplitude
+
+| Method | Description |
+|---|---|
+| `.volume(v)` | Output gain 0–1. |
+| `.attack(s)` | ADSR attack in seconds. |
+| `.decay(s)` | ADSR decay in seconds. |
+| `.sustain(v)` | ADSR sustain level 0–1. |
+| `.release(s)` | ADSR release in seconds. |
+
+### Effects
+
+| Method | Description |
+|---|---|
+| `.reverb(wet, opts?)` | Reverb — `wet` = 0–1. |
+| `.delay(time, feedback?)` | Echo — `time` in seconds or `'1/8d'`. |
+| `.filter(freq, q?)` | Lowpass filter — cutoff Hz + optional resonance. |
+| `.eq(low, mid, high)` | 3-band EQ in dB. |
+| `.chorus(depth?)` | Chorus — `depth` = 0–1 (default 0.5). |
+| `.flange(depth?)` | Flanger — `depth` = 0–1 (default 0.5). |
+| `.bit(bits)` | Bit crusher — `bits` = 4–16. |
+| `.saturate(amt)` | Saturation/distortion — `amt` = 0–1. |
+| `.widen(amt)` | Stereo width — 0–2, 1 = unity. |
+| `.pan(v)` | Stereo position — -1 (left) to 1 (right). |
+
+### Modulation
+
+| Method | Description |
+|---|---|
+| `.tremolo(rate, depth?)` | LFO on volume. `rate` Hz, `depth` 0–1. |
+| `.vibrato(rate, depth?)` | Sine on pitch. `rate` Hz, `depth` Hz. |
+| `.wobble(rate, depth?)` | LFO on filter cutoff (wobble bass / dubstep). |
+| `.autopan(rate, depth?)` | LFO on pan (stereo movement). |
+| `.drift(amt?)` | OU process on pitch — analog warmth. |
+| `.swell(bars)` | Ramp volume over `bars` bars. |
+
+### Routing
+
+| Method | Description |
+|---|---|
+| `.mute()` | Silence this part. |
+| `.solo()` | Solo this part. |
+| `.chokeGroup(name)` | Hits cut each other off within the group. |
+| `.send(bus, amount?)` | Route to a named effect bus. |
+| `.pumpWith(source, release?)` | EDM pump — duck gain on source hits. |
+| `.duckWith(source, opts?)` | Sidechain ducking. |
 
 ---
 
 ## Kick
 
-Synthesized bass drum. Pitched sine with pitch drop envelope.
+Synthesized bass drum. Sine body with pitch envelope and amplitude decay.
 
 ```js
-const kick = Kick({
-  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.9,
-  synth: { frequency: 75, pitchDrop: 0.09 },
-})
+// Four-on-the-floor (engine default)
+Kick().volume(0.9)
+
+// Euclidean — shorthand: pass hit count
+Kick(4).volume(0.9)          // same as Kick().euclidean(4, 16)
+Kick(5).swing(0.08)          // 5 hits, with swing
+
+// Custom pattern
+Kick().pattern([1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0]).volume(0.85)
+
+// With reverb
+Kick(4).volume(0.9).reverb(0.08)
 ```
 
-### Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `pattern` | `number[]` or `(step, bar) => number` | four-on-floor | 16-step rhythm. `1` = hit, `0` = rest. |
-| `volume` | `number` | `0.85` | Output level 0–1. |
-| `synth.frequency` | `number` | `80` | Starting pitch in Hz. |
-| `synth.pitchDrop` | `number` | `0.1` | How fast the pitch falls (seconds). |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain — use descriptor factories from `@score/effects`. |
-
-All props are optional.
+`Kick(hits?)` — `hits` is optional euclidean hit count (1–16). Omit for engine default (four-on-the-floor).
 
 ---
 
 ## Snare
 
-Synthesized snare drum. Noise body with pitched transient.
+Synthesized snare drum. Noise burst with tone body.
 
 ```js
-const snare = Snare({
-  pattern: [0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.6,
-})
+// Standard backbeat
+Snare().volume(0.6)
+
+// Euclidean ghost notes
+Snare(3).degrade(0.3).volume(0.5)
+
+// Manual pattern
+Snare().pattern([0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0])
 ```
 
-### Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `pattern` | `number[]` or `(step, bar) => number` | beats 2 and 4 | 16-step rhythm. |
-| `volume` | `number` | `0.5` | Output level 0–1. |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
-
-All props are optional.
+`Snare(hits?)` — `hits` is optional euclidean hit count. Omit for engine default (beats 2 and 4).
 
 ---
 
 ## HiHat
 
-Synthesized hi-hat. Open and closed variants via filtered noise.
+Synthesized hi-hat. Metal noise filtered to a closed or open hat timbre.
 
 ```js
-const hihat = HiHat({
-  pattern: [1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0,  1, 0, 1, 0],
-  volume: 0.25,
-  open: false,
-})
+// Straight 8th notes
+HiHat(8).volume(0.25)
+
+// Dense pattern with humanize
+HiHat(11).humanize(0.008).volume(0.2)
+
+// Open and closed hats with choke
+const closed = HiHat(8).chokeGroup('hat').volume(0.3)
+const open   = HiHat().hits(15).chokeGroup('hat').volume(0.4)
 ```
 
-### Props
+`HiHat(hits?)` — `hits` is optional euclidean hit count. Omit for engine default (every other 16th).
 
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `pattern` | `number[]` or `(step, bar) => number` | straight 8ths | 16-step rhythm. |
-| `volume` | `number` | `0.25` | Output level 0–1. |
-| `open` | `boolean` | `false` | `true` = open hi-hat (longer sustain). |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
+---
 
-All props are optional.
+## Kick808
+
+TR-808-style bass drum. Pure sine body with deep sub pitch fall. Sugar for `Kick().model('808')`.
+
+```js
+Kick808().volume(0.9)
+Kick808(4).decay(0.7)          // sustain the sub
+Kick808().pumpWith(kick)       // classic pump on self-reference
+```
+
+---
+
+## Kick909
+
+TR-909-style bass drum. Sine body with a short noise click transient. Sugar for `Kick().model('909')`.
+
+```js
+Kick909().volume(0.85)
+Kick909(4).reverb(0.05)
+```
+
+**808 vs 909:** Use `Kick808` for sub-heavy sustained kicks (trap, deep house). Use `Kick909` for punchy click-forward kicks (techno, house, trance).
+
+---
+
+## Snare909
+
+TR-909-style snare. Two triangle oscillators (tone) mixed with filtered white noise. Sugar for `Snare().model('909')`.
+
+```js
+Snare909().volume(0.75)
+Snare909(2).reverb(0.12)
+```
+
+---
+
+## Hihat808
+
+TR-808-style hi-hat. Six detuned square oscillators through bandpass + HPF filtering. Sugar for `HiHat().model('808')`.
+
+```js
+Hihat808(8).volume(0.5)
+Hihat808().hits(15).volume(0.4)      // open hat on last 16th
+Hihat808(8).humanize(0.01).volume(0.3)
+```
+
+Mix closed and open hats in two tracks to build classic 808 patterns.
 
 ---
 
 ## Synth
 
-Subtractive synthesizer with ADSR envelope and optional filter.
+General-purpose subtractive synth. Oscillator → ADSR envelope → optional filter.
 
 ```js
-const bass = Synth({
-  wave: 'sawtooth',
-  gain: 0.3,
-  envelope: {
-    attack: 0.005,
-    decay: 0.1,
-    sustain: 0.6,
-    release: 0.05,
-  },
-  filter: {
-    type: 'lowpass',
-    frequency: 900,
-    Q: 1.2,
-  },
-  pattern: ['A2', 0, 'A2', 0,  0, 'A2', 0, 'D3',  'E3', 0, 'E3', 0,  0, 'A3', 0, 0],
-})
+// Bass line
+Synth('sawtooth', 'A2')
+  .filter(900)
+  .notes(['A2', 'A2', 'D3', 'E3'])
+  .volume(0.3)
+
+// Pad
+Synth('triangle', 'C4')
+  .notes(['C4', 'E4', 'G4'])
+  .attack(0.4)
+  .sustain(0.8)
+  .release(0.6)
+  .reverb(0.4)
+  .volume(0.4)
+
+// Lead with delay
+Synth('sawtooth', 'E4')
+  .notes(['E4', 'D4', 'C4', 'A3'])
+  .delay(0.375, 0.35)
+  .reverb(0.15)
+  .volume(0.25)
 ```
 
-### Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `wave` | `'sine'` \| `'square'` \| `'sawtooth'` \| `'triangle'` | `'sawtooth'` | Oscillator waveform. |
-| `frequency` | `number` | `440` | Base frequency in Hz when pattern values are `1`. |
-| `gain` | `number` | `0.25` | Output level 0–1. |
-| `pattern` | `(number\|string)[]` or `(step, bar) => string\|number` | — | Note names or Hz values. `0` = rest. |
-| `sequence` | `string[]` | — | Pre-parsed note array (output of `Sequence()`). |
-| `envelope.attack` | `number` | `0.005` | Seconds from silence to peak. Short = punchy, long = pad swell. |
-| `envelope.decay` | `number` | `0.08` | Seconds from peak to sustain level. |
-| `envelope.sustain` | `number` | `0.7` | Level held while note is active (0–1). |
-| `envelope.release` | `number` | `0.05` | Seconds to silence after note ends. |
-| `filter.type` | `'lowpass'` \| `'highpass'` \| `'bandpass'` | — | Filter shape. Omit to bypass filter. |
-| `filter.frequency` | `number` | `2000` | Filter cutoff in Hz. |
-| `filter.Q` | `number` | `1` | Resonance. Higher = more pronounced peak at cutoff. |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
+`Synth(wave?, pitch?)` — `wave` is the oscillator shape, `pitch` is an optional starting note.
 
 ### Wave shapes
 
 | Wave | Character | Use for |
 |---|---|---|
-| `sine` | Pure, no harmonics | Sub-bass, soft pads |
-| `triangle` | Soft, few harmonics | Warm leads, mellow pads |
-| `square` | Hollow, odd harmonics | Bass, retro leads |
-| `sawtooth` | Bright, all harmonics | Acid bass, leads, strings |
+| `'sine'` | Pure, no harmonics | Sub-bass, soft pads |
+| `'triangle'` | Soft, few harmonics | Warm leads, mellow pads |
+| `'square'` | Hollow, odd harmonics | Bass, retro leads |
+| `'sawtooth'` | Bright, all harmonics | Acid bass, leads, strings |
+
+Default: `'sawtooth'`.
 
 ### ADSR diagram
 
@@ -145,14 +265,9 @@ sus   │  /    \____________________
            A    D        S             R
 ```
 
-- **A (attack)**: time from note-on to peak volume
-- **D (decay)**: time from peak down to sustain level
-- **S (sustain)**: level held until note-off
-- **R (release)**: time from note-off to silence
+### ADSR presets
 
-### Envelope presets
-
-| Sound | attack | decay | sustain | release |
+| Sound | `.attack()` | `.decay()` | `.sustain()` | `.release()` |
 |---|---|---|---|---|
 | Punchy bass | `0.002` | `0.05` | `0.5` | `0.03` |
 | Pad / string | `0.4` | `0.1` | `0.8` | `0.6` |
@@ -178,73 +293,199 @@ Typical ranges:
 - Mid: `A3`–`A4`
 - Lead: `A4`–`A5`
 
-### Effects on instruments
+---
+
+## SubSynth
+
+Analogue subtractive synth voice. Detuned oscillators → resonant LP filter → ADSR VCA. Juno-60 / Minimoog model. Adds `.unison()` and `.detune()` on top of the base chain methods.
 
 ```js
-import { Synth } from '@score/dsl'
-import { Delay, Reverb, Distortion } from '@score/effects'
+// Deep house bass — dual oscillator, filter sweep
+SubSynth('C2')
+  .unison(2)
+  .detune(8)
+  .filter(600, 1.2)
+  .wobble(0.5)
+  .volume(0.6)
 
-const lead = Synth({
-  wave: 'sawtooth',
-  gain: 0.2,
-  pattern: ['E4', 0, 'D4', 0,  'C4', 0, 'A3', 0],
-  effects: [
-    Distortion({ amount: 0.3 }),
-    Delay({ time: 0.375, feedback: 0.35, mix: 0.25 }),
-    Reverb({ decay: 1.5, mix: 0.15 }),
-  ],
-})
+// Reese bass — heavy detune, hard saturation
+SubSynth('A1')
+  .unison(4)
+  .detune(20)
+  .saturate(0.6)
+  .volume(0.5)
 ```
 
-Effect descriptors are pure data — no AudioContext in song files. The engine hydrates them at play time. See [EFFECTS.md](EFFECTS.md) for all available effects.
+`SubSynth(pitch?)` — optional starting pitch.
 
-### Using Sequence()
+### SubSynth-specific methods
 
-`Sequence()` parses a space-separated string of note names and rests into an array. `.` = rest.
+| Method | Description |
+|---|---|
+| `.unison(n)` | Oscillator count: `1` = mono, `2` = dual, `4` = quad. |
+| `.detune(cents)` | Detune spread in cents across oscillators. Default `8`. |
+
+### Unison and detune combinations
+
+| `.unison()` | `.detune()` | Character |
+|---|---|---|
+| `1` | `8` | Subtle, slightly warm |
+| `2` | `12` | Classic Juno-style doubling |
+| `4` | `20` | Supersaw-adjacent, very thick |
+
+---
+
+## FMSynth
+
+2-operator FM synthesis. Carrier modulated by a modulator with independent envelopes. Adds `.ratio()`, `.modIndex()`, and `.feedback()` on top of the base chain methods.
 
 ```js
-import { Synth, Sequence } from '@score/dsl'
+// DX7 Rhodes voicing — classic deep house chord
+FMSynth('A3')
+  .ratio(1.273)
+  .modIndex(3)
+  .reverb(0.3)
+  .volume(0.6)
 
-const lead = Synth({
-  wave: 'sawtooth',
-  gain: 0.2,
-  sequence: Sequence('A2 . D3 . F3 . E3 .'),
-})
+// Metallic FM lead — inharmonic ratio, high mod index
+FMSynth('C4')
+  .ratio(3.5)
+  .modIndex(6)
+  .delay(0.375, 0.4)
+  .volume(0.3)
 ```
+
+`FMSynth(pitch?)` — optional starting pitch.
+
+### FMSynth-specific methods
+
+| Method | Description |
+|---|---|
+| `.ratio(n)` | Modulator-to-carrier frequency ratio. `1.0` = harmonic. Non-integer = metallic. Default `1.273`. |
+| `.modIndex(n)` | Modulation index — how much the modulator affects the carrier. `0` = pure sine. `1–5` = Rhodes range. `8+` = metallic. |
+| `.feedback(n)` | Carrier feeds back to modulator (0–1). Adds harmonics and brightness. Default `0`. |
+
+### FM timbres
+
+| Sound | `.ratio()` | `.modIndex()` | Character |
+|---|---|---|---|
+| Rhodes / electric piano | `1.0` | `2–3` | Warm, glassy |
+| Bell / tine | `3.0` | `1.5` | Metallic, inharmonic |
+| Brass / organ | `1.0` | `5–8` | Bright, complex |
+| Techno lead | `2.0` | `6–10` | Aggressive, industrial |
+| Sub bass | `0.5` | `1` | Deep sine with weight |
+
+---
+
+## Bass303
+
+Roland TB-303 acid bass. Sawtooth/square oscillator + resonant filter with envelope. The defining voice of acid house, acid techno, and trance. Adds `.cutoff()`, `.resonance()`, `.accent()`, and `.slide()` on top of the base chain methods.
+
+```js
+// Classic acid bassline
+Bass303('C2')
+  .cutoff(600)
+  .resonance(2.0)
+  .accent([0, 4, 8])
+  .wobble(0.5)
+  .volume(0.6)
+
+// Slide phrase across a scale
+Bass303('C2')
+  .notes(['C2', 'D2', 'F2', 'G2'])
+  .slide([1, 3])
+  .cutoff(500)
+  .resonance(1.5)
+  .volume(0.55)
+```
+
+`Bass303(pitch?)` — optional starting pitch.
+
+### Bass303-specific methods
+
+| Method | Description |
+|---|---|
+| `.cutoff(freq)` | Filter cutoff in Hz. Default `400`. |
+| `.resonance(q)` | Filter resonance Q. Default `0.8`. High values → self-oscillation. |
+| `.filter(freq, q?)` | Sets cutoff + optional resonance together. |
+| `.accent(steps)` | Step indices where velocity is boosted and filter opens fully. |
+| `.slide(steps)` | Step indices with portamento (glide) to next note. |
+
+`.wobble(rate)` is especially effective on Bass303 — it sweeps the filter cutoff with an LFO, giving the classic acid wobble.
+
+---
+
+## Arp
+
+Arpeggiator. Cycles through a note list in sequence. Each step triggers the next note at the current synth voice.
+
+```js
+// Classic trance arp — up mode, triangle wave
+Arp(['C4', 'E4', 'G4', 'B4'])
+  .euclidean(8, 16)
+  .volume(0.5)
+  .delay(0.375, 0.3)
+
+// Dense 16th-note arp with reverb
+Arp(['A3', 'C4', 'E4', 'A4'])
+  .fast(2)
+  .reverb(0.25)
+  .volume(0.4)
+```
+
+`Arp(notes)` — `notes` is an ordered array of note names or MIDI pitch numbers to arpeggiate.
+
+---
+
+## Theremin
+
+Continuous pitch/volume control. Sine oscillator with LFO vibrato. Plays continuously — use `.note()` to set pitch.
+
+```js
+Theremin('A4').vibrato(5, 8).volume(0.4)
+Theremin('C4').drift(0.4).glide(0.1).volume(0.3)
+```
+
+`Theremin(pitch?)` — optional starting pitch.
+
+---
+
+## Sax
+
+Saxophone-style voice. Sawtooth through bandpass filter with ADSR envelope. Breathy, reedy character.
+
+```js
+Sax('A4')
+  .notes(['A4', 'B4', 'C5', 'D5'])
+  .dur(0.35)
+  .reverb(0.2)
+  .volume(0.4)
+```
+
+`Sax(pitch?)` — optional starting pitch.
 
 ---
 
 ## Sample
 
-Plays an audio file. Pattern and volume work the same as other instruments.
+Plays an audio file. Triggered on each pattern hit.
 
 ```js
-import { Sample } from '@score/dsl'
+// One-shot clap on beats 2 and 4
+Sample('./samples/clap.wav').hits(4, 12).volume(0.7)
 
-const rim = Sample({
-  path: './samples/rimshot.wav',
-  pattern: [0, 0, 1, 0,  0, 0, 1, 0,  0, 0, 1, 0,  0, 0, 1, 0],
-  volume: 0.8,
-  rate: 1.0,
-})
+// Euclidean rim shot
+Sample('./samples/rim.wav').euclidean(3, 16).volume(0.5)
+
+// Looped vinyl crackle texture
+Sample('./samples/vinyl-crackle.wav')
+  .hits(0)
+  .volume(0.12)
 ```
 
-### Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `path` | `string` | **required** | Relative path to the audio file from the song file's location. Supports `.wav`, `.mp3`, `.ogg`. |
-| `pattern` | `number[]` or `(step, bar) => number` | one hit per beat | 16-step rhythm. `1` = play, `0` = rest. |
-| `volume` | `number` | `0.8` | Output level 0–1. |
-| `rate` | `number` | `1.0` | Playback rate and pitch. `1.0` = original. `2.0` = octave up. `0.5` = octave down. `2 ** (semitones / 12)` for precise tuning. |
-| `loop` | `boolean` | `false` | Loop the sample continuously. |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain — import descriptors from `@score/effects`. |
-
-All props except `path` are optional.
+`Sample(path)` — `path` is required. Relative to the song file. Supports `.wav`, `.mp3`, `.ogg`.
 
 ### Path conventions
-
-Paths resolve relative to the song file. The `samples/` directory next to your song file is the convention:
 
 ```
 my-project/
@@ -252,292 +493,30 @@ my-project/
   samples/
     kick.wav
     snare.wav
-    rimshot.wav
+    rim.wav
 ```
 
-The `samples/` directory is gitignored — each user brings their own files. See [SAMPLE.md](SAMPLE.md) for full details.
+Paths resolve relative to the song file. The `samples/` directory is gitignored — each user brings their own files. See [SAMPLE.md](SAMPLE.md) for full details.
 
 ### Pitch shifting
 
-`rate` shifts pitch proportionally. `2 ** (semitones / 12)` converts semitone offsets to rates:
+Use `.pitch(semitones)` to transpose:
 
-| Rate | Pitch |
-|---|---|
-| `0.5` | 1 octave down |
-| `1.0` | Original |
-| `2.0` | 1 octave up |
-| `2 ** (7/12)` | Perfect fifth up (~1.498) |
-
-### Examples
-
-**Rim on the offbeat:**
 ```js
-const rim = Sample({
-  path: './samples/rim.wav',
-  pattern: [0, 0, 1, 0,  0, 0, 1, 0,  0, 0, 1, 0,  0, 0, 1, 0],
-  volume: 0.5,
-})
+// Root at A2, shift to D3 (+5 semitones)
+Sample('./samples/bass-a2.wav').pitch(5).hits(0, 4, 8, 12)
 ```
-
-**Looped vinyl crackle texture:**
-```js
-import { Sample } from '@score/dsl'
-
-const crackle = Sample({
-  path: './samples/vinyl-crackle.wav',
-  pattern: [1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0],
-  volume: 0.12,
-  loop: true,
-})
-```
-
-**Tuned bass sample — root at A2, shifted to D3 (+5 semitones):**
-```js
-const bass = Sample({
-  path: './samples/bass-a2.wav',
-  rate: 2 ** (5 / 12),
-  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.85,
-})
-```
-
-See [SAMPLE.md](SAMPLE.md) for the full Sample reference including file formats, the `sounds/` directory convention, and melodic sequencing examples.
 
 ---
 
-## Kick808
+## Using Sequence()
 
-TR-808-style bass drum. Pure sine body with deep sub pitch fall — the foundation of deep house, trap, and 808-driven styles.
-
-```js
-import { Kick808 } from '@score/dsl'
-
-const kick = Kick808({
-  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.8,
-  startFreq: 60,
-  endFreq: 45,
-  pitchFall: 0.15,
-  decay: 0.7,
-})
-```
-
-### Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `pattern` | `number[]` | four-on-the-floor | 16-step rhythm. `1` = hit, `0` = rest. |
-| `volume` | `number` | `0.85` | Output level 0–1. |
-| `startFreq` | `number` | `60` | Initial sine pitch in Hz. |
-| `endFreq` | `number` | `45` | Final pitch after fall in Hz. Deep sub. |
-| `pitchFall` | `number` | `0.15` | Duration of pitch fall in seconds. |
-| `decay` | `number` | `0.7` | Amplitude decay in seconds. Longer than Kick for that 808 sustain. |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
-
-All props are optional. The 808 decay is noticeably longer than the standard Kick — use it for sub-heavy styles (trap, deep house, afrotech).
-
----
-
-## Kick909
-
-TR-909-style bass drum. Sine body with transient noise click — the signature of techno, house, and trance.
+`Sequence()` parses a space-separated string of note names and rests into an array. `.` = rest.
 
 ```js
-import { Kick909 } from '@score/dsl'
+import { Synth, Sequence } from '@score/dsl'
 
-const kick = Kick909({
-  pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.9,
-  clickLevel: 0.25,
-  clickDecay: 0.03,
-})
-```
-
-### Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `pattern` | `number[]` | four-on-the-floor | 16-step rhythm. |
-| `volume` | `number` | `0.85` | Output level 0–1. |
-| `startFreq` | `number` | `65` | Initial sine pitch in Hz. |
-| `endFreq` | `number` | `48` | Final pitch after fall in Hz. |
-| `pitchFall` | `number` | `0.12` | Duration of pitch fall in seconds. |
-| `decay` | `number` | `0.65` | Sine body decay in seconds. |
-| `clickLevel` | `number` | `0.25` | Noise click level relative to body (0–1). ≈ −12 dBFS. |
-| `clickDecay` | `number` | `0.03` | Noise click decay in seconds. Shorter = snappier attack. |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
-
-**808 vs 909:** Use `Kick808` for sub-heavy, sustained kicks (trap, deep house). Use `Kick909` for punchier, click-forward kicks (techno, house, trance).
-
----
-
-## Snare909
-
-TR-909-style snare. Pitched triangle tone layer plus white noise body — classic crisp techno snare.
-
-```js
-import { Snare909 } from '@score/dsl'
-
-const snare = Snare909({
-  pattern: [0, 0, 0, 0,  1, 0, 0, 0,  0, 0, 0, 0,  1, 0, 0, 0],
-  volume: 0.7,
-  toneNoiseRatio: 0.35,
-})
-```
-
-### Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `pattern` | `number[]` | beats 2 and 4 | 16-step rhythm. |
-| `volume` | `number` | `0.6` | Output level 0–1. |
-| `toneDecay` | `number` | `0.2` | Triangle oscillator decay in seconds. |
-| `noiseDecay` | `number` | `0.3` | Noise body decay in seconds. |
-| `toneNoiseRatio` | `number` | `0.4` | Balance between tone and noise (0 = all noise, 1 = all tone). |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
-
-Lower `toneNoiseRatio` (0.2–0.3) = snappier, noise-dominant snare. Higher (0.5–0.6) = more tonal, rimshot character.
-
----
-
-## Hihat808
-
-TR-808-style hi-hat. Six-oscillator metallic noise source with bandpass filtering — the tight, characteristic 808 hat.
-
-```js
-import { Hihat808 } from '@score/dsl'
-
-const hihat = Hihat808({
-  pattern: [1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1],
-  volume: 0.3,
-  open: false,
-})
-```
-
-### Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `pattern` | `number[]` | straight 16ths | 16-step rhythm. |
-| `volume` | `number` | `0.3` | Output level 0–1. |
-| `decay` | `number` | `0.06` (closed) / `0.3` (open) | Amplitude decay in seconds. |
-| `open` | `boolean` | `false` | `true` = open hi-hat (longer sustain, `0.3s` decay). |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
-
-Mix closed (`open: false`) and open (`open: true`) variants across two tracks to build classic 808 drum machine patterns.
-
----
-
-## SubSynth
-
-Full Juno-60 / Minimoog model subtractive synthesizer. Unison oscillators, filter envelope, and ADSR amp envelope. For acid lines, Reese bass, detuned pads, and analog leads.
-
-```js
-import { SubSynth } from '@score/dsl'
-import { Reverb } from '@score/effects'
-
-const lead = SubSynth({
-  wave: 'sawtooth',
-  frequency: 220,
-  unison: 2,
-  detune: 12,
-  filter: {
-    type: 'lowpass',
-    frequency: 600,
-    Q: 3.5,
-    envDepth: 1200,
-    adsr: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.1 },
-  },
-  adsr: { attack: 0.008, decay: 0.15, sustain: 0.6, release: 0.08 },
-  pattern: ['A2', 0, 'A2', 0,  0, 'D3', 0, 'E3'],
-  volume: 0.5,
-  effects: [Reverb({ decay: 1.0, mix: 0.18 })],
-})
-```
-
-### Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `pattern` | `(number\|string)[]` | — | Step pattern. Note names (`'A2'`) or Hz values. `0` = rest. |
-| `volume` | `number` | `0.5` | Output level 0–1. |
-| `wave` | `'sine'` \| `'square'` \| `'sawtooth'` \| `'triangle'` | `'sawtooth'` | Oscillator waveform. |
-| `frequency` | `number` | `220` | Base pitch in Hz when pattern values are `1`. |
-| `detune` | `number` | `8` | Total detune spread between oscillator pairs in cents. |
-| `unison` | `1` \| `2` \| `4` | `1` | Oscillator pairs: `1` = 2 oscs, `2` = 4, `4` = 8. More pairs = thicker. |
-| `filter.type` | `'lowpass'` \| `'highpass'` \| `'bandpass'` | `'lowpass'` | Filter shape. |
-| `filter.frequency` | `number` | `2000` | Filter cutoff in Hz. |
-| `filter.Q` | `number` | `1` | Resonance. |
-| `filter.envDepth` | `number` | `800` | How far the filter envelope opens the cutoff (Hz). |
-| `filter.adsr` | `AdsrProps` | — | Filter envelope — controls cutoff over time. |
-| `adsr` | `AdsrProps` | defaults | Amplitude envelope — controls volume over time. |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
-
-### Unison and detune
-
-`unison` + `detune` together control the chorus thickness:
-- `unison: 1, detune: 8` — subtle, slightly warm
-- `unison: 2, detune: 12` — classic Juno-style doubling
-- `unison: 4, detune: 20` — supersaw-adjacent, very thick
-
-### Filter envelope
-
-`filter.envDepth` sets how much the filter opens from `filter.frequency` when the filter ADSR hits. With `frequency: 300, envDepth: 1200`, the cutoff sweeps from 300 Hz to 1500 Hz over the filter attack.
-
----
-
-## FMSynth
-
-2-operator FM synthesizer. Carrier oscillator modulated by a modulator oscillator with independent envelopes. Covers DX7 Rhodes-style tones, electric piano, metallic leads, and bell sounds.
-
-```js
-import { FMSynth } from '@score/dsl'
-import { Reverb } from '@score/effects'
-
-const rhodes = FMSynth({
-  frequency: 261.63,
-  modRatio: 1.0,
-  modIndex: 2.5,
-  ampAdsr:  { attack: 0.005, decay: 0.4,  sustain: 0.3, release: 0.25 },
-  modAdsr:  { attack: 0.001, decay: 0.2,  sustain: 0.0, release: 0.1  },
-  gain: 0.35,
-  pattern: ['C4', 0, 0, 0,  'E4', 0, 0, 0,  'G4', 0, 0, 0,  'C5', 0, 0, 0],
-  volume: 0.6,
-  effects: [Reverb({ decay: 1.8, mix: 0.25 })],
-})
-```
-
-### Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `pattern` | `(number\|string)[]` | — | Step pattern. Note names or Hz values. `0` = rest. |
-| `volume` | `number` | `0.6` | Output level 0–1. |
-| `frequency` | `number` | `440` | Carrier base frequency in Hz. |
-| `modRatio` | `number` | `1.0` | Modulator-to-carrier frequency ratio. `1.0` = same pitch (harmonic). `2.0` = octave above. |
-| `modIndex` | `number` | `3.0` | Modulation index — how much the modulator affects the carrier. `0` = pure sine. `1–5` = Rhodes/DX7 range. `8+` = metallic/inharmonic. |
-| `ampAdsr` | `AdsrProps` | defaults | Amplitude envelope on the carrier output. |
-| `modAdsr` | `AdsrProps` | defaults | Envelope on the modulation depth. Controls timbre evolution over time. |
-| `gain` | `number` | `0.3` | Peak gain 0–1. |
-| `effects` | `EffectDescriptor[]` | `[]` | Effects chain. |
-
-### FM timbres
-
-The combination of `modRatio` and `modIndex` determines the timbre:
-
-| Sound | modRatio | modIndex | Character |
-|---|---|---|---|
-| Rhodes / electric piano | `1.0` | `2–3` | Warm, slightly glassy |
-| Bell / tine | `3.0` | `1.5` | Metallic, inharmonic partials |
-| Brass / organ | `1.0` | `5–8` | Bright, complex |
-| Techno lead | `2.0` | `6–10` | Aggressive, industrial |
-| Sub bass | `0.5` | `1` | Deep sine with weight |
-
-### Modulator envelope
-
-`modAdsr` controls how the timbral brightness evolves. A fast-decaying modulator envelope gives the DX7 pluck character: bright attack, darkening sustain:
-
-```js
-// Classic DX7 "E. Piano 1" timbral envelope
-modAdsr: { attack: 0.001, decay: 0.3, sustain: 0.0, release: 0.15 }
+const lead = Synth('sawtooth', 'A2')
+  .notes(Sequence('A2 . D3 . F3 . E3 .'))
+  .volume(0.2)
 ```
