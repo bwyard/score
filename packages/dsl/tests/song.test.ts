@@ -35,6 +35,33 @@ describe('Song', () => {
     expect(() => Song({ bpm: 140, tracks: [] })).toThrow()
   })
 
+  describe('shorthand form — Song(bpm, tracks[])', () => {
+    it('creates a SongDefinition from positional args', () => {
+      const song = Song(128, [makeTrack()])
+      expect(song._type).toBe('SongDefinition')
+      expect(song.bpm).toBe(128)
+      expect(song.tracks).toHaveLength(1)
+    })
+
+    it('shorthand and object form produce equivalent output', () => {
+      const track = makeTrack()
+      const shorthand = Song(128, [track])
+      const object = Song({ bpm: 128, tracks: [track] })
+      expect(shorthand.bpm).toBe(object.bpm)
+      expect(shorthand.tracks).toEqual(object.tracks)
+      expect(shorthand._type).toBe(object._type)
+      expect(shorthand.arrangement).toEqual(object.arrangement)
+    })
+
+    it('throws when bpm is 0 in shorthand form', () => {
+      expect(() => Song(0, [makeTrack()])).toThrow()
+    })
+
+    it('throws when tracks is empty in shorthand form', () => {
+      expect(() => Song(128, [])).toThrow()
+    })
+  })
+
   // Memory leak check: SongDefinition holds no references beyond what was passed in
   it('does not retain extra references (memory leak check)', () => {
     const comp = createMockComponent()
