@@ -49,6 +49,7 @@ const createMockGainNode = (initialGain = 1.0, shouldThrowOnDisconnect = false):
     gainParam: createMockAudioParam(),
     get gain() { return currentGain },
     setGain: (value: number, _time?: number) => { currentGain = value },
+    scheduleFade: (_from: number, to: number, _startTime: number, _endTime: number) => { currentGain = to },
     scheduleEnvelope: ({ peak }: { peak: number; attack: number; decay: number; sustain: number; release: number; startTime: number; duration: number }) => { currentGain = peak },
   }
 }

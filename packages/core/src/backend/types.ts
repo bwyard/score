@@ -60,6 +60,12 @@ export type BackendGainNode = BackendNode & {
   readonly gainParam: BackendAudioParam
   readonly gain: number
   readonly setGain: (value: number, time?: number) => void
+  /**
+   * Schedule a linear gain ramp from `from` at `startTime` to `to` at `endTime`.
+   * Cancels any conflicting scheduled values before setting the anchor.
+   * Use for fade-in / fade-out that must span multiple bars.
+   */
+  readonly scheduleFade: (from: number, to: number, startTime: number, endTime: number) => void
   // ADSR envelope — schedules attack→decay→sustain→release without anchor conflicts
   readonly scheduleEnvelope: (opts: {
     peak: number

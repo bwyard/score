@@ -176,6 +176,11 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
           gainNode.gain.setValueAtTime(gainNode.gain.value, t)
           gainNode.gain.linearRampToValueAtTime(value, t + MIN_RAMP)
         },
+        scheduleFade: (from: number, to: number, startTime: number, endTime: number) => {
+          gainNode.gain.cancelScheduledValues(startTime)
+          gainNode.gain.setValueAtTime(from, startTime)
+          gainNode.gain.linearRampToValueAtTime(to, endTime)
+        },
         scheduleEnvelope: ({ peak, attack, decay, sustain, release, startTime }) => {
           const g = gainNode.gain
           g.cancelScheduledValues(startTime)
