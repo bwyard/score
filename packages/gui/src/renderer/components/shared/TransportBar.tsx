@@ -45,10 +45,20 @@ export const TransportBar = ({ hardware, onHome, onPlay, onStop, onBpmChange, ge
 
   const [localBpm, setLocalBpm]         = useState(128)
   const [bugModalOpen, setBugModalOpen] = useState(false)
+  const [panicFlash, setPanicFlash]     = useState(false)
 
   useEffect(() => {
     const off = window.scoreBridge.on('engine:state', payload => {
       setEngine(payload)
+    })
+    return off
+  }, [])
+
+  useEffect(() => {
+    const off = window.scoreBridge.on('engine:panic', () => {
+      setPanicFlash(true)
+      const timer = setTimeout(() => { setPanicFlash(false) }, 1500)
+      return () => { clearTimeout(timer) }
     })
     return off
   }, [])
@@ -91,6 +101,13 @@ export const TransportBar = ({ hardware, onHome, onPlay, onStop, onBpmChange, ge
       >
         {engine.playing ? '■' : '▶'}
       </button>
+
+      {/* Panic flash — transient 'Stopped' indicator after Ctrl+. */}
+      {panicFlash && (
+        <span role="status" aria-live="assertive" style={styles.panicFlash}>
+          ■ Stopped
+        </span>
+      )}
 
       {/* BPM */}
       <div style={styles.bpmGroup}>
@@ -272,5 +289,14 @@ const styles = {
     color:      '#6a9fff',
     border:     '1px solid #253050',
     background: '#0d1928',
+  },
+  panicFlash: {
+    fontFamily:    'system-ui, sans-serif',
+    fontSize:      '0.7rem',
+    fontWeight:    600,
+    letterSpacing: '0.08em',
+    color:         '#ff6a6a',
+    textTransform: 'uppercase' as const,
+    flexShrink:    0,
   },
 } as const

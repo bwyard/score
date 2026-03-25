@@ -208,6 +208,7 @@ const panicStop = (): void => {
   slot.bars    = 0
   pushState()
   send('engine:pending', { pending: false })
+  send('engine:panic', undefined)
 }
 
 const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {

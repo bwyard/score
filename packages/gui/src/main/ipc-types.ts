@@ -83,4 +83,9 @@ export type MainToRenderer = {
   'debug:pop':       { maxDelta: number; step: number; bars: number }
   /** Sent by main on launch with the previously saved panel layout (if any). */
   'layout:load':     PanelLayoutMap
+  /**
+   * Fires when the panic key (Cmd/Ctrl+.) triggers an immediate all-stop.
+   * Renderer shows a brief transient flash to confirm the stop landed.
+   */
+  'engine:panic':    undefined
 }
