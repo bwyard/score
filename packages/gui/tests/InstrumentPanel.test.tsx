@@ -63,15 +63,15 @@ describe('InstrumentPanel — rendering', () => {
     expect(screen.getByRole('slider', { name: /snappy/i })).toBeInTheDocument()
   })
 
-  it('renders Open toggle for hihat type', () => {
+  it('renders Decay slider for hihat type', () => {
     setup({ instrumentType: 'hihat', trackName: 'HiHat' })
-    expect(screen.getByRole('checkbox', { name: /open/i })).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: /decay/i })).toBeInTheDocument()
   })
 
-  it('renders Filter and Wobble sliders for bass303 type', () => {
+  it('renders Cutoff and Resonance sliders for bass303 type', () => {
     setup({ instrumentType: 'bass303', trackName: 'Bass303' })
-    expect(screen.getByRole('slider', { name: /filter/i })).toBeInTheDocument()
-    expect(screen.getByRole('slider', { name: /wobble/i })).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: /cutoff/i })).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: /resonance/i })).toBeInTheDocument()
   })
 
   it('renders Attack and Release sliders for synth type', () => {
@@ -127,19 +127,20 @@ describe('InstrumentPanel — interactions', () => {
     expect(onChange).toHaveBeenCalledWith('reverb', 0.3)
   })
 
-  it('calls onChange with method "open" and value 1 when Open checkbox checked', async () => {
+  it('calls onChange with method "decay" when Decay slider changes for hihat', () => {
     const onChange = vi.fn()
-    const { user } = setup({ instrumentType: 'hihat', trackName: 'HiHat', onChange })
-    await user.click(screen.getByRole('checkbox', { name: /open/i }))
-    expect(onChange).toHaveBeenCalledWith('open', 1)
+    setup({ instrumentType: 'hihat', trackName: 'HiHat', onChange })
+    const slider = screen.getByRole('slider', { name: /decay/i })
+    fireEvent.change(slider, { target: { value: '0.5' } })
+    expect(onChange).toHaveBeenCalledWith('decay', 0.5)
   })
 
-  it('calls onChange with method "open" and value 0 when Open checkbox unchecked', async () => {
+  it('calls onChange with method "cutoff" when Cutoff slider changes for bass303', () => {
     const onChange = vi.fn()
-    const { user } = setup({ instrumentType: 'hihat', trackName: 'HiHat', onChange, params: { open: 1 } })
-    const checkbox = screen.getByRole('checkbox', { name: /open/i })
-    await user.click(checkbox)
-    expect(onChange).toHaveBeenCalledWith('open', 0)
+    setup({ instrumentType: 'bass303', trackName: 'Bass303', onChange })
+    const slider = screen.getByRole('slider', { name: /cutoff/i })
+    fireEvent.change(slider, { target: { value: '800' } })
+    expect(onChange).toHaveBeenCalledWith('cutoff', 800)
   })
 })
 

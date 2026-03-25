@@ -31,6 +31,7 @@ export const mockContext = (): MockContext => {
       ...createMockNode(),
       _connectTo: (_destination: unknown) => {},
       frequencyParam: { connectModulator: (_source: unknown) => {}, disconnectModulator: () => {} },
+      onended: null,
       start: (_time?: number) => {},
       stop: (_time?: number) => {},
       setFrequency: (_value: number, _time?: number) => {},
@@ -46,6 +47,7 @@ export const mockContext = (): MockContext => {
     }),
     createNoise: (_props?: { type?: 'white' | 'pink' | 'brown' }) => ({
       ...createMockNode(),
+      onended: null,
       start: (_time?: number) => {},
       stop: (_time?: number) => {},
     }),

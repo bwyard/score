@@ -42,6 +42,43 @@ const trackSlice = (code: string, trackIndex: number): { start: number; end: num
   return { start, end }
 }
 
+/**
+ * Return the instrument model name (PascalCase identifier) at the given track position.
+ * e.g. `'Kick808'`, `'Snare909'`, `'Bass303'`.
+ *
+ * @example
+ * ```ts
+ * // code: const kick = Kick808(4).volume(0.8)
+ * parseTrackModel(code, 0)  // → 'Kick808'
+ * ```
+ */
+export const parseTrackModel = (code: string, trackIndex: number): string => {
+  const positions = findTrackPositions(code)
+  const start = positions[trackIndex]
+  if (start === undefined) return ''
+  const m = /^([A-Z][A-Za-z0-9]*)/.exec(code.slice(start))
+  return m?.[1] ?? ''
+}
+
+/**
+ * Replace the instrument model name at the given track position with `newModel`.
+ * e.g. replaces `Kick808(4)` with `Kick909(4)`.
+ *
+ * @example
+ * ```ts
+ * patchInstrumentModel(code, 0, 'Kick909')
+ * // const kick = Kick808(4).volume(0.8) → const kick = Kick909(4).volume(0.8)
+ * ```
+ */
+export const patchInstrumentModel = (code: string, trackIndex: number, newModel: string): string => {
+  const positions = findTrackPositions(code)
+  const start = positions[trackIndex]
+  if (start === undefined) return code
+  const m = /^([A-Z][A-Za-z0-9]*)/.exec(code.slice(start))
+  if (!m) return code
+  return code.slice(0, start) + newModel + code.slice(start + m[0].length)
+}
+
 // ── Exported pure patch functions ─────────────────────────────────────────────
 
 /**
@@ -258,6 +295,53 @@ export const patchChainMethod = (
 }
 
 /**
+ * Parse all chain method values from the given track's code region.
+ *
+ * Scans for `.method(number)` calls in the track slice and returns them as a
+ * `Record<string, number>`. Used to seed InstrumentPanel slider state from code.
+ *
+ * @param code       - Full DSL code string.
+ * @param trackIndex - Zero-based track index.
+ * @returns Map of method names to their current numeric arguments.
+ *
+ * @example
+ * ```ts
+ * // code: const kick = Kick808(4).volume(0.8).decay(0.6).reverb(0.1)
+ * parseTrackChainParams(code, 0)
+ * // → { volume: 0.8, decay: 0.6, reverb: 0.1 }
+ * ```
+ */
+export const parseTrackChainParams = (code: string, trackIndex: number): Record<string, number> => {
+  const region = trackSlice(code, trackIndex)
+  if (!region) return {}
+  const slice = code.slice(region.start, region.end)
+  const result: Record<string, number> = {}
+  const re = /\.([a-zA-Z]\w*)\(\s*(-?\d+(?:\.\d+)?)\s*\)/g
+  for (const m of slice.matchAll(re)) {
+    const method = m[1]
+    const val    = parseFloat(m[2] ?? '')
+    if (method !== undefined && !isNaN(val)) result[method] = val
+  }
+  return result
+}
+
+/**
+ * Return a variable name that doesn't already exist in the code.
+ * Tries `base`, then `base2`, `base3`, etc.
+ *
+ * @param code - Full DSL code string.
+ * @param base - Preferred base name (e.g. `'kick'`).
+ */
+export const uniqueVarName = (code: string, base: string): string => {
+  if (!new RegExp(`\\bconst\\s+${base}\\b`).test(code)) return base
+  for (let n = 2; n < 20; n++) {
+    const candidate = `${base}${String(n)}`
+    if (!new RegExp(`\\bconst\\s+${candidate}\\b`).test(code)) return candidate
+  }
+  return `${base}${String(Date.now())}`
+}
+
+/**
  * Insert a new instrument `const` declaration before `export default Song(` and
  * append the variable name to the Song's `tracks` array.
  *
@@ -314,4 +398,50 @@ export const patchAddInstrument = (
   const matchStart = tracksMatch.index + tracksMatch[0].indexOf('[') + 1
   const matchEnd   = matchStart + inner.length
   return withConst.slice(0, matchStart) + newInner + withConst.slice(matchEnd)
+}
+
+/**
+ * Returns true if the given track's chain includes a `.mute()` call.
+ *
+ * @param code       - Full DSL code string.
+ * @param trackIndex - Zero-based track index.
+ */
+export const parseMuteState = (code: string, trackIndex: number): boolean => {
+  const region = trackSlice(code, trackIndex)
+  if (!region) return false
+  return /\.mute\(\)/.test(code.slice(region.start, region.end))
+}
+
+/**
+ * Add or remove `.mute()` from a track's chain to persist mute state to code.
+ *
+ * @param code       - Full DSL code string.
+ * @param trackIndex - Zero-based track index.
+ * @param muted      - `true` to add `.mute()`, `false` to remove it.
+ */
+export const patchMute = (code: string, trackIndex: number, muted: boolean): string => {
+  const region = trackSlice(code, trackIndex)
+  if (!region) return code
+  const { start, end } = region
+  const slice = code.slice(start, end)
+
+  if (!muted) {
+    // Remove .mute() from chain
+    const cleaned = slice.replace(/\.mute\(\)/g, '')
+    return code.slice(0, start) + cleaned + code.slice(end)
+  }
+
+  // Already muted — no-op
+  if (/\.mute\(\)/.test(slice)) return code
+
+  // Append .mute() to last non-empty line of region
+  const lines = slice.split('\n')
+  const stopIdx = lines.findIndex(ln =>
+    ln.trim().startsWith('const ') || ln.trim().startsWith('export '))
+  const regionLines = stopIdx === -1 ? lines : lines.slice(0, stopIdx)
+  const insertLineIdx = regionLines.reduce((acc, ln, i) =>
+    ln.trim().length > 0 ? i : acc, 0)
+
+  const patched = lines.map((ln, i) => i === insertLineIdx ? ln + '.mute()' : ln)
+  return code.slice(0, start) + patched.join('\n') + code.slice(end)
 }

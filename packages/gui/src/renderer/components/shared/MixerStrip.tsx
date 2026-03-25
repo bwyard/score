@@ -25,12 +25,21 @@ export type MixerStripProps = {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const STRIP_COLOR: Record<string, string> = {
-  kick:   '#c05a20',
-  snare:  '#c02040',
-  hihat:  '#208060',
-  synth:  '#2060a0',
-  arp:    '#6040a0',
-  sample: '#606060',
+  kick:    '#c05a20',
+  kick808: '#c05a20',
+  kick909: '#d04010',
+  snare:   '#c02040',
+  snare909:'#c02040',
+  hihat:   '#208060',
+  hihat808:'#208060',
+  bass303: '#9040c0',
+  synth:   '#2060a0',
+  subsynth:'#2060a0',
+  fmsynth: '#1a50c0',
+  pad:     '#206080',
+  pluck:   '#208060',
+  arp:     '#6040a0',
+  sample:  '#606060',
 }
 const STRIP_DEFAULT = '#404040'
 
@@ -166,7 +175,7 @@ export const MixerStrip = ({
         aria-label={`${name} level`}
         role="img"
         width={4}
-        height={60}
+        height={44}
         style={styles.vuCanvas}
       />
     </div>
@@ -181,12 +190,11 @@ const styles = {
     flexDirection:   'column' as const,
     alignItems:      'center',
     width:           '56px',
-    minHeight:       '180px',
     background:      '#0d0d10',
     border:          '1px solid #1e1e22',
     boxSizing:       'border-box' as const,
-    padding:         '0 0 6px',
-    gap:             '4px',
+    padding:         '0 0 4px',
+    gap:             '3px',
     userSelect:      'none' as const,
     flexShrink:      0,
   },
@@ -237,7 +245,7 @@ const styles = {
     direction:          'rtl' as const,
     WebkitAppearance:   'slider-vertical' as const,
     width:              '28px',
-    height:             '80px',
+    height:             '60px',
     cursor:             'pointer',
     accentColor:        '#4a8fff',
     flexShrink:         0,
@@ -245,7 +253,7 @@ const styles = {
   vuCanvas: {
     display:        'block',
     width:          '4px',
-    height:         '60px',
+    height:         '44px',
     imageRendering: 'pixelated' as const,
     flexShrink:     0,
   },

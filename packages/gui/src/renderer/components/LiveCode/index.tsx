@@ -20,7 +20,7 @@ import { EvalStatus }                       from '../status/index.js'
 import type { EvalStatusKind }             from '../status/EvalStatus.js'
 import { BarCounter }                       from '../status/index.js'
 import { PendingSwapBadge }                 from '../status/index.js'
-import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod } from '../../lib/codePatcher.js'
+import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams, parseTrackModel, patchInstrumentModel, patchMute, parseMuteState, patchAddInstrument, uniqueVarName } from '../../lib/codePatcher.js'
 import { InstrumentPanel } from '../shared/InstrumentPanel.js'
 import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
 import type { PanelLayoutMap }            from '../../../main/ipc-types.js'
@@ -46,9 +46,11 @@ type PanelVisibility = {
 
 const STARTER = `import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
 
-const kick  = Kick808().hits(0, 4, 8, 12).volume(0.7)
-const snare = Snare909().hits(4, 12).volume(0.55)
-const hihat = Hihat808().euclidean(8, 16).volume(0.25)
+// Click a track in the mixer to open its instrument panel (model, decay, reverb…)
+// Click a step in the punchcard to toggle it on/off
+const kick  = Kick808(4).decay(0.7).volume(0.8)
+const snare = Snare909(2).decay(0.2).volume(0.55)
+const hihat = Hihat808(8).decay(0.08).volume(0.25)
 const bass  = Bass303('A2').cutoff(600).resonance(0.4)
   .pattern(['A2', 0, 0, 0,  'D3', 0, 0, 0,  'A2', 0, 0, 0,  'D3', 0, 0, 0])
   .volume(0.6)
@@ -132,14 +134,20 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [logEntries,  setLogEntries]  = useState<ReadonlyArray<LogEntry>>([])
   const [pianoNotes,  setPianoNotes]  = useState<ReadonlyArray<PianoRollNote>>([])
   // t220 — import visibility toggle (stub: fold/unfold in Monaco; auto-inject deferred for DSL chain API)
-  const [importsVisible, setImportsVisible] = useState(true)
+  const [importsVisible, setImportsVisible] = useState(false)
   // Instrument panel — which track is currently selected (null = none)
   const [selectedTrack, setSelectedTrack] = useState<number | null>(null)
+  // Add-track picker — null = hidden, true = picker open
+  const [addTrackOpen, setAddTrackOpen] = useState(false)
   // Set to true when the user clicks play before eval — song:update handler will
   // fire transport:play once the eval succeeds (eval-then-play flow).
   const autoPlayRef      = useRef(false)
   // Debounce timer for re-eval after instrument param changes
   const evalDebounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Always-current code ref for use in IPC callbacks (avoids stale closures)
+  const codeRef = useRef(STARTER)
+  // Keep codeRef current
+  codeRef.current = code
 
   // t152 — resizable editor/canvas split
   const [splitPct, setSplitPct] = useState(50)
@@ -200,12 +208,12 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
   const [panels, setPanels] = useState<PanelVisibility>({
     punchcard:  true,
-    scope:      true,
+    scope:      false,
     spectrum:   false,
     piano:      false,
-    mixer:      false,
+    mixer:      true,
     console:    true,
-    reference:  true,
+    reference:  false,
   })
 
   const togglePanel = useCallback((key: keyof PanelVisibility): void => {
@@ -242,7 +250,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   useEffect(() => {
     const unsub = window.scoreBridge.on('song:update', ({ tracks: t }) => {
       setTracks(t)
-      setStripStates(prev => t.map((track, i) => prev[i] ?? { volume: track.volume ?? 1, muted: false }))
+      setStripStates(prev => t.map((track, i) => prev[i] ?? { volume: track.volume ?? 1, muted: parseMuteState(codeRef.current, i) }))
       setEvalStatus('ok')
       setEvalTimestamp(Date.now())
       addLog('ok', `Song loaded — ${String(t.length)} track${t.length === 1 ? '' : 's'}`)
@@ -349,6 +357,9 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     return unsub
   }, [addLog])
 
+  // Clear debounce timer on unmount to avoid firing eval after component is gone
+  useEffect(() => () => { if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current) }, [])
+
   // t218 — called by each DraggablePanel after drag/resize ends; debounced save to main
   const onPanelMoved = useCallback((panelId: string, x: number, y: number, w: number, h: number): void => {
     layoutAccRef.current = { ...layoutAccRef.current, [panelId]: { x, y, w, h } }
@@ -396,10 +407,11 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   }, [])
 
   const onMixerMute = useCallback((index: number): void => {
-    // Read current muted state synchronously (user event — closure is fresh)
     const mute = !(stripStates[index]?.muted ?? false)
     setStripStates(prev => updateStrip(prev, index, { muted: mute }))
     window.scoreBridge.send('engine:patch', { tracks: [{ index, mute }] })
+    // Persist mute state to code so it survives re-eval
+    setCode(prev => patchMute(prev, index, mute))
   }, [stripStates])
 
   /**
@@ -407,7 +419,16 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
    * Prevents 60fps re-evals during slider drag while keeping the editor in sync.
    */
   const onInstrumentChange = useCallback((trackIndex: number, method: string, value: number | string): void => {
-    setCode(prev => patchChainMethod(prev, trackIndex, method, value))
+    if (method === '_model' && typeof value === 'string') {
+      setCode(prev => patchInstrumentModel(prev, trackIndex, value))
+    } else {
+      setCode(prev => patchChainMethod(prev, trackIndex, method, value))
+      // Keep mixer fader in sync and apply to engine immediately for volume
+      if (method === 'volume' && typeof value === 'number') {
+        setStripStates(prev => updateStrip(prev, trackIndex, { volume: value }))
+        window.scoreBridge.send('engine:patch', { tracks: [{ index: trackIndex, volume: value }] })
+      }
+    }
     if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
     evalDebounceRef.current = setTimeout(() => {
       setError(null)
@@ -446,6 +467,13 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     if (len === 0) return
     const currentVal = track.pattern[stepIndex % len]
     const newVal = currentVal ? 0 : 1
+    // Optimistic update — punchcard reflects the toggle immediately, before re-eval
+    setTracks(prev => prev.map((t, i) => {
+      if (i !== trackIndex) return t
+      const pat = [...t.pattern]
+      pat[stepIndex % len] = newVal
+      return { ...t, pattern: pat }
+    }))
     setCode(prev => patchTrackPattern(prev, trackIndex, stepIndex, newVal))
     if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
     evalDebounceRef.current = setTimeout(() => {
@@ -471,6 +499,44 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
     setCode(prev => patchTrackNote(prev, arpIndex, step, noteName))
   }, [tracks])
+
+  const onAddTrack = useCallback((instrumentType: string): void => {
+    setAddTrackOpen(false)
+    // Default snippets per instrument type
+    const DEFAULTS: Record<string, string> = {
+      kick808:  'Kick808(4).decay(0.7).volume(0.8)',
+      kick909:  'Kick909(4).decay(0.6).volume(0.8)',
+      kick:     'Kick(4).volume(0.8)',
+      snare909: 'Snare909(2).decay(0.2).volume(0.6)',
+      snare:    'Snare(2).volume(0.6)',
+      hihat808: 'Hihat808(8).decay(0.08).volume(0.3)',
+      hihat:    'HiHat(8).volume(0.3)',
+      bass303:  "Bass303('A2').cutoff(600).resonance(0.4).volume(0.6)",
+      synth:    "Synth('C3').attack(0.01).release(0.4).volume(0.6)",
+      subsynth: "SubSynth('C3').filter(1200).volume(0.6)",
+      fmsynth:  "FMSynth('C3').attack(0.01).release(0.4).volume(0.6)",
+      pad:      "Pad('A3').attack(0.3).reverb(0.3).volume(0.5)",
+      pluck:    "Pluck('C3').volume(0.6)",
+    }
+    const snippet = DEFAULTS[instrumentType] ?? `Synth('C3').volume(0.6)`
+    // Derive a base var name from the type (kick808→kick, bass303→bass, etc.)
+    const base = instrumentType.replace(/\d+$/, '').replace(/[^a-z]/g, '')
+    setCode(prev => {
+      const varName = uniqueVarName(prev, base)
+      return patchAddInstrument(prev, varName, snippet)
+    })
+    // Re-eval after insert
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null)
+      setEvalStatus('pending')
+      addLog('info', 'Evaluating…')
+      setCode(latest => {
+        window.scoreBridge.send('engine:eval', { code: latest })
+        return latest
+      })
+    }, 80)
+  }, [addLog])
 
   // Smart insert — appends snippet inside the tracks: [...] array rather than at cursor.
   // Falls back to end-of-file append if no tracks array is found.
@@ -504,6 +570,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   }, [])
 
   const onNew = useCallback((): void => {
+    if (!window.confirm('Start a new song? Current code will be lost.')) return
+    window.scoreBridge.send('transport:stop', undefined)
     setCode(STARTER)
     setError(null)
     setEvalStatus('idle')
@@ -511,6 +579,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     setPianoNotes([])
     setStripStates([])
     setLogEntries([])
+    setSelectedTrack(null)
   }, [])
 
   const onSave = useCallback((): void => {
@@ -603,6 +672,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               <button style={styles.fileBtn} onClick={onNew}  aria-label="New song">New</button>
               <button style={styles.fileBtn} onClick={onOpen} aria-label="Open song">Open</button>
               <button style={styles.fileBtn} onClick={onSave} aria-label="Save song">Save</button>
+              <button style={styles.fileBtn} onClick={onEval} aria-label="Eval song (load without playing)">Eval</button>
               <button style={styles.evalBtn} onClick={onRun}  aria-label="Run song">▶ Run</button>
             </div>
           </div>
@@ -639,8 +709,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               title="Step Grid"
               defaultX={savedLayout['punchcard']?.x ?? 8}
               defaultY={savedLayout['punchcard']?.y ?? 48}
-              defaultWidth={savedLayout['punchcard']?.w ?? 420}
-              defaultHeight={savedLayout['punchcard']?.h ?? 180}
+              defaultWidth={savedLayout['punchcard']?.w ?? 560}
+              defaultHeight={savedLayout['punchcard']?.h ?? 160}
               onClose={() => { togglePanel('punchcard') }}
               panelId="punchcard"
               onMoved={onPanelMoved}
@@ -650,6 +720,11 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                 currentStep={currentStep}
                 stepCount={currentStepCount}
                 onStepClick={onStepClick}
+                onLabelClick={(i) => {
+                  setSelectedTrack(prev => prev === i ? null : i)
+                  if (!panels.mixer) togglePanel('mixer')
+                }}
+                selectedTrack={selectedTrack}
               />
             </DraggablePanel>
           )}
@@ -712,42 +787,111 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               key={`mixer-${String(layoutGen)}`}
               title="Mixer"
               defaultX={savedLayout['mixer']?.x ?? 8}
-              defaultY={savedLayout['mixer']?.y ?? 412}
-              defaultWidth={savedLayout['mixer']?.w ?? 420}
-              defaultHeight={savedLayout['mixer']?.h ?? 220}
+              defaultY={savedLayout['mixer']?.y ?? 320}
+              defaultWidth={savedLayout['mixer']?.w ?? 560}
+              defaultHeight={savedLayout['mixer']?.h ?? 260}
               onClose={() => { togglePanel('mixer') }}
               panelId="mixer"
               onMoved={onPanelMoved}
             >
-              <div style={styles.mixerInner}>
-                {tracks.map((track, i) => (
-                  <div
-                    key={`${track.name}-${String(i)}`}
-                    style={{ outline: selectedTrack === i ? '1px solid #4a8fff' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setSelectedTrack(prev => prev === i ? null : i) }}
-                    aria-label={`Select ${track.name} track`}
-                  >
-                    <MixerStrip
-                      name={track.name}
-                      type={track.type}
-                      volume={stripStates[i]?.volume ?? 1}
-                      muted={stripStates[i]?.muted ?? false}
-                      level={0}
-                      onVolume={v => { onMixerVolume(i, v) }}
-                      onMute={() => { onMixerMute(i) }}
-                    />
+              {/* Add Track toolbar — outside mixerInner so picker isn't clipped by overflow:auto */}
+              <div style={{ display: 'flex', alignItems: 'center', padding: '4px 6px 0', gap: 6, position: 'relative' }}>
+                <button
+                  style={styles.addTrackBtn}
+                  aria-label="Add track"
+                  title="Add a new instrument track"
+                  onClick={() => { setAddTrackOpen(v => !v) }}
+                >
+                  +
+                </button>
+                <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#3a3a52', letterSpacing: '0.06em' }}>ADD TRACK</span>
+                {addTrackOpen && (
+                  <div style={styles.addTrackPicker}>
+                    {([
+                      ['kick808',  'Kick 808'],
+                      ['kick909',  'Kick 909'],
+                      ['snare909', 'Snare 909'],
+                      ['hihat808', 'HiHat 808'],
+                      ['bass303',  'Bass 303'],
+                      ['synth',    'Synth'],
+                      ['subsynth', 'SubSynth'],
+                      ['fmsynth',  'FM Synth'],
+                      ['pad',      'Pad'],
+                      ['pluck',    'Pluck'],
+                    ] as const).map(([type, label]) => (
+                      <button
+                        key={type}
+                        style={styles.addTrackPickerBtn}
+                        onClick={() => { onAddTrack(type) }}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
-                ))}
+                )}
+              </div>
+
+              <div style={styles.mixerInner}>
+                {tracks.map((track, i) => {
+                  const isSelected = selectedTrack === i
+                  return (
+                    <div
+                      key={`${track.name}-${String(i)}`}
+                      style={{
+                        display:       'flex',
+                        flexDirection: 'column',
+                        alignItems:    'center',
+                        borderRadius:  3,
+                        border:        isSelected ? '2px solid #4a8fff' : '2px solid transparent',
+                        background:    isSelected ? 'rgba(74,143,255,0.08)' : 'transparent',
+                      }}
+                    >
+                      <MixerStrip
+                        name={track.name}
+                        type={track.type}
+                        volume={stripStates[i]?.volume ?? 1}
+                        muted={stripStates[i]?.muted ?? false}
+                        level={0}
+                        onVolume={v => { onMixerVolume(i, v) }}
+                        onMute={() => { onMixerMute(i) }}
+                      />
+                      <button
+                        style={{
+                          fontSize:      8,
+                          fontFamily:    'monospace',
+                          color:         isSelected ? '#4a8fff' : '#3a3a4a',
+                          letterSpacing: '0.08em',
+                          paddingBottom: 3,
+                          userSelect:    'none',
+                          background:    'none',
+                          border:        'none',
+                          cursor:        'pointer',
+                          width:         '100%',
+                        }}
+                        aria-label={`${isSelected ? 'Close' : 'Open'} ${track.name} instrument editor`}
+                        title={isSelected ? `Close ${track.name} editor` : `Click to edit ${track.name}`}
+                        onClick={() => { setSelectedTrack(prev => prev === i ? null : i) }}
+                      >
+                        {isSelected ? '▲ EDIT' : '▼ EDIT'}
+                      </button>
+                    </div>
+                  )
+                })}
                 {tracks.length === 0 && (
                   <span style={styles.mixerEmpty}>No tracks — eval a song first</span>
                 )}
               </div>
+              {selectedTrack === null && tracks.length > 0 && (
+                <div style={{ fontSize: 9, color: '#3a3a52', fontFamily: 'monospace', padding: '4px 8px', textAlign: 'center', letterSpacing: '0.06em' }}>
+                  ▼ EDIT — click a strip above
+                </div>
+              )}
               {selectedTrack !== null && tracks[selectedTrack] !== undefined && (
                 <InstrumentPanel
                   trackIndex={selectedTrack}
                   instrumentType={tracks[selectedTrack].type}
                   trackName={tracks[selectedTrack].name}
-                  params={{ volume: stripStates[selectedTrack]?.volume ?? 1 }}
+                  params={{ ...parseTrackChainParams(code, selectedTrack), _model: parseTrackModel(code, selectedTrack), volume: stripStates[selectedTrack]?.volume ?? 1 }}
                   muted={stripStates[selectedTrack]?.muted ?? false}
                   onChange={(method: string, value: number | string) => { onInstrumentChange(selectedTrack, method, value) }}
                   onMute={() => { onInstrumentMute(selectedTrack) }}
@@ -922,15 +1066,60 @@ const styles = {
     gap:      '4px',
   },
   mixerInner: {
-    display:  'flex',
-    flexWrap: 'wrap' as const,
-    gap:      '4px',
-    padding:  '6px',
+    display:    'flex',
+    flexWrap:   'nowrap' as const,
+    gap:        '4px',
+    padding:    '6px',
+    overflowX:  'auto' as const,
+    alignItems: 'flex-start',
   },
   mixerEmpty: {
     color:      '#3a3a46',
     fontSize:   '0.75rem',
     fontFamily: "'JetBrains Mono', monospace",
     padding:    '8px',
+  },
+  addTrackBtn: {
+    width:         '32px',
+    height:        '32px',
+    background:    '#141420',
+    border:        '1px solid #2a2a42',
+    borderRadius:  '3px',
+    color:         '#4a8fff',
+    fontSize:      '1.2rem',
+    cursor:        'pointer',
+    display:       'flex',
+    alignItems:    'center',
+    justifyContent:'center',
+    flexShrink:    0,
+    padding:       0,
+    lineHeight:    1,
+  },
+  addTrackPicker: {
+    position:      'absolute' as const,
+    top:           '36px',
+    left:          0,
+    zIndex:        300,
+    background:    '#0e0e14',
+    border:        '1px solid #2a2a42',
+    borderRadius:  '4px',
+    display:       'flex',
+    flexDirection: 'column' as const,
+    minWidth:      '90px',
+    maxHeight:     '260px',
+    overflowY:     'auto' as const,
+    boxShadow:     '0 -4px 16px #0006',
+  },
+  addTrackPickerBtn: {
+    background:    'none',
+    border:        'none',
+    borderBottom:  '1px solid #1a1a28',
+    color:         '#8a9ab0',
+    fontSize:      '0.65rem',
+    fontFamily:    'monospace',
+    letterSpacing: '0.05em',
+    padding:       '5px 10px',
+    cursor:        'pointer',
+    textAlign:     'left' as const,
   },
 } as const

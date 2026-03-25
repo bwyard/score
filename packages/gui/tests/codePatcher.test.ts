@@ -4,6 +4,7 @@ import {
   patchTrackPattern,
   patchTrackVolume,
   patchTrackNote,
+  parseTrackChainParams,
 } from '../src/renderer/lib/codePatcher.js'
 
 // ── Base code ─────────────────────────────────────────────────────────────────
@@ -230,5 +231,33 @@ describe('patchTrackPattern — chain API style', () => {
     const noPattern = `const bass = Bass303('C2').volume(0.8)
 export default Song({ bpm: 120, tracks: [bass] })`
     expect(patchTrackPattern(noPattern, 0, 0, 1)).toBe(noPattern)
+  })
+})
+
+describe('parseTrackChainParams', () => {
+  const PARAMS_CODE = `const kick = Kick808(4).volume(0.8).decay(0.6).reverb(0.1)
+const snare = Snare909(2).volume(0.55).sustain(0.4)
+export default Song({ bpm: 128, tracks: [kick, snare] })`
+
+  it('parses all chain method values for track 0', () => {
+    const params = parseTrackChainParams(PARAMS_CODE, 0)
+    expect(params['volume']).toBe(0.8)
+    expect(params['decay']).toBe(0.6)
+    expect(params['reverb']).toBe(0.1)
+  })
+
+  it('parses chain method values for track 1', () => {
+    const params = parseTrackChainParams(PARAMS_CODE, 1)
+    expect(params['volume']).toBe(0.55)
+    expect(params['sustain']).toBe(0.4)
+  })
+
+  it('does not cross into adjacent track region', () => {
+    const params = parseTrackChainParams(PARAMS_CODE, 0)
+    expect(params['sustain']).toBeUndefined()
+  })
+
+  it('returns {} for out-of-range track index', () => {
+    expect(parseTrackChainParams(PARAMS_CODE, 5)).toEqual({})
   })
 })

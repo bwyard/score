@@ -92,6 +92,7 @@ export const createMockOscillatorNode = (): MockBackendOscillatorNode => {
     stopCalls,
     _connectTo: (_destination: unknown) => {},
     frequencyParam: { connectModulator: (_source: unknown) => {}, disconnectModulator: () => {} },
+    onended: null,
     start: (time?: number) => { startCalls.push({ time }) },
     stop: (time?: number) => { stopCalls.push({ time }) },
     setFrequency: (_value: number, _time?: number) => {},
@@ -127,6 +128,7 @@ export const createMockNoiseNode = (): MockBackendNoiseNode => {
     ...base,
     startCalls,
     stopCalls,
+    onended: null,
     start: (time?: number) => { startCalls.push({ time }) },
     stop: (time?: number) => { stopCalls.push({ time }) },
   }

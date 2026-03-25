@@ -290,7 +290,15 @@ export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadg
 
     // Focus editor on mount
     editor.focus()
-  }, [onEval])
+
+    // Apply initial import fold state after model is ready
+    if (!importsVisible) {
+      // Small delay lets Monaco finish building fold regions before we trigger fold
+      window.setTimeout(() => {
+        editor.trigger('t220', 'editor.fold', { selectionLines: [1] })
+      }, 150)
+    }
+  }, [onEval, importsVisible])
 
   const handleChange = useCallback((val: string | undefined) => {
     onChange(val ?? '')

@@ -134,7 +134,9 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
           disconnectModulator: () => {},
         },
         start: (time?: number) => { osc.start(time ?? ctx.currentTime) },
-        stop: (time?: number) => { osc.stop(time ?? ctx.currentTime) },
+        stop:  (time?: number) => { osc.stop(time ?? ctx.currentTime) },
+        get onended() { return (osc.onended as ((event: Event) => void) | null) ?? null },
+        set onended(v: ((event: Event) => void) | null) { osc.onended = v },
         setFrequency: (value: number, time?: number) => {
           const t = time ?? ctx.currentTime
           osc.frequency.setValueAtTime(osc.frequency.value, t)
@@ -195,6 +197,8 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
       const outputBase = wrapNode(outputGain as unknown as WebAudioNode)
       let source: WebBufferSourceNode | null = null
 
+      let noiseOnEnded: ((event: Event) => void) | null = null
+
       return {
         ...outputBase,
         start: (time?: number) => {
@@ -215,7 +219,11 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
             source.disconnect()
             source = null
           }
+          // Fire onended so callers can disconnect downstream nodes
+          if (noiseOnEnded) noiseOnEnded(new Event('ended'))
         },
+        get onended() { return noiseOnEnded },
+        set onended(v: ((event: Event) => void) | null) { noiseOnEnded = v },
       }
     },
 

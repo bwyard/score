@@ -145,6 +145,7 @@ const createMockContext = (shouldThrowOnDisconnect = false): EffectsMockContext 
         ...base,
         _connectTo: (_destination: unknown) => {},
         frequencyParam: { connectModulator: (_source: unknown) => {}, disconnectModulator: () => {} },
+        onended: null,
         start: (_time?: number) => {},
         stop: (_time?: number) => {},
         setFrequency: (_value: number, _time?: number) => {},
@@ -163,6 +164,7 @@ const createMockContext = (shouldThrowOnDisconnect = false): EffectsMockContext 
       const base = createMockNode()
       return {
         ...base,
+        onended: null,
         start: (_time?: number) => {},
         stop: (_time?: number) => {},
       }

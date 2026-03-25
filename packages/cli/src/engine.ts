@@ -109,6 +109,11 @@ const MELODIC_INSTRUMENT_TYPES = new Set([
   'pad', 'rhodes', 'pluck', 'bass-303',
 ])
 
+// Percussion types — chain .decay() maps directly to props.decay (not envelope)
+const PERCUSSION_TYPES = new Set([
+  'kick', 'kick808', 'kick909', 'snare', 'snare909', 'hihat', 'hihat808',
+])
+
 /** Convert a chain-API {@link PartDescriptor} to an {@link InstrumentDescriptor} the engine can hydrate. */
 export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDescriptor => ({
   _type: 'InstrumentDescriptor',
@@ -127,6 +132,9 @@ export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDesc
     ...(part._pattern  !== undefined ? { pattern:  part._pattern  } : {}),
     ...(part._notes    !== undefined ? { notes:    part._notes    } : {}),
     ...(part._adsr     !== undefined ? { envelope: part._adsr     } : {}),
+    // For percussion, also spread _adsr fields directly into props so .decay() / .pitch() etc.
+    // from the chain API reach the component factory (which reads props.decay, not props.envelope.decay).
+    ...(part._adsr !== undefined && PERCUSSION_TYPES.has(part.instrumentType) ? part._adsr : {}),
     ...(part._effects  !== undefined ? { effects:  part._effects  } : {}),
     ...(part._swing    !== undefined ? { swing:    part._swing    } : {}),
     ...(part._humanize !== undefined ? { humanize: part._humanize } : {}),
@@ -160,6 +168,10 @@ export const triggerKick = (ctx: Context, time: number, props: KickProps, dest: 
   osc.start(time)
   osc.setFrequency(30, time + drop)
   osc.stop(time + dur)
+  osc.onended = () => {
+    try { osc.disconnect() } catch { /* ok */ }
+    try { vol.disconnect() } catch { /* ok */ }
+  }
 }
 
 export const triggerSnare = (ctx: Context, time: number, props: SnareProps, dest: GainNode): void => {
@@ -177,6 +189,10 @@ export const triggerSnare = (ctx: Context, time: number, props: SnareProps, dest
   body.start(time)
   body.setFrequency(100, time + 0.05)
   body.stop(time + 0.09)
+  body.onended = () => {
+    try { body.disconnect()  } catch { /* ok */ }
+    try { bGain.disconnect() } catch { /* ok */ }
+  }
 
   // Noise — filtered burst (the snare wire rattle)
   // 1 ms attack snaps the rattle in immediately; decay controlled by props.decay
@@ -189,6 +205,11 @@ export const triggerSnare = (ctx: Context, time: number, props: SnareProps, dest
   nGain.scheduleEnvelope({ peak: gain * 0.5, attack: 0.001, decay, sustain: 0, release: 0, startTime: time, duration: decay + 0.02 })
   noise.start(time)
   noise.stop(time + decay + 0.02)
+  noise.onended = () => {
+    try { noise.disconnect()  } catch { /* ok */ }
+    try { filter.disconnect() } catch { /* ok */ }
+    try { nGain.disconnect()  } catch { /* ok */ }
+  }
 }
 
 export const triggerHiHat = (ctx: Context, time: number, props: HiHatProps, dest: GainNode): void => {
@@ -205,6 +226,11 @@ export const triggerHiHat = (ctx: Context, time: number, props: HiHatProps, dest
   vol.scheduleEnvelope({ peak: gain, attack: 0.001, decay: dur - 0.001, sustain: 0, release: 0, startTime: time, duration: dur })
   noise.start(time)
   noise.stop(time + dur)
+  noise.onended = () => {
+    try { noise.disconnect()  } catch { /* ok */ }
+    try { filter.disconnect() } catch { /* ok */ }
+    try { vol.disconnect()    } catch { /* ok */ }
+  }
 }
 
 export const triggerSynth = (
@@ -233,8 +259,17 @@ export const triggerSynth = (
     })
     osc.connect(filt)
     filt.connect(gain)
+    osc.onended = () => {
+      try { osc.disconnect()  } catch { /* ok */ }
+      try { filt.disconnect() } catch { /* ok */ }
+      try { gain.disconnect() } catch { /* ok */ }
+    }
   } else {
     osc.connect(gain)
+    osc.onended = () => {
+      try { osc.disconnect()  } catch { /* ok */ }
+      try { gain.disconnect() } catch { /* ok */ }
+    }
   }
   gain.connect(dest)
   gain.scheduleEnvelope({ peak, attack, decay, sustain, release, startTime: time, duration: noteDur })
