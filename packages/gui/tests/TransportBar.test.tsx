@@ -73,6 +73,17 @@ describe('TransportBar — IPC', () => {
   })
 })
 
+// ── Panic flash ───────────────────────────────────────────────────────────────
+
+describe('TransportBar — panic flash', () => {
+  it('shows Stopped flash when engine:panic fires', () => {
+    setup()
+    act(() => { emitBridgeEvent('engine:panic', undefined) })
+    expect(screen.getByText(/stopped/i)).toBeInTheDocument()
+  })
+
+})
+
 // ── Accessibility ─────────────────────────────────────────────────────────────
 
 describe('TransportBar — accessibility', () => {
