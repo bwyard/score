@@ -1,5 +1,9 @@
 import { ScoreError } from '@score/core'
-import type { SongProps, SongDefinition } from './types.js'
+import type { SongProps, SongDefinition, TrackComponent, InstrumentDescriptor } from './types.js'
+import type { ChainablePart } from './chain.js'
+
+/** Track types accepted by the `Song()` shorthand positional form. */
+type ShorthandTrack = TrackComponent | InstrumentDescriptor | ChainablePart
 
 /**
  * Define a complete song — the top-level DSL entry point.
@@ -9,8 +13,17 @@ import type { SongProps, SongDefinition } from './types.js'
  * All other fields are optional — `arrangement` defaults to an empty array
  * (the engine loops all tracks indefinitely).
  *
- * @param props - Song configuration including bpm, tracks, and optional arrangement,
- *   key, genre, backend, and XDJ routing.
+ * **Two call forms:**
+ * ```ts
+ * // Object form — full control over all props
+ * export default Song({ bpm: 128, key: 'Am', tracks: [kick, snare] })
+ *
+ * // Shorthand form — bpm + tracks as positional args (live coding)
+ * export default Song(128, [kick, snare, hihat, bass])
+ * ```
+ *
+ * @param propsOrBpm - Either a full {@link SongProps} object, or a BPM number for the shorthand form.
+ * @param shorthandTracks - When `propsOrBpm` is a number, the tracks array for the shorthand form.
  * @returns A validated {@link SongDefinition}.
  * @throws `ScoreError` if `bpm` is missing or non-positive.
  * @throws `ScoreError` if `tracks` is empty.
@@ -29,7 +42,13 @@ import type { SongProps, SongDefinition } from './types.js'
  * @see {@link Track} — wrap an instrument with mix settings before passing to tracks
  * @see {@link Intro}, {@link Drop}, {@link Outro} — section factories for arrangement
  */
-export const Song = (props: SongProps): SongDefinition => {
+export const Song = (
+  propsOrBpm: SongProps | number,
+  shorthandTracks?: ReadonlyArray<ShorthandTrack>,
+): SongDefinition => {
+  const props: SongProps = typeof propsOrBpm === 'number'
+    ? { bpm: propsOrBpm, tracks: (shorthandTracks ?? []) as ReadonlyArray<TrackComponent | InstrumentDescriptor> }
+    : propsOrBpm
   if (!props.bpm || props.bpm <= 0) {
     throw ScoreError('Song bpm must be a positive number', {
       received: props.bpm,
