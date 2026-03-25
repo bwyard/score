@@ -6,6 +6,24 @@ Patterns control when notes and hits play. All pattern utilities are in `@score/
 import { euclidean, fast, slow, rev, shift, degrade, every, stack, beat, scaleNotes, chordNotes } from '@score/pattern'
 ```
 
+Most pattern operations are available as **chain methods** directly on instruments — no import needed:
+
+```js
+Kick().euclidean(5, 16)         // euclidean built-in
+HiHat(8).degrade(0.3)          // degrade built-in
+Snare().shift(1)                // shift built-in
+```
+
+Import from `@score/pattern` when you need the standalone functions — for use with `.pattern()`, `.mask()`, or `.apply()`:
+
+```js
+import { euclidean, stack } from '@score/pattern'
+
+// Pass a computed pattern to .pattern()
+const groove = stack(euclidean(3, 8), euclidean(5, 8))
+Kick().pattern(groove)
+```
+
 ---
 
 ## Array patterns
@@ -14,10 +32,10 @@ The simplest pattern — a plain JavaScript array. 16 steps = one bar at 16th-no
 
 ```js
 // Rhythmic: 1 = hit, 0 = rest
-pattern: [1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0]
+Kick().pattern([1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0,  1, 0, 0, 0])
 
 // Melodic: note name or 0 (rest)
-pattern: ['A2', 0, 'D3', 0,  'E3', 0, 'A3', 0]
+Synth('sawtooth').pattern(['A2', 0, 'D3', 0,  'E3', 0, 'A3', 0])
 ```
 
 Patterns loop automatically. An 8-step array repeats every half bar.
@@ -67,21 +85,21 @@ euclidean(3, 8, 2)  // → clave rotated 2 steps right
 
 ## Function patterns
 
-A function `(step, bar) => value` is called once per step per bar.
+Pass a function `(step, bar) => value` to `.pattern()` or `.apply()` for bar-aware patterns.
 
 ```js
 // Alternate between two bass lines every bar
-pattern: (step, bar) => {
+Synth('sawtooth').pattern((step, bar) => {
   const lineA = ['A2', 0, 'D3', 0]
   const lineB = ['E2', 0, 'A2', 0]
   return (bar % 2 === 0 ? lineA : lineB)[step % 4]
-}
+})
 
 // Extra kick hit on last bar of every 4
-pattern: (step, bar) => {
-  if (bar % 4 === 3 && step === 14) return 1
-  return [1, 0, 0, 0,  1, 0, 0, 0][step % 8]
-}
+Kick().apply((p, { bar }) => {
+  if (bar % 4 === 3) { const next = [...p]; next[14] = 1; return next }
+  return p
+})
 ```
 
 - `step` — 16th-note position within the bar (0–15 for 16 steps)
@@ -93,67 +111,70 @@ All transforms return function patterns and receive `step` and `bar` at runtime.
 
 ## Transforms
 
-All transforms accept an array or function pattern and return a function pattern `(step, bar) => value`.
+These transforms are available both as **chain methods** (no import needed) and as **standalone functions** from `@score/pattern` for use with `.pattern()`.
 
-### `fast(n, pattern)`
+### `fast` / `.fast(n)`
 
-Speed up by factor `n`. `fast(2, pat)` plays the pattern twice per bar.
-
-```js
-pattern: fast(2, [1, 0, 1, 0])        // 16th-note rush
-pattern: fast(4, euclidean(3, 8))      // rapid euclidean fill
-```
-
-### `slow(n, pattern)`
-
-Slow down by factor `n`. Each step plays for `n` times as long.
+Speed up by factor `n`. Plays the pattern `n` times faster.
 
 ```js
-pattern: slow(2, [0, 0, 1, 0,  0, 0, 1, 0])  // half-time snare
+// Chain method (preferred)
+HiHat(8).fast(2)                      // 16th-note rush
+
+// Standalone — pass computed result to .pattern()
+import { fast, euclidean } from '@score/pattern'
+Kick().pattern(fast(4, euclidean(3, 8)))   // rapid euclidean fill
 ```
 
-### `rev(pattern)`
+### `slow` / `.slow(n)`
+
+Slow down by factor `n`. Each step plays `n` times as long.
+
+```js
+Snare().slow(2)                             // half-time snare
+Snare().pattern(slow(2, [0, 0, 1, 0,  0, 0, 1, 0]))  // explicit
+```
+
+### `rev` / `.rev()`
 
 Reverse the pattern — last step to first.
 
 ```js
-pattern: rev(['C4', 'E4', 'G4', 'A4'])  // retrograde melody
+Synth('sawtooth').notes(['C4', 'E4', 'G4', 'A4']).rev()   // retrograde melody
 ```
 
-### `shift(n, pattern)`
+### `shift` / `.shift(n)`
 
 Rotate by `n` steps. Positive = shift right (later), negative = shift left (earlier).
 
 ```js
-pattern: shift(1, [0, 0, 1, 0,  0, 0, 1, 0])  // snare one 16th late
-pattern: shift(-2, euclidean(3, 8))             // clave shifted left 2
+Snare().shift(1)                              // snare one 16th late
+Kick().pattern(shift(-2, euclidean(3, 8)))    // clave shifted left 2
 ```
 
-### `degrade(probability, pattern)`
+### `degrade` / `.degrade(probability)`
 
 Randomly silence hits. `probability` = chance (0–1) of dropping each active step per bar.
 
 ```js
-pattern: degrade(0.3, [1, 1, 1, 1])    // drop ~30% of hits
-pattern: degrade(0.5, euclidean(5, 8)) // sparse euclidean
+HiHat(8).degrade(0.3)                        // drop ~30% of hits
+Kick().pattern(degrade(0.5, euclidean(5, 8))) // sparse euclidean
 ```
 
-### `every(n, transform, pattern)`
+### `every` / `.every(n, fn)`
 
-Apply `transform` on every `n`th bar. Original pattern on other bars.
+Apply `fn` on every `n`th bar. Original pattern on other bars.
 
 ```js
-// Kick doubles speed every 4 bars
-pattern: every(4, p => fast(2, p), [1, 0, 0, 0])
+// Chain method
+Kick(4).every(4, p => fast(2, p))   // kick doubles speed every 4 bars
+HiHat(8).every(2, rev)              // hi-hat reverses every other bar
 
-// Hi-hat reverses every other bar
-pattern: every(2, rev, [1, 0, 1, 1])
-
-// Degrade on bars 0, 8, 16 ...
-pattern: every(8, p => degrade(0.5, p), [0, 0, 1, 0])
+// With standalone degrade
+Snare().every(8, p => degrade(0.5, p))  // drops on bars 0, 8, 16...
 ```
 
-`transform` receives the current pattern and returns a new pattern.
+`fn` receives the current pattern and returns a new pattern.
 
 ---
 
@@ -196,9 +217,9 @@ If the key contains `m` (and not `maj`), minor is used. Otherwise major.
 
 Supported scale modes: `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian`, `pentatonic`, `blues`.
 
-Feed directly into a Synth pattern:
+Feed directly into `.notes()` or `.pattern()`:
 ```js
-const melody = Synth({ pattern: scaleNotes('Am', 3, 1) })
+const melody = Synth('sawtooth').notes(scaleNotes('Am', 3, 1))
 ```
 
 ### `chordNotes(chord, octave?)`
