@@ -140,6 +140,12 @@ export const partToInstrumentDescriptor = (part: PartDescriptor): InstrumentDesc
     ...(part._humanize !== undefined ? { humanize: part._humanize } : {}),
     ...(part._pan      !== undefined ? { pan:      part._pan      } : {}),
     ...(part._model    !== undefined ? { model:    part._model    } : {}),
+    // Fix: map _filter chain method → props.filter (SubSynth, Synth, Pad, etc.)
+    ...(part._filter !== undefined ? { filter: part._filter } : {}),
+    // Fix: bass-303 engine reads props.cutoff/resonance not props.filter — also map for it
+    ...(part._filter !== undefined && part.instrumentType === 'bass-303'
+      ? { cutoff: part._filter.frequency, resonance: part._filter.Q ?? 1 }
+      : {}),
     ...part.props,
   },
 })

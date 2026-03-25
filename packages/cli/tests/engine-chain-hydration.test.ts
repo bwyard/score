@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
-import { createScoreEngine } from '../src/engine.js'
+import { createScoreEngine, partToInstrumentDescriptor } from '../src/engine.js'
 import { webAudioBackend } from '@score/core'
 import { Song, Track, createPart } from '@score/dsl'
 
@@ -106,6 +106,33 @@ describe('engine — chain API hydration', () => {
     })
     expect(() => { engine.update(nextSong) }).not.toThrow()
     engine.dispose()
+  })
+
+  it('_filter chain method maps to props.filter for SubSynth (fix: was silently dropped)', () => {
+    // SubSynth('A2').filter(600, 2) sets _filter on the PartDescriptor.
+    // Before the fix, partToInstrumentDescriptor did not map _filter at all.
+    const part = createPart({
+      instrumentType: 'subsynth',
+      _filter: { frequency: 600, Q: 2 },
+      props: {},
+    })
+    const desc = partToInstrumentDescriptor(part)
+    const props = desc.props as Record<string, unknown>
+    expect(props['filter']).toEqual({ frequency: 600, Q: 2 })
+  })
+
+  it('_filter chain method maps to props.cutoff+resonance for bass-303', () => {
+    // If _filter is set on a bass-303 part, it should map to props.cutoff/resonance
+    // because the bass-303 engine reads those props, not props.filter.
+    const part = createPart({
+      instrumentType: 'bass-303',
+      _filter: { frequency: 400, Q: 4 },
+      props: {},
+    })
+    const desc = partToInstrumentDescriptor(part)
+    const props = desc.props as Record<string, unknown>
+    expect(props['cutoff']).toBe(400)
+    expect(props['resonance']).toBe(4)
   })
 
   it('t147: onStep fires with PartDescriptor-only song (cursor advance fix)', async () => {
