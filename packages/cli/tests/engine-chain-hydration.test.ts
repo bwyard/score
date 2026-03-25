@@ -135,6 +135,24 @@ describe('engine — chain API hydration', () => {
     expect(props['resonance']).toBe(4)
   })
 
+  it('partToInstrumentDescriptor maps _degrade to props.degrade', () => {
+    const part = createPart({ instrumentType: 'kick', _pattern: [1, 0, 0, 0], _degrade: 0.25, props: {} })
+    const desc = partToInstrumentDescriptor(part)
+    expect((desc.props as Record<string, unknown>).degrade).toBe(0.25)
+  })
+
+  it('partToInstrumentDescriptor maps _swing to props.swing', () => {
+    const part = createPart({ instrumentType: 'kick', _pattern: [1, 0, 0, 0], _swing: 0.6, props: {} })
+    const desc = partToInstrumentDescriptor(part)
+    expect((desc.props as Record<string, unknown>).swing).toBe(0.6)
+  })
+
+  it('partToInstrumentDescriptor maps _humanize to props.humanize', () => {
+    const part = createPart({ instrumentType: 'snare', _pattern: [0, 0, 1, 0], _humanize: 0.005, props: {} })
+    const desc = partToInstrumentDescriptor(part)
+    expect((desc.props as Record<string, unknown>).humanize).toBe(0.005)
+  })
+
   it('t147: onStep fires with PartDescriptor-only song (cursor advance fix)', async () => {
     // Before the fix, PartDescriptor tracks were dropped from descriptors in
     // createScoreEngine(), so cursorStepCount defaulted to 8 and no instruments

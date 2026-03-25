@@ -1,7 +1,27 @@
 import { describe, it, expect } from 'vitest'
 import { createStepSequencer } from '../src/stepSequencer.js'
 import { createTransport } from '../src/transport.js'
+import type { Transport } from '../src/transport.js'
+import type { Position } from '../src/types.js'
 import { mockContext } from './utils/harness.js'
+
+// Minimal mock transport for behavioral tick-firing tests.
+// Only implements the subset of Transport that createStepSequencer uses.
+const makeMockTransport = (bpm = 120) => {
+  const tickCallbacks: Array<(pos: Position) => void> = []
+  const transport = {
+    onTick: (cb: (pos: Position) => void) => { tickCallbacks.push(cb) },
+    onBeat: (_cb: (pos: Position) => void) => {},
+    onBar:  (_cb: (pos: Position) => void) => {},
+    play: () => {}, stop: () => {}, pause: () => {}, seek: () => {}, dispose: () => {},
+    get position() { return { bar: 0, beat: 0, tick: 0, time: 0 } },
+    get state() { return 'stopped' as const },
+    get bpm() { return bpm },
+    setBPM: () => {},
+  } as unknown as Transport
+  const fireTick = (pos: Position) => { tickCallbacks.forEach(cb => { cb(pos); }) }
+  return { transport, fireTick }
+}
 
 describe('createStepSequencer', () => {
   const makeTransport = () => createTransport(mockContext())
@@ -123,5 +143,110 @@ describe('createStepSequencer', () => {
       )
     }).not.toThrow()
     transport.dispose()
+  })
+})
+
+describe('createStepSequencer — degrade', () => {
+  it('degrade=0 fires all steps', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const steps: number[] = []
+    createStepSequencer(transport, { pattern: [1, 1, 1, 1], degrade: 0, seed: 42 },
+      (_val, step) => { steps.push(step) })
+    fireTick({ bar: 0, beat: 0, tick: 0, time: 0 })
+    fireTick({ bar: 0, beat: 0, tick: 1, time: 0.125 })
+    fireTick({ bar: 0, beat: 0, tick: 2, time: 0.25 })
+    fireTick({ bar: 0, beat: 0, tick: 3, time: 0.375 })
+    expect(steps).toEqual([0, 1, 2, 3])
+  })
+
+  it('degrade=1.0 skips all steps', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const steps: number[] = []
+    createStepSequencer(transport, { pattern: [1, 1, 1, 1], degrade: 1.0, seed: 42 },
+      (_val, step) => { steps.push(step) })
+    fireTick({ bar: 0, beat: 0, tick: 0, time: 0 })
+    fireTick({ bar: 0, beat: 0, tick: 1, time: 0.125 })
+    fireTick({ bar: 0, beat: 0, tick: 2, time: 0.25 })
+    fireTick({ bar: 0, beat: 0, tick: 3, time: 0.375 })
+    expect(steps).toEqual([])
+  })
+
+  it('degrade still advances currentStep when dropped', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const seq = createStepSequencer(transport, { pattern: [1, 1], degrade: 1.0, seed: 0 }, () => {})
+    fireTick({ bar: 0, beat: 0, tick: 0, time: 0 })
+    fireTick({ bar: 0, beat: 0, tick: 1, time: 0.125 })
+    expect(seq.currentStep).toBe(2)
+  })
+})
+
+describe('createStepSequencer — swing', () => {
+  it('swing=0 does not alter position.time', () => {
+    const { transport, fireTick } = makeMockTransport(120)
+    const times: number[] = []
+    createStepSequencer(transport, { pattern: [1, 1, 1, 1], swing: 0 },
+      (_val, _step, pos) => { times.push(pos.time) })
+    fireTick({ bar: 0, beat: 0, tick: 0, time: 0 })
+    fireTick({ bar: 0, beat: 0, tick: 1, time: 0.125 })
+    expect(times[0]).toBe(0)
+    expect(times[1]).toBe(0.125)
+  })
+
+  it('swing>0 delays odd steps and leaves even steps unchanged', () => {
+    const { transport, fireTick } = makeMockTransport(120)
+    const times: number[] = []
+    createStepSequencer(transport, { pattern: [1, 1, 1, 1], swing: 0.5, ticksPerBeat: 4 },
+      (_val, _step, pos) => { times.push(pos.time) })
+    // bpm=120, ticksPerBeat=4 → tickDur = 60/120/4 = 0.125s
+    // swing offset for odd steps = 0.5 * 0.125 * 0.5 = 0.03125s
+    fireTick({ bar: 0, beat: 0, tick: 0, time: 0 })      // step 0 (even)
+    fireTick({ bar: 0, beat: 0, tick: 1, time: 0.125 })   // step 1 (odd)
+    fireTick({ bar: 0, beat: 0, tick: 2, time: 0.25 })    // step 2 (even)
+    fireTick({ bar: 0, beat: 0, tick: 3, time: 0.375 })   // step 3 (odd)
+    const expectedSwingOffset = 0.5 * (60 / 120 / 4) * 0.5
+    expect(times[0]).toBe(0)                                          // even — no offset
+    expect(times[1]).toBeCloseTo(0.125 + expectedSwingOffset)        // odd — delayed
+    expect(times[2]).toBe(0.25)                                       // even — no offset
+    expect(times[3]).toBeCloseTo(0.375 + expectedSwingOffset)        // odd — delayed
+  })
+})
+
+describe('createStepSequencer — humanize', () => {
+  it('humanize=0 preserves exact position.time', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const times: number[] = []
+    createStepSequencer(transport, { pattern: [1, 1], humanize: 0, seed: 99 },
+      (_val, _step, pos) => { times.push(pos.time) })
+    fireTick({ bar: 0, beat: 0, tick: 0, time: 0.5 })
+    fireTick({ bar: 0, beat: 0, tick: 1, time: 1.0 })
+    expect(times[0]).toBe(0.5)
+    expect(times[1]).toBe(1.0)
+  })
+
+  it('humanize>0 shifts position.time within ±humanize of base time', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const times: number[] = []
+    const amt = 0.01
+    createStepSequencer(transport, { pattern: [1, 1, 1, 1], humanize: amt, seed: 42 },
+      (_val, _step, pos) => { times.push(pos.time) })
+    const baseTimes = [0.5, 0.625, 0.75, 0.875]
+    for (const t of baseTimes) {
+      fireTick({ bar: 0, beat: 0, tick: 0, time: t })
+    }
+    for (let i = 0; i < times.length; i++) {
+      expect(times[i]).toBeGreaterThanOrEqual(0)
+      expect(times[i]).toBeGreaterThanOrEqual((baseTimes[i] ?? 0) - amt)
+      expect(times[i]).toBeLessThanOrEqual((baseTimes[i] ?? 0) + amt)
+    }
+  })
+
+  it('humanize clamps negative result to 0', () => {
+    const { transport, fireTick } = makeMockTransport()
+    const times: number[] = []
+    // Large humanize at time=0 — some steps might go negative, should clamp to 0
+    createStepSequencer(transport, { pattern: [1], humanize: 1.0, seed: 7 },
+      (_val, _step, pos) => { times.push(pos.time) })
+    fireTick({ bar: 0, beat: 0, tick: 0, time: 0 })
+    expect(times[0]).toBeGreaterThanOrEqual(0)
   })
 })
