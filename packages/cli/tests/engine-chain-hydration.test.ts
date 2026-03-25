@@ -151,6 +151,49 @@ describe('engine — chain API hydration', () => {
     const part = createPart({ instrumentType: 'snare', _pattern: [0, 0, 1, 0], _humanize: 0.005, props: {} })
     const desc = partToInstrumentDescriptor(part)
     expect((desc.props as Record<string, unknown>).humanize).toBe(0.005)
+  it('pan: .pan(v) maps to props.pan and engine boots with pan\'d track', async () => {
+    const part = createPart({ instrumentType: 'kick', _pan: -0.5, props: {} })
+    const props = partToInstrumentDescriptor(part).props as Record<string, unknown>
+    expect(props['pan']).toBe(-0.5)
+    // Also verify the engine boots (addChannel now receives pan)
+    const song = Song({ bpm: 120, tracks: [Track(createPart({ instrumentType: 'kick', _pan: 0.3, props: {} }))] })
+    await expect(createScoreEngine(song)).resolves.toBeDefined()
+  })
+
+  it('pitch: ._pitchOffset maps to props.pitchOffset in descriptor', () => {
+    const part = createPart({ instrumentType: 'subsynth', _pitchOffset: 7, props: {} })
+    const props = partToInstrumentDescriptor(part).props as Record<string, unknown>
+    expect(props['pitchOffset']).toBe(7)
+  })
+
+  it('octave: ._octave maps to props.octave in descriptor', () => {
+    const part = createPart({ instrumentType: 'synth', _octave: -1, props: {} })
+    const props = partToInstrumentDescriptor(part).props as Record<string, unknown>
+    expect(props['octave']).toBe(-1)
+  })
+
+  it('scale: ._scale maps to props.scale in descriptor', () => {
+    const part = createPart({ instrumentType: 'synth', _scale: { name: 'minor', root: 'A' }, props: {} })
+    const props = partToInstrumentDescriptor(part).props as Record<string, unknown>
+    expect(props['scale']).toEqual({ name: 'minor', root: 'A' })
+  })
+
+  it('glide: ._glide maps to props.glide in descriptor', () => {
+    const part = createPart({ instrumentType: 'bass-303', _glide: 0.08, props: {} })
+    const props = partToInstrumentDescriptor(part).props as Record<string, unknown>
+    expect(props['glide']).toBe(0.08)
+  })
+
+  it('dur: ._dur maps to props.dur in descriptor', () => {
+    const part = createPart({ instrumentType: 'subsynth', _dur: 0.25, props: {} })
+    const props = partToInstrumentDescriptor(part).props as Record<string, unknown>
+    expect(props['dur']).toBe(0.25)
+  })
+
+  it('seed: ._seed maps to props.seed in descriptor', () => {
+    const part = createPart({ instrumentType: 'kick', _seed: 42, props: {} })
+    const props = partToInstrumentDescriptor(part).props as Record<string, unknown>
+    expect(props['seed']).toBe(42)
   })
 
   it('t147: onStep fires with PartDescriptor-only song (cursor advance fix)', async () => {
