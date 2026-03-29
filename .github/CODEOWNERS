@@ -1,0 +1,5 @@
+# CODEOWNERS — bwyard/score
+# Bree Yard is the sole owner. Required reviewer on all PRs.
+# Dependabot patch/minor PRs are handled by auto-merge workflow.
+
+* @bwyard

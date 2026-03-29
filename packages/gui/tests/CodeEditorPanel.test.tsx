@@ -65,6 +65,57 @@ describe('CodeEditorPanel — EditorDecoration type', () => {
   })
 })
 
+// ── Value passthrough ─────────────────────────────────────────────────────────
+
+describe('CodeEditorPanel — value passthrough', () => {
+  it('passes value into editor stub content', () => {
+    render(<CodeEditorPanel value="export default Song({ bpm: 128, tracks: [] })" onChange={vi.fn()} onEval={vi.fn()} />)
+    expect(screen.getByTestId('monaco-editor')).toHaveTextContent('export default Song({ bpm: 128, tracks: [] })')
+  })
+
+  it('renders empty string value without throwing', () => {
+    expect(() => render(
+      <CodeEditorPanel value="" onChange={vi.fn()} onEval={vi.fn()} />,
+    )).not.toThrow()
+  })
+})
+
+// ── stepBadges prop ───────────────────────────────────────────────────────────
+
+describe('CodeEditorPanel — stepBadges prop', () => {
+  it('renders with stepBadges without throwing', () => {
+    expect(() => render(
+      <CodeEditorPanel
+        value="const kick = Kick808({})"
+        onChange={vi.fn()}
+        onEval={vi.fn()}
+        stepBadges={[{ line: 1, step: 3, total: 16 }]}
+      />,
+    )).not.toThrow()
+  })
+
+  it('renders with multiple stepBadges without throwing', () => {
+    expect(() => render(
+      <CodeEditorPanel
+        value="code"
+        onChange={vi.fn()}
+        onEval={vi.fn()}
+        stepBadges={[
+          { line: 1, step: 0,  total: 16 },
+          { line: 3, step: 4,  total: 8  },
+          { line: 5, step: 15, total: 16 },
+        ]}
+      />,
+    )).not.toThrow()
+  })
+
+  it('renders with empty stepBadges array without throwing', () => {
+    expect(() => render(
+      <CodeEditorPanel value="code" onChange={vi.fn()} onEval={vi.fn()} stepBadges={[]} />,
+    )).not.toThrow()
+  })
+})
+
 // ── t220 — importsVisible prop ─────────────────────────────────────────────────
 
 describe('CodeEditorPanel — importsVisible (t220)', () => {
