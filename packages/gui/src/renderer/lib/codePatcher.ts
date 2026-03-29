@@ -334,11 +334,12 @@ export const parseTrackChainParams = (code: string, trackIndex: number): Record<
  */
 export const uniqueVarName = (code: string, base: string): string => {
   if (!new RegExp(`\\bconst\\s+${base}\\b`).test(code)) return base
-  for (let n = 2; n < 20; n++) {
+  const findNext = (n: number): string => {
+    if (n >= 20) return `${base}${String(Date.now())}`
     const candidate = `${base}${String(n)}`
-    if (!new RegExp(`\\bconst\\s+${candidate}\\b`).test(code)) return candidate
+    return new RegExp(`\\bconst\\s+${candidate}\\b`).test(code) ? findNext(n + 1) : candidate
   }
-  return `${base}${String(Date.now())}`
+  return findNext(2)
 }
 
 /**
