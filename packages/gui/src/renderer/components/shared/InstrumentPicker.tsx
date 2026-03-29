@@ -5,7 +5,7 @@
 //
 // No audio, no IPC — pure props in, callbacks out.
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -101,10 +101,36 @@ const styles = {
 export const InstrumentPicker = (props: InstrumentPickerProps): React.JSX.Element => {
   const { onPick, onClose } = props
 
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  // Initial focus, Escape dismiss, focus trap
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') { onClose() } }
-    window.addEventListener('keydown', handler)
-    return () => { window.removeEventListener('keydown', handler) }
+    const modal = modalRef.current
+    if (modal === null) return
+
+    modal.querySelector<HTMLButtonElement>('button')?.focus()
+
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') { onClose(); return }
+      if (e.key !== 'Tab') return
+
+      const focusable = Array.from(
+        modal.querySelectorAll<HTMLElement>('button, [tabindex]:not([tabindex="-1"])')
+      )
+      const first = focusable[0]
+      const last  = focusable[focusable.length - 1]
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last?.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first?.focus()
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => { window.removeEventListener('keydown', onKeyDown) }
   }, [onClose])
 
   const renderGroup = (entries: readonly InstrumentEntry[]) => (
@@ -124,7 +150,7 @@ export const InstrumentPicker = (props: InstrumentPickerProps): React.JSX.Elemen
 
   return (
     <div style={styles.overlay} data-testid="instrument-picker-overlay">
-      <div style={styles.modal} role="dialog" aria-label="Pick an instrument">
+      <div ref={modalRef} style={styles.modal} role="dialog" aria-modal="true" aria-label="Pick an instrument">
 
         <div style={styles.header}>
           <span style={styles.title}>Add Instrument</span>

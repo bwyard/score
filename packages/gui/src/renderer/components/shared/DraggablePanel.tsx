@@ -24,10 +24,11 @@ type Size = {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const MIN_W = 120
-const MIN_H = 80
-const TITLE_H = 28
-const HANDLE_SIZE = 8
+const MIN_W         = 120
+const MIN_H         = 80
+const TITLE_H       = 28
+const HANDLE_SIZE   = 8
+const KEYBOARD_STEP = 10
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 
@@ -153,6 +154,62 @@ export const DraggablePanel = (props: DraggablePanelProps) => {
     }
   }, [dragging, panelId, onMoved])
 
+  // ── Keyboard (title bar) — move with Arrow, resize with Shift+Arrow, close with Escape ──
+
+  const onTitleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (e.key === 'Escape') {
+      if (onClose !== undefined) { onClose() }
+      return
+    }
+
+    if (e.shiftKey) {
+      // Shift+Arrow → resize
+      let newSize: Size | null = null
+      if (e.key === 'ArrowRight') { e.preventDefault(); newSize = { w: Math.max(MIN_W, size.w + KEYBOARD_STEP), h: size.h } }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); newSize = { w: Math.max(MIN_W, size.w - KEYBOARD_STEP), h: size.h } }
+      if (e.key === 'ArrowDown')  { e.preventDefault(); newSize = { w: size.w, h: Math.max(MIN_H, size.h + KEYBOARD_STEP) } }
+      if (e.key === 'ArrowUp')    { e.preventDefault(); newSize = { w: size.w, h: Math.max(MIN_H, size.h - KEYBOARD_STEP) } }
+      if (newSize !== null) {
+        sizeRef.current = newSize
+        setSize(newSize)
+        if (panelId !== undefined && onMoved !== undefined) {
+          onMoved(panelId, posRef.current.x, posRef.current.y, newSize.w, newSize.h)
+        }
+      }
+    } else {
+      // Arrow → move
+      let newPos: Position | null = null
+      if (e.key === 'ArrowRight') { e.preventDefault(); newPos = { x: pos.x + KEYBOARD_STEP, y: pos.y } }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); newPos = { x: pos.x - KEYBOARD_STEP, y: pos.y } }
+      if (e.key === 'ArrowDown')  { e.preventDefault(); newPos = { x: pos.x, y: pos.y + KEYBOARD_STEP } }
+      if (e.key === 'ArrowUp')    { e.preventDefault(); newPos = { x: pos.x, y: pos.y - KEYBOARD_STEP } }
+      if (newPos !== null) {
+        posRef.current = newPos
+        setPos(newPos)
+        if (panelId !== undefined && onMoved !== undefined) {
+          onMoved(panelId, newPos.x, newPos.y, sizeRef.current.w, sizeRef.current.h)
+        }
+      }
+    }
+  }
+
+  // ── Keyboard (resize handle) — Arrow keys resize ─────────────────────────────
+
+  const onResizeKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
+    let newSize: Size | null = null
+    if (e.key === 'ArrowRight') { e.preventDefault(); newSize = { w: Math.max(MIN_W, size.w + KEYBOARD_STEP), h: size.h } }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); newSize = { w: Math.max(MIN_W, size.w - KEYBOARD_STEP), h: size.h } }
+    if (e.key === 'ArrowDown')  { e.preventDefault(); newSize = { w: size.w, h: Math.max(MIN_H, size.h + KEYBOARD_STEP) } }
+    if (e.key === 'ArrowUp')    { e.preventDefault(); newSize = { w: size.w, h: Math.max(MIN_H, size.h - KEYBOARD_STEP) } }
+    if (newSize !== null) {
+      sizeRef.current = newSize
+      setSize(newSize)
+      if (panelId !== undefined && onMoved !== undefined) {
+        onMoved(panelId, posRef.current.x, posRef.current.y, newSize.w, newSize.h)
+      }
+    }
+  }
+
   // ── Resize (bottom-right handle) ────────────────────────────────────────────
 
   const onHandleMouseDown = (e: React.MouseEvent<HTMLDivElement>): void => {
@@ -207,15 +264,17 @@ export const DraggablePanel = (props: DraggablePanelProps) => {
         height: size.h,
       }}
     >
-      {/* Title bar */}
+      {/* Title bar — Tab to focus, Arrow to move, Shift+Arrow to resize, Escape to close */}
       <div
         role="heading"
         aria-level={3}
+        tabIndex={0}
         style={{
           ...styles.titleBar,
           cursor: dragging ? 'grabbing' : 'grab',
         }}
         onMouseDown={onTitleMouseDown}
+        onKeyDown={onTitleKeyDown}
       >
         <span style={styles.titleText}>{title}</span>
 
@@ -236,12 +295,14 @@ export const DraggablePanel = (props: DraggablePanelProps) => {
         {children}
       </div>
 
-      {/* Resize handle */}
+      {/* Resize handle — Tab to focus, Arrow keys to resize */}
       <div
         aria-label="Resize panel"
         role="separator"
+        tabIndex={0}
         style={styles.resizeHandle}
         onMouseDown={onHandleMouseDown}
+        onKeyDown={onResizeKeyDown}
       />
     </div>
   )

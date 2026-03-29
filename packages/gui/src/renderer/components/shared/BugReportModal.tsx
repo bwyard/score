@@ -10,7 +10,7 @@
 //
 // Design: zero technical jargon shown to user. "What's included" is collapsed.
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -63,6 +63,50 @@ export const BugReportModal = ({
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [copied, setCopied]           = useState(false)
 
+  const cardRef     = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const handleClose = useCallback((): void => {
+    setDescription('')
+    setDetailsOpen(false)
+    setCopied(false)
+    onClose()
+  }, [onClose])
+
+  // Focus trap: keep Tab within modal; Escape dismisses; initial focus on textarea
+  useEffect(() => {
+    if (!isOpen) return
+
+    textareaRef.current?.focus()
+
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') { handleClose(); return }
+      if (e.key !== 'Tab') return
+
+      const card = cardRef.current
+      if (card === null) return
+
+      const focusable = Array.from(
+        card.querySelectorAll<HTMLElement>(
+          'button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      )
+      const first = focusable[0]
+      const last  = focusable[focusable.length - 1]
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last?.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => { document.removeEventListener('keydown', onKeyDown) }
+  }, [isOpen, handleClose])
+
   if (!isOpen) return null
 
   const buildReport = () => ({
@@ -85,19 +129,12 @@ export const BugReportModal = ({
     onClose()
   }
 
-  const handleClose = (): void => {
-    setDescription('')
-    setDetailsOpen(false)
-    setCopied(false)
-    onClose()
-  }
-
   const codePreview = getCurrentCode().split('\n').slice(0, 3).join('\n')
   const logCount    = getRecentLogs().length
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Report an issue" style={styles.overlay}>
-      <div style={styles.card}>
+      <div ref={cardRef} style={styles.card}>
 
         {/* Header */}
         <div style={styles.header}>
@@ -116,6 +153,7 @@ export const BugReportModal = ({
           What happened?
         </label>
         <textarea
+          ref={textareaRef}
           id="bug-description"
           style={styles.textarea}
           rows={4}
