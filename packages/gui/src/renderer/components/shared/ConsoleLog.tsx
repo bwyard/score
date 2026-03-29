@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { memo, useRef, useEffect } from 'react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -57,7 +57,7 @@ const COLOR: Record<LogLevel, string> = {
  * <ConsoleLog entries={log} />
  * ```
  */
-export const ConsoleLog = ({ entries }: Props) => {
+const ConsoleLogInner = ({ entries }: Props) => {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   // Auto-scroll to bottom on new entries
@@ -90,6 +90,9 @@ export const ConsoleLog = ({ entries }: Props) => {
     </div>
   )
 }
+
+/** Scrolling console log — memoized to prevent re-renders at display tick rate. */
+export const ConsoleLog = memo(ConsoleLogInner)
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 

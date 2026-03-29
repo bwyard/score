@@ -1,4 +1,4 @@
-import { useState, useEffect, useId } from 'react'
+import { memo, useState, useEffect, useId } from 'react'
 import type { HardwareLevel }         from '../../../main/ipc-types.js'
 import { BugReportModal }             from './BugReportModal.js'
 
@@ -33,7 +33,7 @@ type Props = {
  * Subscribes to engine state pushed from the main process.
  * Play/stop/BPM changes are forwarded back via IPC.
  */
-export const TransportBar = ({ hardware, onHome, onPlay, onStop, onBpmChange, getCurrentCode, getRecentLogs, bugEngineState }: Props) => {
+const TransportBarInner = ({ hardware, onHome, onPlay, onStop, onBpmChange, getCurrentCode, getRecentLogs, bugEngineState }: Props) => {
   const bpmId   = useId()
   const barsId  = useId()
 
@@ -165,6 +165,9 @@ export const TransportBar = ({ hardware, onHome, onPlay, onStop, onBpmChange, ge
     </div>
   )
 }
+
+/** Fixed transport bar — memoized to prevent re-renders from parent state unrelated to transport. */
+export const TransportBar = memo(TransportBarInner)
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 

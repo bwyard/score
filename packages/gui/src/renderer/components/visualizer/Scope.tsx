@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { memo, useRef, useEffect } from 'react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -104,7 +104,7 @@ const drawScope = (
  * @param waveform - PCM float samples, typically 1024–2048 values in [-1, 1]
  * @param playing  - When true, draws the live waveform; when false draws an idle line
  */
-export const Scope = ({ waveform, playing }: Props) => {
+const ScopeInner = ({ waveform, playing }: Props) => {
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -142,6 +142,9 @@ export const Scope = ({ waveform, playing }: Props) => {
     </div>
   )
 }
+
+/** Canvas oscilloscope visualizer — memoized to prevent re-renders at audio tick rate. */
+export const Scope = memo(ScopeInner)
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 

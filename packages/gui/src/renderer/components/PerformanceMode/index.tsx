@@ -128,7 +128,7 @@ export const PerformanceMode = ({ hardware: _hardware, onHome }: Props): React.J
     const unsubAnalysis = window.scoreBridge.on('engine:analysis', ({ waveform }) => {
       audioRef.current = { waveform }
     })
-    const unsubStep = window.scoreBridge.on('engine:tick', ({ step, stepCount }) => {
+    const unsubStep = window.scoreBridge.on('display:tick', ({ step, stepCount }) => {
       stepRef.current = { step, stepCount }
     })
     const unsubState = window.scoreBridge.on('engine:state', ({ bpm }) => {
