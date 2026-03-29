@@ -26,6 +26,13 @@ jobs:
         with:
           node-version: 20
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
@@ -42,6 +49,9 @@ jobs:
     name: E2E — Playwright Electron Smoke
     runs-on: ubuntu-latest
     needs: ci
+    # Only run on PRs to dev/main — not on every push to feature branches.
+    # Electron build is slow (~8–10 min); unit feedback stays fast.
+    if: github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +63,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - name: Cache Electron build output
+        uses: actions/cache@v4
+        with:
+          path: packages/gui/out
+          key: electron-out-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'packages/gui/src/**') }}
+          restore-keys: electron-out-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
