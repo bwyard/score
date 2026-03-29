@@ -72,6 +72,60 @@ export default Song({ bpm: 140, tracks: [kick, bass] })
 9. Audio scheduling always uses `audioContext.currentTime` — never `setTimeout` or `Date.now()`
 10. **All code is functional** — factory functions, `const`, arrow functions, zero classes
 11. **Every public export gets TSDoc** — `/** */` block with `@param`, `@returns`, `@example`, `@throws {ScoreError}`. Standard in `docs/spec/TSDOC_STANDARD.md`. No undocumented public exports.
+12. **Accessibility ships with the component** — every new GUI component must meet the checklist below before merging. Never backfilled. WCAG 2.1 AA is the target.
+
+## Accessibility — Required for Every New GUI Component
+
+Score Studio targets WCAG 2.1 AA. Accessibility is **non-negotiable** — it ships with the component, not as a follow-up.
+
+### Checklist (must pass before PR merges)
+
+**ARIA — every interactive element must have:**
+- `aria-label` or visible label associated via `aria-labelledby`
+- `role` attribute if the element is not a native HTML element (e.g. `<div role="button">`)
+- `aria-pressed` on toggle buttons (play/stop, mute, step cells)
+- `aria-live="polite"` on regions that update dynamically (console, status)
+- `aria-describedby` on complex widgets explaining their semantics
+
+**Keyboard — every interactive element must support:**
+- `Tab` / `Shift+Tab` to reach the element (do not suppress focus)
+- `Enter` or `Space` to activate buttons and toggles
+- `Escape` to close dialogs, panels, and pickers
+- `Arrow keys` on grids and sliders
+- Draggable panels: `Arrow keys` to move, `Shift+Arrow` to resize
+
+**Focus management — every modal/dialog must:**
+- Trap focus on open — Tab cycles only within the dialog
+- Set initial focus to the first interactive element or the dialog heading
+- Return focus to the trigger element on close
+
+**Tests — every new component test must include:**
+```ts
+import { axe } from '../setup.js'
+it('has no axe violations', async () => {
+  const { container } = render(<MyComponent />)
+  expect(await axe(container)).toHaveNoViolations()
+})
+```
+
+**Canvas elements must have:**
+- `role="img"` + `aria-label` describing what is shown
+- `aria-describedby` linking to a hidden element with full semantics
+
+### What "accessibility ships with the component" means in practice
+
+When writing a new component:
+1. Use `<button>` not `<div onClick>` — native elements give keyboard and ARIA for free
+2. If you must use a `<div>`, add `role`, `tabIndex={0}`, `onKeyDown` with Enter+Space handling
+3. Add `aria-label` to every button — never rely on icon-only labels
+4. Write the axe test before opening the PR
+
+### What is already covered
+
+`vitest-axe` is configured in `packages/gui/tests/setup.ts` — `axe` is exported and ready.
+All existing components have ARIA roles and labels. Gaps are tracked as t355–t364 in `docs/ROADMAP.md`.
+
+---
 
 ## Target Genres — Full EDM Library
 

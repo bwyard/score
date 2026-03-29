@@ -199,6 +199,30 @@ These areas require a dedicated planning session before any window touches them:
 - t281 — Instrument panel UX + full channel strip (dockable, expandable, full ADR 014 chain method set — DAW-competitive GUI)
 - t282 — Per-instrument panel layouts (schedule with t281): Kick/Snare/HiHat/Bass303/FMSynth/SubSynth/Pad/Pluck/Rhodes each get purpose-built compact + expanded panel — progressive disclosure, instrument-aware controls
 
+### Accessibility — WCAG 2.1 AA (t355–t364)
+
+Score Studio is designed for accessibility from the ground up. All new GUI components must follow the rules in CLAUDE.md. Current tracked gaps:
+
+**Tier 1 — Critical (WCAG fail, pre-release blockers):**
+- t355 — Keyboard navigation on DraggablePanel (arrow keys move/resize, Escape closes) — WCAG 2.1.1
+- t356 — Focus trap on all modal dialogs (BugReportModal, InstrumentPicker) — WCAG 2.4.3
+- t357 — Escape key handler on all `role="dialog"` components — WCAG 2.1.1
+- t358 — Keyboard navigation on PunchcardGrid (arrow keys + Space to toggle steps) — WCAG 2.1.1
+
+**Tier 2 — Important (WCAG AA hardening):**
+- t359 — Color contrast audit of dark theme palette (target 4.5:1 text / 3:1 UI)
+- t360 — `aria-describedby` on complex widgets (PunchcardGrid loop semantics, DraggablePanel affordance)
+- t361 — `aria-keyshortcuts` on Transport buttons + keyboard help overlay (Ctrl+? or F1)
+- t362 — `axe-vitest` `toHaveNoViolations()` assertion in every component test
+- t363 — Visible focus indicators — verify `:focus` styles not hidden by inline styles
+- t364 — Canvas fallback content / `aria-describedby` on Scope, PunchcardGrid, SpectrumAnalyser
+
+**What's already good:** ARIA roles + labels throughout, `role="log"` + `aria-live` on console, `aria-pressed` on toggles, `role="toolbar"` on transport, `vitest-axe` configured in test setup.
+
+**Design rule:** Every new interactive component must ship with keyboard support and ARIA labels. See CLAUDE.md § Accessibility for the checklist.
+
+---
+
 ### Thesis Violations to Fix (tracked debt)
 - `@score/midi` — `let` violations (critical)
 - `@score/cli` play.ts — `let` violations (high)
