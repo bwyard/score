@@ -84,8 +84,8 @@ jobs:
       - name: Install Playwright Chromium + system deps
         run: pnpm --filter @score/gui exec playwright install --with-deps chromium
 
-      - name: Build Electron app
-        run: pnpm --filter @score/gui build
+      - name: Build all workspace packages + Electron app
+        run: pnpm run build
 
       - name: Start Xvfb (headless display for Electron)
         run: Xvfb :99 -screen 0 1280x720x24 &
