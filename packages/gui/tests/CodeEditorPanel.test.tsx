@@ -1,17 +1,72 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen }           from '@testing-library/react'
-import { CodeEditorPanel }           from '../src/renderer/components/shared/CodeEditorPanel.js'
-import type { EditorDecoration }    from '../src/renderer/components/shared/CodeEditorPanel.js'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen }                        from '@testing-library/react'
+import { CodeEditorPanel }                       from '../src/renderer/components/shared/CodeEditorPanel.js'
+import type { EditorDecoration }                 from '../src/renderer/components/shared/CodeEditorPanel.js'
+
+// ── Monaco mock spies (hoisted so the vi.mock factory can reference them) ──────
+
+const { addExtraLibSpy, setCompilerOptsSpy, setDiagnosticsSpy } = vi.hoisted(() => ({
+  addExtraLibSpy:     vi.fn(),
+  setCompilerOptsSpy: vi.fn(),
+  setDiagnosticsSpy:  vi.fn(),
+}))
 
 // Monaco editor renders a loader in jsdom — stub it out.
 // The real Monaco bundle requires a DOM canvas and workers; in jsdom we verify
-// the wrapper renders, exports its types, and passes props without throwing.
+// the wrapper renders, exports its types, passes props, and calls the
+// TypeScript language service APIs (addExtraLib, setCompilerOptions,
+// setDiagnosticsOptions) on mount.
 vi.mock('@monaco-editor/react', () => ({
-  default: ({ value, 'aria-label': ariaLabel }: { value?: string; 'aria-label'?: string }) => (
-    <div data-testid="monaco-editor" aria-label={ariaLabel}>
-      {value}
-    </div>
-  ),
+  default: ({
+    value,
+    'aria-label': ariaLabel,
+    onMount,
+  }: {
+    value?:        string
+    'aria-label'?: string
+    onMount?:      (editor: unknown, monaco: unknown) => void
+  }) => {
+    if (typeof onMount === 'function') {
+      const editorStub = {
+        addCommand:       () => {},
+        focus:            () => {},
+        trigger:          () => {},
+        deltaDecorations: () => [],
+        getModel:         () => ({}),
+      }
+      const monacoStub = {
+        languages: {
+          getLanguages:             () => [],
+          register:                 () => {},
+          setMonarchTokensProvider: () => {},
+          typescript: {
+            typescriptDefaults: {
+              addExtraLib:           addExtraLibSpy,
+              setCompilerOptions:    setCompilerOptsSpy,
+              setDiagnosticsOptions: setDiagnosticsSpy,
+            },
+            ScriptTarget: { ESNext: 99 },
+            ModuleKind:   { ESNext: 99 },
+          },
+        },
+        editor: {
+          defineTheme:            () => {},
+          setTheme:               () => {},
+          OverviewRulerLane:      { Left: 1 },
+          TrackedRangeStickiness: { NeverGrowsWhenTypingAtEdges: 1 },
+        },
+        Range:   class { constructor(..._args: unknown[]) {} },
+        KeyMod:  { CtrlCmd: 2048 },
+        KeyCode: { Enter: 3 },
+      }
+      onMount(editorStub, monacoStub)
+    }
+    return (
+      <div data-testid="monaco-editor" aria-label={ariaLabel}>
+        {value}
+      </div>
+    )
+  },
 }))
 
 // ── Rendering ─────────────────────────────────────────────────────────────────
@@ -136,5 +191,55 @@ describe('CodeEditorPanel — importsVisible (t220)', () => {
     expect(() => render(
       <CodeEditorPanel value="import { Song } from '@score/dsl'\nexport default Song({ bpm: 128, tracks: [] })" onChange={vi.fn()} onEval={vi.fn()} />,
     )).not.toThrow()
+  })
+})
+
+// ── 13v Monaco IntelliSense setup ─────────────────────────────────────────────
+// Verifies that the TypeScript language service is fully configured on editor
+// mount: addExtraLib (Score DSL types), setCompilerOptions (permissive),
+// setDiagnosticsOptions (suppress lib noise). Relies on the onMount-calling
+// Monaco stub above.
+
+describe('CodeEditorPanel — Monaco IntelliSense setup (13v)', () => {
+  beforeEach(() => {
+    addExtraLibSpy.mockClear()
+    setCompilerOptsSpy.mockClear()
+    setDiagnosticsSpy.mockClear()
+  })
+
+  it('addExtraLib called on mount with Score DSL type declarations', () => {
+    render(<CodeEditorPanel value="" onChange={vi.fn()} onEval={vi.fn()} />)
+    expect(addExtraLibSpy).toHaveBeenCalledWith(
+      expect.stringContaining('declare function Kick'),
+      'file:///node_modules/@score/dsl/index.d.ts',
+    )
+  })
+
+  it('setCompilerOptions called on mount with permissive TS settings', () => {
+    render(<CodeEditorPanel value="" onChange={vi.fn()} onEval={vi.fn()} />)
+    expect(setCompilerOptsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        strict:        false,
+        noImplicitAny: false,
+        skipLibCheck:  true,
+      }),
+    )
+  })
+
+  it('setDiagnosticsOptions called on mount suppressing lib errors', () => {
+    render(<CodeEditorPanel value="" onChange={vi.fn()} onEval={vi.fn()} />)
+    expect(setDiagnosticsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        noSemanticValidation:    false,
+        noSyntaxValidation:      false,
+        diagnosticCodesToIgnore: expect.arrayContaining([2307, 2580]),
+      }),
+    )
+  })
+
+  it('addExtraLib URI uses node_modules path for @score/dsl module resolution', () => {
+    render(<CodeEditorPanel value="" onChange={vi.fn()} onEval={vi.fn()} />)
+    const [, uri] = addExtraLibSpy.mock.calls[0] as [string, string]
+    expect(uri).toBe('file:///node_modules/@score/dsl/index.d.ts')
   })
 })

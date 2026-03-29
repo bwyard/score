@@ -338,11 +338,12 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
     monaco.editor.setTheme('score-dark')
 
     // ── @score/dsl type stub — loads Score DSL ambient declarations into the
-    // TypeScript language service so unknown symbols get red underlines.
-    // Full IntelliSense (autocomplete + hover docs) is Phase 13v.
+    // TypeScript language service for full IntelliSense: completions, hover
+    // docs, and error underlines on unknown Score symbols (Phase 13v).
+    // URI matches the module specifier so `import { X } from '@score/dsl'` resolves.
     monaco.languages.typescript.typescriptDefaults.addExtraLib(
       SCORE_DSL_TYPES,
-      'ts:@score/dsl/index.d.ts',
+      'file:///node_modules/@score/dsl/index.d.ts',
     )
 
     // Permissive TS config — score song files are plain ESM, not strict TS projects.
@@ -354,6 +355,16 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
       strict:                  false,
       noImplicitAny:           false,
       skipLibCheck:            true,
+    })
+
+    // Suppress lib-level diagnostics that are noise in the song sandbox:
+    //   2307 — Cannot find module '@score/dsl' (module not on TS path)
+    //   2580 — Cannot find name 'process' (Node.js global not in browser lib)
+    // Semantic + syntax validation remain enabled for real user-code errors.
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation:   false,
+      diagnosticCodesToIgnore: [2307, 2580],
     })
 
     // Ctrl+Enter / Cmd+Enter → onEval
