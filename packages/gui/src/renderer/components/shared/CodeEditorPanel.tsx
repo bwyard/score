@@ -20,6 +20,17 @@ export type EditorDecoration = {
   readonly isWholeLine?: boolean
 }
 
+/**
+ * t330 — Line range for a Strudl-style block highlight.
+ * The full `const <name> = <Factory>(…)` block including chain continuations.
+ */
+export type BlockHighlight = {
+  /** 1-based start line (Monaco convention). */
+  readonly startLine: number
+  /** 1-based end line (Monaco convention), inclusive. */
+  readonly endLine:   number
+}
+
 /** One step badge to overlay on an instrument line in the editor. */
 export type StepBadge = {
   /** 1-based line number in the current code. */
@@ -49,6 +60,12 @@ type Props = {
    * Auto-inject of real imports on fold is deferred until the DSL chain API lands.
    */
   readonly importsVisible?: boolean
+  /**
+   * t330 — Strudl-style block highlights — full `const <name> = <Factory>` block
+   * ranges to flash on each engine step. Each highlight fades over ~200 ms via a
+   * CSS keyframe animation. The parent recomputes this array on every step tick.
+   */
+  readonly blockHighlights?: ReadonlyArray<BlockHighlight>
 }
 
 // ── Score DSL Token Provider ───────────────────────────────────────────────────
@@ -161,6 +178,18 @@ const injectDecorationCss = (): void => {
       background: rgba(74, 143, 255, 0.07) !important;
       border-left: 2px solid rgba(74, 143, 255, 0.4) !important;
     }
+    /* t330 — Block highlight fade animation (Strudl-style) */
+    @keyframes score-block-fade {
+      0%   { background: rgba(74, 143, 255, 0.12); border-left-color: rgba(74, 143, 255, 0.55); }
+      100% { background: transparent;              border-left-color: transparent; }
+    }
+    /* Two alternating classes so deltaDecorations triggers a DOM class-name change
+       on consecutive ticks, which restarts the CSS animation each step. */
+    .score-block-active-a,
+    .score-block-active-b {
+      animation: score-block-fade 200ms ease-out forwards;
+      border-left: 2px solid rgba(74, 143, 255, 0.55);
+    }
     /* Step badge — inline content widget gutter marker */
     .score-step-badge {
       display: inline-block;
@@ -205,11 +234,14 @@ const injectDecorationCss = (): void => {
  * />
  * ```
  */
-export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true }: Props) => {
-  const editorRef       = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
-  const decorationsRef  = useRef<string[]>([])
-  const stepBadgesRef   = useRef<string[]>([])
-  const monacoRef       = useRef<Monaco | null>(null)
+export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true, blockHighlights }: Props) => {
+  const editorRef            = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
+  const decorationsRef       = useRef<string[]>([])
+  const stepBadgesRef        = useRef<string[]>([])
+  const blockHighlightsRef   = useRef<string[]>([])
+  // t330 — flip between -a and -b on every tick so the CSS animation restarts
+  const blockFlipRef         = useRef(false)
+  const monacoRef            = useRef<Monaco | null>(null)
 
   // Apply decorations whenever they change
   useEffect(() => {
@@ -255,6 +287,32 @@ export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadg
 
     stepBadgesRef.current = ed.deltaDecorations(stepBadgesRef.current, newBadges)
   }, [stepBadges])
+
+  // t330 — block highlight flash: full instrument block glows on each step tick
+  useEffect(() => {
+    const ed     = editorRef.current
+    const monaco = monacoRef.current
+    if (!ed || !monaco) return
+
+    const model = ed.getModel()
+    if (!model) return
+
+    // Alternate CSS class name each tick so the animation always restarts,
+    // even when the same block stays active across consecutive steps.
+    blockFlipRef.current = !blockFlipRef.current
+    const className = blockFlipRef.current ? 'score-block-active-a' : 'score-block-active-b'
+
+    const newBlocks = (blockHighlights ?? []).map(b => ({
+      range: new monaco.Range(b.startLine, 1, b.endLine, 1),
+      options: {
+        isWholeLine: true,
+        className,
+        stickiness:  monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+      },
+    }))
+
+    blockHighlightsRef.current = ed.deltaDecorations(blockHighlightsRef.current, newBlocks)
+  }, [blockHighlights])
 
   // t220 — fold / unfold the leading import block when importsVisible changes
   useEffect(() => {
