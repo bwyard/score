@@ -88,24 +88,23 @@ describe('TransportBar — panic flash', () => {
 
 describe('TransportBar — bars counter', () => {
   it('displays bar count from engine:state', () => {
-    const { container } = setup()
+    setup()
     act(() => { emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 12 }) })
-    // <output> element renders the bar counter — query directly to avoid
-    // ambiguity with other numeric text in the toolbar
-    expect(container.querySelector('output')?.textContent).toBe('12')
+    // <label htmlFor="barsId">Bar</label> + <output id="barsId"> — accessible query
+    expect(screen.getByLabelText('Bar')).toHaveTextContent('12')
   })
 
   it('bar counter starts at 0', () => {
-    const { container } = setup()
-    expect(container.querySelector('output')?.textContent).toBe('0')
+    setup()
+    expect(screen.getByLabelText('Bar')).toHaveTextContent('0')
   })
 
   it('bar counter updates on successive engine:state events', () => {
-    const { container } = setup()
+    setup()
     act(() => { emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 4 }) })
-    expect(container.querySelector('output')?.textContent).toBe('4')
+    expect(screen.getByLabelText('Bar')).toHaveTextContent('4')
     act(() => { emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 16 }) })
-    expect(container.querySelector('output')?.textContent).toBe('16')
+    expect(screen.getByLabelText('Bar')).toHaveTextContent('16')
   })
 })
 

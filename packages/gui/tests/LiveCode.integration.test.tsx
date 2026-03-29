@@ -164,9 +164,8 @@ describe('LiveCode integration — engine:state bars counter in TransportBar', (
   it('bar counter output updates when engine:state delivers bars', () => {
     setup()
     act(() => { emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 8 }) })
-    // <output> element in TransportBar renders the bar count
-    const output = document.querySelector('output')
-    expect(output?.textContent).toBe('8')
+    // TransportBar: <label htmlFor="barsId">Bar</label> + <output id="barsId">
+    expect(screen.getByLabelText('Bar')).toHaveTextContent('8')
   })
 })
 
