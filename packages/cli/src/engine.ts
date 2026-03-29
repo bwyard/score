@@ -520,7 +520,7 @@ export type ScoreEngine = {
 }
 
 export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngine> => {
-  const ctx = webAudioBackend.createContext()
+  const ctx = webAudioBackend.createContext({ seed: song.seed })
   // masterVolume: 0.72 — leaves headroom so simultaneous hits don't push the
   // limiter into heavy pumping. limiterCeiling -1.5 dBFS gives the compressor
   // more range before onset, reducing audible pump artifacts at pattern repeats.
