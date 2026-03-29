@@ -1,5 +1,5 @@
 {
-  "name": "@score/dsl",
+  "name": "@score/instruments",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -14,15 +14,14 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src",
+    "lint": "eslint src tests",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@score/core": "workspace:*",
-    "@score/instruments": "workspace:*",
-    "@score/math": "workspace:*",
-    "@score/pattern": "workspace:*"
+    "@score/components": "workspace:*",
+    "@score/effects": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

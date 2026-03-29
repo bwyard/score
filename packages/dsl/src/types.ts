@@ -1,4 +1,5 @@
 import type { AudioComponent, EffectDescriptor } from '@score/core'
+import type { InstrumentType } from '@score/instruments'
 
 // ── Instrument descriptors ────────────────────────────────────────────────────
 // Pure data — no AudioContext. The engine hydrates these at play time.
@@ -272,7 +273,13 @@ export type ArpDSLProps = {
  */
 export type InstrumentDescriptor = {
   readonly _type: 'InstrumentDescriptor'
-  readonly instrumentType: 'kick' | 'snare' | 'hihat' | 'synth' | 'sample' | 'theremin' | 'sax' | 'arp' | 'kick808' | 'kick909' | 'hihat808' | 'snare909' | 'subsynth' | 'fmsynth' | 'pad' | 'rhodes' | 'pluck' | 'bass-303'
+  /**
+   * Instrument type key — must be a key of {@link INSTRUMENT_REGISTRY} or `'sample'`.
+   * Derived from `InstrumentType` so adding to the registry automatically widens this union.
+   * `'sample'` is listed separately because it requires a pre-decoded buffer and is
+   * handled outside the registry dispatch in the engine.
+   */
+  readonly instrumentType: InstrumentType | 'sample'
   readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps | ThereminDSLProps | SaxDSLProps | ArpDSLProps | Kick808DSLProps | Kick909DSLProps | Hihat808DSLProps | Snare909DSLProps | SubSynthDSLProps | FMSynthDSLProps
   // Minimal AudioComponent shape so Track() accepts it
   readonly id: string

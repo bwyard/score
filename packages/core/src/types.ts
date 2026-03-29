@@ -32,6 +32,31 @@ export type EffectDescriptor = {
   readonly props: Record<string, unknown>
 }
 
+/**
+ * Song-level context passed to instrument dispatch functions, pattern transforms,
+ * and normalization helpers. Replaces individual `bpm`, `seed`, `bars` params
+ * threaded separately through each call site.
+ *
+ * @example
+ * ```ts
+ * const songCtx: SongContext = { bpm: 128, seed: 42, bars: 8, timeSignature: [4, 4] }
+ * createStepSequencer(transport, { ...props, seed: songCtx.seed }, callback)
+ * ```
+ */
+export type SongContext = {
+  /** Song tempo in beats per minute. */
+  readonly bpm: number
+  /**
+   * Deterministic seed for stochastic operations (`degrade`, `humanize`, `stepProb`).
+   * Always present — defaults to `Date.now()` in `Song()` when not provided.
+   */
+  readonly seed: number
+  /** Current bar number (0-indexed). Set to `0` at song boot, increments each bar. */
+  readonly bars: number
+  /** Time signature as `[beats, noteValue]`. Default `[4, 4]`. */
+  readonly timeSignature: readonly [number, number]
+}
+
 // AudioGraph — return type of createAudioGraph
 export type AudioGraph = {
   readonly context: BackendContext

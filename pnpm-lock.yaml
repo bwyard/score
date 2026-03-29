@@ -130,6 +130,9 @@ importers:
       '@score/core':
         specifier: workspace:*
         version: link:../core
+      '@score/instruments':
+        specifier: workspace:*
+        version: link:../instruments
       '@score/math':
         specifier: workspace:*
         version: link:../math
@@ -244,6 +247,28 @@ importers:
       vitest-axe:
         specifier: 1.0.0-pre.5
         version: 1.0.0-pre.5(vitest@2.1.9(@types/node@25.5.0)(jsdom@25.0.1)(terser@5.46.1))
+
+  packages/instruments:
+    dependencies:
+      '@score/components':
+        specifier: workspace:*
+        version: link:../components
+      '@score/core':
+        specifier: workspace:*
+        version: link:../core
+      '@score/effects':
+        specifier: workspace:*
+        version: link:../effects
+    devDependencies:
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
+      '@vitest/coverage-v8':
+        specifier: ^2.0.0
+        version: 2.1.9(vitest@2.1.9(@types/node@25.5.0)(jsdom@25.0.1)(terser@5.46.1))
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@25.5.0)(jsdom@25.0.1)(terser@5.46.1)
 
   packages/math:
     dependencies:
