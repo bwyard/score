@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { memo, useRef, useEffect } from 'react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -82,7 +82,7 @@ const drawBeatViz = (
  * </div>
  * ```
  */
-export const CodeWaveform = ({ waveform, playing, currentStep, stepCount }: Props) => {
+const CodeWaveformInner = ({ waveform, playing, currentStep, stepCount }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -113,6 +113,9 @@ export const CodeWaveform = ({ waveform, playing, currentStep, stepCount }: Prop
     />
   )
 }
+
+/** Beat-reactive waveform overlay — memoized to prevent re-renders at display tick rate. */
+export const CodeWaveform = memo(CodeWaveformInner)
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { memo, useRef, useEffect, useState } from 'react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -174,7 +174,7 @@ const drawGrid = (
  * />
  * ```
  */
-export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick, onLabelClick, selectedTrack }: Props) => {
+const PunchcardGridInner = ({ tracks, currentStep, stepCount, onStepClick, onLabelClick, selectedTrack }: Props) => {
   const canvasRef         = useRef<HTMLCanvasElement>(null)
   const [flash, setFlash] = useState(false)
 
@@ -253,3 +253,6 @@ export const PunchcardGrid = ({ tracks, currentStep, stepCount, onStepClick, onL
     />
   )
 }
+
+/** Canvas punchcard grid — memoized to prevent re-renders at display tick rate. */
+export const PunchcardGrid = memo(PunchcardGridInner)

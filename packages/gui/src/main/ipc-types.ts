@@ -58,11 +58,20 @@ export type RendererToMain = {
 export type MainToRenderer = {
   'engine:state':    { playing: boolean; bpm: number; bars: number }
   /**
-   * Fires every sequencer step. Carries the full temporal coordinate for all consumers.
+   * Fires every sequencer step at the full audio tick rate.
+   * No longer consumed by visual components — use `display:tick` instead.
+   * Retained for non-display consumers (telemetry, MIDI sync, external tooling).
    * `time` (audioContext.currentTime) is not included — it is only available in the renderer.
-   * Replaces the former `engine:step` channel (ADR 027).
    */
   'engine:tick':     { step: number; stepCount: number; bar: number; beat: number; bpm: number }
+  /**
+   * Throttled display tick — fires at ~60fps max via a setInterval in main.
+   * Renderer visual components (PunchcardGrid, Scope, CodeWaveform) subscribe to this
+   * instead of `engine:tick` to avoid re-renders at the full audio tick rate.
+   *
+   * @see createDisplayTick in `main/display-tick.ts`
+   */
+  'display:tick':    { step: number; stepCount: number; bar: number; beat: number; bpm: number }
   'midi:status':     { connected: boolean }
   'error:report':    { message: string }
   /** Fires when song eval throws — message + optional stack + optional fix hint. Transport is NOT stopped. */

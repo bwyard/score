@@ -22,6 +22,8 @@ import {
   euclidean, fast, slow, rev, every, degrade, shift, stack, beat, humanize,
 }                                                    from '@score/pattern'
 import type { MainToRenderer, RendererToMain, PanelLayoutMap } from './ipc-types.js'
+import { createDisplayTick }                                   from './display-tick.js'
+import type { TickCache }                                      from './display-tick.js'
 import { autoUpdater }                               from 'electron-updater'
 
 // ── Default starter song ────────────────────────────────────────────────────
@@ -66,6 +68,12 @@ const send = <K extends keyof MainToRenderer>(channel: K, payload: MainToRendere
   if (!win || win.isDestroyed()) return
   win.webContents.send(channel, payload)
 }
+
+// Display tick — throttled IPC to renderer at ~60fps. Audio engine writes to tickCache
+// on every onStep; createDisplayTick sends 'display:tick' at max 16ms intervals.
+// Decoupled from audio rate so renderer never processes more than ~60 ticks/sec.
+const tickCache: TickCache = { step: 0, stepCount: 16, bar: 0, beat: 0, bpm: 120, dirty: false }
+const displayTick = createDisplayTick(send, tickCache)
 
 const pushState = (): void => {
   const slot = slotRef.value
@@ -184,6 +192,8 @@ const startAnalysis = (): void => {
 
 const teardown = (): void => {
   stopAnalysis()
+  displayTick.stop()
+  tickCache.dirty = false
   const slot = slotRef.value
   if (!slot) return
   slotRef.value = null
@@ -225,16 +235,21 @@ const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
   }
   teardown()
   slotRef.value = { engine, playing: false, bpm: song.bpm, bars: barOffset }
-  // Per-step IPC — fires every sequencer step carrying the full temporal coordinate.
-  // bar and beat are derived from the engine state; time (audioContext.currentTime)
+  // Per-step cache write — fires at full audio tick rate.
+  // Does NOT send IPC directly — writes to tickCache so the display tick loop
+  // can send 'display:tick' at ~60fps without IPC at the full audio rate.
+  // bar and beat are derived from engine state; time (audioContext.currentTime)
   // is renderer-side only and excluded from IPC (ADR 027).
   engine.onStep((step, stepCount) => {
     const s = slotRef.value
-    const bar  = s ? s.bars : 0
-    const beat = stepCount > 0 ? Math.floor(step / (stepCount / 4)) : 0
-    const bpm  = s ? s.bpm : 120
-    send('engine:tick', { step, stepCount, bar, beat, bpm })
+    tickCache.step      = step
+    tickCache.stepCount = stepCount
+    tickCache.bar       = s ? s.bars : 0
+    tickCache.beat      = stepCount > 0 ? Math.floor(step / (stepCount / 4)) : 0
+    tickCache.bpm       = s ? s.bpm : 120
+    tickCache.dirty     = true
   })
+  displayTick.start()
   engine.onBar(() => {
     const s = slotRef.value
     if (!s) return
