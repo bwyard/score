@@ -132,25 +132,14 @@ describe('LiveCode — step click re-eval wiring (12b.2)', () => {
 // ── t184: song:error IPC — crash resilience ───────────────────────────────────
 
 describe('LiveCode — song:error crash resilience (t184)', () => {
-  it('shows error banner when song:error fires', () => {
+  it('shows error message in console log when song:error fires', () => {
     render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
     act(() => {
       emitBridgeEvent('song:error', { message: 'ReferenceError: Kick is not defined' })
     })
-    expect(screen.getByRole('alert')).toHaveTextContent('ReferenceError: Kick is not defined')
-  })
-
-  it('shows fix hint in console log when song:error has a fix', () => {
-    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
-    act(() => {
-      emitBridgeEvent('song:error', {
-        message: 'Invalid bpm value',
-        fix:     'bpm must be between 20 and 300',
-      })
-    })
-    expect(screen.getByRole('alert')).toBeInTheDocument()
-    // Fix hint logged — visible in console panel
-    expect(screen.getByText(/bpm must be between 20 and 300/i)).toBeInTheDocument()
+    // ConsoleLogPanel renders the error message inside role="log"
+    const log = screen.getByRole('log', { name: 'Engine console' })
+    expect(log).toHaveTextContent('ReferenceError: Kick is not defined')
   })
 
   it('does not stop transport when song:error fires', () => {
@@ -202,35 +191,23 @@ describe('LiveCode — resizable editor/canvas split (t152)', () => {
   })
 })
 
-// ── t184/t133: engine:error overlay ───────────────────────────────────────────
+// ── t184/t133: engine:error in ConsoleLogPanel ────────────────────────────────
 
-describe('LiveCode — engine:error overlay (t184/t133)', () => {
-  it('shows overlay when engine:error fires', () => {
+describe('LiveCode — engine:error in ConsoleLogPanel (t184/t133)', () => {
+  it('shows engine error in console log when engine:error fires', () => {
     render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
     act(() => { emitBridgeEvent('engine:error', { message: 'effect hydration failed' }) })
-    expect(screen.getByRole('alert')).toBeInTheDocument()
-    // Use exact string — addLog also renders "[engine] effect hydration failed" so regex would match twice
-    expect(screen.getByText('effect hydration failed')).toBeInTheDocument()
+    // ConsoleLogPanel prefixes engine errors with "[engine] "
+    expect(screen.getByText('[engine] effect hydration failed')).toBeInTheDocument()
   })
 
-  it('dismiss button removes the overlay', () => {
-    render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
-    act(() => { emitBridgeEvent('engine:error', { message: 'engine crashed' }) })
-    const dismiss = screen.getByLabelText('Dismiss engine errors')
-    act(() => { fireEvent.click(dismiss) })
-    // addLog keeps "[engine] engine crashed" in the console panel — query for the exact overlay text only
-    expect(screen.queryByText('engine crashed')).not.toBeInTheDocument()
-  })
-
-  it('keeps last 5 errors — older entries are dropped on overflow', () => {
+  it('multiple engine errors all appear in the console log', () => {
     render(<LiveCode hardware="pc-only" onHome={vi.fn()} />)
     act(() => {
-      for (let i = 1; i <= 6; i++) {
-        emitBridgeEvent('engine:error', { message: `error ${String(i)}` })
-      }
+      emitBridgeEvent('engine:error', { message: 'error alpha' })
+      emitBridgeEvent('engine:error', { message: 'error beta' })
     })
-    // addLog keeps "[engine] error 1" in console — query for exact overlay entry text only
-    expect(screen.queryByText('error 1')).not.toBeInTheDocument()
-    expect(screen.getByText('error 6')).toBeInTheDocument()
+    expect(screen.getByText('[engine] error alpha')).toBeInTheDocument()
+    expect(screen.getByText('[engine] error beta')).toBeInTheDocument()
   })
 })

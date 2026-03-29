@@ -13,8 +13,7 @@ import { getActiveLines, getStepBadges }    from '../shared/CodeHighlight.js'
 import { CodeEditorPanel }                  from '../shared/CodeEditorPanel.js'
 import type { EditorDecoration, StepBadge } from '../shared/CodeEditorPanel.js'
 import { ReferencePanel }                   from '../shared/ReferencePanel.js'
-import { ConsoleLog }                       from '../shared/ConsoleLog.js'
-import type { LogEntry, LogLevel }          from '../shared/ConsoleLog.js'
+import { ConsoleLogPanel }                  from '../shared/ConsoleLogPanel.js'
 import type { PunchcardTrack }              from '../visualizer/PunchcardGrid.js'
 import { EvalStatus }                       from '../status/index.js'
 import type { EvalStatusKind }             from '../status/EvalStatus.js'
@@ -56,15 +55,6 @@ const bass  = Bass303('A2').cutoff(600).resonance(0.4)
   .volume(0.6)
 
 export default Song({ bpm: 128, tracks: [kick, snare, hihat, bass] })`
-
-// ── Log helpers ────────────────────────────────────────────────────────────────
-
-const mkEntry = (level: LogLevel, message: string): LogEntry => ({
-  id:      Date.now() + Math.random(),
-  level,
-  message,
-  time:    Date.now(),
-})
 
 // ── Mixer strip state ──────────────────────────────────────────────────────────
 
@@ -131,10 +121,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const [pendingSwap, setPendingSwap] = useState(false)
   const [stripStates, setStripStates] = useState<ReadonlyArray<StripState>>([])
   const [fftBins,     setFftBins]     = useState<readonly number[]>([])
-  const [logEntries,  setLogEntries]  = useState<ReadonlyArray<LogEntry>>([])
   const [pianoNotes,  setPianoNotes]  = useState<ReadonlyArray<PianoRollNote>>([])
-  // t184/t133 — engine:error history (last 5 unexpected errors, separate from song eval errors)
-  const [engineErrors, setEngineErrors] = useState<readonly string[]>([])
   // t220 — import visibility toggle (stub: fold/unfold in Monaco; auto-inject deferred for DSL chain API)
   const [importsVisible, setImportsVisible] = useState(false)
   // Instrument panel — which track is currently selected (null = none)
@@ -222,10 +209,6 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     setPanels(prev => ({ ...prev, [key]: !prev[key] }))
   }, [])
 
-  const addLog = useCallback((level: LogLevel, message: string): void => {
-    setLogEntries(prev => [...prev.slice(-199), mkEntry(level, message)])
-  }, [])
-
   // ── IPC subscriptions ──────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -233,31 +216,18 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       autoPlayRef.current = false
       setError(message)
       setEvalStatus('error')
-      addLog('error', message)
     })
     return unsub
-  }, [addLog])
+  }, [])
 
   useEffect(() => {
-    const unsub = window.scoreBridge.on('song:error', ({ message, fix }) => {
+    const unsub = window.scoreBridge.on('song:error', ({ message }) => {
       autoPlayRef.current = false
       setError(message)
       setEvalStatus('error')
-      addLog('error', message)
-      if (fix) addLog('info', `💡 ${fix}`)
     })
     return unsub
-  }, [addLog])
-
-  useEffect(() => {
-    const unsub = window.scoreBridge.on('engine:error', ({ message }) => {
-      // Keep last 5 unexpected engine errors — distinct from song eval errors.
-      // Previous engine stays running; this overlay is purely informational.
-      setEngineErrors(prev => [...prev.slice(-4), message])
-      addLog('error', `[engine] ${message}`)
-    })
-    return unsub
-  }, [addLog])
+  }, [])
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('song:update', ({ tracks: t }) => {
@@ -265,7 +235,6 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       setStripStates(prev => t.map((track, i) => prev[i] ?? { volume: track.volume ?? 1, muted: parseMuteState(codeRef.current, i) }))
       setEvalStatus('ok')
       setEvalTimestamp(Date.now())
-      addLog('ok', `Song loaded — ${String(t.length)} track${t.length === 1 ? '' : 's'}`)
       // Auto-play after eval when the user clicked play (not standalone Eval btn)
       if (autoPlayRef.current) {
         autoPlayRef.current = false
@@ -273,7 +242,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       }
     })
     return unsub
-  }, [addLog])
+  }, [])
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('engine:analysis', ({ waveform: w }) => {
@@ -292,15 +261,10 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('engine:state', ({ playing, bpm, bars }) => {
-      setEngineState(prev => {
-        if (prev.playing !== playing) {
-          addLog('info', playing ? '▶ Playing' : '■ Stopped')
-        }
-        return { playing, bpm, bars }
-      })
+      setEngineState({ playing, bpm, bars })
     })
     return unsub
-  }, [addLog])
+  }, [])
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('display:tick', ({ step, stepCount }) => {
@@ -313,10 +277,9 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   useEffect(() => {
     const unsub = window.scoreBridge.on('engine:pending', ({ pending }) => {
       setPendingSwap(pending)
-      if (pending) addLog('warn', 'Swap queued — applying at next bar boundary')
     })
     return unsub
-  }, [addLog])
+  }, [])
 
   useEffect(() => {
     const unsub = window.scoreBridge.on('engine:notes', ({ notes }) => {
@@ -329,13 +292,6 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     })
     return unsub
   }, [])
-
-  useEffect(() => {
-    const unsub = window.scoreBridge.on('debug:pop', ({ maxDelta, bars }) => {
-      addLog('warn', `POP detected at bar ${String(bars)} — max delta ${maxDelta.toFixed(3)} (threshold 0.25). Likely gain staging or scheduling jitter.`)
-    })
-    return unsub
-  }, [addLog])
 
   // t218 — receive saved panel layout from main on launch
   useEffect(() => {
@@ -364,10 +320,9 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       setCode(loadedCode)
       setError(null)
       setEvalStatus('idle')
-      addLog('info', 'File opened')
     })
     return unsub
-  }, [addLog])
+  }, [])
 
   // Clear debounce timer on unmount to avoid firing eval after component is gone
   useEffect(() => () => { if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current) }, [])
@@ -381,9 +336,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const onEval = useCallback((): void => {
     setError(null)
     setEvalStatus('pending')
-    addLog('info', 'Evaluating…')
     window.scoreBridge.send('engine:eval', { code })
-  }, [code, addLog])
+  }, [code])
 
   // Play: always eval the current code first, then auto-start once song:update fires.
   // This mirrors TidalCycles / Strudl — pressing play runs the code.
@@ -391,9 +345,8 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     autoPlayRef.current = true
     setError(null)
     setEvalStatus('pending')
-    addLog('info', 'Evaluating…')
     window.scoreBridge.send('engine:eval', { code })
-  }, [code, addLog])
+  }, [code])
 
   const onStop = useCallback((): void => {
     autoPlayRef.current = false
@@ -405,12 +358,11 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   const onRun = useCallback((): void => {
     setError(null)
     setEvalStatus('pending')
-    addLog('info', 'Evaluating…')
     if (!engineState.playing) {
       autoPlayRef.current = true
     }
     window.scoreBridge.send('engine:eval', { code })
-  }, [code, addLog, engineState.playing])
+  }, [code, engineState.playing])
 
   const onMixerVolume = useCallback((index: number, volume: number): void => {
     setStripStates(prev => updateStrip(prev, index, { volume }))
@@ -445,14 +397,13 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     evalDebounceRef.current = setTimeout(() => {
       setError(null)
       setEvalStatus('pending')
-      addLog('info', 'Evaluating…')
       // Read latest code via functional setCode to avoid stale closure
       setCode(latest => {
         window.scoreBridge.send('engine:eval', { code: latest })
         return latest
       })
     }, 300)
-  }, [addLog])
+  }, [])
 
   const onInstrumentMute = useCallback((trackIndex: number): void => {
     onMixerMute(trackIndex)
@@ -464,13 +415,12 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     evalDebounceRef.current = setTimeout(() => {
       setError(null)
       setEvalStatus('pending')
-      addLog('info', 'Evaluating…')
       setCode(latest => {
         window.scoreBridge.send('engine:eval', { code: latest })
         return latest
       })
     }, 300)
-  }, [addLog])
+  }, [])
 
   const onStepClick = useCallback((trackIndex: number, stepIndex: number): void => {
     const track = tracks[trackIndex]
@@ -491,13 +441,12 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     evalDebounceRef.current = setTimeout(() => {
       setError(null)
       setEvalStatus('pending')
-      addLog('info', 'Evaluating…')
       setCode(latest => {
         window.scoreBridge.send('engine:eval', { code: latest })
         return latest
       })
     }, 300)
-  }, [tracks, addLog])
+  }, [tracks])
 
   const onNoteClick = useCallback((pitch: number, step: number): void => {
     // Find the Arp track (first track with type 'arp') — that's what the piano roll shows
@@ -542,13 +491,12 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     evalDebounceRef.current = setTimeout(() => {
       setError(null)
       setEvalStatus('pending')
-      addLog('info', 'Evaluating…')
       setCode(latest => {
         window.scoreBridge.send('engine:eval', { code: latest })
         return latest
       })
     }, 80)
-  }, [addLog])
+  }, [])
 
   // Smart insert — appends snippet inside the tracks: [...] array rather than at cursor.
   // Falls back to end-of-file append if no tracks array is found.
@@ -590,7 +538,6 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     setTracks([])
     setPianoNotes([])
     setStripStates([])
-    setLogEntries([])
     setSelectedTrack(null)
   }, [])
 
@@ -636,30 +583,6 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       <div style={styles.body} ref={bodyRef}>
         {/* Editor pane — CodeWaveform behind textarea, Strudl aesthetic */}
         <div style={{ ...styles.editorPane, flex: `0 0 ${String(splitPct)}%` }}>
-          {error !== null && (
-            <div style={styles.errorBanner} role="alert">
-              {error}
-            </div>
-          )}
-
-          {engineErrors.length > 0 && (
-            <div style={styles.engineErrorOverlay} role="alert" aria-live="assertive">
-              <div style={styles.engineErrorHeader}>
-                <span>Engine error</span>
-                <button
-                  style={styles.engineErrorDismiss}
-                  onClick={() => { setEngineErrors([]) }}
-                  aria-label="Dismiss engine errors"
-                >
-                  ✕
-                </button>
-              </div>
-              {engineErrors.map((msg, i) => (
-                <div key={i} style={styles.engineErrorEntry}>{msg}</div>
-              ))}
-            </div>
-          )}
-
           {/* Monaco editor + waveform overlay stacked */}
           {/* z-index 0: CodeWaveform (canvas behind)  1: Monaco editor */}
           <div style={styles.editorArea}>
@@ -681,18 +604,10 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
             </div>
           </div>
 
-          {/* Console log (below textarea, collapsible) */}
+          {/* Console log panel (below editor, collapsible) */}
           {panels.console && (
             <div style={styles.consolePane}>
-              <div style={styles.consoleHeader}>
-                <span style={styles.consoleLabel}>Console</span>
-                <button
-                  style={styles.consoleClose}
-                  onClick={() => { togglePanel('console') }}
-                  aria-label="Close console"
-                >×</button>
-              </div>
-              <ConsoleLog entries={logEntries} />
+              <ConsoleLogPanel />
             </div>
           )}
 
@@ -988,52 +903,6 @@ const styles = {
     transition:     'background 0.15s',
     userSelect:     'none' as const,
   },
-  errorBanner: {
-    background:   '#3a1a1a',
-    color:        '#ff6b6b',
-    padding:      '0.4rem 0.75rem',
-    fontSize:     '0.75rem',
-    borderBottom: '1px solid #5a2a2a',
-    flexShrink:   0,
-    fontFamily:   "'JetBrains Mono', 'Fira Code', monospace",
-  },
-  engineErrorOverlay: {
-    position:     'absolute' as const,
-    top:          '0.5rem',
-    right:        '0.5rem',
-    zIndex:       100,
-    background:   '#2a1a0a',
-    border:       '1px solid #7a3a1a',
-    borderRadius: '4px',
-    padding:      '0.5rem 0.75rem',
-    maxWidth:     '380px',
-    fontFamily:   "'JetBrains Mono', 'Fira Code', monospace",
-    fontSize:     '0.7rem',
-    color:        '#ffaa55',
-    boxShadow:    '0 2px 8px rgba(0,0,0,0.6)',
-  },
-  engineErrorHeader: {
-    display:        'flex',
-    justifyContent: 'space-between',
-    alignItems:     'center',
-    marginBottom:   '0.3rem',
-    fontWeight:     700 as const,
-    color:          '#ffcc88',
-  },
-  engineErrorDismiss: {
-    background:  'none',
-    border:      'none',
-    color:       '#ffaa55',
-    cursor:      'pointer',
-    fontSize:    '0.8rem',
-    padding:     '0 0.2rem',
-    lineHeight:  1,
-  },
-  engineErrorEntry: {
-    marginTop:  '0.2rem',
-    lineHeight: 1.4,
-    wordBreak:  'break-word' as const,
-  },
   // Container for waveform + textarea stacked absolutely
   editorArea: {
     flex:     1,
@@ -1048,38 +917,8 @@ const styles = {
     minHeight: 0,
   },
   consolePane: {
-    flexShrink:    0,
-    height:        '120px',
-    borderTop:     '1px solid #1e1e22',
-    display:       'flex',
-    flexDirection: 'column' as const,
-    background:    '#080809',
-  },
-  consoleHeader: {
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    padding:        '0 0.5rem',
-    height:         '22px',
-    flexShrink:     0,
-    borderBottom:   '1px solid #141418',
-    background:     '#0a0a0d',
-  },
-  consoleLabel: {
-    fontFamily:    "'JetBrains Mono', monospace",
-    fontSize:      '0.6rem',
-    color:         '#3a3a46',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.1em',
-  },
-  consoleClose: {
-    background: 'none',
-    border:     'none',
-    color:      '#3a3a46',
-    cursor:     'pointer',
-    fontSize:   '1rem',
-    lineHeight: 1,
-    padding:    '0',
+    flexShrink: 0,
+    height:     '140px',
   },
   editorFooter: {
     flexShrink:     0,
