@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
-    "node-web-audio-api": "^1.0.8"
+    "node-web-audio-api": "^1.0.9"
   },
   "devDependencies": {
     "@score/cli": "workspace:*",
