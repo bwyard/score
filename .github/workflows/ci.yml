@@ -81,6 +81,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Install Electron binary
+        run: pnpm --filter @score/gui exec node node_modules/electron/install.js
+
       - name: Install Playwright Chromium + system deps
         run: pnpm --filter @score/gui exec playwright install --with-deps chromium
 
