@@ -59,6 +59,9 @@ importers:
       '@score/effects':
         specifier: workspace:*
         version: link:../effects
+      '@score/instruments':
+        specifier: workspace:*
+        version: link:../instruments
       '@score/mixer':
         specifier: workspace:*
         version: link:../mixer
