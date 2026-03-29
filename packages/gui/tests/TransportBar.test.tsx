@@ -84,6 +84,66 @@ describe('TransportBar — panic flash', () => {
 
 })
 
+// ── Bars counter ──────────────────────────────────────────────────────────────
+
+describe('TransportBar — bars counter', () => {
+  it('displays bar count from engine:state', () => {
+    const { container } = setup()
+    act(() => { emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 12 }) })
+    // <output> element renders the bar counter — query directly to avoid
+    // ambiguity with other numeric text in the toolbar
+    expect(container.querySelector('output')?.textContent).toBe('12')
+  })
+
+  it('bar counter starts at 0', () => {
+    const { container } = setup()
+    expect(container.querySelector('output')?.textContent).toBe('0')
+  })
+
+  it('bar counter updates on successive engine:state events', () => {
+    const { container } = setup()
+    act(() => { emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 4 }) })
+    expect(container.querySelector('output')?.textContent).toBe('4')
+    act(() => { emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 16 }) })
+    expect(container.querySelector('output')?.textContent).toBe('16')
+  })
+})
+
+// ── onHome callback ───────────────────────────────────────────────────────────
+
+describe('TransportBar — onHome', () => {
+  it('calls onHome when Score Studio home button clicked', async () => {
+    const onHome = vi.fn()
+    const user = userEvent.setup()
+    render(<TransportBar hardware="pc-only" onHome={onHome} />)
+    await user.click(screen.getByRole('button', { name: /score studio home/i }))
+    expect(onHome).toHaveBeenCalledOnce()
+  })
+})
+
+// ── onPlay / onStop override callbacks ───────────────────────────────────────
+
+describe('TransportBar — onPlay/onStop override props', () => {
+  it('calls onPlay instead of sending transport:play when onPlay prop provided', async () => {
+    const onPlay = vi.fn()
+    const user = userEvent.setup()
+    render(<TransportBar hardware="pc-only" onHome={vi.fn()} onPlay={onPlay} />)
+    await user.click(screen.getByRole('button', { name: /play/i }))
+    expect(onPlay).toHaveBeenCalledOnce()
+    expect(window.scoreBridge.send).not.toHaveBeenCalledWith('transport:play', undefined)
+  })
+
+  it('calls onStop instead of sending transport:stop when onStop prop provided', async () => {
+    const onStop = vi.fn()
+    const user = userEvent.setup()
+    render(<TransportBar hardware="pc-only" onHome={vi.fn()} onStop={onStop} />)
+    act(() => { emitBridgeEvent('engine:state', { playing: true, bpm: 128, bars: 0 }) })
+    await user.click(screen.getByRole('button', { name: /stop/i }))
+    expect(onStop).toHaveBeenCalledOnce()
+    expect(window.scoreBridge.send).not.toHaveBeenCalledWith('transport:stop', undefined)
+  })
+})
+
 // ── Accessibility ─────────────────────────────────────────────────────────────
 
 describe('TransportBar — accessibility', () => {
