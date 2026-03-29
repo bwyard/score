@@ -51,8 +51,9 @@ vi.mock('@monaco-editor/react', () => ({
           ScriptTarget:       { ESNext: 99 },
           ModuleKind:         { ESNext: 99 },
           typescriptDefaults: {
-            addExtraLib:        vi.fn(),
-            setCompilerOptions: vi.fn(),
+            addExtraLib:           vi.fn(),
+            setCompilerOptions:    vi.fn(),
+            setDiagnosticsOptions: vi.fn(),
           },
         },
       },
