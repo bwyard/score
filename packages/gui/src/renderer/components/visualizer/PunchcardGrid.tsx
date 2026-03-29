@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect, useState } from 'react'
+import { memo, useRef, useEffect, useState, useId, useCallback } from 'react'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -6,6 +6,11 @@ export type PunchcardTrack = {
   readonly name:    string
   readonly type:    string
   readonly pattern: ReadonlyArray<number | string>
+}
+
+type ActiveCell = {
+  readonly track: number
+  readonly step:  number
 }
 
 type Props = {
@@ -73,6 +78,7 @@ const drawGrid = (
   height:        number,
   flash:         boolean,
   selectedTrack: number | null | undefined,
+  activeCell:    ActiveCell | null,
 ): void => {
   // Background
   ctx.fillStyle = BG_COLOR
@@ -153,6 +159,28 @@ const drawGrid = (
 
   ctx.fillStyle = flash ? CURSOR_OVERLAY_FLASH : CURSOR_OVERLAY
   ctx.fillRect(cursorX, 0, cellWidth, totalHeight)
+
+  // Active keyboard cell — bright outline for keyboard focus navigation
+  if (activeCell !== null && activeCell.track < tracks.length) {
+    const activeCellRowY = activeCell.track * (ROW_HEIGHT + ROW_GAP)
+    const activeCellX    = LABEL_WIDTH + activeCell.step * (cellWidth + CELL_GAP)
+    ctx.strokeStyle      = '#ffffff'
+    ctx.lineWidth        = 1.5
+    ctx.strokeRect(activeCellX + 0.75, activeCellRowY + 0.75, cellWidth - 1.5, ROW_HEIGHT - 1.5)
+  }
+}
+
+// ── Visually-hidden style (screen reader only) ─────────────────────────────────
+
+const srOnlyStyle: React.CSSProperties = {
+  position: 'absolute',
+  width:    1,
+  height:   1,
+  padding:  0,
+  margin:   -1,
+  overflow: 'hidden',
+  clip:     'rect(0,0,0,0)',
+  border:   0,
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -160,6 +188,8 @@ const drawGrid = (
 /**
  * Canvas-based punchcard grid visualizer for Score Studio.
  * Renders one row per track, with step cells and a playhead cursor column.
+ * Fully keyboard-navigable: arrow keys move the active cell, Space/Enter
+ * toggle the selected step, Escape returns focus to the parent.
  *
  * @param tracks      - Array of tracks to display, each with a step pattern.
  * @param currentStep - Zero-based index of the currently playing step.
@@ -175,8 +205,10 @@ const drawGrid = (
  * ```
  */
 const PunchcardGridInner = ({ tracks, currentStep, stepCount, onStepClick, onLabelClick, selectedTrack }: Props) => {
-  const canvasRef         = useRef<HTMLCanvasElement>(null)
-  const [flash, setFlash] = useState(false)
+  const canvasRef                     = useRef<HTMLCanvasElement>(null)
+  const [flash,      setFlash]        = useState(false)
+  const [activeCell, setActiveCell]   = useState<ActiveCell | null>(null)
+  const descId                        = useId()
 
   // Beat flash: pulse on step 0
   useEffect(() => {
@@ -202,8 +234,8 @@ const PunchcardGridInner = ({ tracks, currentStep, stepCount, onStepClick, onLab
     if (ctx === null) return
 
     ctx.scale(dpr, dpr)
-    drawGrid(ctx, tracks, currentStep, stepCount, width, height, flash, selectedTrack)
-  }, [tracks, currentStep, stepCount, flash, selectedTrack])
+    drawGrid(ctx, tracks, currentStep, stepCount, width, height, flash, selectedTrack, activeCell)
+  }, [tracks, currentStep, stepCount, flash, selectedTrack, activeCell])
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>): void => {
     const canvas = canvasRef.current
@@ -234,23 +266,129 @@ const PunchcardGridInner = ({ tracks, currentStep, stepCount, onStepClick, onLab
     onStepClick(trackIndex, stepIndex)
   }
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLCanvasElement>): void => {
+    if (tracks.length === 0) return
+
+    // Initialise active cell on first keypress if none is set
+    const current: ActiveCell = activeCell ?? { track: 0, step: 0 }
+
+    switch (e.key) {
+      case 'ArrowRight': {
+        e.preventDefault()
+        const rightTrack    = tracks[current.track]
+        const rightTrackLen = rightTrack
+          ? (rightTrack.pattern.length > 0 ? rightTrack.pattern.length : stepCount)
+          : stepCount
+        setActiveCell({ track: current.track, step: (current.step + 1) % rightTrackLen })
+        break
+      }
+      case 'ArrowLeft': {
+        e.preventDefault()
+        const leftTrack    = tracks[current.track]
+        const leftTrackLen = leftTrack
+          ? (leftTrack.pattern.length > 0 ? leftTrack.pattern.length : stepCount)
+          : stepCount
+        setActiveCell({ track: current.track, step: (current.step - 1 + leftTrackLen) % leftTrackLen })
+        break
+      }
+      case 'ArrowDown': {
+        e.preventDefault()
+        const nextTrack     = Math.min(current.track + 1, tracks.length - 1)
+        const nextTrackData = tracks[nextTrack]
+        const nextLen       = nextTrackData
+          ? (nextTrackData.pattern.length > 0 ? nextTrackData.pattern.length : stepCount)
+          : stepCount
+        setActiveCell({ track: nextTrack, step: Math.min(current.step, nextLen - 1) })
+        break
+      }
+      case 'ArrowUp': {
+        e.preventDefault()
+        const prevTrack     = Math.max(current.track - 1, 0)
+        const prevTrackData = tracks[prevTrack]
+        const prevLen       = prevTrackData
+          ? (prevTrackData.pattern.length > 0 ? prevTrackData.pattern.length : stepCount)
+          : stepCount
+        setActiveCell({ track: prevTrack, step: Math.min(current.step, prevLen - 1) })
+        break
+      }
+      case 'Home': {
+        e.preventDefault()
+        setActiveCell({ track: current.track, step: 0 })
+        break
+      }
+      case 'End': {
+        e.preventDefault()
+        const endTrack    = tracks[current.track]
+        const endTrackLen = endTrack
+          ? (endTrack.pattern.length > 0 ? endTrack.pattern.length : stepCount)
+          : stepCount
+        setActiveCell({ track: current.track, step: endTrackLen - 1 })
+        break
+      }
+      case ' ':
+      case 'Enter': {
+        e.preventDefault()
+        if (onStepClick) {
+          onStepClick(current.track, current.step)
+        }
+        break
+      }
+      case 'Escape': {
+        setActiveCell(null)
+        canvasRef.current?.blur()
+        break
+      }
+      default:
+        break
+    }
+  }, [activeCell, tracks, stepCount, onStepClick])
+
+  const handleFocus = useCallback((): void => {
+    if (activeCell === null && tracks.length > 0) {
+      setActiveCell({ track: 0, step: 0 })
+    }
+  }, [activeCell, tracks.length])
+
+  const handleBlur = useCallback((): void => {
+    setActiveCell(null)
+  }, [])
+
   const canvasHeight =
     tracks.length === 0
       ? 60
       : tracks.length * (ROW_HEIGHT + ROW_GAP) - ROW_GAP
 
+  const ariaLabel =
+    tracks.length === 0
+      ? 'Punchcard sequencer grid, empty'
+      : `Punchcard sequencer grid, ${String(tracks.length)} tracks, ${String(stepCount)} steps`
+
   return (
-    <canvas
-      ref={canvasRef}
-      onClick={onStepClick ?? onLabelClick ? handleClick : undefined}
-      style={{
-        width:          '100%',
-        height:         `${String(canvasHeight)}px`,
-        display:        'block',
-        imageRendering: 'pixelated',
-        cursor:         onStepClick ? 'pointer' : 'default',
-      }}
-    />
+    <div style={{ display: 'contents' }}>
+      <canvas
+        ref={canvasRef}
+        role="application"
+        aria-label={ariaLabel}
+        aria-describedby={descId}
+        tabIndex={0}
+        onClick={onStepClick ?? onLabelClick ? handleClick : undefined}
+        onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        style={{
+          width:          '100%',
+          height:         `${String(canvasHeight)}px`,
+          display:        'block',
+          imageRendering: 'pixelated',
+          cursor:         onStepClick ? 'pointer' : 'default',
+        }}
+      />
+      <span id={descId} style={srOnlyStyle}>
+        Use arrow keys to navigate steps. Space or Enter to toggle a step.
+        Home moves to the first step, End to the last.
+        Escape returns focus to the main content.
+      </span>
+    </div>
   )
 }
 
