@@ -8,6 +8,7 @@ export default defineConfig({
     environment:     'jsdom',
     passWithNoTests: true,
     setupFiles:      ['./tests/setup.ts'],
+    exclude:         ['**/node_modules/**', '**/tests/e2e/**'],
     coverage: {
       provider:  'v8',
       // Exclude non-application files and phase-placeholder directories.

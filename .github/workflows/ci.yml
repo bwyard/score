@@ -37,3 +37,36 @@ jobs:
 
       - name: Test with coverage
         run: pnpm test:coverage
+
+  e2e:
+    name: E2E — Playwright Electron Smoke
+    runs-on: ubuntu-latest
+    needs: ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Install Playwright Chromium + system deps
+        run: pnpm --filter @score/gui exec playwright install --with-deps chromium
+
+      - name: Build Electron app
+        run: pnpm --filter @score/gui build
+
+      - name: Start Xvfb (headless display for Electron)
+        run: Xvfb :99 -screen 0 1280x720x24 &
+
+      - name: Run e2e smoke tests
+        run: pnpm --filter @score/gui test:e2e
+        env:
+          DISPLAY: ':99.0'
