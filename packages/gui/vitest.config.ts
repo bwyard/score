@@ -1,8 +1,17 @@
 import { defineConfig } from 'vitest/config'
 import react            from '@vitejs/plugin-react'
+import { resolve }      from 'node:path'
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: [
+      // Prevent monaco-editor from initializing its TypeScript language service
+      // in jsdom — ts.ScriptTarget.ESNext is undefined in the jsdom environment.
+      // @monaco-editor/react is mocked per-test-file via vi.mock() factories.
+      { find: 'monaco-editor', replacement: resolve(__dirname, 'tests/__mocks__/monaco-editor.ts') },
+    ],
+  },
   test: {
     globals:         true,
     environment:     'jsdom',
