@@ -16,9 +16,10 @@ type Props = {
 /**
  * Draw beat-reactive glow and step scrub bar onto the canvas.
  *
- * Replaces the oscilloscope trace with two visual elements:
+ * Draws three layered visual elements:
  *  1. **Beat-reactive background glow** — RMS-derived radial gradient.
- *  2. **Step scrub bar** — 2px bar at the top sweeping left→right.
+ *  2. **Waveform trace** — semi-transparent oscilloscope line centered vertically.
+ *  3. **Step scrub bar** — 2px bar at the top sweeping left→right.
  */
 const drawBeatViz = (
   ctx:         CanvasRenderingContext2D,
@@ -49,6 +50,28 @@ const drawBeatViz = (
     ctx.fillRect(0, 0, width, height)
   }
 
+  // Waveform trace — oscilloscope-style time-domain signal centered vertically.
+  // Drawn very subtly so the code editor text remains fully legible.
+  if (waveform.length > 1) {
+    const centerY  = height / 2
+    const stepSize = width / waveform.length
+
+    ctx.beginPath()
+    ctx.strokeStyle = 'rgba(74, 143, 255, 0.12)'
+    ctx.lineWidth   = 1.5
+
+    for (let i = 0; i < waveform.length; i++) {
+      const x = i * stepSize
+      const y = centerY - (waveform[i] ?? 0) * (height * 0.4)
+      if (i === 0) {
+        ctx.moveTo(x, y)
+      } else {
+        ctx.lineTo(x, y)
+      }
+    }
+    ctx.stroke()
+  }
+
   // Step scrub bar — 2px at top, sweeps left→right over the current bar
   if (stepCount > 0) {
     const progress = currentStep / stepCount
@@ -62,9 +85,10 @@ const drawBeatViz = (
 /**
  * Beat-reactive waveform overlay drawn behind the code editor.
  *
- * Shows an RMS-derived radial glow that pulses with the audio energy and a
- * thin step scrub bar at the top that sweeps left→right through each bar —
- * the same aesthetic as Strudl and TidalCycles editors.
+ * Shows an RMS-derived radial glow, a semi-transparent oscilloscope waveform
+ * trace centred vertically behind the code, and a thin step scrub bar at the
+ * top that sweeps left→right through each bar — the same aesthetic as Strudl
+ * and TidalCycles editors.
  *
  * Position this absolutely behind the textarea using `position: relative` on
  * the editor pane container with this canvas positioned `absolute, inset: 0`.
