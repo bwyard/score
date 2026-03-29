@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
-    "@vitest/coverage-v8": "^2.0.0",
+    "@vitest/coverage-v8": "^4.1.2",
     "node-web-audio-api": "^1.0.8",
     "vitest": "^2.0.0"
   }
