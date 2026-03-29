@@ -58,15 +58,19 @@ describe('createDisplayTick', () => {
     expect(calls).toHaveLength(0)
   })
 
-  it('sends display:tick when dirty and interval fires', () => {
+  it('sends display:tick and engine:tick when dirty and interval fires', () => {
     const { send, calls } = makeSend()
     const cache = makeCache({ step: 3, stepCount: 16, bar: 0, beat: 3, bpm: 140, dirty: true })
     const displayTick = createDisplayTick(send, cache)
     displayTick.start()
     vi.advanceTimersByTime(16)
-    expect(calls).toHaveLength(1)
+    // Both channels sent per tick — identical payloads
+    expect(calls).toHaveLength(2)
+    const expectedPayload = { step: 3, stepCount: 16, bar: 0, beat: 3, bpm: 140 }
     expect(calls[0]?.channel).toBe('display:tick')
-    expect(calls[0]?.payload).toEqual({ step: 3, stepCount: 16, bar: 0, beat: 3, bpm: 140 })
+    expect(calls[0]?.payload).toEqual(expectedPayload)
+    expect(calls[1]?.channel).toBe('engine:tick')
+    expect(calls[1]?.payload).toEqual(expectedPayload)
   })
 
   it('resets dirty to false after sending', () => {
@@ -83,9 +87,9 @@ describe('createDisplayTick', () => {
     const cache = makeCache({ dirty: true })
     const displayTick = createDisplayTick(send, cache)
     displayTick.start()
-    vi.advanceTimersByTime(16)   // fires — sends once, clears dirty
+    vi.advanceTimersByTime(16)   // fires — sends display:tick + engine:tick, clears dirty
     vi.advanceTimersByTime(100)  // further ticks — dirty is false, no more sends
-    expect(calls).toHaveLength(1)
+    expect(calls).toHaveLength(2)
   })
 
   it('sends on each interval where dirty is true', () => {
@@ -95,12 +99,12 @@ describe('createDisplayTick', () => {
     displayTick.start()
 
     cache.dirty = true
-    vi.advanceTimersByTime(16)   // tick 1 — dirty, sends
-    expect(calls).toHaveLength(1)
+    vi.advanceTimersByTime(16)   // tick 1 — dirty, sends display:tick + engine:tick
+    expect(calls).toHaveLength(2)
 
     cache.dirty = true
-    vi.advanceTimersByTime(16)   // tick 2 — dirty again, sends
-    expect(calls).toHaveLength(2)
+    vi.advanceTimersByTime(16)   // tick 2 — dirty again, sends display:tick + engine:tick
+    expect(calls).toHaveLength(4)
   })
 
   it('always sends latest cache values at fire time', () => {
@@ -122,7 +126,7 @@ describe('createDisplayTick', () => {
     displayTick.start()
     displayTick.start()  // second call is no-op
     vi.advanceTimersByTime(16)
-    expect(calls).toHaveLength(1)
+    expect(calls).toHaveLength(2)  // display:tick + engine:tick, not 4
   })
 
   it('stop() halts the interval', () => {
@@ -155,6 +159,6 @@ describe('createDisplayTick', () => {
     displayTick.start()
     cache.dirty = true
     vi.advanceTimersByTime(16)
-    expect(calls).toHaveLength(1)
+    expect(calls).toHaveLength(2)  // display:tick + engine:tick
   })
 })

@@ -7,7 +7,7 @@
 //
 // No audio, no IPC — pure visual rendering. Theme selection is via the `theme` prop.
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, memo } from 'react'
 import { getTheme } from '@score/visuals'
 import type { AudioVisualState, DrawLayer } from '@score/visuals'
 
@@ -214,7 +214,7 @@ const drawLayer = (
  * <PerformanceCanvas state={state} theme="dark-pulse" editorVisible={true} />
  * ```
  */
-export const PerformanceCanvas = ({
+const PerformanceCanvasInner = ({
   state,
   theme,
   editorVisible: _editorVisible,
@@ -277,3 +277,5 @@ export const PerformanceCanvas = ({
     </div>
   )
 }
+
+export const PerformanceCanvas = memo(PerformanceCanvasInner)
