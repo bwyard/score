@@ -131,6 +131,52 @@ export const getActiveLines = (
 }
 
 /**
+ * Returns the 1-based Monaco line range for the full instrument block at `trackIndex`.
+ *
+ * A block starts at the `const <name> = <Factory>(…)` declaration line and
+ * extends through any contiguous chain lines (`.method(…)` continuations).
+ * It ends just before the first blank line or the first line that starts a new
+ * top-level statement (`const`, `export`, `import`, `Song`).
+ *
+ * @param code       - The raw code string from the editor.
+ * @param trackIndex - Zero-based index into the tracks array.
+ * @param tracks     - Track descriptors from the last eval.
+ * @returns `{ startLine, endLine }` (both 1-based, Monaco convention), or
+ *          `null` if the track has no corresponding declaration line.
+ *
+ * @example
+ * ```ts
+ * getBlockBounds(code, 0, tracks) // → { startLine: 4, endLine: 7 }
+ * ```
+ */
+export const getBlockBounds = (
+  code:       string,
+  trackIndex: number,
+  tracks:     ReadonlyArray<TrackInfo>,
+): { readonly startLine: number; readonly endLine: number } | null => {
+  const trackLineList = getTrackLines(code, tracks)
+  const entry = trackLineList.find(t => t.trackIndex === trackIndex)
+  if (!entry) return null
+
+  const lines    = code.split('\n')
+  const startIdx = entry.lineIndex   // 0-based
+
+  // NEW_STATEMENT_RE — recognises the start of a top-level declaration that is
+  // not a chain continuation.  Blank lines also terminate the block.
+  const NEW_STATEMENT_RE = /^\s*(const|export|import|Song)\b/
+
+  let endIdx = startIdx
+  for (let i = startIdx + 1; i < lines.length; i++) {
+    const line = lines[i]
+    if (line === undefined || line.trim() === '') break       // blank line
+    if (NEW_STATEMENT_RE.test(line)) break                   // new statement
+    endIdx = i
+  }
+
+  return { startLine: startIdx + 1, endLine: endIdx + 1 }    // 1-based
+}
+
+/**
  * Returns step badge data for each instrument line — used to render `STEP/TOTAL`
  * pills in the Monaco editor via `after` inline decorations (t219).
  *

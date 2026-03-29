@@ -5,6 +5,7 @@ import {
   getActiveLines,
   getTrackLines,
   getStepBadges,
+  getBlockBounds,
 } from '../src/renderer/components/shared/CodeHighlight.js'
 
 // ── getActiveLines — Track() style (legacy) ───────────────────────────────────
@@ -297,5 +298,89 @@ describe('getTrackLines — PR #74 melodic instruments', () => {
     expect(result).toHaveLength(2)
     expect(result[0]).toEqual({ lineIndex: 2, trackIndex: 0 })
     expect(result[1]).toEqual({ lineIndex: 3, trackIndex: 1 })
+  })
+})
+
+// ── getBlockBounds (t330) ──────────────────────────────────────────────────────
+
+// Single-line block: `const kick = Kick808(4)` — ends at a blank line
+const SINGLE_LINE_CODE = `import { Song, Kick808, Snare } from '@score/dsl'
+
+const kick  = Kick808(4).volume(0.8)
+const snare = Snare(2).volume(0.55)
+
+export default Song({ bpm: 128, tracks: [kick, snare] })`
+// kick  → line index 2 (0-based) → startLine 3 (1-based), endLine 3
+// snare → line index 3            → startLine 4 (1-based), endLine 4
+
+// Multi-line block: chain continues on next lines
+const MULTI_LINE_CODE = `import { Song, Bass303, Kick808 } from '@score/dsl'
+
+const bass = Bass303('A2')
+  .cutoff(600)
+  .resonance(0.4)
+  .volume(0.6)
+const kick = Kick808(4).volume(0.8)
+
+export default Song({ bpm: 128, tracks: [bass, kick] })`
+// bass → line index 2 (0-based) through line index 5 → startLine 3, endLine 6
+// kick → line index 6 (0-based) → startLine 7, endLine 7
+
+describe('getBlockBounds (t330)', () => {
+  it('returns null when tracks is empty', () => {
+    expect(getBlockBounds(SINGLE_LINE_CODE, 0, [])).toBeNull()
+  })
+
+  it('returns null when track index has no matching line', () => {
+    const tracks = [{ type: 'kick', pattern: [1, 0] }]
+    expect(getBlockBounds(SINGLE_LINE_CODE, 1, tracks)).toBeNull()
+  })
+
+  it('returns single-line bounds for a one-liner instrument block', () => {
+    const tracks = [
+      { type: 'kick',  pattern: [1, 0] },
+      { type: 'snare', pattern: [0, 1] },
+    ]
+    const result = getBlockBounds(SINGLE_LINE_CODE, 0, tracks)
+    expect(result).toEqual({ startLine: 3, endLine: 3 })
+  })
+
+  it('second single-line instrument is its own single-line block', () => {
+    const tracks = [
+      { type: 'kick',  pattern: [1, 0] },
+      { type: 'snare', pattern: [0, 1] },
+    ]
+    const result = getBlockBounds(SINGLE_LINE_CODE, 1, tracks)
+    expect(result).toEqual({ startLine: 4, endLine: 4 })
+  })
+
+  it('returns multi-line bounds for a chained block', () => {
+    const tracks = [
+      { type: 'bass303', pattern: ['A2', 0] },
+      { type: 'kick',    pattern: [1, 0] },
+    ]
+    const result = getBlockBounds(MULTI_LINE_CODE, 0, tracks)
+    // Bass block: const bass = Bass303('A2') through .volume(0.6)
+    expect(result).toEqual({ startLine: 3, endLine: 6 })
+  })
+
+  it('returns single-line bounds for a block following a multi-line block', () => {
+    const tracks = [
+      { type: 'bass303', pattern: ['A2', 0] },
+      { type: 'kick',    pattern: [1, 0] },
+    ]
+    const result = getBlockBounds(MULTI_LINE_CODE, 1, tracks)
+    expect(result).toEqual({ startLine: 7, endLine: 7 })
+  })
+
+  it('terminates block on new const statement (no blank line between)', () => {
+    // SINGLE_LINE_CODE has no blank between kick and snare
+    const tracks = [
+      { type: 'kick',  pattern: [1, 0] },
+      { type: 'snare', pattern: [0, 1] },
+    ]
+    const kickBounds = getBlockBounds(SINGLE_LINE_CODE, 0, tracks)
+    // kick is line 3 — must NOT extend to line 4 (snare's const line)
+    expect(kickBounds?.endLine).toBe(3)
   })
 })

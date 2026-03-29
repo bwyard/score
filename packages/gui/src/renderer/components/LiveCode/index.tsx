@@ -9,9 +9,9 @@ import { MasterLevel }                      from '../shared/MasterLevel.js'
 import { MixerStrip }                       from '../shared/MixerStrip.js'
 import { DraggablePanel }                   from '../shared/DraggablePanel.js'
 import { CodeWaveform }                     from '../shared/CodeWaveform.js'
-import { getActiveLines, getStepBadges }    from '../shared/CodeHighlight.js'
-import { CodeEditorPanel }                  from '../shared/CodeEditorPanel.js'
-import type { EditorDecoration, StepBadge } from '../shared/CodeEditorPanel.js'
+import { getActiveLines, getStepBadges, getBlockBounds, getTrackLines } from '../shared/CodeHighlight.js'
+import { CodeEditorPanel }                                              from '../shared/CodeEditorPanel.js'
+import type { EditorDecoration, StepBadge, BlockHighlight }            from '../shared/CodeEditorPanel.js'
 import { ReferencePanel }                   from '../shared/ReferencePanel.js'
 import { ConsoleLogPanel }                  from '../shared/ConsoleLogPanel.js'
 import type { PunchcardTrack }              from '../visualizer/PunchcardGrid.js'
@@ -194,6 +194,22 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       ? getStepBadges(code, tracks, currentStep, currentStepCount)
       : []
   , [engineState.playing, code, tracks, currentStep, currentStepCount])
+
+  // t330 — block highlight flash: full instrument block for each track that hits this step
+  const blockHighlights = useMemo((): ReadonlyArray<BlockHighlight> => {
+    if (!engineState.playing) return []
+    return getTrackLines(code, tracks)
+      .flatMap(({ trackIndex }) => {
+        const track = tracks[trackIndex]
+        if (!track) return []
+        const len = track.pattern.length
+        if (len === 0) return []
+        const val = track.pattern[currentStep % len]
+        if (!val) return []
+        const bounds = getBlockBounds(code, trackIndex, tracks)
+        return bounds ? [bounds] : []
+      })
+  }, [engineState.playing, code, tracks, currentStep])
 
   const [panels, setPanels] = useState<PanelVisibility>({
     punchcard:  true,
@@ -600,6 +616,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                 decorations={editorDecorations}
                 stepBadges={stepBadges}
                 importsVisible={importsVisible}
+                blockHighlights={blockHighlights}
               />
             </div>
           </div>
