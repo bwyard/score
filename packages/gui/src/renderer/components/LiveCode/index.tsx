@@ -703,7 +703,12 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               panelId="scope"
               onMoved={onPanelMoved}
             >
-              <Scope waveform={waveform} playing={engineState.playing} />
+              <Scope
+                waveform={waveform}
+                playing={engineState.playing}
+                currentStep={currentStep}
+                stepCount={currentStepCount}
+              />
             </DraggablePanel>
           )}
 

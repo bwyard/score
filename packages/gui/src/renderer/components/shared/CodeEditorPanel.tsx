@@ -10,6 +10,7 @@ import { useRef, useEffect, useCallback } from 'react'
 // @monaco-editor/react's Monaco type resolves at runtime, not statically.
 import MonacoEditor, { type OnMount, type Monaco }  from '@monaco-editor/react'
 import type { editor as MonacoEditorNS }            from 'monaco-editor'
+import { SCORE_DSL_TYPES }                          from '../../types/score-dsl-types.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -336,9 +337,24 @@ export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadg
 
     monaco.editor.setTheme('score-dark')
 
-    // Set the model language to score-dsl
-    const model = editor.getModel()
-    if (model) monaco.editor.setModelLanguage(model, 'score-dsl')
+    // ── @score/dsl type stub — loads Score DSL ambient declarations into the
+    // TypeScript language service so unknown symbols get red underlines.
+    // Full IntelliSense (autocomplete + hover docs) is Phase 13v.
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      SCORE_DSL_TYPES,
+      'ts:@score/dsl/index.d.ts',
+    )
+
+    // Permissive TS config — score song files are plain ESM, not strict TS projects.
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      target:                  monaco.languages.typescript.ScriptTarget.ESNext,
+      module:                  monaco.languages.typescript.ModuleKind.ESNext,
+      allowNonTsExtensions:    true,
+      noEmit:                  true,
+      strict:                  false,
+      noImplicitAny:           false,
+      skipLibCheck:            true,
+    })
 
     // Ctrl+Enter / Cmd+Enter → onEval
     editor.addCommand(
@@ -365,7 +381,7 @@ export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadg
   return (
     <MonacoEditor
       height="100%"
-      language="score-dsl"
+      language="typescript"
       theme="score-dark"
       value={value}
       onChange={handleChange}
