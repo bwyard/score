@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, memo } from 'react'
 /* eslint-disable
    @typescript-eslint/no-unsafe-assignment,
    @typescript-eslint/no-unsafe-call,
@@ -235,7 +235,7 @@ const injectDecorationCss = (): void => {
  * />
  * ```
  */
-export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true, blockHighlights }: Props) => {
+const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true, blockHighlights }: Props) => {
   const editorRef            = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
   const decorationsRef       = useRef<string[]>([])
   const stepBadgesRef        = useRef<string[]>([])
@@ -414,3 +414,5 @@ export const CodeEditorPanel = ({ value, onChange, onEval, decorations, stepBadg
     />
   )
 }
+
+export const CodeEditorPanel = memo(CodeEditorPanelInner)

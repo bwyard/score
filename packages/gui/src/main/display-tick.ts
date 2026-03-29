@@ -3,7 +3,13 @@
 // Decouples the audio engine tick rate from the renderer display rate.
 // The audio engine fires onStep at the full sequencer rate (up to ~80/sec at 300 BPM,
 // higher still with 32-step patterns). createDisplayTick sets up a setInterval at ~60fps
-// (16ms) that sends the latest cached step state to the renderer via 'display:tick' IPC.
+// (16ms) that sends the latest cached step state to the renderer via both IPC channels:
+//
+//   - 'display:tick' — used by LiveCode + PerformanceMode visualizers
+//   - 'engine:tick'  — used by ConsoleLogPanel (bar boundary detection)
+//
+// Both channels carry identical payloads and fire from the same throttled loop.
+// Sending both ensures no component is forced to choose between them.
 //
 // Isolation note (t335): this module is intentionally self-contained. It has no deps on
 // the rest of main/index.ts beyond the send function and TickCache type. When the
@@ -87,14 +93,16 @@ export const createDisplayTick = (
     handleRef.value = setInterval(() => {
       if (!cache.dirty) return
       cache.dirty = false
-      // HARDWARE BOUNDARY — IPC send to renderer
-      send('display:tick', {
+      // HARDWARE BOUNDARY — IPC send to renderer (both channels, same throttled payload)
+      const payload = {
         step:      cache.step,
         stepCount: cache.stepCount,
         bar:       cache.bar,
         beat:      cache.beat,
         bpm:       cache.bpm,
-      })
+      }
+      send('display:tick', payload)
+      send('engine:tick',  payload)
     }, DISPLAY_TICK_MS)
   }
 
