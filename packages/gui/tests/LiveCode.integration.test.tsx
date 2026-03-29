@@ -47,7 +47,14 @@ vi.mock('@monaco-editor/react', () => ({
         getLanguages:             vi.fn(() => []),
         register:                 vi.fn(),
         setMonarchTokensProvider: vi.fn(),
-        typescript: { typescriptDefaults: { addExtraLib: vi.fn() } },
+        typescript: {
+          ScriptTarget:       { ESNext: 99 },
+          ModuleKind:         { ESNext: 99 },
+          typescriptDefaults: {
+            addExtraLib:        vi.fn(),
+            setCompilerOptions: vi.fn(),
+          },
+        },
       },
     }
     // Call onMount synchronously so addCommand/focus wiring runs
