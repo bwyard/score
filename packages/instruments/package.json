@@ -1,46 +1,31 @@
 {
-  "name": "@score/cli",
+  "name": "@score/instruments",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": {
-    "score": "./dist/index.js"
-  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./engine": {
-      "import": "./dist/engine.js",
-      "types": "./dist/engine.d.ts"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src",
+    "lint": "eslint src tests",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@score/components": "workspace:*",
     "@score/core": "workspace:*",
-    "@score/dsl": "workspace:*",
-    "@score/effects": "workspace:*",
-    "@score/instruments": "workspace:*",
-    "@score/mixer": "workspace:*",
-    "@score/sequencer": "workspace:*",
-    "zod": "^3.23.8"
+    "@score/components": "workspace:*",
+    "@score/effects": "workspace:*"
   },
   "devDependencies": {
-    "@types/acorn": "^4.0.6",
     "@types/node": "^25.5.0",
     "@vitest/coverage-v8": "^2.0.0",
-    "acorn": "^8.14.0",
-    "acorn-walk": "^8.3.4",
     "vitest": "^2.0.0"
   }
 }

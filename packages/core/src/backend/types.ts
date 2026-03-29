@@ -247,5 +247,7 @@ export type BackendProvider = {
     sampleRate?: number
     latencyHint?: 'interactive' | 'balanced' | 'playback'
     offline?: { length: number; numberOfChannels?: number }
+    /** Song seed — propagated to noise generators so all randomness is deterministic. */
+    seed?: number
   }) => BackendContext
 }

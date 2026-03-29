@@ -49,41 +49,73 @@ const getRaw = (node: BackendNode): WebAudioNode =>
 const getRawBuffer = (buf: BackendBuffer): AudioBuffer =>
   (buf as unknown as WithBuffer)[BUFFER]
 
-// --- Noise buffer generation (pure functions) ---
+// --- Mulberry32 PRNG — inlined from @prime/prime-random ---
+// Replace with `import { prngNext } from '@prime/prime-random'` when that package ships to npm.
+// Same algorithm as @score/sequencer's inline — all seeded randomness in Score uses Mulberry32.
+//
+// prngNext(seed) → [value in [0, 1), nextSeed]
+// Period: 2^32 — sufficient for noise buffers (2s × 44100 = 88200 samples << 4 billion).
 
-const fillWhiteNoise = (data: Float32Array): void => {
-  for (let i = 0; i < data.length; i++) {
-    data[i] = Math.random() * 2 - 1
-  }
+const prngNext = (seed: number): [number, number] => {
+  const s  = (seed + 0x6D2B79F5) | 0
+  const t0 = Math.imul(s ^ (s >>> 15), s | 1)
+  const t1 = t0 ^ t0 + Math.imul(t0 ^ (t0 >>> 7), t0 | 61)
+  return [((t1 ^ (t1 >>> 14)) >>> 0) / 4294967296, s]
 }
 
-const fillPinkNoise = (data: Float32Array): void => {
+// --- Noise buffer generation ---
+// HARDWARE BOUNDARY: fills a Web Audio AudioBuffer in-place — typed-array mutation is
+// required at this layer. IIR filter accumulators (b0–b6, lastOut) are DSP state that
+// must persist across samples within a single buffer fill; they cannot be made purely
+// functional without O(n) allocation per sample (unacceptable for audio).
+//
+// All three fillers accept a seed and return the next seed, eliminating Math.random().
+
+const fillWhiteNoise = (data: Float32Array, seed: number): number => {
+  // HARDWARE BOUNDARY: indexed typed-array write in tight DSP loop
+  for (let i = 0; i < data.length; i++) {
+    const [value, nextSeed] = prngNext(seed)
+    seed = nextSeed
+    data[i] = value * 2 - 1
+  }
+  return seed
+}
+
+const fillPinkNoise = (data: Float32Array, seed: number): number => {
+  // HARDWARE BOUNDARY: IIR filter accumulators + indexed typed-array write
   let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0
   for (let i = 0; i < data.length; i++) {
-    const white = Math.random() * 2 - 1
+    const [raw, nextSeed] = prngNext(seed)
+    seed = nextSeed
+    const white = raw * 2 - 1
     b0 = 0.99886 * b0 + white * 0.0555179
     b1 = 0.99332 * b1 + white * 0.0750759
-    b2 = 0.969 * b2 + white * 0.153852
-    b3 = 0.8665 * b3 + white * 0.3104856
-    b4 = 0.55 * b4 + white * 0.5329522
+    b2 = 0.969   * b2 + white * 0.153852
+    b3 = 0.8665  * b3 + white * 0.3104856
+    b4 = 0.55    * b4 + white * 0.5329522
     b5 = -0.7616 * b5 - white * 0.016898
     data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11
     b6 = white * 0.115926
   }
+  return seed
 }
 
-const fillBrownNoise = (data: Float32Array): void => {
+const fillBrownNoise = (data: Float32Array, seed: number): number => {
+  // HARDWARE BOUNDARY: IIR integrator state + indexed typed-array write
   let lastOut = 0
   for (let i = 0; i < data.length; i++) {
-    const white = Math.random() * 2 - 1
+    const [raw, nextSeed] = prngNext(seed)
+    seed = nextSeed
+    const white = raw * 2 - 1
     lastOut = (lastOut + white * 0.02) / 1.02
     data[i] = lastOut * 3.5
   }
+  return seed
 }
 
-const noiseFiller: Readonly<Record<NoiseType, (d: Float32Array) => void>> = {
+const noiseFiller: Readonly<Record<NoiseType, (d: Float32Array, seed: number) => number>> = {
   white: fillWhiteNoise,
-  pink: fillPinkNoise,
+  pink:  fillPinkNoise,
   brown: fillBrownNoise,
 }
 
@@ -105,8 +137,12 @@ const wrapNode = (raw: WebAudioNode): BackendNode & WithRaw => ({
 
 // --- Backend context factory ---
 
-const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
+const createBackendContext = (ctx: BaseAudioContext, seed = 0): BackendContext => {
   const destination = wrapNode(ctx.destination as unknown as WebAudioNode)
+  // HARDWARE BOUNDARY: mutable PRNG state — noise buffers are audio hardware output;
+  // seed advances monotonically per createNoise call so each buffer is distinct but
+  // the full sequence is reproducible from the song seed.
+  const prngState = { seed }
 
   return {
     get currentTime() { return ctx.currentTime },
@@ -200,7 +236,8 @@ const createBackendContext = (ctx: BaseAudioContext): BackendContext => {
       const noiseType = props?.type ?? 'white'
       const bufferSize = ctx.sampleRate * 2
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-      noiseFiller[noiseType](buffer.getChannelData(0))
+      // Advance prngState.seed so successive createNoise calls produce distinct buffers
+      prngState.seed = noiseFiller[noiseType](buffer.getChannelData(0), prngState.seed)
 
       const outputGain: WebGainNode = ctx.createGain()
       const outputBase = wrapNode(outputGain as unknown as WebAudioNode)
@@ -514,6 +551,7 @@ export const webAudioBackend: BackendProvider = {
   name: 'web-audio',
   createContext: (options) => {
     try {
+      const seed = options?.seed ?? 0
       if (options?.offline) {
         const sampleRate = options.sampleRate ?? 44100
         const ctx = new OfflineAudioContext(
@@ -521,9 +559,9 @@ export const webAudioBackend: BackendProvider = {
           options.offline.length,
           sampleRate,
         )
-        return createBackendContext(ctx)
+        return createBackendContext(ctx, seed)
       }
-      return createBackendContext(new AudioContext(options))
+      return createBackendContext(new AudioContext(options), seed)
     } catch (err) {
       throw ScoreError('Failed to create AudioContext', {
         fix: 'Ensure node-web-audio-api is installed: pnpm add node-web-audio-api',

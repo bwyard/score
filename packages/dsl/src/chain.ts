@@ -407,12 +407,13 @@ const appendMod = (desc: PartDescriptor, param: string, source: ModulationDescri
  * ```
  *
  * @see {@link defineInstrument} — define a reusable custom instrument factory
+ * @see {@link extendPart} — add custom chain methods that survive through all chain calls
  */
 export const createPart = (
   init: Partial<PartDescriptor> & { readonly instrumentType: string },
-  // Sub-type makers (makeBass303, makeFMSynth, makeSubSynth) pass themselves here so
-  // their extra methods survive any base ChainablePart call. Default: identity.
-  wrap: (p: ChainablePart) => ChainablePart = (p) => p,
+  // Sub-type makers (makeBass303, makeFMSynth, makeSubSynth) and extendPart() pass themselves
+  // here so their extra methods survive any base chain call. Default: identity.
+  buildExtensions: (p: ChainablePart) => ChainablePart = (p) => p,
 ): ChainablePart => {
   const desc: PartDescriptor = {
     _type: 'ChainablePart',
@@ -427,9 +428,9 @@ export const createPart = (
     dispose: undefined as unknown as PartDescriptor['dispose'],
   }
 
-  // Shorthand: build a new part from updated descriptor and re-apply wrap.
+  // Shorthand: build a new part from updated descriptor and re-apply buildExtensions.
   const cp = (next: Partial<PartDescriptor> & { readonly instrumentType: string }): ChainablePart =>
-    wrap(createPart(next, wrap))
+    buildExtensions(createPart(next, buildExtensions))
 
   const part: ChainablePart = {
     ...desc,
@@ -627,3 +628,48 @@ export const defineInstrument = <Args extends unknown[], T extends ChainablePart
   _typeName: string,
   factory: (...args: Args) => T,
 ): ((...args: Args) => T) => factory
+
+// ── extendPart ────────────────────────────────────────────────────────────────
+
+/**
+ * Create a part factory with custom chain methods that survive through all base chain calls.
+ *
+ * `extendPart` is the public API for the extension pattern used internally by sub-type
+ * factories (`SubSynthPart`, `FMSynthPart`, `Bass303Part`). After every base chain method
+ * call (`.volume()`, `.reverb()`, etc.) the extensions are re-attached via spread — the
+ * custom methods are always present on the result.
+ *
+ * **Extension contract:**
+ * - `buildExtensions` receives the *current* `ChainablePart` and returns plain methods.
+ * - Each call to a base chain method produces a new part and re-calls `buildExtensions`.
+ * - Extensions compose via spread — no `Object.assign`, no mutation.
+ *
+ * @param instrumentType - The instrument type identifier (e.g. `'kick'`, `'reese-bass'`)
+ * @param buildExtensions - Called with the current part; returns extra methods to spread
+ * @returns A no-arg factory function returning `ChainablePart & Ext`
+ *
+ * @example
+ * ```ts
+ * // Add convenience aliases to Kick
+ * const MyKick = extendPart('kick', (part) => ({
+ *   quiet: () => part.volume(0.2),
+ *   loud:  () => part.volume(0.95),
+ * }))
+ *
+ * const k = MyKick().quiet().swing(0.1)
+ * k.loud   // still present after .swing() ✓
+ * ```
+ *
+ * @see {@link defineInstrument} — define a reusable custom instrument factory
+ * @see {@link createPart} — low-level factory used internally
+ */
+export const extendPart = <Ext extends Record<string, unknown>>(
+  instrumentType: string,
+  buildExtensions: (part: ChainablePart) => Ext,
+): (() => ChainablePart & Ext) => {
+  const attachExtensions = (base: ChainablePart): ChainablePart & Ext => ({
+    ...base,
+    ...buildExtensions(base),
+  })
+  return () => attachExtensions(createPart({ instrumentType }, attachExtensions))
+}

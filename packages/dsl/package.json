@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@score/core": "workspace:*",
+    "@score/instruments": "workspace:*",
     "@score/math": "workspace:*",
     "@score/pattern": "workspace:*"
   },

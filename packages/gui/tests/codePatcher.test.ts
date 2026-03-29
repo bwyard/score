@@ -5,6 +5,11 @@ import {
   patchTrackVolume,
   patchTrackNote,
   parseTrackChainParams,
+  patchAddInstrument,
+  patchMute,
+  parseMuteState,
+  patchInstrumentModel,
+  uniqueVarName,
 } from '../src/renderer/lib/codePatcher.js'
 
 // ── Base code ─────────────────────────────────────────────────────────────────
@@ -259,5 +264,163 @@ export default Song({ bpm: 128, tracks: [kick, snare] })`
 
   it('returns {} for out-of-range track index', () => {
     expect(parseTrackChainParams(PARAMS_CODE, 5)).toEqual({})
+  })
+})
+
+// ── uniqueVarName ─────────────────────────────────────────────────────────────
+
+describe('uniqueVarName', () => {
+  it('returns base when not already declared', () => {
+    expect(uniqueVarName('const snare = Snare()', 'kick')).toBe('kick')
+  })
+
+  it('returns base2 when base is taken', () => {
+    expect(uniqueVarName('const kick = Kick()', 'kick')).toBe('kick2')
+  })
+
+  it('returns base3 when base and base2 are both taken', () => {
+    const code = 'const kick = Kick()\nconst kick2 = Kick()'
+    expect(uniqueVarName(code, 'kick')).toBe('kick3')
+  })
+
+  it('does not false-match partial names (kick vs kicker)', () => {
+    expect(uniqueVarName('const kicker = Kick()', 'kick')).toBe('kick')
+  })
+})
+
+// ── patchAddInstrument ────────────────────────────────────────────────────────
+
+const ADD_BASE = `import { Song, Kick, Snare } from '@score/dsl'
+
+const kick  = Kick().pattern([1, 0, 0, 0]).volume(0.9)
+const snare = Snare().pattern([0, 0, 1, 0]).volume(0.7)
+
+export default Song({ bpm: 128, tracks: [kick, snare] })`
+
+describe('patchAddInstrument', () => {
+  it('inserts const declaration before export default', () => {
+    const result = patchAddInstrument(ADD_BASE, 'pad', "Pad('Am').reverb(0.3)")
+    expect(result).toContain("const pad = Pad('Am').reverb(0.3)")
+    expect(result.indexOf('const pad')).toBeLessThan(result.indexOf('export default'))
+  })
+
+  it('appends varName to tracks array', () => {
+    const result = patchAddInstrument(ADD_BASE, 'pad', "Pad('Am').reverb(0.3)")
+    expect(result).toMatch(/tracks\s*:\s*\[kick,\s*snare,\s*pad\]/)
+  })
+
+  it('returns original if export default Song( not found', () => {
+    const code = 'const kick = Kick()'
+    expect(patchAddInstrument(code, 'pad', "Pad('Am')"  )).toBe(code)
+  })
+
+  it('preserves existing track declarations unchanged', () => {
+    const result = patchAddInstrument(ADD_BASE, 'hihat', 'HiHat().volume(0.5)')
+    expect(result).toContain('const kick  = Kick()')
+    expect(result).toContain('const snare = Snare()')
+  })
+
+  it('works with multiline tracks array', () => {
+    const multiline = `const kick = Kick()
+const snare = Snare()
+export default Song({ bpm: 128, tracks: [
+  kick,
+  snare,
+] })`
+    const result = patchAddInstrument(multiline, 'pad', "Pad('Am')")
+    expect(result).toContain('const pad')
+    expect(result).toContain('pad')
+  })
+})
+
+// ── parseMuteState ────────────────────────────────────────────────────────────
+
+const MUTE_CODE = `const kick  = Kick().pattern([1, 0, 0, 0]).mute()
+const snare = Snare().pattern([0, 0, 1, 0]).volume(0.7)
+export default Song({ bpm: 128, tracks: [kick, snare] })`
+
+describe('parseMuteState', () => {
+  it('returns true for a muted track', () => {
+    expect(parseMuteState(MUTE_CODE, 0)).toBe(true)
+  })
+
+  it('returns false for an unmuted track', () => {
+    expect(parseMuteState(MUTE_CODE, 1)).toBe(false)
+  })
+
+  it('returns false for out-of-range track index', () => {
+    expect(parseMuteState(MUTE_CODE, 99)).toBe(false)
+  })
+})
+
+// ── patchMute ─────────────────────────────────────────────────────────────────
+
+const UNMUTED_CODE = `const kick  = Kick().pattern([1, 0, 0, 0]).volume(0.9)
+const snare = Snare().pattern([0, 0, 1, 0]).volume(0.7)
+export default Song({ bpm: 128, tracks: [kick, snare] })`
+
+describe('patchMute', () => {
+  it('appends .mute() when muted = true', () => {
+    const result = patchMute(UNMUTED_CODE, 0, true)
+    expect(result).toContain('Kick().pattern([1, 0, 0, 0]).volume(0.9).mute()')
+  })
+
+  it('is a no-op when track already has .mute() and muted = true', () => {
+    const already = patchMute(UNMUTED_CODE, 0, true)
+    expect(patchMute(already, 0, true)).toBe(already)
+  })
+
+  it('removes .mute() when muted = false', () => {
+    const muted = patchMute(UNMUTED_CODE, 0, true)
+    const result = patchMute(muted, 0, false)
+    expect(result).not.toContain('.mute()')
+    expect(result).toContain('.volume(0.9)')
+  })
+
+  it('does not affect an unmuted track when muted = false', () => {
+    expect(patchMute(UNMUTED_CODE, 0, false)).toBe(UNMUTED_CODE)
+  })
+
+  it('does not affect adjacent tracks', () => {
+    const result = patchMute(UNMUTED_CODE, 0, true)
+    expect(result).toContain('Snare().pattern([0, 0, 1, 0]).volume(0.7)')
+  })
+
+  it('returns original for out-of-range track index', () => {
+    expect(patchMute(UNMUTED_CODE, 99, true)).toBe(UNMUTED_CODE)
+  })
+})
+
+// ── patchInstrumentModel ──────────────────────────────────────────────────────
+
+const MODEL_CODE = `const kick  = Kick808().pattern([1, 0, 0, 0]).volume(0.9)
+const snare = Snare909().pattern([0, 0, 1, 0]).volume(0.7)
+export default Song({ bpm: 128, tracks: [kick, snare] })`
+
+describe('patchInstrumentModel', () => {
+  it('replaces instrument model name at track 0', () => {
+    const result = patchInstrumentModel(MODEL_CODE, 0, 'Kick909')
+    expect(result).toContain('Kick909()')
+    expect(result).not.toContain('Kick808()')
+  })
+
+  it('replaces instrument model name at track 1', () => {
+    const result = patchInstrumentModel(MODEL_CODE, 1, 'Snare')
+    expect(result).toContain('Snare()')
+    expect(result).not.toContain('Snare909()')
+  })
+
+  it('does not affect adjacent tracks', () => {
+    const result = patchInstrumentModel(MODEL_CODE, 0, 'Kick909')
+    expect(result).toContain('Snare909()')
+  })
+
+  it('returns original for out-of-range track index', () => {
+    expect(patchInstrumentModel(MODEL_CODE, 99, 'Kick909')).toBe(MODEL_CODE)
+  })
+
+  it('preserves all chain methods after the model name', () => {
+    const result = patchInstrumentModel(MODEL_CODE, 0, 'Kick909')
+    expect(result).toContain('.pattern([1, 0, 0, 0]).volume(0.9)')
   })
 })
