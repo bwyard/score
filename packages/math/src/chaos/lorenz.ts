@@ -1,8 +1,8 @@
 // Lorenz attractor — chaotic 3D dynamical system
-// Uses RK4 integration for numerical accuracy
-// Classic parameters: sigma=10, rho=28, beta=8/3 produce the iconic butterfly shape
+// Uses @prime/prime-dynamics lorenzStep (RK4) for numerical accuracy.
+// Classic parameters: sigma=10, rho=28, beta=8/3 produce the iconic butterfly shape.
 
-import { rk4 } from '../rk4.js'
+import { lorenzStep } from '@prime/prime-dynamics'
 
 /**
  * State vector for the Lorenz attractor.
@@ -25,27 +25,8 @@ export type LorenzParams = {
   readonly beta?: number
 }
 
-const lorenzDeriv = (sigma: number, rho: number, beta: number) =>
-  (state: LorenzState, _t: number): LorenzState => ({
-    x: sigma * (state.y - state.x),
-    y: state.x * (rho - state.z) - state.y,
-    z: state.x * state.y - beta * state.z,
-  })
-
-const lorenzAdd = (a: LorenzState, b: LorenzState): LorenzState => ({
-  x: a.x + b.x,
-  y: a.y + b.y,
-  z: a.z + b.z,
-})
-
-const lorenzScale = (a: LorenzState, k: number): LorenzState => ({
-  x: a.x * k,
-  y: a.y * k,
-  z: a.z * k,
-})
-
 /**
- * Create a Lorenz attractor simulation using RK4 integration.
+ * Create a Lorenz attractor simulation using RK4 integration from `@prime/prime-dynamics`.
  *
  * The Lorenz system is a set of three coupled ODEs:
  * - `dx/dt = sigma * (y - x)`
@@ -70,13 +51,12 @@ const lorenzScale = (a: LorenzState, k: number): LorenzState => ({
  */
 export const createLorenz = (params?: LorenzParams) => {
   const sigma = params?.sigma ?? 10
-  const rho = params?.rho ?? 28
-  const beta = params?.beta ?? 8 / 3
+  const rho   = params?.rho   ?? 28
+  const beta  = params?.beta  ?? 8 / 3
 
   const initial: LorenzState = { x: 0.1, y: 0, z: 0 }
-  const deriv = lorenzDeriv(sigma, rho, beta)
 
-  // Hardware-boundary exception: stateful generator — const binding, property mutation only.
+  // HARDWARE BOUNDARY — stateful generator: const binding, property mutation only.
   // Named `sim` to avoid clash with the public `state` getter below.
   const sim: { current: LorenzState; t: number } = { current: { ...initial }, t: 0 }
 
@@ -84,11 +64,18 @@ export const createLorenz = (params?: LorenzParams) => {
     /**
      * Advance the simulation one RK4 step and return the new state.
      *
+     * Delegates to `@prime/prime-dynamics` `lorenzStep` (pure function).
+     * Object ↔ tuple conversion happens at this boundary only.
+     *
      * @param dt - Time step size. Default `0.01`.
      * @returns New `LorenzState` after advancing by `dt`.
      */
     next(dt = 0.01): LorenzState {
-      sim.current = rk4(sim.current, sim.t, dt, deriv, lorenzAdd, lorenzScale)
+      const [nx, ny, nz] = lorenzStep(
+        [sim.current.x, sim.current.y, sim.current.z],
+        sigma, rho, beta, dt,
+      )
+      sim.current = { x: nx, y: ny, z: nz }
       sim.t += dt
       return { ...sim.current }
     },

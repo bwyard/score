@@ -19,6 +19,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@prime/prime-random": "file:../../../prime/packages/prime-random",
     "@score/core": "workspace:*"
   },
   "devDependencies": {

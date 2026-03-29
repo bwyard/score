@@ -247,6 +247,12 @@ importers:
 
   packages/math:
     dependencies:
+      '@prime/prime-dynamics':
+        specifier: file:../../../prime/packages/prime-dynamics
+        version: file:../prime/packages/prime-dynamics
+      '@prime/prime-interp':
+        specifier: file:../../../prime/packages/prime-interp
+        version: file:../prime/packages/prime-interp
       '@score/core':
         specifier: workspace:*
         version: link:../core
@@ -349,6 +355,9 @@ importers:
 
   packages/sequencer:
     dependencies:
+      '@prime/prime-random':
+        specifier: file:../../../prime/packages/prime-random
+        version: file:../prime/packages/prime-random
       '@score/core':
         specifier: workspace:*
         version: link:../core
@@ -1013,6 +1022,15 @@ packages:
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
+
+  '@prime/prime-dynamics@file:../prime/packages/prime-dynamics':
+    resolution: {directory: ../prime/packages/prime-dynamics, type: directory}
+
+  '@prime/prime-interp@file:../prime/packages/prime-interp':
+    resolution: {directory: ../prime/packages/prime-interp, type: directory}
+
+  '@prime/prime-random@file:../prime/packages/prime-random':
+    resolution: {directory: ../prime/packages/prime-random, type: directory}
 
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
@@ -4087,6 +4105,12 @@ snapshots:
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
+
+  '@prime/prime-dynamics@file:../prime/packages/prime-dynamics': {}
+
+  '@prime/prime-interp@file:../prime/packages/prime-interp': {}
+
+  '@prime/prime-random@file:../prime/packages/prime-random': {}
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 

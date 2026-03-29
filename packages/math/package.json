@@ -19,6 +19,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@prime/prime-dynamics": "file:../../../prime/packages/prime-dynamics",
+    "@prime/prime-interp":   "file:../../../prime/packages/prime-interp",
     "@score/core": "workspace:*"
   },
   "devDependencies": {

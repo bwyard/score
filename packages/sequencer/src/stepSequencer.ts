@@ -2,16 +2,7 @@
 
 import type { PatternInput, Position } from './types.js'
 import type { Transport } from './transport.js'
-
-// Mulberry32 PRNG — inlined to avoid a cross-package dep on @score/pattern.
-// Same algorithm used in @score/pattern/transforms.ts and @prime/prime-random.
-// Returns [randomValue 0–1, nextSeed].
-const prngNext = (seed: number): [number, number] => {
-  const s = (seed + 0x6D2B79F5) >>> 0
-  let t = Math.imul(s ^ (s >>> 15), 1 | s)
-  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) >>> 0
-  return [((t ^ (t >>> 14)) >>> 0) / 0x100000000, s]
-}
+import { prngNext }       from '@prime/prime-random'
 
 /**
  * Configuration props for {@link createStepSequencer}.
