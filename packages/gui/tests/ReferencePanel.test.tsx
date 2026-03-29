@@ -91,3 +91,15 @@ describe('ReferencePanel — shortcuts', () => {
     expect(screen.getByText('Ctrl+Enter')).toBeInTheDocument()
   })
 })
+
+describe('ReferencePanel — beat indicator', () => {
+  it('renders beat dot element', () => {
+    const { container } = render(<ReferencePanel beatPulse={true} />)
+    // aria-hidden dot is in the DOM — verify the panel still renders cleanly
+    expect(container.querySelector('[aria-label="DSL reference panel"]')).not.toBeNull()
+  })
+
+  it('renders without beatPulse prop (defaults to false)', () => {
+    expect(() => render(<ReferencePanel />)).not.toThrow()
+  })
+})

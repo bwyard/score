@@ -879,7 +879,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
               panelId="reference"
               onMoved={onPanelMoved}
             >
-              <ReferencePanel onInsert={onInsert} />
+              <ReferencePanel onInsert={onInsert} beatPulse={currentStep === 0} />
             </DraggablePanel>
           )}
         </div>
