@@ -1102,14 +1102,14 @@ Score is uniquely positioned — no existing tool combines: component instrument
 - Free with no restrictions: personal use, performance (any venue), streaming, sales, sync, teaching, festivals, research, open source
 - Voluntary support at score.dev/support — never required
 - Contact required only for: building a competing DAW using Score code, embedding Score in a commercial product, white-labeling, or selling Score itself
-- Framework packages: MIT. Score Studio GUI: MIT. @score/dsp (post-v1.0): ELv2.
+- Framework packages: Apache 2.0. Score Studio GUI: Apache 2.0. @score/dsp (post-v1.0): ELv2.
 - Override keys: free for universities, festival partners, invited artists — issued within 24 hours
 
 **@score/dsp — post-v1.0 (Phase 16b):**
 - AssemblyScript compiled to WebAssembly, runs in AudioWorklets
 - Core algorithms: FFT (Cooley-Tukey), phase vocoder, pitch shifter, ZDF filter, true peak limiter, convolution reverb
 - Target: within 5x of scsynth in browser context (~0.05ms FFT vs scsynth's ~0.01ms)
-- License: ELv2 (not MIT) — free for everything except managed service providers
+- License: ELv2 (not Apache 2.0) — free for everything except managed service providers
 
 **Additional libraries to evaluate (not yet added as deps):**
 - `WebMIDI.js` — cleaner browser WebMIDI wrapper for @score/midi (Phase 12)

@@ -6,16 +6,6 @@ Read this before opening a PR.
 
 ---
 
-## Contributor License Agreement
-
-**All contributors must agree to the [Contributor License Agreement](CLA.md)
-before their pull request can be merged.**
-
-By opening a pull request, you automatically agree to the CLA terms. No
-separate signature is required — your PR submission is your agreement.
-
----
-
 ## Philosophy
 
 Score has a strict design philosophy. Every contribution must follow it.
@@ -108,6 +98,7 @@ Always welcome. Include a failing test that the fix makes pass.
 ## What we don't accept
 
 - AI-generated music, patterns, or songs
+- Use of contributions as AI training data
 - Bundled audio samples
 - Class-based architecture
 - Direct mutations of config objects
@@ -125,4 +116,4 @@ Open an issue on GitHub. For security vulnerabilities, email byard29@gmail.com d
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the same terms as the project. See [LICENSE](LICENSE) and [CLA.md](CLA.md).
+By contributing, you agree that your contributions will be licensed under the Apache License 2.0. See [LICENSE](LICENSE).
