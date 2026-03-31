@@ -324,8 +324,17 @@ export type ChainMethods<T> = {
   readonly seed:        (n: number) => T
   /** Human-readable label for GUI mixer and codePatcher. */
   readonly name:        (label: string) => T
-  /** Model variant (percussion only): '808' | '909' | 'hard'. */
+  /**
+   * Model variant — changes `instrumentType` to `${baseType}${variant}`.
+   * e.g. `Kick().model('808')` → `instrumentType: 'kick808'` (routes to `createKick808`).
+   */
   readonly model:       (variant: string) => T
+  /**
+   * Open variant — converts a closed hi-hat to its open counterpart.
+   * e.g. `HiHat().model('808').open()` → `instrumentType: 'hihatopen808'`.
+   * Only valid after `.model()` sets a model that has an open variant registered.
+   */
+  readonly open:        () => T
   // ── Visual chain methods ──────────────────────────────────────────────────
   /**
    * Set all visual override fields at once.

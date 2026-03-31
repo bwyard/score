@@ -145,8 +145,8 @@ describe('Kick808', () => {
     expect(isChainablePart(Kick808())).toBe(true)
   })
 
-  it('has instrumentType kick', () => {
-    expect(Kick808().instrumentType).toBe('kick')
+  it('has instrumentType kick808', () => {
+    expect(Kick808().instrumentType).toBe('kick808')
   })
 
   it('has _model 808', () => {
@@ -183,8 +183,8 @@ describe('Kick909', () => {
     expect(isChainablePart(Kick909())).toBe(true)
   })
 
-  it('has instrumentType kick', () => {
-    expect(Kick909().instrumentType).toBe('kick')
+  it('has instrumentType kick909', () => {
+    expect(Kick909().instrumentType).toBe('kick909')
   })
 
   it('has _model 909', () => {
@@ -212,8 +212,8 @@ describe('Hihat808', () => {
     expect(isChainablePart(Hihat808())).toBe(true)
   })
 
-  it('has instrumentType hihat', () => {
-    expect(Hihat808().instrumentType).toBe('hihat')
+  it('has instrumentType hihat808', () => {
+    expect(Hihat808().instrumentType).toBe('hihat808')
   })
 
   it('has _model 808', () => {
@@ -237,8 +237,8 @@ describe('Snare909', () => {
     expect(isChainablePart(Snare909())).toBe(true)
   })
 
-  it('has instrumentType snare', () => {
-    expect(Snare909().instrumentType).toBe('snare')
+  it('has instrumentType snare909', () => {
+    expect(Snare909().instrumentType).toBe('snare909')
   })
 
   it('has _model 909', () => {

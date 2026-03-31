@@ -62,6 +62,8 @@ declare interface ChainMethods<T> {
   fadeOutBars(bars?: number): T
   chokeGroup(id?: string): T
   seed(n?: number): T
+  model(variant?: string): T
+  open(): T
   dur(steps?: number): T
   visual(id?: string): T
   color(hex?: string): T

@@ -4,8 +4,8 @@
 // Model aliases (Kick808, Kick909, etc.) are thin wrappers: Kick().model('808').
 // Old InstrumentDescriptor factories remain in instruments.ts as deprecated stubs.
 
-import { createPart } from './chain.js'
-import { euclidean } from '@score/pattern'
+import { createPart }         from './chain.js'
+import { euclidean }          from '@score/pattern'
 import type { ChainablePart } from './chain.js'
 
 // ── Kick ──────────────────────────────────────────────────────────────────────
@@ -94,14 +94,14 @@ export const HiHat = (hits?: number): ChainablePart =>
  * Sugar for `Kick(hits).model('808')`.
  *
  * @param hits - Optional euclidean hit count (1–16). Passed through to `Kick()`.
- * @returns A `ChainablePart` for `'kick'` with `_model: '808'`.
+ * @returns A `ChainablePart` for `'kick808'`. Equivalent to `Kick(hits).model('808')`.
  *
  * @example
  * ```ts
  * // Classic 808 four-on-the-floor
  * const kick = Kick808().volume(0.9).decay(0.7)
  * // Euclidean 808 pattern
- * const kick = Kick808(5).pumpWith(kick)
+ * const kick = Kick808(5).swing(0.1)
  * ```
  *
  * @see {@link Kick} — base kick factory
@@ -114,7 +114,7 @@ export const Kick808 = (hits?: number): ChainablePart => Kick(hits).model('808')
  * Sugar for `Kick(hits).model('909')`.
  *
  * @param hits - Optional euclidean hit count (1–16). Passed through to `Kick()`.
- * @returns A `ChainablePart` for `'kick'` with `_model: '909'`.
+ * @returns A `ChainablePart` for `'kick909'`. Equivalent to `Kick(hits).model('909')`.
  *
  * @example
  * ```ts
@@ -131,7 +131,7 @@ export const Kick909 = (hits?: number): ChainablePart => Kick(hits).model('909')
  * Sugar for `HiHat(hits).model('808')`.
  *
  * @param hits - Optional euclidean hit count (1–16). Passed through to `HiHat()`.
- * @returns A `ChainablePart` for `'hihat'` with `_model: '808'`.
+ * @returns A `ChainablePart` for `'hihat808'`. Equivalent to `HiHat(hits).model('808')`.
  *
  * @example
  * ```ts
@@ -146,28 +146,22 @@ export const Hihat808 = (hits?: number): ChainablePart => HiHat(hits).model('808
 /**
  * Roland TR-808 open hi-hat — same six detuned square oscillators as {@link Hihat808}
  * but with a longer default decay (0.3 s) giving the sustained, washy open-hat sound.
- *
- * Unlike the other model aliases (Kick808, Hihat808, Snare909) this factory creates a
- * part with `instrumentType: 'hihatopen808'` so the engine dispatches it to
- * `createHihatOpen808` rather than `createGenericHihat`.
+ * Sugar for `HiHat(hits).model('808').open()`.
  *
  * @param hits - Optional euclidean hit count (1–16). Sets `_pattern` via `euclidean(hits, 16)`.
- * @returns A `ChainablePart` for `'hihatopen808'`.
+ * @returns A `ChainablePart` for `'hihatopen808'`. Equivalent to `HiHat(hits).model('808').open()`.
  *
  * @example
  * ```ts
  * const openHat = HihatOpen808().pattern([0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0]).volume(0.6)
+ * // Equivalent:
+ * const openHat = HiHat().model('808').open().pattern([0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0]).volume(0.6)
  * ```
  *
  * @see {@link Hihat808} — closed variant
  * @see {@link HiHat} — base hi-hat factory
  */
-export const HihatOpen808 = (hits?: number): ChainablePart =>
-  createPart({
-    instrumentType: 'hihatopen808',
-    props: {},
-    ...(hits !== undefined ? { _pattern: euclidean(hits, 16) } : {}),
-  })
+export const HihatOpen808 = (hits?: number): ChainablePart => HiHat(hits).model('808').open()
 
 /**
  * Roland TR-909 snare drum — two triangle oscillators (tone) mixed with filtered white noise.

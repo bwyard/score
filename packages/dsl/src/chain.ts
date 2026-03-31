@@ -332,7 +332,20 @@ export const createPart = (
     // ── Meta ──────────────────────────────────────────────────────────────────
     seed:  (n)       => cp({ ...desc, _seed:  validateSeed(n) }),
     name:  (label)   => cp({ ...desc, _name:  validateLabel(label, 'name') }),
-    model: (variant) => cp({ ...desc, _model: validateModel(variant) }),
+    model: (variant) => {
+      const v = validateModel(variant)
+      const newType = `${desc.instrumentType}${v}`
+      return cp({ ...desc, instrumentType: newType, type: newType, _model: v })
+    },
+    open: () => {
+      // Maps base instrument types to their open counterparts.
+      // Add new open variants here as they are registered in INSTRUMENT_REGISTRY.
+      const OPEN_INSTRUMENT_MAP: Readonly<Partial<Record<string, string>>> = {
+        'hihat808': 'hihatopen808',
+      }
+      const openType = OPEN_INSTRUMENT_MAP[desc.instrumentType] ?? desc.instrumentType
+      return cp({ ...desc, instrumentType: openType, type: openType })
+    },
 
     // ── Visual ────────────────────────────────────────────────────────────────
     visual: (override) => cp({ ...desc, _visual: { ...desc._visual, ...override } }),
