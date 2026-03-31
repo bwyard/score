@@ -134,4 +134,4 @@ Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating. To
 
 ## License
 
-Open source. Free for personal, non-commercial, and individual commercial use. Corporations distributing Score or building commercial products on top of it require a separate license — contact byard29@gmail.com. Author: Bree Yard.
+Open source. Free for personal, non-commercial, and individual commercial use. Corporations distributing Score or building commercial products on top of it require a separate license. Nonprofits may reach out for a license exception. Contact byard29@gmail.com. Author: Bree Yard.
