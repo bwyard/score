@@ -1,0 +1,5 @@
+# Electron build output — never commit
+out/
+dist/
+dist-electron/
+release/
