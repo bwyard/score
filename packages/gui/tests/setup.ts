@@ -18,7 +18,7 @@ export const axe = configureAxe({
 // jsdom does not implement canvas. Stub getContext so canvas components mount
 // without throwing "Not implemented: HTMLCanvasElement.prototype.getContext".
 HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
-  clearRect: vi.fn(), fillRect: vi.fn(), fillText: vi.fn(),
+  clearRect: vi.fn(), fillRect: vi.fn(), strokeRect: vi.fn(), fillText: vi.fn(),
   scale: vi.fn(), setTransform: vi.fn(), transform: vi.fn(),
   save: vi.fn(), restore: vi.fn(),
   beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), stroke: vi.fn(),

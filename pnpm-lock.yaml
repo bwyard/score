@@ -142,6 +142,9 @@ importers:
       '@score/pattern':
         specifier: workspace:*
         version: link:../pattern
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^25.5.0
@@ -268,10 +271,10 @@ importers:
         version: 25.5.0
       '@vitest/coverage-v8':
         specifier: ^2.0.0
-        version: 2.1.9(vitest@2.1.9(@types/node@25.5.0)(jsdom@25.0.1)(terser@5.46.1))
+        version: 2.1.9(vitest@2.1.9(@types/node@25.5.0)(jsdom@29.0.1)(terser@5.46.1))
       vitest:
         specifier: ^2.0.0
-        version: 2.1.9(@types/node@25.5.0)(jsdom@25.0.1)(terser@5.46.1)
+        version: 2.1.9(@types/node@25.5.0)(jsdom@29.0.1)(terser@5.46.1)
 
   packages/math:
     dependencies:
