@@ -266,11 +266,16 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
 
   // Notify Monaco when the container resizes (e.g. console panel toggle pushes editor height).
   // Without this, the editor's internal scroll area is never recalculated and content appears clipped.
+  // Pass explicit pixel dimensions from the ResizeObserver entry — avoids a layout() no-arg race
+  // where Monaco reads the DOM before the browser has finished the resize reflow.
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    const observer = new ResizeObserver(() => {
-      editorRef.current?.layout()
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry || !editorRef.current) return
+      const { width, height } = entry.contentRect
+      editorRef.current.layout({ width: Math.floor(width), height: Math.floor(height) })
     })
     observer.observe(el)
     return () => { observer.disconnect() }
