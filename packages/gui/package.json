@@ -5,7 +5,9 @@
   "description": "Score Studio — DAW, live coding, and DJ set GUI",
   "main": "out/main/index.js",
   "scripts": {
+    "sync-monaco-types": "node scripts/sync-monaco-types.mjs",
     "dev": "electron-vite dev",
+    "prebuild": "node scripts/sync-monaco-types.mjs",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "pack": "electron-vite build && electron-builder --dir",

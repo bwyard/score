@@ -266,6 +266,16 @@ export type ChainMethods<T> = {
   readonly bit:         (bits: number) => T
   /** Overdrive / saturation warmth (0–1). */
   readonly saturate:    (amt: number) => T
+  /** Waveshaper distortion (0–1 drive). */
+  readonly distortion:  (amount?: number) => T
+  /** Phaser sweep — depth 0–1, rate Hz. */
+  readonly phaser:      (depth?: number, rate?: number) => T
+  /** Dynamics compressor — threshold dBFS, ratio n:1. */
+  readonly compressor:  (threshold?: number, ratio?: number) => T
+  /** Hard limiter — ceiling dBFS. */
+  readonly limiter:     (ceiling?: number) => T
+  /** Noise gate — threshold dBFS, ratio n:1. */
+  readonly gate:        (threshold?: number, ratio?: number) => T
   // ── Space ────────────────────────────────────────────────────────────────
   /** Stereo position -1 (left) to 1 (right). */
   readonly pan:         (v: number) => T

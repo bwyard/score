@@ -81,11 +81,12 @@ declare function Track(parts: readonly PartDescriptor[]): ChainablePart
 
 declare function Kick(shorthand?: number): ChainablePart
 declare function Snare(shorthand?: number): ChainablePart
-declare function HiHat(shorthand?: number, openDecay?: number): ChainablePart
+declare function HiHat(shorthand?: number): ChainablePart
 declare function Kick808(shorthand?: number): ChainablePart
 declare function Kick909(shorthand?: number): ChainablePart
 declare function Snare909(shorthand?: number): ChainablePart
-declare function Hihat808(shorthand?: number, openDecay?: number): ChainablePart
+declare function Hihat808(shorthand?: number): ChainablePart
+declare function HihatOpen808(shorthand?: number): ChainablePart
 
 // ── Melodic instruments ────────────────────────────────────────────────────────
 

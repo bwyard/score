@@ -48,7 +48,26 @@ export type {
   ChainablePart,
 } from './chain.types.js'
 
-import type { PartDescriptor, ChainablePart } from './chain.types.js'
+import type { PartDescriptor, ChainablePart, ChainMethods } from './chain.types.js'
+
+// ── Simple effect chain methods — data-driven ─────────────────────────────────
+//
+// Each entry maps a chain method name to its effect type + argument → props transform.
+// Adding a new simple effect: one line here + one declaration in chain.types.ts.
+// The generated methods are spread into the `part` object inside createPart().
+
+type SimpleFxEntry = {
+  readonly effectType: string
+  readonly toProps:    (...args: number[]) => Record<string, unknown>
+}
+
+const SIMPLE_FX: ReadonlyArray<SimpleFxEntry & { readonly method: string }> = [
+  { method: 'distortion', effectType: 'distortion', toProps: (amount = 0.5)            => ({ drive: Math.max(0, Math.min(1, amount)) }) },
+  { method: 'phaser',     effectType: 'phaser',     toProps: (depth = 0.5, rate = 1)   => ({ depth: Math.max(0, Math.min(1, depth)), rate: Math.max(0.1, rate) }) },
+  { method: 'compressor', effectType: 'compressor', toProps: (threshold = -24, ratio = 4) => ({ threshold, ratio: Math.max(1, ratio) }) },
+  { method: 'limiter',    effectType: 'limiter',    toProps: (ceiling = -1)             => ({ ceiling }) },
+  { method: 'gate',       effectType: 'gate',       toProps: (threshold = -40, ratio = 10) => ({ threshold, ratio: Math.max(1, ratio) }) },
+]
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
@@ -278,6 +297,13 @@ export const createPart = (
     },
     chorus: (depth = 0.5) => cp({ ...desc, ...appendFx(desc, makeFx('chorus',  { depth: validateModDepth(depth,  'chorus') })) }),
     flange: (depth = 0.5) => cp({ ...desc, ...appendFx(desc, makeFx('flanger', { depth: validateModDepth(depth,  'flange') })) }),
+
+    // Generated from SIMPLE_FX table — distortion, phaser, compressor, limiter, gate.
+    // Type-asserted because TypeScript cannot infer individual signatures from the table.
+    ...Object.fromEntries(SIMPLE_FX.map(({ method, effectType, toProps }) => [
+      method,
+      (...args: number[]) => cp({ ...desc, ...appendFx(desc, makeFx(effectType, toProps(...args))) }),
+    ])) as Pick<ChainMethods<ChainablePart>, 'distortion' | 'phaser' | 'compressor' | 'limiter' | 'gate'>,
 
     // ── Routing ───────────────────────────────────────────────────────────────
     send: (bus, amount = 1) => {
