@@ -23,12 +23,15 @@ The core philosophy: **a song is a pure function of time.** Every note, pattern,
 ```js
 import { Song, Kick808, Snare909, Hihat808, Bass303, Pad } from '@score/dsl'
 
-// Drums — chain API
-const kick  = Kick808().pattern([1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0]).volume(0.8)
-const snare = Snare909().pattern([0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]).volume(0.55)
-const hihat = Hihat808().pattern([1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0]).volume(0.25)
+// Drums — euclidean shorthand: Kick808(n) spreads n hits over 16 steps
+const kick  = Kick808(4).volume(0.8)
+const snare = Snare909(2).volume(0.55)
+const hihat = Hihat808(8).volume(0.25)
 
-// Melodic — chain API preserves sub-type through composition
+// Or explicit step indices
+// const kick = Kick808().hits(0, 4, 8, 12).volume(0.8)
+
+// Melodic — note array pattern: strings are pitches, 0 is a rest
 const bass = Bass303('A2')
   .cutoff(600)
   .resonance(0.4)
