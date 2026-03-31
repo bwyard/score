@@ -144,6 +144,32 @@ export const Kick909 = (hits?: number): ChainablePart => Kick(hits).model('909')
 export const Hihat808 = (hits?: number): ChainablePart => HiHat(hits).model('808')
 
 /**
+ * Roland TR-808 open hi-hat — same six detuned square oscillators as {@link Hihat808}
+ * but with a longer default decay (0.3 s) giving the sustained, washy open-hat sound.
+ *
+ * Unlike the other model aliases (Kick808, Hihat808, Snare909) this factory creates a
+ * part with `instrumentType: 'hihatopen808'` so the engine dispatches it to
+ * `createHihatOpen808` rather than `createGenericHihat`.
+ *
+ * @param hits - Optional euclidean hit count (1–16). Sets `_pattern` via `euclidean(hits, 16)`.
+ * @returns A `ChainablePart` for `'hihatopen808'`.
+ *
+ * @example
+ * ```ts
+ * const openHat = HihatOpen808().pattern([0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,0,0]).volume(0.6)
+ * ```
+ *
+ * @see {@link Hihat808} — closed variant
+ * @see {@link HiHat} — base hi-hat factory
+ */
+export const HihatOpen808 = (hits?: number): ChainablePart =>
+  createPart({
+    instrumentType: 'hihatopen808',
+    props: {},
+    ...(hits !== undefined ? { _pattern: euclidean(hits, 16) } : {}),
+  })
+
+/**
  * Roland TR-909 snare drum — two triangle oscillators (tone) mixed with filtered white noise.
  * Sugar for `Snare(hits).model('909')`.
  *

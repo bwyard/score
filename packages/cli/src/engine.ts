@@ -35,6 +35,10 @@ import {
 import {
   INSTRUMENT_REGISTRY,
   EFFECTS_REGISTRY,
+  PERCUSSION_INSTRUMENT_TYPES,
+  MELODIC_VOICE_INSTRUMENT_TYPES,
+  MELODIC_INSTRUMENT_TYPE_SET,
+  DEFAULT_KICK_PATTERN,
   type InstrumentType,
   type EffectType,
   type GenericSynthComponent,
@@ -107,26 +111,14 @@ export const isPartDescriptor = (comp: unknown): comp is PartDescriptor => {
 }
 
 // ── Instrument classification ─────────────────────────────────────────────────
-// PERCUSSION_REGISTRY_TYPES — Model A: create-once, trigger per hit
-// MELODIC_VOICE_TYPES       — Model B': per-step voice creation (noteOn/noteOff)
-// Remaining types handled inline: synth (B), theremin/sax (C), arp (D), sample (E)
+// Derived automatically from INSTRUMENT_REGISTRY — no manual maintenance needed.
+// When adding a new instrument: add its entry to @score/instruments/src/index.ts.
+// These sets update on their own.
 
-const PERCUSSION_REGISTRY_TYPES = new Set<InstrumentType>([
-  'kick', 'snare', 'hihat', 'kick808', 'kick909', 'hihat808', 'snare909',
-])
-
-const MELODIC_VOICE_TYPES = new Set<InstrumentType>([
-  'subsynth', 'fmsynth', 'pad', 'rhodes', 'pluck', 'bass-303',
-])
-
-// Used by normalizeVolumeField and partToInstrumentDescriptor ADSR spread
-const PERCUSSION_TYPES = PERCUSSION_REGISTRY_TYPES
-
-// Used by partToInstrumentDescriptor to route _volume → gain (melodic) or volume (percussion)
-const MELODIC_INSTRUMENT_TYPES = new Set([
-  'synth', 'subsynth', 'fmsynth', 'arp', 'theremin', 'sax', 'sample',
-  'pad', 'rhodes', 'pluck', 'bass-303',
-])
+// Aliases for local readability — same objects exported by @score/instruments.
+const PERCUSSION_REGISTRY_TYPES = PERCUSSION_INSTRUMENT_TYPES
+const MELODIC_VOICE_TYPES        = MELODIC_VOICE_INSTRUMENT_TYPES
+const PERCUSSION_TYPES           = PERCUSSION_INSTRUMENT_TYPES
 
 // ── Pitch helpers ─────────────────────────────────────────────────────────────
 
@@ -181,7 +173,7 @@ const normalizeVolumeField = (
   volume: number | undefined,
 ): { readonly gain: number } | { readonly volume: number } | Record<never, never> => {
   if (volume === undefined) return {}
-  return MELODIC_INSTRUMENT_TYPES.has(instrumentType) ? { gain: volume } : { volume }
+  return MELODIC_INSTRUMENT_TYPE_SET.has(instrumentType) ? { gain: volume } : { volume }
 }
 
 /**
@@ -299,22 +291,14 @@ const seqExtras = (
 })
 
 // ── Default patterns ──────────────────────────────────────────────────────────
+// Percussion defaults live in INSTRUMENT_REGISTRY entries (defaultPattern field).
+// DEFAULT_KICK_PATTERN is imported above as the fallback for unknown percussion types.
+// DEFAULT_SYNTH_PATTERN is local — only the synth/melodic dispatchers use it.
 
-const DEFAULT_KICK_PATTERN  = [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]
-const DEFAULT_SNARE_PATTERN = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
-const DEFAULT_HIHAT_PATTERN = [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
 const DEFAULT_SYNTH_PATTERN = [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0]
 
-// Per-type default patterns for percussion dispatch.
-const PERCUSSION_DEFAULT_PATTERNS: Readonly<Partial<Record<InstrumentType, readonly number[]>>> = {
-  kick:     DEFAULT_KICK_PATTERN,
-  snare:    DEFAULT_SNARE_PATTERN,
-  hihat:    DEFAULT_HIHAT_PATTERN,
-  kick808:  DEFAULT_KICK_PATTERN,
-  kick909:  DEFAULT_KICK_PATTERN,
-  hihat808: DEFAULT_HIHAT_PATTERN,
-  snare909: DEFAULT_SNARE_PATTERN,
-}
+// Per-type default patterns come from INSTRUMENT_REGISTRY entries (.defaultPattern).
+// DEFAULT_KICK_PATTERN stays here as the fallback for unknown percussion types.
 
 // ── seqPatternExtras — thread pattern-transform props into createStepSequencer ─
 // Reads mask/stepProb/every/stretch from comp.props and returns the subset that
@@ -606,7 +590,7 @@ const dispatchPercussion = (
     ...(props.volume !== undefined ? { gain: props.volume } : {}),
   }
 
-  const factory = INSTRUMENT_REGISTRY[instrumentType] as unknown as (
+  const factory = INSTRUMENT_REGISTRY[instrumentType].factory as unknown as (
     ctx: Context,
     props: CommonProps,
   ) => PercussionComponent
@@ -614,7 +598,7 @@ const dispatchPercussion = (
   const component = factory(ctx, factoryProps)
   component.connect(dest)
 
-  const defaultPattern = PERCUSSION_DEFAULT_PATTERNS[instrumentType] ?? DEFAULT_KICK_PATTERN
+  const defaultPattern = (INSTRUMENT_REGISTRY[instrumentType] as { defaultPattern?: readonly number[] }).defaultPattern ?? DEFAULT_KICK_PATTERN
   const pattern = (props.pattern ?? defaultPattern) as PatternInput
 
   createStepSequencer(transport, { pattern, ...timing, ...seqPatternExtras(props) }, (hit, _step, pos) => {
@@ -637,7 +621,7 @@ const dispatchSynth = (
   const rawPattern = (props.pattern ?? props.sequence ?? DEFAULT_SYNTH_PATTERN) as PatternInput
   const pattern = (Array.isArray(rawPattern) ? rawPattern : DEFAULT_SYNTH_PATTERN) as (number | string)[]
 
-  const synthComponent = (INSTRUMENT_REGISTRY['synth'] as unknown as (ctx: Context, props: CommonProps) => GenericSynthComponent)(ctx, props)
+  const synthComponent = (INSTRUMENT_REGISTRY['synth'].factory as unknown as (ctx: Context, props: CommonProps) => GenericSynthComponent)(ctx, props)
   synthComponent.connect(dest)
 
   createStepSequencer(transport, { pattern, ...timing, ...seqPatternExtras(props) }, (val, _step, pos) => {
@@ -663,7 +647,7 @@ const dispatchMelodicVoice = (
   const pattern = (Array.isArray(rawPattern) ? rawPattern : DEFAULT_SYNTH_PATTERN) as (number | string)[]
   const noteDur = computeNoteDur(instrumentType, props)
 
-  const factory = INSTRUMENT_REGISTRY[instrumentType] as unknown as (
+  const factory = INSTRUMENT_REGISTRY[instrumentType].factory as unknown as (
     ctx: Context,
     props: CommonProps,
   ) => MelodicVoiceComponent

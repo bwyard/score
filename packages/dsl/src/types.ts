@@ -145,6 +145,15 @@ export type Hihat808DSLProps = {
   readonly effects?: ReadonlyArray<EffectDescriptor>
 }
 
+/** Configuration props for the {@link HihatOpen808} instrument factory. */
+export type HihatOpen808DSLProps = {
+  readonly pattern?: number[]
+  readonly volume?: number
+  /** Amplitude decay in seconds. Default `0.3` (open). */
+  readonly decay?: number
+  readonly effects?: ReadonlyArray<EffectDescriptor>
+}
+
 /** Configuration props for the {@link Snare909} instrument factory. */
 export type Snare909DSLProps = {
   readonly pattern?: number[]
@@ -280,7 +289,14 @@ export type InstrumentDescriptor = {
    * handled outside the registry dispatch in the engine.
    */
   readonly instrumentType: InstrumentType | 'sample'
-  readonly props: KickProps | SnareProps | HiHatProps | SynthDSLProps | SampleProps | ThereminDSLProps | SaxDSLProps | ArpDSLProps | Kick808DSLProps | Kick909DSLProps | Hihat808DSLProps | Snare909DSLProps | SubSynthDSLProps | FMSynthDSLProps
+  readonly props:
+    | KickProps | SnareProps | HiHatProps
+    | SynthDSLProps | SampleProps
+    | ThereminDSLProps | SaxDSLProps | ArpDSLProps
+    | Kick808DSLProps | Kick909DSLProps
+    | Hihat808DSLProps | HihatOpen808DSLProps
+    | Snare909DSLProps
+    | SubSynthDSLProps | FMSynthDSLProps
   // Minimal AudioComponent shape so Track() accepts it
   readonly id: string
   readonly type: string
