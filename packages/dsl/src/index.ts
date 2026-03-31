@@ -10,8 +10,27 @@ export { chord, scale, progression, Scale, Progression } from './theory.js'
 export type { ScaleObject, ProgressionObject } from './theory.js'
 export { defineGenre, DEFAULT_REGISTRY, Techno, House, DeepHouse, DnB, Dubstep, Hardstyle, Trance, FutureBass, Trap, Psytrance, IDM, Ambient, Synthwave, LoFi, MinimalTechno, AcidHouse } from './genre.js'
 export { defineGroove, GrooveStraight, GrooveShuffle, GrooveSwing16, GrooveHipHop, GrooveLatin, GrooveMPC } from './groove.js'
-export type { PartDescriptor, ChainablePart, ChainMethods } from './chain.js'
+export type { PartDescriptor, ChainablePart, ChainMethods, PatternCtx, SendDescriptor, SidechainDescriptor } from './chain.js'
 export { createPart, defineInstrument, extendPart } from './chain.js'
+export {
+  validateSpeed,        validateSlow,         validateFast,
+  validateEuclidean,    validateShift,        validateStutter,
+  validateDegrade,      validateHumanize,     validateSwing,
+  validateEvery,        validateRepeat,       validatePattern,
+  validateStepProb,     validateStretch,      validatePhase,
+  validateBarNumber,    validateFadeBars,
+  validateNote,         validateNotes,        validateScale,
+  validatePitch,        validateOctave,       validateGlide,
+  validateDur,          validateVolume,       validateAdsrTime,
+  validateSustain,      validatePan,          validateWiden,
+  validateFilter,       validateEq,           validateBit,
+  validateSaturate,     validateReverbWet,    validateDelay,
+  validateModDepth,     validateLfoRate,      validateSwell,
+  validateSend,         validateChokeGroup,   validateModulateParam,
+  validateColor,        validateGlyph,        validateLabel,
+  validateSeed,         validateModel,        validateOpacity,
+  validateGain,         validateBarCount,
+} from './validators.js'
 export { noteHz, resolveFreq } from './notes.js'
 export { drift, keepFor } from './modifiers.js'
 export { lfo, sine, ramp, lorenz, ou, logistic } from './modulation.js'

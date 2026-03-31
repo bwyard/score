@@ -19,10 +19,11 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@score/core": "workspace:*",
+    "@score/core":        "workspace:*",
     "@score/instruments": "workspace:*",
-    "@score/math": "workspace:*",
-    "@score/pattern": "workspace:*"
+    "@score/math":        "workspace:*",
+    "@score/pattern":     "workspace:*",
+    "zod":               "^3.24.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
