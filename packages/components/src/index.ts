@@ -9,7 +9,7 @@ export { Theremin, type ThereminProps, type ThereminComponent } from './theremin
 export { Sax, type SaxProps, type SaxComponent } from './sax.js'
 export { createKick808, type Kick808Props, type PercussionComponent } from './drums/kick808.js'
 export { createKick909, type Kick909Props, type Kick909Component } from './drums/kick909.js'
-export { createHihat808, type Hihat808Props, type Hihat808Component } from './drums/hihat808.js'
+export { createHihat808, createHihatOpen808, type Hihat808Props, type Hihat808Component } from './drums/hihat808.js'
 export { createSnare909, type Snare909Props, type Snare909Component } from './drums/snare909.js'
 export { createSubtractiveSynth, type SubtractiveSynthProps, type SubtractiveSynthComponent } from './synths/subtractive.js'
 export { createFMSynth, type FMSynthProps, type FMSynthComponent, type FMSynthAmpAdsr, type FMSynthModAdsr } from './synths/fm.js'

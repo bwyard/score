@@ -50,6 +50,7 @@ This is what makes SCORE a reference implementation rather than just another aud
 - **Pure functions where possible** — predictable inputs/outputs, no hidden side effects
 - **`const` + arrow functions** — no `let`, no `function` declarations, no classes
 - **No exceptions** — `ScoreError` is a factory function, not a class
+- **Minimize comments** — code is self-documenting through descriptive names. Keep: TSDoc on public exports, BOUNDARY annotations, section dividers, genuinely non-obvious WHY. Remove everything else.
 
 The song language should feel like writing Svelte — declarative, component-based, props in, music out:
 

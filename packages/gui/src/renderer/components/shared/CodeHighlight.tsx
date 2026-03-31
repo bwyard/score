@@ -5,6 +5,18 @@ type TrackInfo = {
   readonly pattern: ReadonlyArray<number | string>
 }
 
+/**
+ * Character-level decoration range for a single inline beat highlight.
+ * Targets the euclidean arg (e.g. the `4` in `Kick808(4)`) or the active
+ * step element in an explicit `.pattern([...])` array.
+ * All positions are 1-based (Monaco convention).
+ */
+export type InlineHighlight = {
+  readonly line:     number
+  readonly startCol: number
+  readonly endCol:   number
+}
+
 type Props = {
   /** The full code string in the editor. */
   readonly code:        string
@@ -205,6 +217,140 @@ export const getStepBadges = (
     const total = track.pattern.length > 0 ? track.pattern.length : defaultStepCount
     return { line: lineIndex + 1, step: currentStep % total, total }
   }).filter((b): b is { line: number; step: number; total: number } => b !== null)
+}
+
+/**
+ * Matches the numeric euclidean arg in a drum shorthand call — e.g. the `4`
+ * in `Kick808(4)`. Only matches numeric args, not empty `()` or pitch strings.
+ */
+const EUCLIDEAN_ARG_RE = /(?:Kick(?:808|909)?|Snare(?:909)?|Hihat(?:808)?|HiHat(?:808)?|Sample)\s*\((\d+)\)/
+
+/**
+ * Returns character-level inline highlight ranges for the currently active
+ * step across all tracks — used to render a Strudl-style inline playhead in
+ * the Monaco editor.
+ *
+ * Strategy per track:
+ *  - If the track block contains `.pattern([...])` → find the element at
+ *    `currentStep % patternLength` and return its column range.
+ *  - Otherwise (euclidean shorthand, e.g. `Kick808(4)`) → return the column
+ *    range of the numeric arg inside the first `(N)` on the declaration line.
+ *
+ * Only tracks that are **active** at `currentStep` (i.e. their pattern value
+ * is truthy) produce a highlight — passive steps return nothing.
+ *
+ * @param code        - Full DSL code string from the editor.
+ * @param tracks      - Track descriptors from last successful eval.
+ * @param currentStep - Current zero-based sequencer step.
+ * @returns Array of column-level highlight ranges (1-based, Monaco convention).
+ *
+ * @example
+ * ```ts
+ * // const kick = Kick808(4).volume(0.8)   ← 4 hits, step 0 active
+ * getActiveStepHighlight(code, tracks, 0)
+ * // → [{ line: 3, startCol: 17, endCol: 18 }]  (highlights the `4`)
+ * ```
+ */
+export const getActiveStepHighlight = (
+  code:        string,
+  tracks:      ReadonlyArray<TrackInfo>,
+  currentStep: number,
+): ReadonlyArray<InlineHighlight> => {
+  if (tracks.length === 0) return []
+
+  const lines         = code.split('\n')
+  const trackLineList = getTrackLines(code, tracks)
+  const result: InlineHighlight[] = []
+
+  for (const { lineIndex, trackIndex } of trackLineList) {
+    const track = tracks[trackIndex]
+    if (!track) continue
+
+    const patLen     = Math.max(track.pattern.length, 1)
+    const activeStep = currentStep % patLen
+    const val        = track.pattern[activeStep]
+
+    // Only highlight the active (hitting) step
+    if (!val) continue
+
+    // ── Case 1: explicit .pattern([...]) ───────────────────────────────────
+    // Search from the declaration line through the track's chain block
+    const NEW_STATEMENT_RE = /^\s*(const|export|import|Song)\b/
+    let patternLineIdx = -1
+    let patternLine    = ''
+
+    for (let i = lineIndex; i < lines.length; i++) {
+      const ln = lines[i]
+      if (ln === undefined || ln.trim() === '') break
+      if (i > lineIndex && NEW_STATEMENT_RE.test(ln)) break
+      if (ln.includes('.pattern([')) {
+        patternLineIdx = i
+        patternLine    = ln
+        break
+      }
+    }
+
+    if (patternLineIdx !== -1) {
+      const patStart   = patternLine.indexOf('.pattern([')
+      const arrayStart = patStart + '.pattern(['.length
+      const arrayEnd   = patternLine.indexOf('])', arrayStart)
+      if (arrayStart !== -1 && arrayEnd !== -1) {
+        const arrayContent = patternLine.slice(arrayStart, arrayEnd)
+
+        // Tokenise by commas, tracking per-element char positions
+        const elements: Array<{ start: number; end: number }> = []
+        let tokenStart = 0
+        let inStr      = false
+
+        for (let i = 0; i < arrayContent.length; i++) {
+          const ch = arrayContent[i]
+          if (ch === "'" || ch === '"') inStr = !inStr
+          if (!inStr && ch === ',') {
+            elements.push({ start: tokenStart, end: i })
+            tokenStart = i + 1
+          }
+        }
+        elements.push({ start: tokenStart, end: arrayContent.length })
+
+        const el = elements[activeStep]
+        if (el) {
+          const raw      = arrayContent.slice(el.start, el.end)
+          const trimLeft  = raw.length - raw.trimStart().length
+          const trimRight = raw.length - raw.trimEnd().length
+          const absStart  = arrayStart + el.start + trimLeft
+          const absEnd    = arrayStart + el.end   - trimRight
+
+          result.push({
+            line:     patternLineIdx + 1,   // 1-based
+            startCol: absStart + 1,          // 1-based
+            endCol:   absEnd   + 1,
+          })
+          continue
+        }
+      }
+    }
+
+    // ── Case 2: euclidean shorthand ─────────────────────────────────────────
+    // Highlight the numeric arg — e.g. the `4` in `Kick808(4)`.
+    const declLine = lines[lineIndex]
+    if (!declLine) continue
+
+    const m = EUCLIDEAN_ARG_RE.exec(declLine)
+    if (!m) continue
+
+    // Locate the `(N)` within the full match to get exact column
+    const parenOpen  = declLine.indexOf('(', m.index)
+    const parenClose = declLine.indexOf(')', parenOpen)
+    if (parenOpen === -1 || parenClose <= parenOpen + 1) continue
+
+    result.push({
+      line:     lineIndex + 1,
+      startCol: parenOpen  + 2,    // skip `(`, 1-based
+      endCol:   parenClose + 1,    // 1-based, exclusive
+    })
+  }
+
+  return result
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────

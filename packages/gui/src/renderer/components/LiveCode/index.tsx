@@ -9,7 +9,7 @@ import { MasterLevel }                      from '../shared/MasterLevel.js'
 import { MixerStrip }                       from '../shared/MixerStrip.js'
 import { DraggablePanel }                   from '../shared/DraggablePanel.js'
 import { CodeWaveform }                     from '../shared/CodeWaveform.js'
-import { getActiveLines, getStepBadges, getBlockBounds, getTrackLines } from '../shared/CodeHighlight.js'
+import { getStepBadges, getBlockBounds, getTrackLines, getActiveStepHighlight } from '../shared/CodeHighlight.js'
 import { CodeEditorPanel }                                              from '../shared/CodeEditorPanel.js'
 import type { EditorDecoration, StepBadge, BlockHighlight }            from '../shared/CodeEditorPanel.js'
 import { ReferencePanel }                   from '../shared/ReferencePanel.js'
@@ -19,7 +19,7 @@ import { EvalStatus }                       from '../status/index.js'
 import type { EvalStatusKind }             from '../status/EvalStatus.js'
 import { BarCounter }                       from '../status/index.js'
 import { PendingSwapBadge }                 from '../status/index.js'
-import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams, parseTrackModel, patchInstrumentModel, patchMute, parseMuteState, patchAddInstrument, uniqueVarName } from '../../lib/codePatcher.js'
+import { patchBpm, patchTrackPattern, insertTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams, parseTrackModel, patchInstrumentModel, patchMute, parseMuteState, patchAddInstrument, uniqueVarName } from '../../lib/codePatcher.js'
 import { InstrumentPanel } from '../shared/InstrumentPanel.js'
 import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
 import type { PanelLayoutMap }            from '../../../main/ipc-types.js'
@@ -177,17 +177,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   // Accumulate panel positions for debounced save (ref avoids extra re-renders)
   const layoutAccRef = useRef<PanelLayoutMap>({})
 
-  // Monaco beat-highlight decorations — active track lines while playing
-  const editorDecorations = useMemo((): ReadonlyArray<EditorDecoration> => {
-    if (!engineState.playing) return []
-    const activeLines = getActiveLines(code, tracks, currentStep)
-    return activeLines.map(zeroIdx => ({
-      startLine:   zeroIdx + 1,  // Monaco is 1-based
-      endLine:     zeroIdx + 1,
-      className:   'score-beat-active',
-      isWholeLine: true,
-    }))
-  }, [engineState.playing, code, tracks, currentStep])
+  const editorDecorations = useMemo((): ReadonlyArray<EditorDecoration> => [], [])
   // t219 — step badges: per-instrument line `STEP/TOTAL` pills during playback
   const stepBadges = useMemo((): ReadonlyArray<StepBadge> =>
     engineState.playing
@@ -210,6 +200,11 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
         return bounds ? [bounds] : []
       })
   }, [engineState.playing, code, tracks, currentStep])
+
+  const inlineHighlights = useMemo(
+    () => engineState.playing ? getActiveStepHighlight(code, tracks, currentStep) : [],
+    [engineState.playing, code, tracks, currentStep],
+  )
 
   const [panels, setPanels] = useState<PanelVisibility>({
     punchcard:  true,
@@ -452,7 +447,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       pat[stepIndex % len] = newVal
       return { ...t, pattern: pat }
     }))
-    setCode(prev => patchTrackPattern(prev, trackIndex, stepIndex, newVal))
+    setCode(prev => {
+      const patched = patchTrackPattern(prev, trackIndex, stepIndex, newVal)
+      if (patched === prev) {
+        const newPattern: number[] = track.pattern.map(v => (typeof v === 'number' ? v : 0))
+        newPattern[stepIndex % len] = newVal
+        return insertTrackPattern(prev, trackIndex, newPattern)
+      }
+      return patched
+    })
     if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
     evalDebounceRef.current = setTimeout(() => {
       setError(null)
@@ -617,6 +620,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                 stepBadges={stepBadges}
                 importsVisible={importsVisible}
                 blockHighlights={blockHighlights}
+                inlineHighlights={inlineHighlights}
               />
             </div>
           </div>

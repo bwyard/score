@@ -6,7 +6,16 @@
 
 import type { BackendNode } from '@score/core'
 import { uid } from '@score/core'
-import type { InstrumentDescriptor, KickProps, SnareProps, HiHatProps, SynthDSLProps, SampleProps, ThereminDSLProps, SaxDSLProps, ArpDSLProps, Kick808DSLProps, Kick909DSLProps, Hihat808DSLProps, Snare909DSLProps, SubSynthDSLProps, FMSynthDSLProps } from './types.js'
+import type {
+  InstrumentDescriptor,
+  KickProps, SnareProps, HiHatProps,
+  SynthDSLProps, SampleProps,
+  ThereminDSLProps, SaxDSLProps, ArpDSLProps,
+  Kick808DSLProps, Kick909DSLProps,
+  Hihat808DSLProps,
+  Snare909DSLProps,
+  SubSynthDSLProps, FMSynthDSLProps,
+} from './types.js'
 
 const makeDescriptor = (
   instrumentType: InstrumentDescriptor['instrumentType'],

@@ -140,3 +140,36 @@ export const createHihat808 = (
 
   return component
 }
+
+/**
+ * Create a synthesized 808-style open hi-hat component.
+ *
+ * Sugar for {@link createHihat808} with `open: true` fixed — uses a longer
+ * default decay (0.3 s) that gives the sustained, washy open-hat character.
+ * Accepts the same props as {@link createHihat808} except `open` is ignored.
+ *
+ * @param context - Backend audio context providing the Web Audio graph.
+ * @param props - Optional configuration. `decay` defaults to `0.3`; `open` is always `true`.
+ * @returns A {@link Hihat808Component} with `id` prefixed `hihatopen808` and `type` set to `'hihatopen808'`.
+ *
+ * @example
+ * ```ts
+ * const openHat = createHihatOpen808(context, { decay: 0.4 })
+ * openHat.connect(context.destination)
+ * openHat.trigger(context.currentTime)
+ * ```
+ *
+ * @see {@link createHihat808} — closed variant
+ * @throws \{ScoreError\} Never — invalid props are silently clamped.
+ */
+export const createHihatOpen808 = (
+  context: ScoreAudioContext,
+  props?: Omit<Hihat808Props, 'open'>,
+): Hihat808Component => {
+  const component = createHihat808(context, { ...props, open: true })
+  return {
+    ...component,
+    id: uid('hihatopen808'),
+    type: 'hihatopen808' as const,
+  }
+}

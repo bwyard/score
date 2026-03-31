@@ -11,6 +11,7 @@ import { useRef, useEffect, useCallback, memo } from 'react'
 import MonacoEditor, { type OnMount, type Monaco }  from '@monaco-editor/react'
 import type { editor as MonacoEditorNS }            from 'monaco-editor'
 import { SCORE_DSL_TYPES }                          from '../../types/score-dsl-types.js'
+import type { InlineHighlight }                     from './CodeHighlight.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,12 @@ type Props = {
    * CSS keyframe animation. The parent recomputes this array on every step tick.
    */
   readonly blockHighlights?: ReadonlyArray<BlockHighlight>
+  /**
+   * Inline character-level highlights — targets the euclidean arg (`4` in
+   * `Kick808(4)`) or the active element in `.pattern([...])`. Updated on every
+   * engine step tick; only active (hitting) tracks produce a highlight.
+   */
+  readonly inlineHighlights?: ReadonlyArray<InlineHighlight>
 }
 
 // ── Score DSL Token Provider ───────────────────────────────────────────────────
@@ -179,17 +186,19 @@ const injectDecorationCss = (): void => {
       background: rgba(74, 143, 255, 0.07) !important;
       border-left: 2px solid rgba(74, 143, 255, 0.4) !important;
     }
-    /* t330 — Block highlight fade animation (Strudl-style) */
-    @keyframes score-block-fade {
-      0%   { background: rgba(74, 143, 255, 0.12); border-left-color: rgba(74, 143, 255, 0.55); }
-      100% { background: transparent;              border-left-color: transparent; }
-    }
-    /* Two alternating classes so deltaDecorations triggers a DOM class-name change
-       on consecutive ticks, which restarts the CSS animation each step. */
+    /* Block highlight — no-op. Whole-line highlight is disabled; only inline token
+       outlines are used. Classes kept so deltaDecorations calls don't error. */
     .score-block-active-a,
-    .score-block-active-b {
-      animation: score-block-fade 200ms ease-out forwards;
-      border-left: 2px solid rgba(74, 143, 255, 0.55);
+    .score-block-active-b {}
+    /* Inline step highlight — Strudl-style box around the active token.
+       Single stable class (no -a/-b flip) so there is no frame gap where
+       nothing is applied — that gap was causing the highlight to vanish in
+       screenshots. box-shadow used instead of outline (outline is clipped by
+       Monaco overflow:hidden line containers). */
+    .score-inline-active {
+      background: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+      border-radius: 2px;
     }
     /* Step badge — inline content widget gutter marker */
     .score-step-badge {
@@ -235,16 +244,31 @@ const injectDecorationCss = (): void => {
  * />
  * ```
  */
-const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true, blockHighlights }: Props) => {
+const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true, blockHighlights, inlineHighlights }: Props) => {
   const editorRef            = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
+  const containerRef         = useRef<HTMLDivElement>(null)
   const decorationsRef       = useRef<string[]>([])
   const stepBadgesRef        = useRef<string[]>([])
   const blockHighlightsRef   = useRef<string[]>([])
   // t330 — flip between -a and -b on every tick so the CSS animation restarts
   const blockFlipRef         = useRef(false)
+  const inlineHighlightsRef  = useRef<string[]>([])
   const monacoRef            = useRef<Monaco | null>(null)
 
-  // Apply decorations whenever they change
+  // Pass explicit dimensions from ResizeObserver — avoids a layout() no-arg race before reflow.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry || !editorRef.current) return
+      const { width, height } = entry.contentRect
+      editorRef.current.layout({ width: Math.floor(width), height: Math.floor(height) })
+    })
+    observer.observe(el)
+    return () => { observer.disconnect() }
+  }, [])
+
   useEffect(() => {
     const ed     = editorRef.current
     const monaco = monacoRef.current
@@ -298,8 +322,6 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
     const model = ed.getModel()
     if (!model) return
 
-    // Alternate CSS class name each tick so the animation always restarts,
-    // even when the same block stays active across consecutive steps.
     blockFlipRef.current = !blockFlipRef.current
     const className = blockFlipRef.current ? 'score-block-active-a' : 'score-block-active-b'
 
@@ -314,6 +336,25 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
 
     blockHighlightsRef.current = ed.deltaDecorations(blockHighlightsRef.current, newBlocks)
   }, [blockHighlights])
+
+  useEffect(() => {
+    const ed     = editorRef.current
+    const monaco = monacoRef.current
+    if (!ed || !monaco) return
+
+    const model = ed.getModel()
+    if (!model) return
+
+    const newInline = (inlineHighlights ?? []).map(h => ({
+      range: new monaco.Range(h.line, h.startCol, h.line, h.endCol),
+      options: {
+        className: 'score-inline-active',
+        stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+      },
+    }))
+
+    inlineHighlightsRef.current = ed.deltaDecorations(inlineHighlightsRef.current, newInline)
+  }, [inlineHighlights])
 
   // t220 — fold / unfold the leading import block when importsVisible changes
   useEffect(() => {
@@ -390,39 +431,41 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
   }, [onChange])
 
   return (
-    <MonacoEditor
-      height="100%"
-      language="typescript"
-      theme="score-dark"
-      value={value}
-      onChange={handleChange}
-      onMount={handleMount}
-      options={{
-        fontSize:              12.8,
-        fontFamily:            "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-        lineHeight:            1.65 * 12.8,
-        minimap:               { enabled: false },
-        scrollBeyondLastLine:  false,
-        wordWrap:              'on',
-        tabSize:               2,
-        insertSpaces:          true,
-        renderLineHighlight:   'line',
-        cursorBlinking:        'smooth',
-        cursorSmoothCaretAnimation: 'on',
-        padding:               { top: 12, bottom: 12 },
-        overviewRulerLanes:    1,
-        scrollbar: {
-          verticalScrollbarSize:   6,
-          horizontalScrollbarSize: 6,
-        },
-        // Folding enabled so import block can be collapsed via the Imports toggle (t220).
-        // The fold icon is hidden via CSS — folding: true is required for editor.fold() to work.
-        folding:               true,
-        showFoldingControls:   'never',
-        renderWhitespace:      'none',
-        guides:                { indentation: false },
-      }}
-    />
+    <div ref={containerRef} style={{ height: '100%' }}>
+      <MonacoEditor
+        height="100%"
+        language="typescript"
+        theme="score-dark"
+        value={value}
+        onChange={handleChange}
+        onMount={handleMount}
+        options={{
+          fontSize:              12.8,
+          fontFamily:            "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+          lineHeight:            1.65 * 12.8,
+          minimap:               { enabled: false },
+          scrollBeyondLastLine:  false,
+          wordWrap:              'on',
+          tabSize:               2,
+          insertSpaces:          true,
+          renderLineHighlight:   'line',
+          cursorBlinking:        'smooth',
+          cursorSmoothCaretAnimation: 'on',
+          padding:               { top: 12, bottom: 12 },
+          overviewRulerLanes:    1,
+          scrollbar: {
+            verticalScrollbarSize:   6,
+            horizontalScrollbarSize: 6,
+          },
+          // Folding enabled so import block can be collapsed via the Imports toggle (t220).
+          // The fold icon is hidden via CSS — folding: true is required for editor.fold() to work.
+          folding:               true,
+          showFoldingControls:   'never',
+          renderWhitespace:      'none',
+          guides:                { indentation: false },
+        }}
+      />
+    </div>
   )
 }
 

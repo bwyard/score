@@ -3,7 +3,7 @@ export { Intro, Buildup, Drop, Breakdown, Outro } from './sections.js'
 export { Track } from './track.js'
 export { Sequence } from './sequence.js'
 export { Synth, Sample, Theremin, Sax, Arp } from './instruments.js'
-export { Kick, Snare, HiHat, Kick808, Kick909, Hihat808, Snare909 } from './percussion.js'
+export { Kick, Snare, HiHat, Kick808, Kick909, Hihat808, HihatOpen808, Snare909 } from './percussion.js'
 export { Bass303, SubSynth, FMSynth, Pad, Pluck, Stab, Rhodes, Wurlitzer, Hammond, Clavinet, DX7Lead, WavetableSynth, SuperSaw, KarplusSynth, Guitar, AcousticGuitar, BassGuitar, Trumpet, Trombone, FrenchHorn, Flugelhorn } from './melodic.js'
 export type { Bass303Part, FMSynthPart, SubSynthPart } from './melodic.js'
 export { chord, scale, progression, Scale, Progression } from './theory.js'
@@ -54,6 +54,7 @@ export type {
   Kick808DSLProps,
   Kick909DSLProps,
   Hihat808DSLProps,
+  HihatOpen808DSLProps,
   Snare909DSLProps,
   SubSynthDSLProps,
   FMSynthDSLProps,

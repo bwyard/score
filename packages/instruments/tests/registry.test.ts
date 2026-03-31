@@ -198,7 +198,7 @@ const mockCtx = {
 const EXPECTED_INSTRUMENT_TYPES: ReadonlyArray<InstrumentType> = [
   // Drums
   'kick', 'snare', 'hihat',
-  'kick808', 'kick909', 'hihat808', 'snare909',
+  'kick808', 'kick909', 'hihat808', 'hihatopen808', 'snare909',
   // Synths
   'synth', 'subsynth', 'pad', 'fmsynth', 'rhodes', 'pluck', 'bass-303',
   // Melodic
@@ -220,7 +220,7 @@ describe('INSTRUMENT_REGISTRY', () => {
   it.each(EXPECTED_INSTRUMENT_TYPES)(
     '%s factory is a function',
     (instrumentType) => {
-      expect(typeof INSTRUMENT_REGISTRY[instrumentType]).toBe('function')
+      expect(typeof INSTRUMENT_REGISTRY[instrumentType].factory).toBe('function')
     },
   )
 
@@ -229,10 +229,11 @@ describe('INSTRUMENT_REGISTRY', () => {
     ['snare',    {},                    ],
     ['hihat',    {},                    ],
     ['synth',    {},                    ],
-    ['kick808',  {},                    ],
-    ['kick909',  {},                    ],
-    ['hihat808', {},                    ],
-    ['snare909', {},                    ],
+    ['kick808',      {},                    ],
+    ['kick909',      {},                    ],
+    ['hihat808',     {},                    ],
+    ['hihatopen808', {},                    ],
+    ['snare909',     {},                    ],
     ['subsynth', {},                    ],
     ['fmsynth',  {},                    ],
     ['pad',      {},                    ],
@@ -245,10 +246,9 @@ describe('INSTRUMENT_REGISTRY', () => {
   ] as const)(
     '%s factory produces a valid AudioComponent (id, type, connect, disconnect, dispose)',
     (instrumentType, props) => {
-      const factory = INSTRUMENT_REGISTRY[instrumentType]
+      const { factory } = INSTRUMENT_REGISTRY[instrumentType]
       // Cast through unknown — mockCtx satisfies the methods used by each factory but
       // does not implement every BackendContext method (compressor, delay, etc.).
-       
       const component = (factory as unknown as (ctx: unknown, props: unknown) => unknown)(mockCtx, props)
 
       expect(component).toBeDefined()
