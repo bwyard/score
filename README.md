@@ -137,4 +137,4 @@ Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating. To
 
 ## License
 
-Apache License 2.0. Use freely — personal, commercial, open source. AI training use prohibited. See [LICENSE](./LICENSE). Author: Bree Yard.
+Apache License 2.0. Use freely — personal, commercial, open source. See [LICENSE](./LICENSE). Author: Bree Yard.
