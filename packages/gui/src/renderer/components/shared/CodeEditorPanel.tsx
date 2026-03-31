@@ -190,13 +190,16 @@ const injectDecorationCss = (): void => {
        outlines are used. Classes kept so deltaDecorations calls don't error. */
     .score-block-active-a,
     .score-block-active-b {}
-    /* Inline step highlight — Strudl-style box outline around the active token.
-       No background, no animation. Constant solid outline while the step is active.
-       -a/-b alternation forces a class-name swap each tick so deltaDecorations fires. */
+    /* Inline step highlight — Strudl-style box around the active token.
+       outline is clipped by Monaco overflow:hidden line containers so we use
+       box-shadow instead (not clipped the same way). Subtle background tint
+       ensures visibility in screenshots. -a/-b swap forces deltaDecorations. */
     .score-inline-active-a,
     .score-inline-active-b {
-      outline: 1px solid rgba(255, 255, 255, 0.75);
+      background: rgba(255, 255, 255, 0.13);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
       border-radius: 2px;
+      padding: 1px 1px;
     }
     /* Step badge — inline content widget gutter marker */
     .score-step-badge {
