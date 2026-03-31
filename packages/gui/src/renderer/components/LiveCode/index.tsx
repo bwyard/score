@@ -9,7 +9,7 @@ import { MasterLevel }                      from '../shared/MasterLevel.js'
 import { MixerStrip }                       from '../shared/MixerStrip.js'
 import { DraggablePanel }                   from '../shared/DraggablePanel.js'
 import { CodeWaveform }                     from '../shared/CodeWaveform.js'
-import { getActiveLines, getStepBadges, getBlockBounds, getTrackLines, getActiveStepHighlight } from '../shared/CodeHighlight.js'
+import { getStepBadges, getBlockBounds, getTrackLines, getActiveStepHighlight } from '../shared/CodeHighlight.js'
 import { CodeEditorPanel }                                              from '../shared/CodeEditorPanel.js'
 import type { EditorDecoration, StepBadge, BlockHighlight }            from '../shared/CodeEditorPanel.js'
 import { ReferencePanel }                   from '../shared/ReferencePanel.js'
@@ -177,17 +177,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   // Accumulate panel positions for debounced save (ref avoids extra re-renders)
   const layoutAccRef = useRef<PanelLayoutMap>({})
 
-  // Monaco beat-highlight decorations — active track lines while playing
-  const editorDecorations = useMemo((): ReadonlyArray<EditorDecoration> => {
-    if (!engineState.playing) return []
-    const activeLines = getActiveLines(code, tracks, currentStep)
-    return activeLines.map(zeroIdx => ({
-      startLine:   zeroIdx + 1,  // Monaco is 1-based
-      endLine:     zeroIdx + 1,
-      className:   'score-beat-active',
-      isWholeLine: true,
-    }))
-  }, [engineState.playing, code, tracks, currentStep])
+  const editorDecorations = useMemo((): ReadonlyArray<EditorDecoration> => [], [])
   // t219 — step badges: per-instrument line `STEP/TOTAL` pills during playback
   const stepBadges = useMemo((): ReadonlyArray<StepBadge> =>
     engineState.playing
