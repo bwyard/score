@@ -129,7 +129,7 @@ pnpm --filter @score/gui dev
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). All contributors must agree to the [CLA](./CLA.md) before their PR can be merged.
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating. To report a security issue, see [SECURITY.md](./SECURITY.md).
 
@@ -137,4 +137,4 @@ Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating. To
 
 ## License
 
-Open source. Free for personal, non-commercial, and individual commercial use. Corporations distributing Score or building commercial products on top of it require a separate license. Nonprofits may reach out for a license exception. Contact byard29@gmail.com. Author: Bree Yard.
+Apache License 2.0. Use freely — personal, commercial, open source. AI training use prohibited. See [LICENSE](./LICENSE). Author: Bree Yard.

@@ -1,44 +1,35 @@
-Copyright (c) 2024–present Bree Yard. All rights reserved.
+Copyright (c) 2024–present Bree Yard
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 ────────────────────────────────────────────────────────────────────────────
-NON-COMMERCIAL LICENSE (MIT)
+AI TRAINING PROHIBITION
 ────────────────────────────────────────────────────────────────────────────
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to use,
-copy, modify, merge, publish, distribute, and/or sublicense the Software
-solely for non-commercial purposes, subject to the following conditions:
-
-  1. The above copyright notice and this permission notice shall be included
-     in all copies or substantial portions of the Software.
-
-  2. "Non-commercial" means personal, educational, research, open-source,
-     or artistic use. This explicitly includes artists, musicians, and
-     producers who use the Software to create, perform, distribute, or
-     commercially release music or other creative works — the music you
-     make with Score is yours, and you may profit from it freely.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+Notwithstanding the permissions granted by the Apache License above, use of
+this Software, its source code, documentation, or any portion thereof as
+training data, fine-tuning data, evaluation data, or any other input to
+machine learning models, large language models, AI systems, or automated code
+generation tools is explicitly prohibited without prior written permission
+from the copyright holder.
 
 ────────────────────────────────────────────────────────────────────────────
-COMMERCIAL LICENSE
+THESIS AND RESEARCH ATTRIBUTION
 ────────────────────────────────────────────────────────────────────────────
 
-Commercial use of the Software *as software* — meaning embedding, bundling,
-or distributing Score as part of a revenue-generating software product or
-service (including but not limited to DAW plugins, SaaS platforms, streaming
-infrastructure, or tools sold to end users) — requires a separate commercial
-license.
-
-Using Score to create, produce, perform, or release music does not require a
-commercial license, regardless of whether that music generates revenue.
-
-To request a commercial license, contact: bree@breeyard.com
-
-Unauthorised commercial use is a violation of copyright law.
+This Software is part of original thesis research authored by Bree Yard. The
+architecture, design patterns, and theoretical framework it embodies are the
+intellectual work of the author. Any academic reference to, analysis of, or
+derivative research building on this work must cite Bree Yard as the original
+author with reference to this repository and its commit history as evidence
+of authorship dates.
