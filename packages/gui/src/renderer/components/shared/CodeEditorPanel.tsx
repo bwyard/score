@@ -191,15 +191,14 @@ const injectDecorationCss = (): void => {
     .score-block-active-a,
     .score-block-active-b {}
     /* Inline step highlight — Strudl-style box around the active token.
-       outline is clipped by Monaco overflow:hidden line containers so we use
-       box-shadow instead (not clipped the same way). Subtle background tint
-       ensures visibility in screenshots. -a/-b swap forces deltaDecorations. */
-    .score-inline-active-a,
-    .score-inline-active-b {
-      background: rgba(255, 255, 255, 0.13);
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
+       Single stable class (no -a/-b flip) so there is no frame gap where
+       nothing is applied — that gap was causing the highlight to vanish in
+       screenshots. box-shadow used instead of outline (outline is clipped by
+       Monaco overflow:hidden line containers). */
+    .score-inline-active {
+      background: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
       border-radius: 2px;
-      padding: 1px 1px;
     }
     /* Step badge — inline content widget gutter marker */
     .score-step-badge {
@@ -254,7 +253,6 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
   // t330 — flip between -a and -b on every tick so the CSS animation restarts
   const blockFlipRef         = useRef(false)
   const inlineHighlightsRef  = useRef<string[]>([])
-  const inlineFlipRef        = useRef(false)
   const monacoRef            = useRef<Monaco | null>(null)
 
   // Pass explicit dimensions from ResizeObserver — avoids a layout() no-arg race before reflow.
@@ -347,13 +345,10 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
     const model = ed.getModel()
     if (!model) return
 
-    inlineFlipRef.current = !inlineFlipRef.current
-    const className = inlineFlipRef.current ? 'score-inline-active-a' : 'score-inline-active-b'
-
     const newInline = (inlineHighlights ?? []).map(h => ({
       range: new monaco.Range(h.line, h.startCol, h.line, h.endCol),
       options: {
-        inlineClassName: className,
+        inlineClassName: 'score-inline-active',
         stickiness:      monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
       },
     }))
