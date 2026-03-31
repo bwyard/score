@@ -67,6 +67,9 @@ export const EvalStatus = ({ status, message, timestamp }: Props) => {
         {status === 'error'   && 'Error'}
         {status === 'pending' && 'Pending...'}
       </span>
+      {status === 'idle' && (
+        <span style={styles.hint}>Ctrl+Enter to run</span>
+      )}
       {status === 'ok' && timestamp !== undefined && (
         <span style={styles.time}>{relativeTime(timestamp)}</span>
       )}
@@ -126,5 +129,11 @@ const styles = {
     overflow:     'hidden',
     textOverflow: 'ellipsis',
     maxWidth:     '220px',
+  },
+  hint: {
+    display:    'block',
+    fontSize:   '0.62rem',
+    color:      '#444454',
+    marginTop:  '0.05rem',
   },
 } as const

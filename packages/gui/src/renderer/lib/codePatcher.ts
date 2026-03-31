@@ -146,6 +146,56 @@ export const patchTrackPattern = (
 }
 
 /**
+ * Insert an explicit `.pattern([...])` into a track that uses euclidean shorthand
+ * (e.g. `Kick808(4)`) — which has no pattern array in the code to patch in-place.
+ *
+ * Inserts the pattern before `.volume()` if present, otherwise appends to the
+ * last non-empty line of the track's chain region.
+ *
+ * @param code       - Full DSL code string.
+ * @param trackIndex - Zero-based track index.
+ * @param pattern    - The full step pattern to insert (e.g. from engine track state).
+ * @returns Patched code string, or original if track region is not found.
+ *
+ * @example
+ * ```ts
+ * // const kick = Kick808(4).volume(0.8)
+ * insertTrackPattern(code, 0, [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0])
+ * // → const kick = Kick808(4).pattern([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]).volume(0.8)
+ * ```
+ */
+export const insertTrackPattern = (
+  code:       string,
+  trackIndex: number,
+  pattern:    ReadonlyArray<number>,
+): string => {
+  const region = trackSlice(code, trackIndex)
+  if (!region) return code
+  const { start, end } = region
+  const slice = code.slice(start, end)
+
+  const patternStr = `.pattern([${pattern.join(', ')}])`
+
+  // Insert before .volume() to keep volume last in the chain
+  const volMatch = /\.volume\(/.exec(slice)
+  if (volMatch) {
+    const newSlice = slice.slice(0, volMatch.index) + patternStr + slice.slice(volMatch.index)
+    return code.slice(0, start) + newSlice + code.slice(end)
+  }
+
+  // No .volume() — append to the last non-empty line of the track's chain region
+  const lines   = slice.split('\n')
+  const stopIdx = lines.findIndex(ln =>
+    ln.trim().startsWith('const ') || ln.trim().startsWith('export '))
+  const regionLines    = stopIdx === -1 ? lines : lines.slice(0, stopIdx)
+  const insertLineIdx  = regionLines.reduce((acc, ln, i) =>
+    ln.trim().length > 0 ? i : acc, 0)
+
+  const patched = lines.map((ln, i) => i === insertLineIdx ? ln + patternStr : ln)
+  return code.slice(0, start) + patched.join('\n') + code.slice(end)
+}
+
+/**
  * Replace the volume value for the given track.
  * Matches the first `volume: <number>` within the track's region.
  *

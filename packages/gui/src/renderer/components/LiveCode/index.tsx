@@ -19,7 +19,7 @@ import { EvalStatus }                       from '../status/index.js'
 import type { EvalStatusKind }             from '../status/EvalStatus.js'
 import { BarCounter }                       from '../status/index.js'
 import { PendingSwapBadge }                 from '../status/index.js'
-import { patchBpm, patchTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams, parseTrackModel, patchInstrumentModel, patchMute, parseMuteState, patchAddInstrument, uniqueVarName } from '../../lib/codePatcher.js'
+import { patchBpm, patchTrackPattern, insertTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams, parseTrackModel, patchInstrumentModel, patchMute, parseMuteState, patchAddInstrument, uniqueVarName } from '../../lib/codePatcher.js'
 import { InstrumentPanel } from '../shared/InstrumentPanel.js'
 import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
 import type { PanelLayoutMap }            from '../../../main/ipc-types.js'
@@ -452,7 +452,18 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       pat[stepIndex % len] = newVal
       return { ...t, pattern: pat }
     }))
-    setCode(prev => patchTrackPattern(prev, trackIndex, stepIndex, newVal))
+    setCode(prev => {
+      const patched = patchTrackPattern(prev, trackIndex, stepIndex, newVal)
+      // Fallback: euclidean shorthand (e.g. Kick808(4)) has no .pattern() to patch in-place.
+      // Build the full toggled pattern array and insert it explicitly.
+      if (patched === prev) {
+        // Drum patterns are always numeric (0|1); cast away the string union from PunchcardTrack.
+        const newPattern: number[] = track.pattern.map(v => (typeof v === 'number' ? v : 0))
+        newPattern[stepIndex % len] = newVal
+        return insertTrackPattern(prev, trackIndex, newPattern)
+      }
+      return patched
+    })
     if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
     evalDebounceRef.current = setTimeout(() => {
       setError(null)

@@ -237,12 +237,25 @@ const injectDecorationCss = (): void => {
  */
 const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true, blockHighlights }: Props) => {
   const editorRef            = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
+  const containerRef         = useRef<HTMLDivElement>(null)
   const decorationsRef       = useRef<string[]>([])
   const stepBadgesRef        = useRef<string[]>([])
   const blockHighlightsRef   = useRef<string[]>([])
   // t330 — flip between -a and -b on every tick so the CSS animation restarts
   const blockFlipRef         = useRef(false)
   const monacoRef            = useRef<Monaco | null>(null)
+
+  // Notify Monaco when the container resizes (e.g. console panel toggle pushes editor height).
+  // Without this, the editor's internal scroll area is never recalculated and content appears clipped.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new ResizeObserver(() => {
+      editorRef.current?.layout()
+    })
+    observer.observe(el)
+    return () => { observer.disconnect() }
+  }, [])
 
   // Apply decorations whenever they change
   useEffect(() => {
@@ -390,39 +403,41 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
   }, [onChange])
 
   return (
-    <MonacoEditor
-      height="100%"
-      language="typescript"
-      theme="score-dark"
-      value={value}
-      onChange={handleChange}
-      onMount={handleMount}
-      options={{
-        fontSize:              12.8,
-        fontFamily:            "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-        lineHeight:            1.65 * 12.8,
-        minimap:               { enabled: false },
-        scrollBeyondLastLine:  false,
-        wordWrap:              'on',
-        tabSize:               2,
-        insertSpaces:          true,
-        renderLineHighlight:   'line',
-        cursorBlinking:        'smooth',
-        cursorSmoothCaretAnimation: 'on',
-        padding:               { top: 12, bottom: 12 },
-        overviewRulerLanes:    1,
-        scrollbar: {
-          verticalScrollbarSize:   6,
-          horizontalScrollbarSize: 6,
-        },
-        // Folding enabled so import block can be collapsed via the Imports toggle (t220).
-        // The fold icon is hidden via CSS — folding: true is required for editor.fold() to work.
-        folding:               true,
-        showFoldingControls:   'never',
-        renderWhitespace:      'none',
-        guides:                { indentation: false },
-      }}
-    />
+    <div ref={containerRef} style={{ height: '100%' }}>
+      <MonacoEditor
+        height="100%"
+        language="typescript"
+        theme="score-dark"
+        value={value}
+        onChange={handleChange}
+        onMount={handleMount}
+        options={{
+          fontSize:              12.8,
+          fontFamily:            "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+          lineHeight:            1.65 * 12.8,
+          minimap:               { enabled: false },
+          scrollBeyondLastLine:  false,
+          wordWrap:              'on',
+          tabSize:               2,
+          insertSpaces:          true,
+          renderLineHighlight:   'line',
+          cursorBlinking:        'smooth',
+          cursorSmoothCaretAnimation: 'on',
+          padding:               { top: 12, bottom: 12 },
+          overviewRulerLanes:    1,
+          scrollbar: {
+            verticalScrollbarSize:   6,
+            horizontalScrollbarSize: 6,
+          },
+          // Folding enabled so import block can be collapsed via the Imports toggle (t220).
+          // The fold icon is hidden via CSS — folding: true is required for editor.fold() to work.
+          folding:               true,
+          showFoldingControls:   'never',
+          renderWhitespace:      'none',
+          guides:                { indentation: false },
+        }}
+      />
+    </div>
   )
 }
 
