@@ -134,4 +134,4 @@ Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating. To
 
 ## License
 
-Source-available — license TBD (pre-release). Author: Bree Yard.
+Open source for non-commercial use. Individual commercial use (personal projects, freelance work) is permitted. Corporate/enterprise licensing TBD. Author: Bree Yard.
