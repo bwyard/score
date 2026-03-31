@@ -348,8 +348,8 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
     const newInline = (inlineHighlights ?? []).map(h => ({
       range: new monaco.Range(h.line, h.startCol, h.line, h.endCol),
       options: {
-        inlineClassName: 'score-inline-active',
-        stickiness:      monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        className: 'score-inline-active',
+        stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
       },
     }))
 
