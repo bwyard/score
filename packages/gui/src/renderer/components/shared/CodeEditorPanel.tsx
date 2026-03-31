@@ -11,6 +11,7 @@ import { useRef, useEffect, useCallback, memo } from 'react'
 import MonacoEditor, { type OnMount, type Monaco }  from '@monaco-editor/react'
 import type { editor as MonacoEditorNS }            from 'monaco-editor'
 import { SCORE_DSL_TYPES }                          from '../../types/score-dsl-types.js'
+import type { InlineHighlight }                     from './CodeHighlight.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,12 @@ type Props = {
    * CSS keyframe animation. The parent recomputes this array on every step tick.
    */
   readonly blockHighlights?: ReadonlyArray<BlockHighlight>
+  /**
+   * Inline character-level highlights — targets the euclidean arg (`4` in
+   * `Kick808(4)`) or the active element in `.pattern([...])`. Updated on every
+   * engine step tick; only active (hitting) tracks produce a highlight.
+   */
+  readonly inlineHighlights?: ReadonlyArray<InlineHighlight>
 }
 
 // ── Score DSL Token Provider ───────────────────────────────────────────────────
@@ -191,6 +198,16 @@ const injectDecorationCss = (): void => {
       animation: score-block-fade 200ms ease-out forwards;
       border-left: 2px solid rgba(74, 143, 255, 0.55);
     }
+    /* Inline step highlight — flashes the euclidean arg or active pattern element.
+       Two alternating classes so the animation restarts on consecutive ticks. */
+    @keyframes score-inline-flash {
+      0%   { background: rgba(74, 143, 255, 0.55); color: #ffffff; border-radius: 2px; }
+      100% { background: transparent;              color: inherit; }
+    }
+    .score-inline-active-a,
+    .score-inline-active-b {
+      animation: score-inline-flash 180ms ease-out forwards;
+    }
     /* Step badge — inline content widget gutter marker */
     .score-step-badge {
       display: inline-block;
@@ -235,7 +252,7 @@ const injectDecorationCss = (): void => {
  * />
  * ```
  */
-const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true, blockHighlights }: Props) => {
+const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges, importsVisible = true, blockHighlights, inlineHighlights }: Props) => {
   const editorRef            = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
   const containerRef         = useRef<HTMLDivElement>(null)
   const decorationsRef       = useRef<string[]>([])
@@ -243,6 +260,8 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
   const blockHighlightsRef   = useRef<string[]>([])
   // t330 — flip between -a and -b on every tick so the CSS animation restarts
   const blockFlipRef         = useRef(false)
+  const inlineHighlightsRef  = useRef<string[]>([])
+  const inlineFlipRef        = useRef(false)
   const monacoRef            = useRef<Monaco | null>(null)
 
   // Notify Monaco when the container resizes (e.g. console panel toggle pushes editor height).
@@ -327,6 +346,31 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
 
     blockHighlightsRef.current = ed.deltaDecorations(blockHighlightsRef.current, newBlocks)
   }, [blockHighlights])
+
+  // Inline step highlights — character-level flash on the euclidean arg or active
+  // pattern element (e.g. the `4` in `Kick808(4)`). Restarts animation each tick
+  // by alternating between -a and -b class names.
+  useEffect(() => {
+    const ed     = editorRef.current
+    const monaco = monacoRef.current
+    if (!ed || !monaco) return
+
+    const model = ed.getModel()
+    if (!model) return
+
+    inlineFlipRef.current = !inlineFlipRef.current
+    const className = inlineFlipRef.current ? 'score-inline-active-a' : 'score-inline-active-b'
+
+    const newInline = (inlineHighlights ?? []).map(h => ({
+      range: new monaco.Range(h.line, h.startCol, h.line, h.endCol),
+      options: {
+        inlineClassName: className,
+        stickiness:      monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+      },
+    }))
+
+    inlineHighlightsRef.current = ed.deltaDecorations(inlineHighlightsRef.current, newInline)
+  }, [inlineHighlights])
 
   // t220 — fold / unfold the leading import block when importsVisible changes
   useEffect(() => {

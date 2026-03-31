@@ -9,7 +9,7 @@ import { MasterLevel }                      from '../shared/MasterLevel.js'
 import { MixerStrip }                       from '../shared/MixerStrip.js'
 import { DraggablePanel }                   from '../shared/DraggablePanel.js'
 import { CodeWaveform }                     from '../shared/CodeWaveform.js'
-import { getActiveLines, getStepBadges, getBlockBounds, getTrackLines } from '../shared/CodeHighlight.js'
+import { getActiveLines, getStepBadges, getBlockBounds, getTrackLines, getActiveStepHighlight } from '../shared/CodeHighlight.js'
 import { CodeEditorPanel }                                              from '../shared/CodeEditorPanel.js'
 import type { EditorDecoration, StepBadge, BlockHighlight }            from '../shared/CodeEditorPanel.js'
 import { ReferencePanel }                   from '../shared/ReferencePanel.js'
@@ -210,6 +210,13 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
         return bounds ? [bounds] : []
       })
   }, [engineState.playing, code, tracks, currentStep])
+
+  // Inline step highlight — flashes the euclidean arg or active pattern element
+  // for each hitting track. Only active during playback.
+  const inlineHighlights = useMemo(
+    () => engineState.playing ? getActiveStepHighlight(code, tracks, currentStep) : [],
+    [engineState.playing, code, tracks, currentStep],
+  )
 
   const [panels, setPanels] = useState<PanelVisibility>({
     punchcard:  true,
@@ -628,6 +635,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                 stepBadges={stepBadges}
                 importsVisible={importsVisible}
                 blockHighlights={blockHighlights}
+                inlineHighlights={inlineHighlights}
               />
             </div>
           </div>
