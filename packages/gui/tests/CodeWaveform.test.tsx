@@ -62,4 +62,13 @@ describe('CodeWaveform', () => {
       ),
     ).not.toThrow()
   })
+
+  it('renders without crashing on beat boundary (currentStep === 0, playing)', () => {
+    const waveform = Array.from({ length: 256 }, (_, i) => Math.sin(i / 8))
+    expect(() =>
+      render(
+        <CodeWaveform waveform={waveform} playing={true} currentStep={0} stepCount={16} />,
+      ),
+    ).not.toThrow()
+  })
 })

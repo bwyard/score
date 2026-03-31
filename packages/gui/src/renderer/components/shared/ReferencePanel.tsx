@@ -6,7 +6,9 @@ type Section = {
 }
 
 type Props = {
-  readonly onInsert?: (snippet: string) => void
+  readonly onInsert?:  (snippet: string) => void
+  /** When true, the beat indicator dot pulses bright — driven by currentStep === 0. */
+  readonly beatPulse?: boolean
 }
 
 // ── Data ───────────────────────────────────────────────────────────────────────
@@ -133,10 +135,18 @@ const RefSection = ({ section, onInsert }: SectionProps) => (
  * </DraggablePanel>
  * ```
  */
-export const ReferencePanel = ({ onInsert }: Props) => (
+export const ReferencePanel = ({ onInsert, beatPulse = false }: Props) => (
   <div style={styles.root} aria-label="DSL reference panel">
     <div style={styles.header}>
       <span style={styles.headerLabel}>Score DSL</span>
+      <span
+        aria-hidden="true"
+        style={{
+          ...styles.beatDot,
+          opacity:    beatPulse ? 1 : 0.15,
+          transition: 'opacity 150ms ease-out',
+        }}
+      />
       <span style={styles.headerImport}>
         import {'{'} Song, Track, Kick, … {'}'} from '@score/dsl'
       </span>
@@ -232,5 +242,14 @@ const styles = {
     overflow:   'hidden' as const,
     whiteSpace: 'nowrap' as const,
     textOverflow: 'ellipsis' as const,
+  },
+  beatDot: {
+    display:      'inline-block' as const,
+    width:        6,
+    height:       6,
+    borderRadius: '50%',
+    background:   'rgba(74, 143, 255, 0.8)',
+    flexShrink:   0,
+    alignSelf:    'center' as const,
   },
 } as const

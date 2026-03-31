@@ -33,6 +33,12 @@ const drawBeatViz = (
   ctx.clearRect(0, 0, width, height)
   if (!playing) return
 
+  // Beat-flash: single-frame fill on bar boundary (currentStep === 0)
+  if (currentStep === 0) {
+    ctx.fillStyle = 'rgba(74, 143, 255, 0.15)'
+    ctx.fillRect(0, 0, width, height)
+  }
+
   // RMS-derived glow
   const rms = Math.sqrt(
     waveform.reduce((s, v) => s + v * v, 0) / Math.max(waveform.length, 1)
