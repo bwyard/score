@@ -186,28 +186,16 @@ const injectDecorationCss = (): void => {
       background: rgba(74, 143, 255, 0.07) !important;
       border-left: 2px solid rgba(74, 143, 255, 0.4) !important;
     }
-    /* Block highlight — subtle left border only while the track is active this step.
-       No background fill — avoids whole-line flash that obscures code readability.
-       Alternating -a/-b forces a class-name change each tick so deltaDecorations re-runs. */
-    @keyframes score-block-fade {
-      0%   { border-left-color: rgba(74, 143, 255, 0.7); }
-      100% { border-left-color: rgba(74, 143, 255, 0.15); }
-    }
+    /* Block highlight — no-op. Whole-line highlight is disabled; only inline token
+       outlines are used. Classes kept so deltaDecorations calls don't error. */
     .score-block-active-a,
-    .score-block-active-b {
-      animation: score-block-fade 250ms ease-out forwards;
-      border-left: 2px solid rgba(74, 143, 255, 0.7);
-    }
-    /* Inline step highlight — solid white underline + mild background on the
-       euclidean arg or active pattern element. High contrast, no flicker.
-       Alternating -a/-b so consecutive ticks restart the animation. */
-    @keyframes score-inline-active {
-      0%   { background: rgba(255, 255, 255, 0.18); border-bottom: 2px solid #ffffff; color: #ffffff; }
-      100% { background: transparent;               border-bottom: 2px solid rgba(255,255,255,0.2); color: inherit; }
-    }
+    .score-block-active-b {}
+    /* Inline step highlight — Strudl-style box outline around the active token.
+       No background, no animation. Constant solid outline while the step is active.
+       -a/-b alternation forces a class-name swap each tick so deltaDecorations fires. */
     .score-inline-active-a,
     .score-inline-active-b {
-      animation: score-inline-active 300ms ease-out forwards;
+      outline: 1px solid rgba(255, 255, 255, 0.75);
       border-radius: 2px;
     }
     /* Step badge — inline content widget gutter marker */
