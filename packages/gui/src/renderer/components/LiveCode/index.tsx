@@ -211,8 +211,6 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
       })
   }, [engineState.playing, code, tracks, currentStep])
 
-  // Inline step highlight — flashes the euclidean arg or active pattern element
-  // for each hitting track. Only active during playback.
   const inlineHighlights = useMemo(
     () => engineState.playing ? getActiveStepHighlight(code, tracks, currentStep) : [],
     [engineState.playing, code, tracks, currentStep],
@@ -461,10 +459,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     }))
     setCode(prev => {
       const patched = patchTrackPattern(prev, trackIndex, stepIndex, newVal)
-      // Fallback: euclidean shorthand (e.g. Kick808(4)) has no .pattern() to patch in-place.
-      // Build the full toggled pattern array and insert it explicitly.
       if (patched === prev) {
-        // Drum patterns are always numeric (0|1); cast away the string union from PunchcardTrack.
         const newPattern: number[] = track.pattern.map(v => (typeof v === 'number' ? v : 0))
         newPattern[stepIndex % len] = newVal
         return insertTrackPattern(prev, trackIndex, newPattern)

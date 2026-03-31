@@ -186,27 +186,29 @@ const injectDecorationCss = (): void => {
       background: rgba(74, 143, 255, 0.07) !important;
       border-left: 2px solid rgba(74, 143, 255, 0.4) !important;
     }
-    /* t330 — Block highlight fade animation (Strudl-style) */
+    /* Block highlight — subtle left border only while the track is active this step.
+       No background fill — avoids whole-line flash that obscures code readability.
+       Alternating -a/-b forces a class-name change each tick so deltaDecorations re-runs. */
     @keyframes score-block-fade {
-      0%   { background: rgba(74, 143, 255, 0.12); border-left-color: rgba(74, 143, 255, 0.55); }
-      100% { background: transparent;              border-left-color: transparent; }
+      0%   { border-left-color: rgba(74, 143, 255, 0.7); }
+      100% { border-left-color: rgba(74, 143, 255, 0.15); }
     }
-    /* Two alternating classes so deltaDecorations triggers a DOM class-name change
-       on consecutive ticks, which restarts the CSS animation each step. */
     .score-block-active-a,
     .score-block-active-b {
-      animation: score-block-fade 200ms ease-out forwards;
-      border-left: 2px solid rgba(74, 143, 255, 0.55);
+      animation: score-block-fade 250ms ease-out forwards;
+      border-left: 2px solid rgba(74, 143, 255, 0.7);
     }
-    /* Inline step highlight — flashes the euclidean arg or active pattern element.
-       Two alternating classes so the animation restarts on consecutive ticks. */
-    @keyframes score-inline-flash {
-      0%   { background: rgba(74, 143, 255, 0.55); color: #ffffff; border-radius: 2px; }
-      100% { background: transparent;              color: inherit; }
+    /* Inline step highlight — solid white underline + mild background on the
+       euclidean arg or active pattern element. High contrast, no flicker.
+       Alternating -a/-b so consecutive ticks restart the animation. */
+    @keyframes score-inline-active {
+      0%   { background: rgba(255, 255, 255, 0.18); border-bottom: 2px solid #ffffff; color: #ffffff; }
+      100% { background: transparent;               border-bottom: 2px solid rgba(255,255,255,0.2); color: inherit; }
     }
     .score-inline-active-a,
     .score-inline-active-b {
-      animation: score-inline-flash 180ms ease-out forwards;
+      animation: score-inline-active 300ms ease-out forwards;
+      border-radius: 2px;
     }
     /* Step badge — inline content widget gutter marker */
     .score-step-badge {
@@ -264,10 +266,7 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
   const inlineFlipRef        = useRef(false)
   const monacoRef            = useRef<Monaco | null>(null)
 
-  // Notify Monaco when the container resizes (e.g. console panel toggle pushes editor height).
-  // Without this, the editor's internal scroll area is never recalculated and content appears clipped.
-  // Pass explicit pixel dimensions from the ResizeObserver entry — avoids a layout() no-arg race
-  // where Monaco reads the DOM before the browser has finished the resize reflow.
+  // Pass explicit dimensions from ResizeObserver — avoids a layout() no-arg race before reflow.
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -281,7 +280,6 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
     return () => { observer.disconnect() }
   }, [])
 
-  // Apply decorations whenever they change
   useEffect(() => {
     const ed     = editorRef.current
     const monaco = monacoRef.current
@@ -335,8 +333,6 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
     const model = ed.getModel()
     if (!model) return
 
-    // Alternate CSS class name each tick so the animation always restarts,
-    // even when the same block stays active across consecutive steps.
     blockFlipRef.current = !blockFlipRef.current
     const className = blockFlipRef.current ? 'score-block-active-a' : 'score-block-active-b'
 
@@ -352,9 +348,6 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
     blockHighlightsRef.current = ed.deltaDecorations(blockHighlightsRef.current, newBlocks)
   }, [blockHighlights])
 
-  // Inline step highlights — character-level flash on the euclidean arg or active
-  // pattern element (e.g. the `4` in `Kick808(4)`). Restarts animation each tick
-  // by alternating between -a and -b class names.
   useEffect(() => {
     const ed     = editorRef.current
     const monaco = monacoRef.current
