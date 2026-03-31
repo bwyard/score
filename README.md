@@ -128,8 +128,10 @@ pnpm --filter @score/gui dev
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md). All contributors must agree to the [CLA](./CLA.md) before their PR can be merged.
 
+Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating. To report a security issue, see [SECURITY.md](./SECURITY.md).
+
 ---
 
 ## License
 
-Open source — license TBD. Author: Bree Yard.
+Source-available — license TBD (pre-release). Author: Bree Yard.
