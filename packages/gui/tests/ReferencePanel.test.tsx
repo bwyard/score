@@ -17,42 +17,42 @@ describe('ReferencePanel — rendering', () => {
 describe('ReferencePanel — instruments', () => {
   it('shows Kick', () => {
     render(<ReferencePanel />)
-    expect(screen.getByText('Kick')).toBeInTheDocument()
+    expect(screen.getByText('Kick()')).toBeInTheDocument()
   })
 
   it('shows Snare', () => {
     render(<ReferencePanel />)
-    expect(screen.getByText('Snare')).toBeInTheDocument()
+    expect(screen.getByText('Snare()')).toBeInTheDocument()
   })
 
   it('shows HiHat', () => {
     render(<ReferencePanel />)
-    expect(screen.getByText('HiHat')).toBeInTheDocument()
+    expect(screen.getByText('HiHat()')).toBeInTheDocument()
   })
 
   it('shows Synth', () => {
     render(<ReferencePanel />)
-    expect(screen.getByText('Synth')).toBeInTheDocument()
+    expect(screen.getByText('Synth(wave)')).toBeInTheDocument()
   })
 
   it('shows Sample', () => {
     render(<ReferencePanel />)
-    expect(screen.getByText('Sample')).toBeInTheDocument()
+    expect(screen.getByText('Sample(path)')).toBeInTheDocument()
   })
 
   it('shows Theremin', () => {
     render(<ReferencePanel />)
-    expect(screen.getByText('Theremin')).toBeInTheDocument()
+    expect(screen.getByText('Theremin(pitch)')).toBeInTheDocument()
   })
 
   it('shows Sax', () => {
     render(<ReferencePanel />)
-    expect(screen.getByText('Sax')).toBeInTheDocument()
+    expect(screen.getByText('Sax(pitch)')).toBeInTheDocument()
   })
 
   it('shows Arp', () => {
     render(<ReferencePanel />)
-    expect(screen.getByText('Arp')).toBeInTheDocument()
+    expect(screen.getByText('Arp(notes[])')).toBeInTheDocument()
   })
 })
 

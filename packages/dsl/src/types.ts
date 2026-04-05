@@ -314,6 +314,8 @@ export type InstrumentDescriptor = {
   readonly _fadeOutBars?: number
   /** Choke group name — triggers in the same group cut off each other's decay. */
   readonly _chokeGroup?: string
+  /** Initial mute state — set via `.mute()` in the chain API. `true` = muted at boot. */
+  readonly _mute?: boolean
 }
 
 /**

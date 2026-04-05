@@ -361,12 +361,35 @@ export const WavetableSynth = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'wavetable', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
 /**
- * Supersaw — N detuned sawtooth oscillators (trance, big room, synthwave). @stub
+ * Supersaw — 7 detuned sawtooth oscillators (trance, big room, synthwave).
+ * JP-8080-style unison stack: 1 centre osc + 3 symmetric pairs.
+ *
  * @param pitch - Optional starting pitch, e.g. `'C4'`.
  * @returns A `ChainablePart` for `'supersaw'`.
+ *
+ * @example
+ * ```ts
+ * SuperSaw('C4').notes(['C4','E4','G4']).reverb(0.4).volume(0.6)
+ * ```
  */
 export const SuperSaw = (pitch?: string): ChainablePart =>
   createPart({ instrumentType: 'supersaw', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
+
+/**
+ * Wobble bass — resonant sawtooth with an internal LFO sweeping the filter cutoff.
+ * Canonical dubstep/brostep voice. Sync `lfoRateHz` to BPM: `bpm / 60 * noteValue`.
+ *
+ * @param pitch - Optional starting pitch, e.g. `'A1'`.
+ * @returns A `ChainablePart` for `'wobble'`.
+ *
+ * @example
+ * ```ts
+ * // 140 BPM quarter-note wobble (2.33 Hz LFO)
+ * WobbleBass('A1').notes(['A1','C2','D2']).volume(0.8)
+ * ```
+ */
+export const WobbleBass = (pitch?: string): ChainablePart =>
+  createPart({ instrumentType: 'wobble', props: {}, ...( pitch !== undefined ? { _notes: [pitch] } : {}) })
 
 /**
  * Karplus-Strong plucked string synthesis. @stub

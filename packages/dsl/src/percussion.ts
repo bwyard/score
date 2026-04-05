@@ -178,3 +178,68 @@ export const HihatOpen808 = (hits?: number): ChainablePart => HiHat(hits).model(
  * @see {@link Snare} — base snare factory
  */
 export const Snare909 = (hits?: number): ChainablePart => Snare(hits).model('909')
+
+// ── Clap909 ───────────────────────────────────────────────────────────────────
+
+/**
+ * Roland TR-909-style clap — four staggered white-noise bursts through a tight bandpass.
+ *
+ * @param hits - Optional euclidean hit count (1–16). Sets `_pattern` via `euclidean(hits, 16)`.
+ *   Omit for the engine default (beats 2 and 4).
+ * @returns A `ChainablePart` for `'clap909'`.
+ *
+ * @example
+ * ```ts
+ * const clap = Clap909().volume(0.8)
+ * ```
+ */
+export const Clap909 = (hits?: number): ChainablePart =>
+  createPart({
+    instrumentType: 'clap909',
+    props: {},
+    ...(hits !== undefined ? { _pattern: euclidean(hits, 16) } : {}),
+  })
+
+// ── KickHardstyle ─────────────────────────────────────────────────────────────
+
+/**
+ * Hardstyle kick — sine body with reverse-bass pitch envelope (sweeps UP then falls)
+ * through a tanh waveshaper for the characteristic hard, warm distortion.
+ *
+ * @param hits - Optional euclidean hit count (1–16). Sets `_pattern` via `euclidean(hits, 16)`.
+ *   Omit for the engine default (4-on-the-floor).
+ * @returns A `ChainablePart` for `'kickHardstyle'`.
+ *
+ * @example
+ * ```ts
+ * const kick = KickHardstyle().volume(0.95)
+ * ```
+ */
+export const KickHardstyle = (hits?: number): ChainablePart =>
+  createPart({
+    instrumentType: 'kickHardstyle',
+    props: {},
+    ...(hits !== undefined ? { _pattern: euclidean(hits, 16) } : {}),
+  })
+
+// ── KickHardcore ─────────────────────────────────────────────────────────────
+
+/**
+ * Hardcore/gabber kick — short punchy sine body hard-clipped to near square wave.
+ * Short decay (0.25 s default) built for 160–200 BPM gabber tempos.
+ *
+ * @param hits - Optional euclidean hit count (1–16). Sets `_pattern` via `euclidean(hits, 16)`.
+ *   Omit for the engine default (4-on-the-floor).
+ * @returns A `ChainablePart` for `'kickHardcore'`.
+ *
+ * @example
+ * ```ts
+ * const kick = KickHardcore().volume(0.9)
+ * ```
+ */
+export const KickHardcore = (hits?: number): ChainablePart =>
+  createPart({
+    instrumentType: 'kickHardcore',
+    props: {},
+    ...(hits !== undefined ? { _pattern: euclidean(hits, 16) } : {}),
+  })
