@@ -1,7 +1,8 @@
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import path                                          from 'node:path'
-import { readFileSync, writeFileSync }               from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync }    from 'node:fs'
 import vm                                            from 'node:vm'
+import { registerShortcuts }                         from './shortcuts.js'
 import { createScoreEngine, isPartDescriptor, partToInstrumentDescriptor } from '@score/cli/engine'
 import type { PatchProps, ScoreEngine }              from '@score/cli/engine'
 import {
@@ -360,15 +361,8 @@ process.on('unhandledRejection', (reason: unknown) => {
 app.on('ready', () => {
   const win = createWindow()
   winRef.value = win
-  // F12 toggles devtools — off by default, no auto-open
-  globalShortcut.register('F12', () => {
-    const focused = BrowserWindow.getFocusedWindow()
-    if (focused) focused.webContents.toggleDevTools()
-  })
-  // t207 — panic key: Cmd/Ctrl+. = instant all-stop (no bar-boundary wait)
-  globalShortcut.register('CommandOrControl+.', () => {
-    panicStop()
-  })
+  const { unregister: unregisterShortcuts } = registerShortcuts({ panicStop })
+  app.on('will-quit', unregisterShortcuts)
   // t218 — send saved panel layout once renderer is ready
   win.webContents.once('did-finish-load', () => {
     const layout = readLayout()
@@ -572,13 +566,24 @@ ipcMain.on('file:save', (_event, { code }: RendererToMain['file:save']) => {
   })
 })
 
-// BOUNDARY — IO: bug report — saves JSON report to Downloads folder, notifies renderer of save path
+// BOUNDARY — IO: bug report — saves JSON to two locations:
+//   1. Fixed path Claude can always read: <repo>/debug/report.json (overwritten each time)
+//   2. Timestamped archive in Downloads for the user
 ipcMain.on('bug:report', (_event, payload: RendererToMain['bug:report']) => {
   try {
-    const timestamp  = new Date(payload.timestamp).toISOString().replace(/[:.]/g, '-')
-    const fileName   = `score-bug-report-${timestamp}.json`
-    const filePath   = path.join(app.getPath('downloads'), fileName)
-    writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf8')
+    const json        = JSON.stringify(payload, null, 2)
+    const timestamp   = new Date(payload.timestamp).toISOString().replace(/[:.]/g, '-')
+    const fileName    = `score-bug-report-${timestamp}.json`
+
+    // Fixed path — always the same location so Claude can read it directly
+    const repoRoot    = path.resolve(__dirname, '..', '..', '..', '..', '..')
+    const debugDir    = path.join(repoRoot, 'debug')
+    mkdirSync(debugDir, { recursive: true })
+    writeFileSync(path.join(debugDir, 'report.json'), json, 'utf8')
+
+    // Timestamped archive in Downloads for the user
+    writeFileSync(path.join(app.getPath('downloads'), fileName), json, 'utf8')
+
     void shell.openPath(app.getPath('downloads'))
   } catch (err) {
     send('error:report', { message: `Bug report save failed: ${err instanceof Error ? err.message : String(err)}` })

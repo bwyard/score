@@ -20,6 +20,9 @@ sounds/**/*
 # Claude Code local state
 .claude/
 
+# Bug reports written by the app — not committed
+debug/
+
 # Local only — not ready to publish
 THESIS.md
 mcp-servers/score-codebase/node_modules/
