@@ -48,6 +48,12 @@ export type StepSequencerProps<T = number> = {
    */
   readonly ticksPerBeat?: number
   /**
+   * Stutter repeat count. When > 1, each fired step is repeated N times within the step
+   * window, with each repeat evenly spaced. E.g. `stutter: 4` fires the step 4 times.
+   * Defaults to `1` (no stutter).
+   */
+  readonly stutter?: number
+  /**
    * Boolean gate pattern — steps where `mask[step]` is falsy are silently skipped.
    * Accepts the same `PatternInput<number>` shape as `pattern`.
    */
@@ -221,6 +227,16 @@ export const createStepSequencer = <T = number>(
         : { ...position, time: rawTime < 0 ? 0 : rawTime }
 
       onStep(value, currentStepNumber, adjustedPosition)
+
+      // Stutter — repeat N-1 additional times evenly spaced within the step window
+      if (props.stutter !== undefined && props.stutter > 1) {
+        const tickDuration = 60 / transport.bpm / (props.ticksPerBeat ?? 4)
+        const stepDuration = tickDuration * ticksPerStep
+        for (let i = 1; i < props.stutter; i++) {
+          const stutterOffset = (stepDuration * i) / props.stutter
+          onStep(value, currentStepNumber, { ...adjustedPosition, time: adjustedPosition.time + stutterOffset })
+        }
+      }
     }
     state.step += 1  // ADVANCE — the only forward-time mutation permitted
     if (currentStepNumber + 1 >= state.steps) state.cycleCount += 1
