@@ -1,16 +1,16 @@
 # Score Studio — Tester Onboarding
 
 **Audience:** Coders, DJs, and music enthusiasts
-**Release:** Tester build — Live Code mode only
-**Last updated:** 2026-03-22
+**Release:** Tester build — Live Code mode
+**Last updated:** 2026-04-05
 
 ---
 
 ## What is Score Studio?
 
-Score Studio is a live coding environment for writing EDM in JavaScript. You describe music as pure functions — no DAW drag-and-drop, no sample banks, no clip launching. You write code, hit eval, hear the result. Edit while it plays. Changes apply at the next bar boundary, no audio gap. It is the TidalCycles philosophy with a TypeScript runtime and a visual feedback layer on top.
+Score Studio is a live coding environment for writing EDM in JavaScript. You describe music as pure functions — no DAW drag-and-drop, no sample banks, no clip launching. You write code, hit eval, hear the result. Edit while it plays. Changes apply at the next bar boundary, no audio gap.
 
-The current tester build covers **Live Code mode only.** Produce, DJ Set, and Jam Session are scaffolded but disabled until later phases.
+The current tester build covers **Live Code mode.** Produce, DJ Set, and Jam Session are scaffolded but disabled until later phases.
 
 ---
 
@@ -34,114 +34,145 @@ Select **Live Code** on the splash screen and click **Enter Mode**.
 │ ← Score  [Live Code]  ●128bpm  ▶ Play  ■ Stop  Bar:0 │  ← TransportBar
 ├──────────────┬───────────────────────────────────────┤
 │              │  ┌─ Step Grid ─────────────────────┐  │
-│  CODE        │  │ 🟠 kick  ██░░██░░██░░██░░  ▶   │  │
-│  EDITOR      │  │ 🔴 snare ░░██░░██░░██░░██       │  │
-│              │  │ 🟢 hihat ████████████████        │  │
+│  MONACO      │  │ kick  ██░░██░░██░░██░░           │  │
+│  EDITOR      │  │ snare ░░░░██░░░░░░██░░           │  │
+│  (Monaco     │  │ hihat ████████████████            │  │
+│   IntelliSense│  └─────────────────────────────────┘  │
+│   + step     │  ┌─ Scope / Waveform ──────────────┐  │
+│   highlight) │  │  ∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿              │  │
 │              │  └─────────────────────────────────┘  │
-│              │  ┌─ Waveform ──────────────────────┐  │
-│ ──────────── │  │  ∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿∿              │  │
-│  CONSOLE     │  └─────────────────────────────────┘  │
+│ ──────────── │  ┌─ Reference ─────────────────────┐  │
+│  CONSOLE     │  │  Drums / Melodic / Chain methods │  │
 └──────────────┴───────────────────────────────────────┘
 ```
 
-- **TransportBar** — pinned top, always visible. BPM is editable.
-- **Code editor** — left pane. Ctrl+Enter to eval.
+- **TransportBar** — pinned top. BPM is live-editable.
+- **Monaco editor** — left pane. Full IntelliSense, step highlighting as the track plays.
 - **Console** — below editor. Eval status, errors, bar counter.
 - **Visualizer panels** — right side, all draggable and resizable.
-  - Toggle panels: Grid | Scope | FFT | Piano | Mixer | Console | Ref
+  - Toggle: Grid | Scope | FFT | Mixer | Console | Reference
+- **Reference panel** — in-app DSL cheatsheet. Click an instrument name to insert a snippet.
 
 ---
 
 ## Starter Song
 
-The editor loads with a STARTER template. Hit Play immediately to hear it, then modify.
+The editor loads with a working starter. Hit **▶ Run** to hear it, then modify.
 
 ```js
-import { Song, Kick, Snare, HiHat, Synth, Arp } from '@score/dsl'
-import { Reverb, Delay } from '@score/effects'
-import { euclidean } from '@score/pattern'
+import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
 
-const kick  = Kick({ pattern: euclidean(4, 16), volume: 0.9 })
-const snare = Snare({ pattern: euclidean(2, 16, 8), volume: 0.7 })
-const hihat = HiHat({ pattern: euclidean(8, 16), volume: 0.4 })
+const kick  = Kick808(4).decay(0.7).volume(0.8)
+const snare = Snare909(2).decay(0.2).volume(0.55)
+const hihat = Hihat808(8).decay(0.08).volume(0.25)
+const bass  = Bass303('A2').cutoff(600).resonance(0.4)
+  .pattern(['A2', 0, 0, 0,  'D3', 0, 0, 0,  'A2', 0, 0, 0,  'D3', 0, 0, 0])
+  .volume(0.6)
 
-const bass = Synth({
-  wave: 'sawtooth',
-  frequency: 65.41,
-  pattern: [1,0,0,1,0,0,1,0, 1,0,0,1,0,0,0,0],
-  filter:  { type: 'lowpass', frequency: 400 },
-  effects: [Reverb({ decay: 1.5, mix: 0.2 })],
-  gain: 0.6,
-})
-
-const lead = Arp({
-  notes: ['C3','Eb3','G3','Bb3'],
-  mode: 'up',
-  rate: 2,
-  wave: 'triangle',
-  gain: 0.4,
-  effects: [Delay({ time: 0.1875, feedback: 0.35, mix: 0.25 })],
-})
-
-export default Song({ bpm: 128, tracks: [kick, snare, hihat, bass, lead] })
+export default Song({ bpm: 128, tracks: [kick, snare, hihat, bass] })
 ```
 
 ---
 
-## Key Concepts
+## Chain API
 
-**`euclidean(hits, steps, offset?)`** — spreads `hits` evenly across `steps` using Bjorklund algorithm. `euclidean(3,8)` = the classic 3-against-8 pattern. Offset shifts the phase.
+Every instrument returns a chainable part. Methods return a new part — nothing is mutated.
 
-**`pattern`** — array of `1`/`0` for rhythm, or note strings for pitch (`['C3','G3']`). Length defines the loop.
-
-**Hot reload** — edit code, press `Ctrl+Enter`. If playing, change applies at next bar boundary with no audio gap (listen for the downbeat). The console shows "Swap queued".
-
-**`patch()` vs `update()`** — internally, BPM and volume changes use `patch()` (instant, no restart). Structural changes (new tracks, new patterns) use `update()` (bar-boundary swap).
-
-**`bars` counter** — available in code as a live variable. Use it to create arrangement logic:
 ```js
-// Only play the lead after bar 8
-const lead = bars > 8 ? Arp({ ... }) : null
+Kick808(4)                          // 4 euclidean hits across 16 steps
+  .volume(0.9)                      // output level 0–1
+  .decay(0.7)                       // amp envelope decay in seconds
+  .reverb(0.1)                      // reverb wet 0–1
+  .swing(0.05)                      // shuffle amount
+  .mute()                           // mute at boot
+
+Bass303('C2')
+  .cutoff(800)                      // filter cutoff in Hz
+  .resonance(2.0)                   // filter Q
+  .accent([0, 4, 8])                // steps where velocity spikes
+  .notes(['C2','D2','F2','G2'])     // pitch sequence
+  .volume(0.7)
 ```
+
+**The `euclidean(hits, steps)` shorthand** — pass hit count as first arg to any drum:
+```js
+Kick808(4)     // 4 hits over 16 steps → [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0]
+Hihat808(11)   // 11 hits → dense shuffled pattern
+```
+
+**Hot-swap** — edit code, press `Ctrl+Enter` or **▶ Run** while playing. The change queues and applies cleanly at the next bar boundary. No audio gap. The console shows "Swap queued".
 
 ---
 
-## DSL Reference
+## Available Instruments
 
-### Instruments (`@score/dsl`)
-| Factory | Props |
+### Drums
+| Factory | Character |
 |---|---|
-| `Kick` | `pattern, volume` |
-| `Snare` | `pattern, volume` |
-| `HiHat` | `pattern, volume, open?` |
-| `Synth` | `wave, frequency, pattern, filter?, effects?, gain, adsr?` |
-| `Sample` | `path, pattern, loop?, playbackRate?, gain` |
-| `Arp` | `notes, mode, rate, wave, gain, effects?` |
-| `Song` | `bpm, tracks` |
+| `Kick808()` | 808 sine kick — long decay, sub weight |
+| `Kick909()` | 909 kick — noise click transient, punchy |
+| `KickHardstyle()` | Reverse-bass pitch envelope + tanh drive |
+| `KickHardcore()` | Hard-clip gabber kick, short decay (160–200 BPM) |
+| `Snare909()` | 909 tone+noise snare |
+| `Clap909()` | 4-layer staggered noise burst |
+| `Hihat808()` | 6 detuned square oscs, closed hat |
+| `HihatOpen808()` | Same as 808 hat with longer decay |
 
-### Effects (`@score/effects`)
-`Reverb`, `Delay`, `Distortion`, `Compressor`, `EQ`, `Chorus`, `Flanger`, `Phaser`, `BitCrusher`, `Limiter`, `Sidechain`, `Gate`, `StereoWidener`, `AutoPan`, `Saturation`
+### Melodic
+| Factory | Character |
+|---|---|
+| `Bass303(pitch)` | TB-303 acid bass — cutoff, resonance, accent, slide |
+| `SuperSaw(pitch)` | JP-8080-style 7-oscillator detuned saw stack |
+| `WobbleBass(pitch)` | Resonant sawtooth with LFO filter sweep |
+| `SubSynth(pitch)` | Analogue subtractive, Juno-style |
+| `FMSynth(pitch)` | 2-operator FM — DX7 Rhodes / metallic leads |
+| `Pad(pitch)` | Long attack sustained pad |
+| `Pluck(pitch)` | Fast attack/decay plucked string |
+| `Rhodes(pitch)` | FM tine electric piano |
+| `Sax(pitch)` | Sawtooth through bandpass, reedy character |
+| `Theremin(pitch)` | Continuous sine with vibrato |
+| `Arp(notes[])` | Cycles through note array per step |
+| `Sample(path)` | One-shot sample playback |
 
-### Patterns (`@score/pattern`)
-`euclidean`, `beat`, `stack`, `rev`, `every`, `shift`, `slow`, `fast`, `degrade`, `humanize`, `scaleNotes`, `chordNotes`
+---
 
-### Math / Stochastic (`@score/math`)
-`drunk`, `markov`, `lorenz`, `logistic`, `fibonacci`, `polyrhythm`, `circleOfFifths`
+## Effects
+
+Effects attach via chain methods or `.effects([…])`:
+
+```js
+Bass303('C2').reverb(0.2).delay(0.375, 0.3).filter(800)
+// or
+Bass303('C2').effects([Reverb({ decay: 1.5, mix: 0.2 }), Delay({ time: 0.375 })])
+```
+
+Available: `Reverb`, `Delay`, `Filter`, `Distortion`, `Compressor`, `EQ`, `Limiter`, `BitCrusher`, `Chorus`, `Phaser`, `Flanger`, `StereoWidener`, `Gate`, `Saturation`, `AutoPan`
 
 ---
 
 ## What to Test
 
 **Core flow:**
-- Write a song, eval, hear audio. Does it work?
-- Edit a pattern while playing — does the hot-swap land cleanly on the bar?
-- Change BPM in transport bar — does tempo shift instantly?
-- Introduce a typo — does the old song keep playing? Does the error show clearly?
+- Write a song, eval, hear audio
+- Edit a pattern while playing — does the hot-swap land on the bar boundary?
+- Change BPM in the transport bar — does tempo shift instantly?
+- Introduce a typo — does the old song keep playing? Does the error show clearly in the console?
+
+**New instruments (this build):**
+- `KickHardstyle()` — try `.decay(0.8)` and crank BPM to 150
+- `KickHardcore()` — 160–200 BPM, should feel clipped and punchy
+- `Clap909()` — replace `Snare909` with `Clap909`
+- `SuperSaw('C4').notes(['C4','E4','G4']).reverb(0.4)` — trance pad
+- `WobbleBass('A1').volume(0.8)` — low frequency wobble
 
 **Visualizers:**
 - Does the Step Grid cursor animate correctly per step?
-- Does the Waveform respond to the audio signal?
+- Does the Waveform respond to audio?
 - Do visualizers update correctly after a hot-swap?
+
+**Monaco editor:**
+- IntelliSense — does autocomplete suggest chain methods?
+- Step highlight — does the active line flash as the track plays?
 
 **Mixer:**
 - Mute/unmute tracks — instant?
@@ -149,41 +180,26 @@ const lead = bars > 8 ? Arp({ ... }) : null
 
 **Panels:**
 - Drag and resize panels — do they behave?
-- Close and reopen via toolbar buttons — does state restore?
+- Click an instrument name in the Reference panel — does it insert a snippet?
 
-**File ops:**
-- Save to disk, reopen — does code reload and re-eval correctly?
+**Reporting issues:**
+Use the **Report Issue** button in the app (captures code + logs + engine state automatically).
+Include: what you expected vs what happened, and which mode/BPM/panels were open.
 
 ---
 
-## What to Ignore / Known Gaps
+## Known Gaps (this build)
 
 - **Produce, DJ Set, Jam Session** — disabled. Stubs only.
-- **Monaco IDE** — using plain textarea for now. IntelliSense coming Phase 13f.
-- **808/909 accurate drums** — current `Kick`/`Snare`/`HiHat` are generic stubs. Genre-accurate synthesis (t160–t166) is the next instrument pass.
-- **TB-303, FM synth (Rhodes), SubtractiveSynth** — not yet built. Roadmap Phases 2–3.
-- **Panel layout persistence** — resets on app restart.
-- **MIDI input** — Phase 12b (Jam mode).
-- **SuperCollider backend** — Phase 12c. Currently Web Audio only.
-
----
-
-## Reporting Issues
-
-Include:
-1. The code that triggered it (paste the full Song)
-2. What you expected vs what happened
-3. Console output (copy the error text)
-4. App state: playing/stopped, BPM, which panels were open
-
-File at the Score repo issues page. Tag: `tester-release`.
+- **Panel layout persistence** — resets on app restart (t218).
+- **Monaco step badges** — STEP/TOTAL pill per instrument line not yet implemented (t219).
+- **MIDI input** — Jam mode only, Phase 12b.
+- **`WobbleBass` LFO rate** — not yet sync'd to BPM automatically. Set `lfoRateHz` manually: `bpm / 60 * noteValue` (e.g. 140 BPM quarter-note wobble = 2.33 Hz).
+- **`SuperSaw` / `WobbleBass` chain extras** — no `.detune()` or `.lfo()` chain methods yet; set via `props` if needed.
 
 ---
 
 ## Useful Reading
 
-- `docs/LIVE_CODING.md` — live coding patterns and bar-counter arrangements
-- `docs/PATTERNS.md` — full pattern function reference
-- `docs/EXAMPLES.md` — full song examples
-- `docs/design/synthesis-spec.md` — what instruments are coming (808/909/303/Rhodes)
-- `docs/design/wireframes/` — full UI spec for all modes
+- `docs/design/DSL_REFERENCE.md` — full chain API reference
+- `docs/design/synthesis-spec.md` — instrument design specs

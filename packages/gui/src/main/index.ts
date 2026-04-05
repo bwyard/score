@@ -34,13 +34,12 @@ import { autoUpdater }                               from 'electron-updater'
 const defaultSong = (): SongDefinition => Song({
   bpm:    128,
   tracks: [
-    Track(Synth({
-      wave:      'sawtooth',
-      frequency: 65.41,
-      pattern:   [1, 0, 1, 0, 0, 1, 0, 0],
-      filter:    { type: 'lowpass', frequency: 400 },
-      gain:      0.7,
-    })),
+    Track(Kick808(4).volume(0.9)),
+    Track(Snare909(2).volume(0.6)),
+    Track(Hihat808(8).volume(0.3)),
+    Track(Bass303('A2').cutoff(600).resonance(0.4)
+      .pattern(['A2', 0, 0, 0, 'D3', 0, 0, 0, 'A2', 0, 0, 0, 'D3', 0, 0, 0])
+      .volume(0.6)),
   ],
 })
 
