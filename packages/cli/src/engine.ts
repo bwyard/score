@@ -241,6 +241,7 @@ export const partToInstrumentDescriptor = (
     ...(part._fadeOutBars !== undefined ? { _fadeOutBars: part._fadeOutBars } : {}),
     ...(part._chokeGroup  !== undefined ? { _chokeGroup:  part._chokeGroup  } : {}),
     ...(part._mute        !== undefined ? { _mute:        part._mute        } : {}),
+    ...(part._solo        !== undefined ? { _solo:        part._solo        } : {}),
     props: {
       ...normalizeVolumeField(part.instrumentType, part._volume),
       ...(resolvedPattern !== undefined ? { pattern:  resolvedPattern } : {}),
@@ -272,6 +273,7 @@ export const partToInstrumentDescriptor = (
       ...(part._stepProb !== undefined ? { stepProb: part._stepProb } : {}),
       ...(part._every    !== undefined ? { every: { n: part._every.n, transform: part._every.fn } } : {}),
       ...(part._stretch  !== undefined ? { stretch:  part._stretch  } : {}),
+      ...(part._stutter  !== undefined ? { stutter:  part._stutter  } : {}),
       ...part.props,
     },
   }
@@ -312,6 +314,7 @@ const seqPatternExtras = (props: CommonProps) => ({
   ...(props['stepProb'] !== undefined ? { stepProb: props['stepProb'] as ReadonlyArray<number> } : {}),
   ...(props['every']    !== undefined ? { every:    props['every']    as EveryTransform } : {}),
   ...(props['stretch']  !== undefined ? { stretch:  props['stretch']  as number } : {}),
+  ...(props['stutter']  !== undefined ? { stutter:  props['stutter']  as number } : {}),
 })
 
 // ── computeNoteDur — note duration for Model B' melodic voice instruments ──────
@@ -515,6 +518,7 @@ export type PatchProps = {
     readonly index: number
     readonly volume?: number
     readonly mute?: boolean
+    readonly solo?: boolean
   }>
 }
 
@@ -826,6 +830,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       ...(channelPan !== undefined ? { pan: channelPan } : {}),
     })
     if (comp._mute) channel.setMute(true)
+    if (comp._solo) channel.setSolo(true)
     return channel.input as unknown as GainNode
   })
 
@@ -1023,6 +1028,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
           if (!channel) continue
           if (t.volume !== undefined) channel.setVolume(t.volume)
           if (t.mute   !== undefined) channel.setMute(t.mute)
+          if (t.solo   !== undefined) channel.setSolo(t.solo)
         }
       }
     },

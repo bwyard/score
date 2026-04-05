@@ -61,6 +61,8 @@ export default Song({ bpm: 128, tracks: [kick, snare, hihat, bass] })`
 type StripState = {
   readonly volume: number
   readonly muted:  boolean
+  readonly soloed: boolean
+  readonly pan:    number
 }
 
 const updateStrip = (
@@ -243,7 +245,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   useEffect(() => {
     const unsub = window.scoreBridge.on('song:update', ({ tracks: t }) => {
       setTracks(t)
-      setStripStates(prev => t.map((track, i) => prev[i] ?? { volume: track.volume ?? 1, muted: parseMuteState(codeRef.current, i) }))
+      setStripStates(prev => t.map((track, i) => prev[i] ?? { volume: track.volume ?? 1, muted: parseMuteState(codeRef.current, i), soloed: false, pan: 0 }))
       setEvalStatus('ok')
       setEvalTimestamp(Date.now())
       // Auto-play after eval when the user clicked play (not standalone Eval btn)
@@ -388,6 +390,28 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     // Persist mute state to code so it survives re-eval
     setCode(prev => patchMute(prev, index, mute))
   }, [stripStates])
+
+  const onMixerSolo = useCallback((index: number): void => {
+    const solo = !(stripStates[index]?.soloed ?? false)
+    // Toggle solo on clicked track; clear solo on all others
+    setStripStates(prev => prev.map((s, i) => ({ ...s, soloed: i === index ? solo : false })))
+    window.scoreBridge.send('engine:patch', { tracks: [{ index, solo }] })
+    setCode(prev => patchChainMethod(prev, index, 'solo', solo ? 1 : 0))
+  }, [stripStates])
+
+  const onMixerPan = useCallback((index: number, pan: number): void => {
+    setStripStates(prev => updateStrip(prev, index, { pan }))
+    setCode(prev => patchChainMethod(prev, index, 'pan', pan))
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null)
+      setEvalStatus('pending')
+      setCode(latest => {
+        window.scoreBridge.send('engine:eval', { code: latest })
+        return latest
+      })
+    }, 300)
+  }, [])
 
   /**
    * Optimistic UI: patch code immediately, then re-eval after 300ms idle.
@@ -822,9 +846,13 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                         type={track.type}
                         volume={stripStates[i]?.volume ?? 1}
                         muted={stripStates[i]?.muted ?? false}
+                        soloed={stripStates[i]?.soloed ?? false}
+                        pan={stripStates[i]?.pan ?? 0}
                         level={0}
                         onVolume={v => { onMixerVolume(i, v) }}
                         onMute={() => { onMixerMute(i) }}
+                        onSolo={() => { onMixerSolo(i) }}
+                        onPan={v => { onMixerPan(i, v) }}
                       />
                       <button
                         style={{
