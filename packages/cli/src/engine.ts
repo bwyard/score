@@ -240,6 +240,7 @@ export const partToInstrumentDescriptor = (
     ...(part._fadeInBars  !== undefined ? { _fadeInBars:  part._fadeInBars  } : {}),
     ...(part._fadeOutBars !== undefined ? { _fadeOutBars: part._fadeOutBars } : {}),
     ...(part._chokeGroup  !== undefined ? { _chokeGroup:  part._chokeGroup  } : {}),
+    ...(part._mute        !== undefined ? { _mute:        part._mute        } : {}),
     props: {
       ...normalizeVolumeField(part.instrumentType, part._volume),
       ...(resolvedPattern !== undefined ? { pattern:  resolvedPattern } : {}),
@@ -824,6 +825,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       effects: hydratedEffects,
       ...(channelPan !== undefined ? { pan: channelPan } : {}),
     })
+    if (comp._mute) channel.setMute(true)
     return channel.input as unknown as GainNode
   })
 
