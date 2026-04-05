@@ -200,6 +200,29 @@ export const Clap909 = (hits?: number): ChainablePart =>
     ...(hits !== undefined ? { _pattern: euclidean(hits, 16) } : {}),
   })
 
+// ── Cowbell808 ────────────────────────────────────────────────────────────────
+
+/**
+ * Roland TR-808-style cowbell — two detuned square oscillators (562 Hz + 839 Hz)
+ * through a bandpass filter, shaped by a short metallic envelope. Ubiquitous in
+ * house, electro, and 808-influenced genres.
+ *
+ * @param hits - Optional euclidean hit count (1–16). Sets `_pattern` via `euclidean(hits, 16)`.
+ *   Omit for the engine default (off-beat sixteenth pattern).
+ * @returns A `ChainablePart` for `'cowbell808'`.
+ *
+ * @example
+ * ```ts
+ * const cowbell = Cowbell808(2).decay(0.4).volume(0.5)
+ * ```
+ */
+export const Cowbell808 = (hits?: number): ChainablePart =>
+  createPart({
+    instrumentType: 'cowbell808',
+    props: {},
+    ...(hits !== undefined ? { _pattern: euclidean(hits, 16) } : {}),
+  })
+
 // ── KickHardstyle ─────────────────────────────────────────────────────────────
 
 /**

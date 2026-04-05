@@ -6,7 +6,7 @@ import { createScoreEngine, isPartDescriptor, partToInstrumentDescriptor } from 
 import type { PatchProps, ScoreEngine }              from '@score/cli/engine'
 import {
   Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp,
-  Kick808, Kick909, Snare909, Hihat808, HihatOpen808, Clap909, KickHardstyle, KickHardcore,
+  Kick808, Kick909, Snare909, Hihat808, HihatOpen808, Clap909, Cowbell808, KickHardstyle, KickHardcore,
   SubSynth, FMSynth,
   Bass303, Pad, Pluck, Stab, Rhodes, Wurlitzer, Hammond, Clavinet,
   DX7Lead, WavetableSynth, SuperSaw, WobbleBass, KarplusSynth, Guitar,
@@ -454,7 +454,7 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
   const contextObj: Record<string, unknown> = {
     // DSL — percussion + legacy instruments
     Song, Track, Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp, resolveFreq,
-    Kick808, Kick909, Snare909, Hihat808, HihatOpen808, Clap909, KickHardstyle, KickHardcore,
+    Kick808, Kick909, Snare909, Hihat808, HihatOpen808, Clap909, Cowbell808, KickHardstyle, KickHardcore,
     SubSynth, FMSynth,
     // DSL — chain API melodic factories
     Bass303, Pad, Pluck, Stab, Rhodes, Wurlitzer, Hammond, Clavinet,
