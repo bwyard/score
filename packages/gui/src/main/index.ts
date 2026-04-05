@@ -572,6 +572,19 @@ ipcMain.on('file:save', (_event, { code }: RendererToMain['file:save']) => {
   })
 })
 
+// BOUNDARY — IO: bug report — saves JSON report to Downloads folder, notifies renderer of save path
+ipcMain.on('bug:report', (_event, payload: RendererToMain['bug:report']) => {
+  try {
+    const timestamp  = new Date(payload.timestamp).toISOString().replace(/[:.]/g, '-')
+    const fileName   = `score-bug-report-${timestamp}.json`
+    const filePath   = path.join(app.getPath('downloads'), fileName)
+    writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf8')
+    void shell.openPath(app.getPath('downloads'))
+  } catch (err) {
+    send('error:report', { message: `Bug report save failed: ${err instanceof Error ? err.message : String(err)}` })
+  }
+})
+
 // BOUNDARY — IO: panel layout persistence (t218) — renderer sends positions on each panel move
 ipcMain.on('layout:save', (_event, layout: RendererToMain['layout:save']) => {
   writeLayout(layout)
