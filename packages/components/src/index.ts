@@ -18,6 +18,7 @@ export { createRhodes, type RhodesProps, type RhodesComponent } from './synths/r
 export { createPluck, type PluckProps, type PluckComponent } from './synths/pluck.js'
 export { createBass303, type Bass303Props, type Bass303Component, type Bass303AdsrProps } from './synths/bass303.js'
 export { createClap909, type Clap909Props, type Clap909Component } from './drums/clap909.js'
+export { createCowbell808, type Cowbell808Props, type Cowbell808Component } from './drums/cowbell808.js'
 export { createKickHardstyle, type KickHardstyleProps, type KickHardstyleComponent } from './drums/kickHardstyle.js'
 export { createKickHardcore, type KickHardcoreProps, type KickHardcoreComponent } from './drums/kickHardcore.js'
 export { createSupersaw, type SupersawProps, type SupersawComponent, type SupersawFilterProps } from './synths/supersaw.js'

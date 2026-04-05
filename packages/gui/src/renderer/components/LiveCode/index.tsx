@@ -43,18 +43,24 @@ type PanelVisibility = {
 
 // ── Starter template ───────────────────────────────────────────────────────────
 
-const STARTER = `import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
+const STARTER = `import { Song, Kick808, Snare909, Hihat808, HihatOpen808, Clap909, Cowbell808, Bass303 } from '@score/dsl'
 
-// Click a track in the mixer to open its instrument panel (model, decay, reverb…)
-// Click a step in the punchcard to toggle it on/off
-const kick  = Kick808(4).decay(0.7).volume(0.8)
-const snare = Snare909(2).decay(0.2).volume(0.55)
-const hihat = Hihat808(8).decay(0.08).volume(0.25)
-const bass  = Bass303('A2').cutoff(600).resonance(0.4)
-  .pattern(['A2', 0, 0, 0,  'D3', 0, 0, 0,  'A2', 0, 0, 0,  'D3', 0, 0, 0])
-  .volume(0.6)
+// ▶ Run to hear it — edit while playing, changes drop in at the next bar
+// Click a track in the mixer to open its controls (decay, filter, effects…)
+// Click a step in the grid to toggle it on/off
 
-export default Song({ bpm: 128, tracks: [kick, snare, hihat, bass] })`
+const kick    = Kick808(4).decay(0.8).volume(0.9)
+const snare   = Snare909(2).decay(0.15).reverb(0.1).volume(0.65)
+const clap    = Clap909().pattern([0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]).volume(0.5)
+const hihat   = Hihat808(8).decay(0.06).swing(0.04).volume(0.35)
+const openhat = HihatOpen808().pattern([0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,1,0]).decay(0.35).volume(0.28)
+const cowbell = Cowbell808().pattern([0,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0]).decay(0.4).volume(0.45)
+const bass    = Bass303('A2')
+  .pattern(['A2',0,0,0, 'A2',0,'D3',0, 'A2',0,0,0, 'F3',0,'E3',0])
+  .cutoff(700).resonance(10).envDepth(3500)
+  .swing(0.04).volume(0.75)
+
+export default Song({ bpm: 128, tracks: [kick, snare, clap, hihat, openhat, cowbell, bass] })`
 
 // ── Mixer strip state ──────────────────────────────────────────────────────────
 
