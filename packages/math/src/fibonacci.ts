@@ -32,6 +32,7 @@ export const fibonacci = (n: number): number[] => {
   if (n <= 0) return []
   if (n === 1) return [1]
   type FibAcc = { readonly seq: number[]; readonly last: number; readonly prev: number }
+   
   return (Array.from({ length: n - 2 })).reduce<FibAcc>(
     ({ seq, last, prev }) => ({ seq: [...seq, last + prev], last: last + prev, prev: last }),
     { seq: [1, 1], last: 1, prev: 1 },
@@ -111,6 +112,7 @@ export const padovan = (n: number): number[] => {
   if (n <= 3) return Array(n).fill(1) as number[]
   // P(k) = P(k-2) + P(k-3); track last three values as [a=last, b=second, c=third]
   type PadAcc = { readonly seq: number[]; readonly last: [number, number, number] }
+   
   return (Array.from({ length: n - 3 })).reduce<PadAcc>(
     ({ seq, last: [a, b, c] }) => {
       const next = b + c
@@ -151,6 +153,7 @@ export const tribonacci = (n: number): number[] => {
   if (n === 2) return [0, 0]
   // T(k) = T(k-1) + T(k-2) + T(k-3); track last three as [a=last, b=second, c=third]
   type TribAcc = { readonly seq: number[]; readonly last: [number, number, number] }
+   
   return (Array.from({ length: n - 3 })).reduce<TribAcc>(
     ({ seq, last: [a, b, c] }) => {
       const next = a + b + c

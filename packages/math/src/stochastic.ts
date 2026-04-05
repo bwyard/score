@@ -93,6 +93,7 @@ export const markov = (matrix: readonly (readonly number[])[], length: number, s
   // Pick the next state by walking the probability row — freeze once cumulative sum >= r
   const pickNext = (currentState: number): number => {
     const row = matrix[currentState] ?? []
+     
     return row.reduce<{ readonly next: number; readonly remaining: number }>(
       ({ next, remaining }, prob, j) =>
         remaining > 0 ? { next: j, remaining: remaining - prob } : { next, remaining },

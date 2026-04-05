@@ -46,6 +46,7 @@ export const lyapunovExponent = (r: number, x0 = 0.5, iterations = 1000): number
 
   // Pure accumulation via reduce — threads {x, sum} forward, no let, no mutation
   type LyapAcc = { readonly x: number; readonly sum: number }
+   
   const { sum } = (Array.from({ length: iterations })).reduce<LyapAcc>(
     ({ x, sum }) => {
       const derivative = Math.abs(r * (1 - 2 * x))

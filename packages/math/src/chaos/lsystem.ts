@@ -52,6 +52,7 @@ export const lsystem = (axiom: string, rules: LRule, generations: number): strin
   }
 
   // Each generation rewrites every character via the rules; unmatched symbols pass through unchanged
+   
   return (Array.from({ length: generations })).reduce<string>(
     (current) => Array.from(current).reduce((acc, ch) => acc + (rules[ch] ?? ch), ''),
     axiom,

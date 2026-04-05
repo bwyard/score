@@ -84,6 +84,7 @@ export const wolframCA = (
     : Array.from({ length: width }, (_, i) => (i === Math.floor(width / 2) ? 1 : 0))
 
   // Pure reduce — each generation is derived from the previous row, no push, no let loops
+   
   return (Array.from({ length: generations - 1 })).reduce<number[][]>(
     (acc) => {
       const prev = acc[acc.length - 1]!
