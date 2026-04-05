@@ -18,18 +18,20 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test --config playwright.config.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "node-web-audio-api": "^1.0.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@score/cli": "workspace:*",
     "@score/core": "workspace:*",
     "@score/dsl": "workspace:*",
-    "@score/session": "workspace:*",
     "@score/sequencer": "workspace:*",
+    "@score/session": "workspace:*",
     "@score/visuals": "workspace:*",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^16.0.0",

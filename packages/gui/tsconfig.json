@@ -17,5 +17,5 @@
     "outDir":                     "./dist",
     "rootDir":                    "."
   },
-  "include": ["src", "tests", "vitest.config.ts", "electron.vite.config.ts"]
+  "include": ["src", "tests", "vitest.config.ts", "electron.vite.config.ts", "playwright.config.ts"]
 }

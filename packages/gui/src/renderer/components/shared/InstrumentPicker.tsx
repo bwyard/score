@@ -3,6 +3,8 @@
 // Renders a grid of instrument type buttons grouped by category.
 // Clicking a button fires onPick(instrumentType). Escape or close button fires onClose().
 //
+// Catalogue is defined here as a UI concern (labels + grouping).
+// Types must match INSTRUMENT_REGISTRY keys in @score/instruments exactly.
 // No audio, no IPC — pure props in, callbacks out.
 
 import React, { useEffect, useRef } from 'react'
@@ -11,37 +13,52 @@ import React, { useEffect, useRef } from 'react'
 
 /** Props for {@link InstrumentPicker}. */
 export type InstrumentPickerProps = {
-  /** Called when the user selects an instrument. @param instrumentType - DSL type string, e.g. `'kick'`. */
+  /** Called when the user selects an instrument. @param instrumentType - Registry key, e.g. `'kick808'`. */
   readonly onPick:  (instrumentType: string) => void
   /** Called when the picker should be dismissed (Escape key or close button). */
   readonly onClose: () => void
 }
 
 // ── Instrument catalogue ──────────────────────────────────────────────────────
+// Labels are DJ-friendly names. Types must exactly match INSTRUMENT_REGISTRY keys.
 
 type InstrumentEntry = { readonly label: string; readonly type: string }
 
 const DRUMS: readonly InstrumentEntry[] = [
-  { label: 'Kick',    type: 'kick'    },
-  { label: 'Snare',   type: 'snare'   },
-  { label: 'HiHat',   type: 'hihat'   },
-  { label: 'Clap',    type: 'clap'    },
-  { label: 'Crash',   type: 'crash'   },
-  { label: 'Ride',    type: 'ride'    },
+  { label: 'Kick 808',      type: 'kick808'       },
+  { label: 'Kick 909',      type: 'kick909'       },
+  { label: 'Kick Hardstyle',type: 'kickHardstyle'  },
+  { label: 'Kick Hardcore', type: 'kickHardcore'   },
+  { label: 'Kick',          type: 'kick'           },
+  { label: 'Snare 909',     type: 'snare909'       },
+  { label: 'Snare',         type: 'snare'          },
+  { label: 'Clap 909',      type: 'clap909'        },
+  { label: 'Hi-Hat 808',    type: 'hihat808'       },
+  { label: 'Open Hat 808',  type: 'hihatopen808'   },
+  { label: 'Hi-Hat',        type: 'hihat'          },
+  { label: 'Cowbell 808',   type: 'cowbell808'     },
 ]
 
-const MELODIC: readonly InstrumentEntry[] = [
-  { label: 'Bass303', type: 'bass303'  },
-  { label: 'SubSynth',type: 'subsynth' },
-  { label: 'Synth',   type: 'synth'   },
-  { label: 'Pad',     type: 'pad'     },
-  { label: 'Pluck',   type: 'pluck'   },
-  { label: 'FMSynth', type: 'fmsynth' },
+const BASS: readonly InstrumentEntry[] = [
+  { label: 'Bass 303',      type: 'bass-303'       },
+  { label: 'Wobble Bass',   type: 'wobble'         },
+  { label: 'Sub Synth',     type: 'subsynth'       },
+]
+
+const SYNTHS: readonly InstrumentEntry[] = [
+  { label: 'Supersaw',      type: 'supersaw'       },
+  { label: 'Pad',           type: 'pad'            },
+  { label: 'FM Synth',      type: 'fmsynth'        },
+  { label: 'Rhodes',        type: 'rhodes'         },
+  { label: 'Pluck',         type: 'pluck'          },
+  { label: 'Synth',         type: 'synth'          },
 ]
 
 const OTHER: readonly InstrumentEntry[] = [
-  { label: 'Sample',  type: 'sample'  },
-  { label: 'Arp',     type: 'arp'     },
+  { label: 'Arp',           type: 'arp'            },
+  { label: 'Theremin',      type: 'theremin'       },
+  { label: 'Sax',           type: 'sax'            },
+  { label: 'Sample',        type: 'sample'         },
 ]
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -54,7 +71,8 @@ const styles = {
   },
   modal: {
     background: '#111', border: '1px solid #333', borderRadius: 6,
-    padding: '16px 20px', minWidth: 340, position: 'relative' as const,
+    padding: '16px 20px', minWidth: 400, position: 'relative' as const,
+    maxHeight: '80vh', overflowY: 'auto' as const,
   },
   header: {
     display: 'flex', flexDirection: 'row' as const,
@@ -66,7 +84,7 @@ const styles = {
     color: '#888', cursor: 'pointer', fontSize: 11, fontFamily: 'monospace',
     padding: '2px 8px',
   },
-  section: { marginBottom: 10 },
+  section: { marginBottom: 12 },
   sectionLabel: {
     fontSize: 9, color: '#555', fontFamily: 'monospace',
     textTransform: 'uppercase' as const, letterSpacing: 1, marginBottom: 6,
@@ -77,7 +95,7 @@ const styles = {
   instrBtn: {
     background: '#1a1a1a', border: '1px solid #333', borderRadius: 3,
     color: '#aaa', cursor: 'pointer', fontSize: 10, fontFamily: 'monospace',
-    padding: '4px 10px', minWidth: 56,
+    padding: '4px 10px', minWidth: 80,
   },
 } as const
 
@@ -87,7 +105,7 @@ const styles = {
  * Instrument selection modal.
  *
  * Renders a dark modal overlay with a grid of instrument type buttons grouped
- * by category (Drums, Melodic, Other). Clicking a button fires `onPick(type)`.
+ * by category (Drums, Bass, Synths, Other). Clicking a button fires `onPick(type)`.
  * Pressing Escape or clicking the close button fires `onClose()`.
  *
  * @example
@@ -163,8 +181,13 @@ export const InstrumentPicker = (props: InstrumentPickerProps): React.JSX.Elemen
         </div>
 
         <div style={styles.section}>
-          <div style={styles.sectionLabel}>Melodic</div>
-          {renderGroup(MELODIC)}
+          <div style={styles.sectionLabel}>Bass</div>
+          {renderGroup(BASS)}
+        </div>
+
+        <div style={styles.section}>
+          <div style={styles.sectionLabel}>Synths</div>
+          {renderGroup(SYNTHS)}
         </div>
 
         <div style={styles.section}>

@@ -57,7 +57,7 @@ const openhat = HihatOpen808().pattern([0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,1,0]).dec
 const cowbell = Cowbell808().pattern([0,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0]).decay(0.4).volume(0.45)
 const bass    = Bass303('A2')
   .pattern(['A2',0,0,0, 'A2',0,'D3',0, 'A2',0,0,0, 'F3',0,'E3',0])
-  .cutoff(700).resonance(10).envDepth(3500)
+  .cutoff(700).resonance(10)
   .swing(0.04).volume(0.75)
 
 export default Song({ bpm: 128, tracks: [kick, snare, clap, hihat, openhat, cowbell, bass] })`
