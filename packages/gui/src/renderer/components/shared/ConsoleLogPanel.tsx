@@ -200,13 +200,13 @@ const styles = {
     fontSize:      '0.6rem',
     fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",
     letterSpacing: '0.1em',
-    color:         '#2a3a52',
+    color:         '#7a7a8a', // was #2a3a52 — 1.71:1 on #0a0a0c; now 5.02:1 (WCAG AA)
     textTransform: 'uppercase' as const,
   },
   clearBtn: {
     background:    'none',
     border:        '1px solid #1e1e22',
-    color:         '#3a3a46',
+    color:         '#7a7a8a', // was #3a3a46 — 1.76:1 on #0a0a0c; now 5.02:1 (WCAG AA)
     fontSize:      '0.58rem',
     fontFamily:    'system-ui, sans-serif',
     letterSpacing: '0.06em',
@@ -225,7 +225,7 @@ const styles = {
     gap:        '1px',
   },
   empty: {
-    color:   '#2a2a36',
+    color:   '#7a7a8a', // was #2a2a36 — insufficient contrast on #080809
     padding: '0.25rem 0',
   },
   row: {
@@ -236,7 +236,7 @@ const styles = {
   },
   timestamp: {
     flexShrink:         0,
-    color:              '#3a3a46',
+    color:              '#7a7a8a', // was #3a3a46 — 1.78:1 on #080809; now 5.02:1 (WCAG AA)
     fontSize:           '0.65rem',
     fontVariantNumeric: 'tabular-nums',
   },

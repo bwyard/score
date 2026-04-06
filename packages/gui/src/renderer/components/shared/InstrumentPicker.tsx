@@ -86,7 +86,7 @@ const styles = {
   },
   section: { marginBottom: 12 },
   sectionLabel: {
-    fontSize: 9, color: '#555', fontFamily: 'monospace',
+    fontSize: 9, color: '#808090', fontFamily: 'monospace', // was #555 — 2.53:1 on #111; #7a7a8a gives 4.47 (marginally fails); #808090 gives 4.90:1 ✓
     textTransform: 'uppercase' as const, letterSpacing: 1, marginBottom: 6,
   },
   grid: {

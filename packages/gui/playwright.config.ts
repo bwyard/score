@@ -10,11 +10,17 @@ import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
 
-  testDir:     './tests/e2e',
-  testMatch:   '**/*.e2e.ts',
-  timeout:     30_000,
-  retries:     process.env['CI'] ? 2 : 0,
-  workers:     1, // Electron: single instance only
+  testDir:        './tests/e2e',
+  testMatch:      '**/*.e2e.ts',
+  timeout:        30_000,  // per-test limit
+  globalTimeout:  900_000, // 15 min total safety cap
+  retries:        process.env['CI'] ? 2 : 0,
+  workers:        1, // Electron: single instance only
+
+  expect: {
+    // Electron startup (~5-7s) + render time — give assertions room to breathe
+    timeout: 8_000,
+  },
 
   use: {
     // Electron does not use a browser — launch config is in each test via electron.launch()
@@ -22,6 +28,15 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     trace:      'on-first-retry',
   },
+
+  // Pass SCORE_TEST=1 so the main process hides the BrowserWindow.
+  // Playwright interacts via DevTools Protocol — the window does not need to be visible.
+  projects: [
+    {
+      name: 'electron',
+      use: { },
+    },
+  ],
 
   reporter: [
     ['list'],

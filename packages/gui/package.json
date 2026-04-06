@@ -26,6 +26,7 @@
     "node-web-audio-api": "^1.0.8"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "@playwright/test": "^1.59.1",
     "@score/cli": "workspace:*",
     "@score/core": "workspace:*",

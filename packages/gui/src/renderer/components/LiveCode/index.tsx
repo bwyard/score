@@ -21,6 +21,7 @@ import { BarCounter }                       from '../status/index.js'
 import { PendingSwapBadge }                 from '../status/index.js'
 import { patchBpm, patchTrackPattern, insertTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams, parseTrackModel, patchInstrumentModel, patchMute, parseMuteState, patchAddInstrument, uniqueVarName } from '../../lib/codePatcher.js'
 import { InstrumentPanel } from '../shared/InstrumentPanel.js'
+import { InstrumentPicker } from '../shared/InstrumentPicker.js'
 import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
 import type { PanelLayoutMap }            from '../../../main/ipc-types.js'
 
@@ -95,7 +96,7 @@ const PanelToggle = ({ label, active, onClick }: PanelToggleProps) => (
       background:    active ? '#152035' : 'none',
       border:        active ? '1px solid #2a4a7a' : '1px solid #1e1e22',
       borderRadius:  '2px',
-      color:         active ? '#6a9fff' : '#3a3a46',
+      color:         active ? '#6a9fff' : '#7a7a8a', // was #3a3a46 — 1.77:1 on #090909; now 5.02:1 (WCAG AA)
       fontSize:      '0.65rem',
       fontFamily:    'system-ui, sans-serif',
       letterSpacing: '0.06em',
@@ -801,34 +802,16 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                   style={styles.addTrackBtn}
                   aria-label="Add track"
                   title="Add a new instrument track"
-                  onClick={() => { setAddTrackOpen(v => !v) }}
+                  onClick={() => { setAddTrackOpen(true) }}
                 >
                   +
                 </button>
-                <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#3a3a52', letterSpacing: '0.06em' }}>ADD TRACK</span>
+                <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#7a7a8a', letterSpacing: '0.06em' }}>ADD TRACK</span>
                 {addTrackOpen && (
-                  <div style={styles.addTrackPicker}>
-                    {([
-                      ['kick808',  'Kick 808'],
-                      ['kick909',  'Kick 909'],
-                      ['snare909', 'Snare 909'],
-                      ['hihat808', 'HiHat 808'],
-                      ['bass303',  'Bass 303'],
-                      ['synth',    'Synth'],
-                      ['subsynth', 'SubSynth'],
-                      ['fmsynth',  'FM Synth'],
-                      ['pad',      'Pad'],
-                      ['pluck',    'Pluck'],
-                    ] as const).map(([type, label]) => (
-                      <button
-                        key={type}
-                        style={styles.addTrackPickerBtn}
-                        onClick={() => { onAddTrack(type) }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
+                  <InstrumentPicker
+                    onPick={onAddTrack}
+                    onClose={() => { setAddTrackOpen(false) }}
+                  />
                 )}
               </div>
 
@@ -864,7 +847,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                         style={{
                           fontSize:      8,
                           fontFamily:    'monospace',
-                          color:         isSelected ? '#4a8fff' : '#3a3a4a',
+                          color:         isSelected ? '#4a8fff' : '#7a7a8a', // was #3a3a4a — 1.74:1 on #0d0d10; now 5.43:1 (WCAG AA)
                           letterSpacing: '0.08em',
                           paddingBottom: 3,
                           userSelect:    'none',
@@ -887,7 +870,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                 )}
               </div>
               {selectedTrack === null && tracks.length > 0 && (
-                <div style={{ fontSize: 9, color: '#3a3a52', fontFamily: 'monospace', padding: '4px 8px', textAlign: 'center', letterSpacing: '0.06em' }}>
+                <div style={{ fontSize: 9, color: '#7a7a8a', fontFamily: 'monospace', padding: '4px 8px', textAlign: 'center', letterSpacing: '0.06em' }}>
                   ▼ EDIT — click a strip above
                 </div>
               )}
@@ -999,7 +982,7 @@ const styles = {
     background:    'none',
     border:        '1px solid #1e1e28',
     borderRadius:  '2px',
-    color:         '#3a3a50',
+    color:         '#7a7a8a', // was #3a3a50 — 1.78:1 on #0a0a0d; now 5.43:1 (WCAG AA)
     fontSize:      '0.68rem',
     letterSpacing: '0.06em',
     cursor:        'pointer',

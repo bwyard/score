@@ -236,6 +236,10 @@ const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
   }
   teardown()
   slotRef.value = { engine, playing: false, bpm: song.bpm, bars: barOffset }
+
+  // In test mode (SCORE_TEST=1) mute master output — engine still runs, IPC still fires,
+  // but no audio comes out of the speakers.
+  if (process.env['SCORE_TEST'] === '1') engine.patch({ masterVolume: 0 })
   // Per-step cache write — fires at full audio tick rate.
   // Does NOT send IPC directly — writes to tickCache so the display tick loop
   // can send 'display:tick' at ~60fps without IPC at the full audio rate.
@@ -269,6 +273,7 @@ const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
           const next = slotRef.value
           if (next && !next.playing) {
             next.engine.start()
+            if (process.env['SCORE_TEST'] === '1') next.engine.patch({ masterVolume: 0 })
             next.playing = true
             pushState()
             startAnalysis()
@@ -286,11 +291,16 @@ const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
 // ── Window factory ─────────────────────────────────────────────────────────────
 
 const createWindow = (): BrowserWindow => {
+  // In test mode (SCORE_TEST=1) suppress the visible window — Playwright still
+  // interacts via DevTools Protocol regardless of show state.
+  const isTest = process.env['SCORE_TEST'] === '1'
+
   const win = new BrowserWindow({
     width:  1280,
     height: 800,
     minWidth:  900,
     minHeight: 600,
+    show:            !isTest,
     backgroundColor: '#0c0c0e',
     titleBarStyle: 'hiddenInset',
     webPreferences: {
@@ -408,6 +418,8 @@ ipcMain.on('transport:play', () => {
   const slot = slotRef.value
   if (!slot || slot.playing) return
   slot.engine.start()
+  // Belt-and-suspenders: re-apply mute after start() in case any initialization gap
+  if (process.env['SCORE_TEST'] === '1') slot.engine.patch({ masterVolume: 0 })
   slot.playing = true
   pushState()
   startAnalysis()
@@ -576,7 +588,7 @@ ipcMain.on('bug:report', (_event, payload: RendererToMain['bug:report']) => {
     const fileName    = `score-bug-report-${timestamp}.json`
 
     // Fixed path — always the same location so Claude can read it directly
-    const repoRoot    = path.resolve(__dirname, '..', '..', '..', '..', '..')
+    const repoRoot    = path.resolve(__dirname, '..', '..', '..', '..')
     const debugDir    = path.join(repoRoot, 'debug')
     mkdirSync(debugDir, { recursive: true })
     writeFileSync(path.join(debugDir, 'report.json'), json, 'utf8')

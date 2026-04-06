@@ -240,7 +240,7 @@ const styles = {
   trackName: {
     width:         '100%',
     fontSize:      '0.6rem',
-    color:         '#6a6a7a',
+    color:         '#7a7a8a', // was #6a6a7a — 3.65:1 on #0d0d10; now 5.43:1 (WCAG AA)
     fontFamily:    'system-ui, sans-serif',
     textAlign:     'center' as const,
     overflow:      'hidden',

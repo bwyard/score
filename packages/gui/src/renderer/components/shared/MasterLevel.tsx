@@ -133,7 +133,7 @@ const styles = {
   label: {
     fontFamily:    "'JetBrains Mono', 'Fira Code', monospace",
     fontSize:      '0.6rem',
-    color:         '#6a6a7a',
+    color:         '#7a7a8a', // was #6a6a7a — 3.87:1 on #0a0a0d; now 5.43:1 (WCAG AA)
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
   },

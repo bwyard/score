@@ -249,7 +249,7 @@ const styles = {
   label: {
     fontFamily:    'system-ui, sans-serif',
     fontSize:      '0.58rem',
-    color:         '#3e3e46',
+    color:         '#7a7a8a', // was #3e3e46 — 1.81:1 on #0e0e11; now 5.02:1 (WCAG AA)
     letterSpacing: '0.12em',
     textTransform: 'uppercase' as const,
   },
@@ -268,7 +268,7 @@ const styles = {
     marginLeft:    'auto',
     background:    'none',
     border:        '1px solid #2a2a35',
-    color:         '#556688',
+    color:         '#7090c0', // was #556688 — 3.34:1 on #0e0e11; now 6.27:1 (WCAG AA)
     fontFamily:    'system-ui, sans-serif',
     fontSize:      '0.58rem',
     letterSpacing: '0.08em',
@@ -281,7 +281,7 @@ const styles = {
   hw: {
     fontFamily:    'system-ui, sans-serif',
     fontSize:      '0.58rem',
-    color:         '#3e3e46',
+    color:         '#7a7a8a', // was #3e3e46 — 1.81:1 on #0e0e11; now 5.02:1 (WCAG AA)
     letterSpacing: '0.12em',
     textTransform: 'uppercase' as const,
     padding:       '0.12rem 0.4rem',
