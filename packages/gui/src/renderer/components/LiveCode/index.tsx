@@ -603,7 +603,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
   return (
     <div style={styles.root}>
-      <TransportBar hardware={hardware} onHome={onHome} onPlay={onPlay} onStop={onStop} onBpmChange={onBpmChange} />
+      <TransportBar
+        hardware={hardware}
+        onHome={onHome}
+        onPlay={onPlay}
+        onStop={onStop}
+        onBpmChange={onBpmChange}
+        getCurrentCode={() => codeRef.current}
+        bugEngineState={{ playing: engineState.playing, bpm: engineState.bpm, bars: engineState.bars }}
+      />
 
       {/* Status bar */}
       <div style={styles.statusBar}>

@@ -21,7 +21,7 @@ const DRUMS: Section = {
     { name: 'Kick909()',        desc: '909 click kick — .volume() .decay()' },
     { name: 'KickHardstyle()',  desc: 'reverse-bass + tanh distortion' },
     { name: 'KickHardcore()',   desc: 'hard-clip gabber, 160–200 BPM' },
-    { name: 'Snare()',          desc: '.volume() .decay() .tone()' },
+    { name: 'Snare()',          desc: '.volume() .decay()' },
     { name: 'Snare909()',       desc: '909 tone+noise snare' },
     { name: 'Clap909()',        desc: '4-layer staggered noise burst' },
     { name: 'Cowbell808()',     desc: 'TR-808 cowbell — metallic bell, two square oscs' },

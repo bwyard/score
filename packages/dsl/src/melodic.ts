@@ -76,7 +76,7 @@ const makeSubSynth = (base: ChainablePart): SubSynthPart => ({
 export const SubSynth = (pitch?: string): SubSynthPart =>
   makeSubSynth(
     createPart({
-      instrumentType: 'sub-synth',
+      instrumentType: 'subsynth',
       props: {},
       ...( pitch !== undefined ? { _notes: [pitch] } : {}),
     }, makeSubSynth),

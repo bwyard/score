@@ -214,6 +214,9 @@ const panicStop = (): void => {
   stopAnalysis()
   pendingRef.value = null
   try { slot.engine.stop() } catch { /* ignore */ }
+  // Hard-cut all audio immediately — kills reverb/delay tails on panic stop.
+  // masterVolume is restored to 0.72 on next transport:play.
+  try { slot.engine.patch({ masterVolume: 0 }) } catch { /* ignore */ }
   slot.playing = false
   slot.bars    = 0
   pushState()
@@ -417,9 +420,13 @@ ipcMain.on('mode:selected', (_event, payload: RendererToMain['mode:selected']) =
 ipcMain.on('transport:play', () => {
   const slot = slotRef.value
   if (!slot || slot.playing) return
+  // Restore master volume (may have been zeroed by panicStop to kill reverb tails)
+  if (process.env['SCORE_TEST'] === '1') {
+    slot.engine.patch({ masterVolume: 0 })
+  } else {
+    slot.engine.patch({ masterVolume: 0.72 })
+  }
   slot.engine.start()
-  // Belt-and-suspenders: re-apply mute after start() in case any initialization gap
-  if (process.env['SCORE_TEST'] === '1') slot.engine.patch({ masterVolume: 0 })
   slot.playing = true
   pushState()
   startAnalysis()
@@ -595,8 +602,6 @@ ipcMain.on('bug:report', (_event, payload: RendererToMain['bug:report']) => {
 
     // Timestamped archive in Downloads for the user
     writeFileSync(path.join(app.getPath('downloads'), fileName), json, 'utf8')
-
-    void shell.openPath(app.getPath('downloads'))
   } catch (err) {
     send('error:report', { message: `Bug report save failed: ${err instanceof Error ? err.message : String(err)}` })
   }

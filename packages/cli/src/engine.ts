@@ -274,6 +274,8 @@ export const partToInstrumentDescriptor = (
       ...(part._every    !== undefined ? { every: { n: part._every.n, transform: part._every.fn } } : {}),
       ...(part._stretch  !== undefined ? { stretch:  part._stretch  } : {}),
       ...(part._stutter  !== undefined ? { stutter:  part._stutter  } : {}),
+      // Map _tone chain field → props.tone (Snare, Snare909 bandpass frequency)
+      ...(part._tone     !== undefined ? { tone:     part._tone     } : {}),
       ...part.props,
     },
   }

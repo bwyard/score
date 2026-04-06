@@ -55,7 +55,7 @@ const TRACK_COLOR_DEFAULT = '#404040'
  *   - Legacy:  lines containing `Track(`
  *   - Const:   lines containing `= Kick(` / `= Kick808(` / `= Snare(` etc.
  */
-const TRACK_LINE_RE = /(?:Track\(|=\s*(?:Kick(?:808|909)?|Snare(?:909)?|HiHat(?:808)?|Hihat(?:808)?|Bass303|Pad|Rhodes|Pluck|Synth|Sample|Theremin|Sax|Arp|SubSynth|FMSynth)\s*\()/
+const TRACK_LINE_RE = /(?:Track\(|=\s*(?:Kick(?:808|909|Hardstyle|Hardcore)?|Snare(?:909)?|HiHat(?:808)?|Hihat(?:Open808|808)?|Clap(?:909)?|Cowbell(?:808)?|Bass303|Pad|Rhodes|Wurlitzer|Hammond|Clavinet|Pluck|Stab|Synth|Sample|Theremin|Sax|Arp|SubSynth|FMSynth|SuperSaw|WobbleBass|KarplusSynth|Guitar|DX7Lead|WavetableSynth)\s*\()/
 
 /**
  * Returns `{ lineIndex, trackIndex }` pairs for each instrument line found in
