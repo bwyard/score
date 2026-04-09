@@ -92,6 +92,8 @@ export const createGenericSynth = (
   context: ScoreAudioContext,
   props: GenericSynthProps = {},
 ): GenericSynthComponent => {
+  // outputGain holds the static output level — the VCA envelope peaks at 1.0
+  // so gain controls the instrument level without double-applying.
   const outputGain = context.createGain({ gain: props.gain ?? 0.25 })
 
   const triggerNote = (freq: number, time: number): void => {
@@ -100,7 +102,6 @@ export const createGenericSynth = (
     const decay   = env.decay   ?? 0.08
     const sustain = env.sustain ?? 0.7
     const release = env.release ?? 0.05
-    const peak    = props.gain  ?? 0.25
     const noteDur = attack + decay + release + 0.02
 
     const osc = context.createOscillator({ type: props.wave ?? 'sawtooth', frequency: freq })
@@ -128,7 +129,7 @@ export const createGenericSynth = (
     }
 
     vca.connect(outputGain)
-    vca.scheduleEnvelope({ peak, attack, decay, sustain, release, startTime: time, duration: noteDur })
+    vca.scheduleEnvelope({ peak: 1.0, attack, decay, sustain, release, startTime: time, duration: noteDur })
     osc.start(time)
     osc.stop(time + noteDur)
   }

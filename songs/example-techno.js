@@ -72,7 +72,7 @@ const harpsichord = Synth({
 
 const chantVoice = Synth({
   wave: 'square',        // pure tone — closest to unadorned vocal resonance
-  gain: 4,
+  gain: 0.45,
 
   envelope: {
     attack:  1.0,   // slow bloom — voices don't punch, they swell
