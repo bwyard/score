@@ -406,22 +406,47 @@ export const triggerSnare = (ctx: Context, time: number, props: SnareProps, dest
   }
 }
 
+// Bandpass bands matching createGenericHihat in @score/instruments.
+// Three resonant peaks + ±2% per-hit detune for machine-gun prevention.
+const HIHAT_BANDS = [
+  { frequency: 3500, Q: 1.5 },
+  { frequency: 6000, Q: 2.0 },
+  { frequency: 10000, Q: 1.5 },
+] as const
+const HIHAT_HPF       = 4000
+const HIHAT_DETUNE    = 0.02
+
 export const triggerHiHat = (ctx: Context, time: number, props: HiHatProps, dest: GainNode): void => {
   const gain = props.volume ?? 0.25
-  const dur  = props.open ? 0.3 : 0.06
-  const noise  = ctx.createNoise({ type: 'white' })
-  const filter = ctx.createFilter({ type: 'highpass', frequency: 8000 })
-  const vol    = ctx.createGain({ gain: 0 })
-  noise.connect(filter)
-  filter.connect(vol)
+  const dur  = props.open   ? 0.3 : 0.06
+
+  const noise   = ctx.createNoise({ type: 'white' })
+  const sumGain = ctx.createGain({ gain: 1 / HIHAT_BANDS.length })
+
+  const bands = HIHAT_BANDS.map(({ frequency, Q }) => {
+    const detunedFreq = frequency * (1 + (Math.random() * HIHAT_DETUNE * 2 - HIHAT_DETUNE))
+    const bp = ctx.createFilter({ type: 'bandpass', frequency: detunedFreq, Q })
+    noise.connect(bp)
+    bp.connect(sumGain)
+    return bp
+  })
+
+  const hpf = ctx.createFilter({ type: 'highpass', frequency: HIHAT_HPF })
+  const vol = ctx.createGain({ gain: 0 })
+
+  sumGain.connect(hpf)
+  hpf.connect(vol)
   vol.connect(dest)
+
   vol.scheduleEnvelope({ peak: gain, attack: 0.001, decay: dur - 0.001, sustain: 0, release: 0, startTime: time, duration: dur })
   noise.start(time)
   noise.stop(time + dur)
   noise.onended = () => {
-    try { noise.disconnect()  } catch { /* ok */ }
-    try { filter.disconnect() } catch { /* ok */ }
-    try { vol.disconnect()    } catch { /* ok */ }
+    try { noise.disconnect()   } catch { /* ok */ }
+    for (const bp of bands)  { try { bp.disconnect()     } catch { /* ok */ } }
+    try { sumGain.disconnect() } catch { /* ok */ }
+    try { hpf.disconnect()     } catch { /* ok */ }
+    try { vol.disconnect()     } catch { /* ok */ }
   }
 }
 
