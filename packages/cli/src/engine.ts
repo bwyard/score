@@ -153,6 +153,7 @@ const applyPitchTransforms = (
 // function patterns are passed through as-is and evaluated per-tick in the sequencer.
 
 const rotatePattern = (pattern: number[], phase: number): number[] => {
+  if (pattern.length === 0) return pattern
   const offset = ((Math.round(phase * pattern.length) % pattern.length) + pattern.length) % pattern.length
   return offset === 0 ? pattern : [...pattern.slice(offset), ...pattern.slice(0, offset)]
 }
@@ -768,6 +769,11 @@ const dispatchArp = (
   const notes = props.notes
   const mode  = props.mode ?? 'up'
   const rate  = props.rate ?? 1
+
+  if (notes.length === 0) {
+    console.error('[score-engine] arp: notes array is empty — track skipped')
+    return
+  }
 
   // HARDWARE BOUNDARY: mutable step counter — sequential arpeggio state across callbacks
   const arpState = { noteIndex: 0, pingDir: 1 }
