@@ -1,20 +1,29 @@
 # Score
 
-> A production-level, component-based EDM audio framework for creating music as code in TypeScript/JavaScript.
+[![CI](https://github.com/bwyard/score/actions/workflows/ci.yml/badge.svg)](https://github.com/bwyard/score/actions/workflows/ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+[![Node ≥20](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org)
 
-**Author:** Bree Yard
-**Status:** Active development — Phase 13 (Score Studio GUI). Tester release in progress.
+> A production-grade, component-based EDM audio framework. Write music as code in TypeScript — no samples, no MIDI files, no drag-and-drop. Every note, pattern, and arrangement is a pure function of time.
+
+**Author:** Bree Yard — [breeyard.dev](https://breeyard.dev)
+**Status:** Phase 13 of 17 — stable core, Score Studio GUI in active development
+
+<!-- TODO: add a GIF or screenshot of Score Studio here once captured -->
+<!-- ![Score Studio](./docs/assets/score-studio.gif) -->
 
 ---
 
 ## What is Score?
 
-Score is two things simultaneously:
+Score is a professional music production framework and a live coding environment built on the Web Audio API.
 
-1. **A framework** (TypeScript) — the engine, instruments, effects, sequencer, mixer, CLI, and GUI
-2. **A language** (plain ESM) — the song file format that musicians and developers use to write music as code
+**As a framework** — 15 TypeScript packages covering synthesis, effects, sequencing, mixing, modulation, MIDI, and an Electron GUI. Built with a strict functional architecture: no classes, no mutation, every component is a factory function.
 
-The core philosophy: **a song is a pure function of time.** Every note, pattern, effect value, and arrangement decision is written by hand. No AI generates any musical content — ever.
+**As a language** — song files are plain ESM. Import instruments, chain methods, export a `Song`. The engine evaluates it and plays it. Live reload while you write.
+
+The core thesis: **a song is a pure function of time.** No AI generates musical content — ever.
 
 ---
 
@@ -23,15 +32,10 @@ The core philosophy: **a song is a pure function of time.** Every note, pattern,
 ```js
 import { Song, Kick808, Snare909, Hihat808, Bass303, Pad } from '@score/dsl'
 
-// Drums — euclidean shorthand: Kick808(n) spreads n hits over 16 steps
 const kick  = Kick808(4).volume(0.8)
 const snare = Snare909(2).volume(0.55)
 const hihat = Hihat808(8).volume(0.25)
 
-// Or explicit step indices
-// const kick = Kick808().hits(0, 4, 8, 12).volume(0.8)
-
-// Melodic — note array pattern: strings are pitches, 0 is a rest
 const bass = Bass303('A2')
   .cutoff(600)
   .resonance(0.4)
@@ -47,22 +51,25 @@ const pad = Pad('A3')
 export default Song({ bpm: 128, tracks: [kick, snare, hihat, bass, pad] })
 ```
 
-Chain methods are fully type-safe. `Bass303().cutoff(600).volume(0.8)` returns `Bass303Part` — sub-type methods are preserved through every composition step.
+Chain methods are fully type-safe — `Bass303().cutoff(600).volume(0.8)` returns `Bass303Part`, sub-type methods preserved through every composition step.
 
 ---
 
-## Score Studio (GUI)
+## Score Studio
 
-Score Studio is the Electron-based GUI that ships with Score. Edit code on the left, hear and see changes in real time.
+Score Studio is the Electron-based live coding environment that ships with Score.
 
-- **Live Code mode** — code editor wired to the engine. Ctrl+Enter evals. BPM, step toggles, and mixer changes write back to the code.
-- **Performance mode** — full-screen audio visualizer. Theme declared in song file.
-- **Punchcard grid** — click steps to toggle. Changes write back to the editor.
-- **Mixer** — per-track volume/mute faders. Drag to update `.volume()` in code.
-- **Import toggle** — hide/show the import block for a cleaner editing view.
+<!-- TODO: replace with actual demo link once deployed -->
+<!-- **[→ Try the tester demo](https://score-tester.breeyard.dev)** -->
+
+- **Live Code editor** — edit code, hit Ctrl+Enter, hear changes immediately
+- **Punchcard grid** — click steps to toggle hits; changes write back to the editor
+- **Mixer** — per-track volume and mute faders; drag to update `.volume()` in code
+- **Performance mode** — full-screen audio visualizer, theme declared in the song file
+- **Bug reporting** — in-app report button captures logs, code, and engine state
 
 ```bash
-# From the score repo root
+# Start Score Studio
 pnpm --filter @score/gui dev
 ```
 
@@ -71,13 +78,13 @@ pnpm --filter @score/gui dev
 ## CLI
 
 ```bash
-score play <song.js>              # Play a song file
-score play <song.js> --watch      # Live reload on every save
-score new song <name>             # Create a new song from template
-score list <song.js>              # Show song info and track list
-score export <song.js>            # Render to WAV
-score repl                        # Interactive REPL
-score doctor                      # Check system requirements
+score play <song.js>           # Play a song file
+score play <song.js> --watch   # Live reload on save
+score new song <name>          # Create a new song from template
+score list <song.js>           # Show song info and track list
+score export <song.js>         # Render to WAV
+score repl                     # Interactive REPL
+score doctor                   # Check system requirements
 ```
 
 ---
@@ -86,28 +93,41 @@ score doctor                      # Check system requirements
 
 | Package | Purpose |
 |---|---|
-| `@score/core` | AudioContext backend, ScoreError, UID |
-| `@score/components` | Kick808/909, Snare909, Hihat808, FMSynth, SubtractiveSynth, Bass303, Pad, Rhodes, Pluck |
+| `@score/core` | Audio context backend, ScoreError, UID |
+| `@score/components` | Kick808/909, Snare909, Hihat808, FMSynth, SubtractiveSynth, Bass303, Pad, Rhodes, Pluck, WobbleBass |
 | `@score/effects` | Reverb, Delay, Filter, Compressor, EQ, Distortion, Chorus, Phaser, Flanger, Limiter, Gate, Saturation, AutoPan, BitCrusher, StereoWidener |
-| `@score/dsl` | Song, Track, chain API (Bass303, Pad, Pluck, Rhodes, Kick808, etc.), `ChainMethods<T>` |
-| `@score/sequencer` | Transport, step sequencer, bar callbacks |
-| `@score/mixer` | Mixer, channel strips, return bus, master chain |
-| `@score/math` | Chaos math — Lorenz, logistic map, OUProcess (stochastic basis) |
-| `@score/modulation` | LFO, ADSR, ramp/sine/OU, automation wiring |
-| `@score/pattern` | Euclidean rhythms, combinators, reverse, shift, degrade |
-| `@score/visuals` | Visual themes, rendering targets, per-song canvas |
-| `@score/cli` | play, repl, list, export, new, doctor |
-| `@score/midi` | WebMIDI bridge, Pioneer XDJ profiles |
-| `@score/session` | Jam session, WebSocket sync |
-| `@score/mcp` | MCP tools for Claude Code integration |
-| `@score/gui` | Score Studio — Electron DAW interface |
+| `@score/instruments` | Instrument registry — kick, snare, hihat, synth, arp, subsynth, pad, sample |
+| `@score/dsl` | Song, chain API (Bass303, Pad, Kick808, etc.), arrangement blocks, modulation descriptors |
+| `@score/sequencer` | Transport, clock, step sequencer |
+| `@score/mixer` | Channel strips, return bus, master chain |
+| `@score/modulation` | LFO, ADSR, automation, ramp, chaos sources |
+| `@score/math` | Chaos math — Lorenz attractor, logistic map, Ornstein-Uhlenbeck process |
+| `@score/pattern` | Euclidean rhythms, reverse, shift, degrade, swing |
+| `@score/musical` | Music theory — scales, chord resolution, frequency mapping |
+| `@score/visuals` | Visual themes, audio-reactive canvas rendering |
+| `@score/midi` | WebMIDI bridge, Pioneer XDJ-RX3 profile |
+| `@score/session` | Jam session, live patch updates |
+| `@score/cli` | play, repl, list, export, new, doctor commands |
+| `@score/mcp` | MCP server for Claude Code integration |
+| `@score/gui` | Score Studio — Electron DAW |
+
+---
+
+## Architecture
+
+Score is a strict functional TypeScript monorepo built with Turborepo and pnpm workspaces.
+
+- **Zero classes** — every component is a factory function returning a plain object
+- **No mutation** — config objects are never mutated; state is threaded explicitly
+- **Web Audio API** — all synthesis runs in the audio thread, scheduled against `audioContext.currentTime`
+- **Hardware boundary pattern** — audio nodes are the only mutable state; everything above is pure
+- **Test coverage** — 90/85/90/90 thresholds enforced in CI (statements/branches/functions/lines)
 
 ---
 
 ## Development
 
 ```bash
-# Install dependencies
 pnpm install
 
 # Build all library packages (Turborepo, cached)
@@ -119,7 +139,10 @@ pnpm test
 # Type-check everything
 pnpm typecheck
 
-# Start Score Studio (Electron dev server)
+# Lint
+pnpm lint
+
+# Start Score Studio
 pnpm --filter @score/gui dev
 ```
 
@@ -129,12 +152,11 @@ pnpm --filter @score/gui dev
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating. To report a security issue, see [SECURITY.md](./SECURITY.md).
+See [CONTRIBUTING.md](./CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+To report a security issue see [SECURITY.md](./SECURITY.md).
 
 ---
 
 ## License
 
-Apache License 2.0. Use freely — personal, commercial, open source. See [LICENSE](./LICENSE). Author: Bree Yard.
+Apache License 2.0 — use freely in personal, commercial, and open source projects. See [LICENSE](./LICENSE).
