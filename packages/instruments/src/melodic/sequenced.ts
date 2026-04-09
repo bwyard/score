@@ -118,6 +118,7 @@ export const createArp = (
   }
 
   const advanceNoteIndex = (): void => {
+    if (notes.length === 0) return
     if (mode === 'up') {
       arpState.noteIndex += 1
     } else if (mode === 'down') {
@@ -140,7 +141,7 @@ export const createArp = (
     type: 'arp' as const,
 
     step: (active: number, time: number) => {
-      if (active <= 0) return
+      if (active <= 0 || notes.length === 0) return
       const idx  = Math.floor(arpState.noteIndex / rate) % notes.length
       // active is the pre-resolved frequency from the engine's resolveFreq
       // When active === 1 (generic trigger), fall back to the indexed note's

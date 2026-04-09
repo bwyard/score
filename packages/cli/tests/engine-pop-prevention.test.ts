@@ -63,18 +63,21 @@ describe('trigger functions — zero-gain onset invariant', () => {
     })
   })
 
-  it('triggerHiHat — internal GainNode initialises at gain 0 (regression: was full amplitude)', () => {
+  it('triggerHiHat — VCA initialises at gain 0, sumGain is a routing node (regression: was full amplitude)', () => {
     withGainSpy((ctx, dest, gains) => {
       triggerHiHat(ctx, 0, { volume: 0.4 } satisfies HiHatProps, dest)
-      expect(gains().every(g => g === 0)).toBe(true)
-      expect(gains().length).toBe(1)
+      const all = gains()
+      // Signal chain: sumGain (routing, non-zero) + vol (VCA, must be 0)
+      expect(all.length).toBe(2)
+      expect(all[all.length - 1]).toBe(0)
     })
   })
 
-  it('triggerHiHat open — open hi-hat also initialises at gain 0', () => {
+  it('triggerHiHat open — VCA also initialises at gain 0', () => {
     withGainSpy((ctx, dest, gains) => {
       triggerHiHat(ctx, 0, { volume: 0.4, open: true } satisfies HiHatProps, dest)
-      expect(gains().every(g => g === 0)).toBe(true)
+      const all = gains()
+      expect(all[all.length - 1]).toBe(0)
     })
   })
 

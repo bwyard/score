@@ -117,7 +117,7 @@ const styles = {
   },
   time: {
     fontSize: '0.65rem',
-    color:    '#5a5a6a',
+    color:    '#7a7a8a', // was #5a5a6a — 2.88:1 on #0c0c0e; now 5.02:1 (WCAG AA)
     marginLeft: '0.25rem',
   },
   errorMsg: {
@@ -133,7 +133,7 @@ const styles = {
   hint: {
     display:    'block',
     fontSize:   '0.62rem',
-    color:      '#444454',
+    color:      '#7a7a8a', // was #444454 — insufficient contrast on #0c0c0e
     marginTop:  '0.05rem',
   },
 } as const

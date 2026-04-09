@@ -383,4 +383,48 @@ describe('getBlockBounds (t330)', () => {
     // kick is line 3 — must NOT extend to line 4 (snare's const line)
     expect(kickBounds?.endLine).toBe(3)
   })
+
+})
+
+// ── TRACK_LINE_RE coverage — every instrument must match ─────────────────────
+// Ensures that adding new instruments to @score/dsl does not silently break
+// beat highlighting. Each instrument factory name must appear in TRACK_LINE_RE.
+
+describe('getTrackLines — instrument recognition (TRACK_LINE_RE coverage)', () => {
+
+  const makeCode = (factory: string) =>
+    `import { Song, Track, ${factory} } from '@score/dsl'\n\nexport default Song({ bpm: 128, tracks: [Track(${factory}(4))] })`
+
+  const makeConstCode = (factory: string) =>
+    `const x = ${factory}(4).volume(0.8)\nexport default Song({ bpm: 128, tracks: [Track(x)] })`
+
+  const instruments = [
+    // percussion
+    'Kick', 'Kick808', 'Kick909', 'KickHardstyle', 'KickHardcore',
+    'Snare', 'Snare909',
+    'HiHat', 'Hihat808', 'HihatOpen808', 'Clap909', 'Cowbell808',
+    // bass / melodic
+    'Bass303', 'SubSynth', 'FMSynth', 'SuperSaw', 'WobbleBass',
+    'Pad', 'Pluck', 'Stab', 'Rhodes', 'Wurlitzer', 'Hammond', 'Clavinet',
+    'DX7Lead', 'WavetableSynth', 'KarplusSynth', 'Guitar',
+    // other
+    'Synth', 'Sample', 'Theremin', 'Sax', 'Arp',
+  ]
+
+  instruments.forEach(name => {
+    it(`recognises ${name} in Track() style`, () => {
+      const code   = makeCode(name)
+      const tracks = [{ type: name.toLowerCase(), pattern: [1, 0] }]
+      const lines  = getTrackLines(code, tracks)
+      expect(lines.length).toBe(1)
+    })
+
+    it(`recognises ${name} in const-assignment style`, () => {
+      const code   = makeConstCode(name)
+      const tracks = [{ type: name.toLowerCase(), pattern: [1, 0] }]
+      const lines  = getTrackLines(code, tracks)
+      expect(lines.length).toBe(1)
+    })
+  })
+
 })

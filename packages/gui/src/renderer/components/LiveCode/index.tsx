@@ -21,6 +21,7 @@ import { BarCounter }                       from '../status/index.js'
 import { PendingSwapBadge }                 from '../status/index.js'
 import { patchBpm, patchTrackPattern, insertTrackPattern, patchTrackVolume, patchTrackNote, patchChainMethod, parseTrackChainParams, parseTrackModel, patchInstrumentModel, patchMute, parseMuteState, patchAddInstrument, uniqueVarName } from '../../lib/codePatcher.js'
 import { InstrumentPanel } from '../shared/InstrumentPanel.js'
+import { InstrumentPicker } from '../shared/InstrumentPicker.js'
 import type { PianoRollNote }              from '../visualizer/PianoRoll.js'
 import type { PanelLayoutMap }            from '../../../main/ipc-types.js'
 
@@ -43,24 +44,32 @@ type PanelVisibility = {
 
 // ── Starter template ───────────────────────────────────────────────────────────
 
-const STARTER = `import { Song, Kick808, Snare909, Hihat808, Bass303 } from '@score/dsl'
+const STARTER = `import { Song, Kick808, Snare909, Hihat808, HihatOpen808, Clap909, Cowbell808, Bass303 } from '@score/dsl'
 
-// Click a track in the mixer to open its instrument panel (model, decay, reverb…)
-// Click a step in the punchcard to toggle it on/off
-const kick  = Kick808(4).decay(0.7).volume(0.8)
-const snare = Snare909(2).decay(0.2).volume(0.55)
-const hihat = Hihat808(8).decay(0.08).volume(0.25)
-const bass  = Bass303('A2').cutoff(600).resonance(0.4)
-  .pattern(['A2', 0, 0, 0,  'D3', 0, 0, 0,  'A2', 0, 0, 0,  'D3', 0, 0, 0])
-  .volume(0.6)
+// ▶ Run to hear it — edit while playing, changes drop in at the next bar
+// Click a track in the mixer to open its controls (decay, filter, effects…)
+// Click a step in the grid to toggle it on/off
 
-export default Song({ bpm: 128, tracks: [kick, snare, hihat, bass] })`
+const kick    = Kick808(4).decay(0.8).volume(0.9)
+const snare   = Snare909(2).decay(0.15).reverb(0.1).volume(0.65)
+const clap    = Clap909().pattern([0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]).volume(0.5)
+const hihat   = Hihat808(8).decay(0.06).swing(0.04).volume(0.35)
+const openhat = HihatOpen808().pattern([0,0,0,0, 0,0,1,0, 0,0,0,0, 0,0,1,0]).decay(0.35).volume(0.28)
+const cowbell = Cowbell808().pattern([0,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0]).decay(0.4).volume(0.45)
+const bass    = Bass303('A2')
+  .pattern(['A2',0,0,0, 'A2',0,'D3',0, 'A2',0,0,0, 'F3',0,'E3',0])
+  .cutoff(700).resonance(10)
+  .swing(0.04).volume(0.75)
+
+export default Song({ bpm: 128, tracks: [kick, snare, clap, hihat, openhat, cowbell, bass] })`
 
 // ── Mixer strip state ──────────────────────────────────────────────────────────
 
 type StripState = {
   readonly volume: number
   readonly muted:  boolean
+  readonly soloed: boolean
+  readonly pan:    number
 }
 
 const updateStrip = (
@@ -87,7 +96,7 @@ const PanelToggle = ({ label, active, onClick }: PanelToggleProps) => (
       background:    active ? '#152035' : 'none',
       border:        active ? '1px solid #2a4a7a' : '1px solid #1e1e22',
       borderRadius:  '2px',
-      color:         active ? '#6a9fff' : '#3a3a46',
+      color:         active ? '#6a9fff' : '#7a7a8a', // was #3a3a46 — 1.77:1 on #090909; now 5.02:1 (WCAG AA)
       fontSize:      '0.65rem',
       fontFamily:    'system-ui, sans-serif',
       letterSpacing: '0.06em',
@@ -243,7 +252,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
   useEffect(() => {
     const unsub = window.scoreBridge.on('song:update', ({ tracks: t }) => {
       setTracks(t)
-      setStripStates(prev => t.map((track, i) => prev[i] ?? { volume: track.volume ?? 1, muted: parseMuteState(codeRef.current, i) }))
+      setStripStates(prev => t.map((track, i) => prev[i] ?? { volume: track.volume ?? 1, muted: parseMuteState(codeRef.current, i), soloed: false, pan: 0 }))
       setEvalStatus('ok')
       setEvalTimestamp(Date.now())
       // Auto-play after eval when the user clicked play (not standalone Eval btn)
@@ -388,6 +397,28 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
     // Persist mute state to code so it survives re-eval
     setCode(prev => patchMute(prev, index, mute))
   }, [stripStates])
+
+  const onMixerSolo = useCallback((index: number): void => {
+    const solo = !(stripStates[index]?.soloed ?? false)
+    // Toggle solo on clicked track; clear solo on all others
+    setStripStates(prev => prev.map((s, i) => ({ ...s, soloed: i === index ? solo : false })))
+    window.scoreBridge.send('engine:patch', { tracks: [{ index, solo }] })
+    setCode(prev => patchChainMethod(prev, index, 'solo', solo ? 1 : 0))
+  }, [stripStates])
+
+  const onMixerPan = useCallback((index: number, pan: number): void => {
+    setStripStates(prev => updateStrip(prev, index, { pan }))
+    setCode(prev => patchChainMethod(prev, index, 'pan', pan))
+    if (evalDebounceRef.current !== null) clearTimeout(evalDebounceRef.current)
+    evalDebounceRef.current = setTimeout(() => {
+      setError(null)
+      setEvalStatus('pending')
+      setCode(latest => {
+        window.scoreBridge.send('engine:eval', { code: latest })
+        return latest
+      })
+    }, 300)
+  }, [])
 
   /**
    * Optimistic UI: patch code immediately, then re-eval after 300ms idle.
@@ -572,7 +603,15 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
 
   return (
     <div style={styles.root}>
-      <TransportBar hardware={hardware} onHome={onHome} onPlay={onPlay} onStop={onStop} onBpmChange={onBpmChange} />
+      <TransportBar
+        hardware={hardware}
+        onHome={onHome}
+        onPlay={onPlay}
+        onStop={onStop}
+        onBpmChange={onBpmChange}
+        getCurrentCode={() => codeRef.current}
+        bugEngineState={{ playing: engineState.playing, bpm: engineState.bpm, bars: engineState.bars }}
+      />
 
       {/* Status bar */}
       <div style={styles.statusBar}>
@@ -771,34 +810,16 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                   style={styles.addTrackBtn}
                   aria-label="Add track"
                   title="Add a new instrument track"
-                  onClick={() => { setAddTrackOpen(v => !v) }}
+                  onClick={() => { setAddTrackOpen(true) }}
                 >
                   +
                 </button>
-                <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#3a3a52', letterSpacing: '0.06em' }}>ADD TRACK</span>
+                <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#7a7a8a', letterSpacing: '0.06em' }}>ADD TRACK</span>
                 {addTrackOpen && (
-                  <div style={styles.addTrackPicker}>
-                    {([
-                      ['kick808',  'Kick 808'],
-                      ['kick909',  'Kick 909'],
-                      ['snare909', 'Snare 909'],
-                      ['hihat808', 'HiHat 808'],
-                      ['bass303',  'Bass 303'],
-                      ['synth',    'Synth'],
-                      ['subsynth', 'SubSynth'],
-                      ['fmsynth',  'FM Synth'],
-                      ['pad',      'Pad'],
-                      ['pluck',    'Pluck'],
-                    ] as const).map(([type, label]) => (
-                      <button
-                        key={type}
-                        style={styles.addTrackPickerBtn}
-                        onClick={() => { onAddTrack(type) }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
+                  <InstrumentPicker
+                    onPick={onAddTrack}
+                    onClose={() => { setAddTrackOpen(false) }}
+                  />
                 )}
               </div>
 
@@ -822,15 +843,19 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                         type={track.type}
                         volume={stripStates[i]?.volume ?? 1}
                         muted={stripStates[i]?.muted ?? false}
+                        soloed={stripStates[i]?.soloed ?? false}
+                        pan={stripStates[i]?.pan ?? 0}
                         level={0}
                         onVolume={v => { onMixerVolume(i, v) }}
                         onMute={() => { onMixerMute(i) }}
+                        onSolo={() => { onMixerSolo(i) }}
+                        onPan={v => { onMixerPan(i, v) }}
                       />
                       <button
                         style={{
                           fontSize:      8,
                           fontFamily:    'monospace',
-                          color:         isSelected ? '#4a8fff' : '#3a3a4a',
+                          color:         isSelected ? '#4a8fff' : '#7a7a8a', // was #3a3a4a — 1.74:1 on #0d0d10; now 5.43:1 (WCAG AA)
                           letterSpacing: '0.08em',
                           paddingBottom: 3,
                           userSelect:    'none',
@@ -853,7 +878,7 @@ export const LiveCode = ({ hardware, onHome }: Props) => {
                 )}
               </div>
               {selectedTrack === null && tracks.length > 0 && (
-                <div style={{ fontSize: 9, color: '#3a3a52', fontFamily: 'monospace', padding: '4px 8px', textAlign: 'center', letterSpacing: '0.06em' }}>
+                <div style={{ fontSize: 9, color: '#7a7a8a', fontFamily: 'monospace', padding: '4px 8px', textAlign: 'center', letterSpacing: '0.06em' }}>
                   ▼ EDIT — click a strip above
                 </div>
               )}
@@ -965,7 +990,7 @@ const styles = {
     background:    'none',
     border:        '1px solid #1e1e28',
     borderRadius:  '2px',
-    color:         '#3a3a50',
+    color:         '#7a7a8a', // was #3a3a50 — 1.78:1 on #0a0a0d; now 5.43:1 (WCAG AA)
     fontSize:      '0.68rem',
     letterSpacing: '0.06em',
     cursor:        'pointer',

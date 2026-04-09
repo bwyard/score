@@ -29,7 +29,7 @@ import {
   validateBarNumber,    validateFadeBars,
   validateNote,         validateNotes,        validateScale,
   validatePitch,        validateOctave,       validateGlide,
-  validateDur,          validateVolume,       validateAdsrTime,
+  validateDur,          validateVolume,       validateAdsrTime,  validateTone,
   validateSustain,      validatePan,          validateWiden,
   validateFilter,       validateEq,           validateBit,
   validateSaturate,     validateReverbWet,    validateDelay,
@@ -243,6 +243,11 @@ export const createPart = (
     glide:      (time)       => cp({ ...desc, _glide:       validateGlide(time) }),
     dur:        (time)       => cp({ ...desc, _dur:         validateDur(time) }),
     mapNotes:   (fn)         => cp({ ...desc, _mapNotesFn:  fn }),
+
+    // ── Timbre ────────────────────────────────────────────────────────────────
+    // tone: set the bandpass filter centre frequency (Hz) on instruments that
+    // support it (Snare, Snare909). Silently ignored on other instruments.
+    tone:    (hz) => cp({ ...desc, _tone: validateTone(hz) }),
 
     // ── Amplitude ─────────────────────────────────────────────────────────────
     volume:  (v) => cp({ ...desc, _volume: validateVolume(v) }),

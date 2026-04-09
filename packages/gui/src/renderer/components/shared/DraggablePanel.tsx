@@ -296,9 +296,13 @@ export const DraggablePanel = (props: DraggablePanelProps) => {
       </div>
 
       {/* Resize handle — Tab to focus, Arrow keys to resize */}
+      {/* aria-valuenow/min/max required by WCAG for interactive role="separator" */}
       <div
         aria-label="Resize panel"
         role="separator"
+        aria-valuenow={size.w}
+        aria-valuemin={MIN_W}
+        aria-valuemax={1920}
         tabIndex={0}
         style={styles.resizeHandle}
         onMouseDown={onHandleMouseDown}

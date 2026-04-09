@@ -56,27 +56,32 @@ const BeatClock = ({ step, stepCount }: { step: number; stepCount: number }) => 
  * @param playing   - Whether the transport is rolling
  */
 export const BarCounter = ({ bars, step, stepCount, bpm, playing }: Props) => {
-  const color    = playing ? '#6a9fff' : '#2a2a3a'
-  const beatNum  = playing ? Math.floor(step / 4) + 1 : 0
+  // Explicit colors to avoid opacity-based dimming which fails WCAG AA on dark backgrounds.
+  // When playing: bright blue for numbers, muted blue for labels.
+  // When stopped: visible gray for numbers, muted gray for labels.
+  const numColor   = playing ? '#6a9fff' : '#7a7a8a'
+  const dimColor   = playing ? '#7090c0' : '#7a7a8a'
+  const sepColor   = playing ? '#4a6090' : '#555566'
+  const beatNum    = playing ? Math.floor(step / 4) + 1 : 0
   const beatsTotal = Math.max(Math.ceil(stepCount / 4), 1)
 
   return (
-    <div style={{ ...styles.root, color }} aria-label="Transport position">
+    <div style={styles.root} aria-label="Transport position">
       <span style={styles.segment}>
-        <span style={styles.dimLabel}>BAR</span>
-        <span style={styles.bigNum}>{playing ? bars + 1 : '—'}</span>
+        <span style={{ ...styles.dimLabel, color: dimColor }}>BAR</span>
+        <span style={{ ...styles.bigNum, color: numColor }}>{playing ? bars + 1 : '—'}</span>
       </span>
-      <span style={styles.separator} aria-hidden="true">·</span>
+      <span style={{ ...styles.separator, color: sepColor }} aria-hidden="true">·</span>
       <span style={styles.segment}>
-        <span style={styles.dimLabel}>BEAT</span>
-        <span style={styles.bigNum}>
+        <span style={{ ...styles.dimLabel, color: dimColor }}>BEAT</span>
+        <span style={{ ...styles.bigNum, color: numColor }}>
           {playing ? `${String(beatNum)}/${String(beatsTotal)}` : '—'}
         </span>
       </span>
-      <span style={styles.separator} aria-hidden="true">·</span>
+      <span style={{ ...styles.separator, color: sepColor }} aria-hidden="true">·</span>
       <span style={styles.segment}>
-        <span style={styles.bigNum}>{bpm}</span>
-        <span style={styles.dimLabel}>BPM</span>
+        <span style={{ ...styles.bigNum, color: numColor }}>{bpm}</span>
+        <span style={{ ...styles.dimLabel, color: dimColor }}>BPM</span>
       </span>
       {playing && <BeatClock step={step} stepCount={stepCount} />}
     </div>
@@ -100,17 +105,18 @@ const styles = {
   },
   dimLabel: {
     fontSize:   '0.6rem',
-    opacity:    0.5,
+    // color set inline — opacity-based dimming fails WCAG AA on dark backgrounds
     fontWeight: 400,
   },
   bigNum: {
     fontSize:   '1.2rem',
     fontWeight: 700,
     lineHeight: 1,
+    // color set inline — inheriting opacity from root fails WCAG AA
   },
   separator: {
-    opacity:  0.3,
     fontSize: '0.9rem',
+    // color set inline
   },
   // Beat clock
   beatClock: {

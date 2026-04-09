@@ -14,12 +14,20 @@ export type MixerStripProps = {
   readonly volume:   number
   /** When `true` the mute button is lit amber and the track is silenced. */
   readonly muted:    boolean
+  /** When `true` the solo button is lit and all other tracks are silenced. */
+  readonly soloed:   boolean
+  /** Pan position in [-1, 1]. 0 = centre. */
+  readonly pan:      number
   /** Current RMS output level in [0, 1]. Drives the VU bar. */
   readonly level:    number
   /** Called with the new volume value (0–1) when the fader moves. */
   readonly onVolume: (v: number) => void
   /** Called when the mute button is clicked. */
   readonly onMute:   () => void
+  /** Called when the solo button is clicked. */
+  readonly onSolo:   () => void
+  /** Called with the new pan value (-1–1) when the pan slider moves. */
+  readonly onPan:    (v: number) => void
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -112,9 +120,13 @@ export const MixerStrip = ({
   type,
   volume,
   muted,
+  soloed,
+  pan,
   level,
   onVolume,
   onMute,
+  onSolo,
+  onPan,
 }: MixerStripProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -147,37 +159,59 @@ export const MixerStrip = ({
         {name}
       </div>
 
-      {/* Mute button */}
-      <button
-        aria-label={muted ? `Unmute ${name}` : `Mute ${name}`}
-        aria-pressed={muted}
-        style={muted ? { ...styles.muteBtn, ...styles.muteBtnActive } : styles.muteBtn}
-        onClick={onMute}
-      >
-        M
-      </button>
+      {/* Solo + Mute buttons */}
+      <div style={styles.btnRow}>
+        <button
+          aria-label={soloed ? `Unsolo ${name}` : `Solo ${name}`}
+          aria-pressed={soloed}
+          style={soloed ? { ...styles.soloBtn, ...styles.soloBtnActive } : styles.soloBtn}
+          onClick={onSolo}
+        >
+          S
+        </button>
+        <button
+          aria-label={muted ? `Unmute ${name}` : `Mute ${name}`}
+          aria-pressed={muted}
+          style={muted ? { ...styles.muteBtn, ...styles.muteBtnActive } : styles.muteBtn}
+          onClick={onMute}
+        >
+          M
+        </button>
+      </div>
 
-      {/* Volume fader */}
+      {/* Pan slider */}
       <input
-        aria-label={`${name} volume`}
+        aria-label={`${name} pan`}
         type="range"
-        min={0}
+        min={-1}
         max={1}
         step={0.01}
-        value={volume}
-        style={styles.fader}
-        onChange={e => { onVolume(Number(e.target.value)) }}
+        value={pan}
+        style={styles.panSlider}
+        onChange={e => { onPan(Number(e.target.value)) }}
       />
 
-      {/* VU bar */}
-      <canvas
-        ref={canvasRef}
-        aria-label={`${name} level`}
-        role="img"
-        width={4}
-        height={44}
-        style={styles.vuCanvas}
-      />
+      {/* Volume fader + VU */}
+      <div style={styles.faderRow}>
+        <input
+          aria-label={`${name} volume`}
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={volume}
+          style={styles.fader}
+          onChange={e => { onVolume(Number(e.target.value)) }}
+        />
+        <canvas
+          ref={canvasRef}
+          aria-label={`${name} level`}
+          role="img"
+          width={4}
+          height={44}
+          style={styles.vuCanvas}
+        />
+      </div>
     </div>
   )
 }
@@ -189,7 +223,7 @@ const styles = {
     display:         'flex',
     flexDirection:   'column' as const,
     alignItems:      'center',
-    width:           '56px',
+    width:           '68px',
     background:      '#0d0d10',
     border:          '1px solid #1e1e22',
     boxSizing:       'border-box' as const,
@@ -206,7 +240,7 @@ const styles = {
   trackName: {
     width:         '100%',
     fontSize:      '0.6rem',
-    color:         '#6a6a7a',
+    color:         '#7a7a8a', // was #6a6a7a — 3.65:1 on #0d0d10; now 5.43:1 (WCAG AA)
     fontFamily:    'system-ui, sans-serif',
     textAlign:     'center' as const,
     overflow:      'hidden',
@@ -216,14 +250,41 @@ const styles = {
     boxSizing:     'border-box' as const,
     letterSpacing: '0.05em',
   },
-  muteBtn: {
-    width:          '28px',
-    height:         '20px',
+  btnRow: {
+    display:    'flex',
+    gap:        '3px',
+    flexShrink: 0,
+  },
+  soloBtn: {
+    width:          '26px',
+    height:         '18px',
     background:     '#1a1a22',
     border:         '1px solid #2a2a36',
     borderRadius:   '2px',
     color:          '#6a6a7a',
-    fontSize:       '0.65rem',
+    fontSize:       '0.6rem',
+    fontWeight:     700,
+    cursor:         'pointer',
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'center',
+    flexShrink:     0,
+    padding:        0,
+    letterSpacing:  '0.05em',
+  },
+  soloBtnActive: {
+    background: '#22aaff',
+    border:     '1px solid #1188cc',
+    color:      '#001020',
+  },
+  muteBtn: {
+    width:          '26px',
+    height:         '18px',
+    background:     '#1a1a22',
+    border:         '1px solid #2a2a36',
+    borderRadius:   '2px',
+    color:          '#6a6a7a',
+    fontSize:       '0.6rem',
     fontWeight:     700,
     cursor:         'pointer',
     display:        'flex',
@@ -237,6 +298,19 @@ const styles = {
     background: '#ffcc00',
     border:     '1px solid #cc9900',
     color:      '#1a1000',
+  },
+  panSlider: {
+    width:       '56px',
+    height:      '14px',
+    cursor:      'pointer',
+    accentColor: '#4a8fff',
+    flexShrink:  0,
+  },
+  faderRow: {
+    display:    'flex',
+    gap:        '3px',
+    alignItems: 'center',
+    flexShrink: 0,
   },
   fader: {
     // writingMode makes the range input render vertically in modern browsers.

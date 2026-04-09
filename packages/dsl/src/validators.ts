@@ -236,6 +236,10 @@ export const validateDur = (time: unknown): number =>
 export const validateVolume = (v: unknown): number =>
   parse(schemaVolume, v, 'volume', 'Use a number 0–2 e.g. .volume(0.8). Values above 1 amplify.')
 
+/** `.tone(hz)` — bandpass filter frequency in Hz (20–20000). */
+export const validateTone = (hz: unknown): number =>
+  parse(schemaFrequency, hz, 'tone', 'Use a frequency in Hz e.g. .tone(4000). Range 20–20000.')
+
 /** `.attack(s)` / `.decay(s)` / `.release(s)` — seconds &gt;= 0. */
 export const validateAdsrTime = (s: unknown, method: string): number =>
   parse(schemaTimingSeconds, s, method, `Use a non-negative number in seconds e.g. .${method}(0.01).`)

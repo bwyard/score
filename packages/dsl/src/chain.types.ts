@@ -100,6 +100,9 @@ export type PartDescriptor = {
     readonly release?:  number
   }
   readonly _sidechain?:     SidechainDescriptor
+  // ── Timbre ─────────────────────────────────────────────────────────────────
+  /** Bandpass filter centre frequency in Hz (Hz). Used by Snare, Snare909. */
+  readonly _tone?:   number
   // ── Tone ───────────────────────────────────────────────────────────────────
   readonly _filter?: { readonly frequency: number; readonly Q?: number }
   readonly _eq?:     { readonly lo: number; readonly mid: number; readonly hi: number }
@@ -238,6 +241,10 @@ export type ChainMethods<T> = {
   readonly dur:         (time: number) => T
   /** Custom note sequence transform: `(notes, ctx) => notes`. */
   readonly mapNotes:    (fn: (notes: (string | number)[], ctx: PatternCtx) => (string | number)[]) => T
+  // ── Timbre ───────────────────────────────────────────────────────────────
+  /** Bandpass filter centre frequency in Hz (20–20000). Applies to Snare, Snare909. */
+  readonly tone:        (hz: number) => T
+
   // ── Amplitude ────────────────────────────────────────────────────────────
   /** Output gain 0–2. */
   readonly volume:      (v: number) => T

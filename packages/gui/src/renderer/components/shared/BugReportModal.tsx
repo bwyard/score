@@ -251,7 +251,7 @@ const styles = {
   closeBtn: {
     background:      'none',
     border:          'none',
-    color:           '#556688',
+    color:           '#7090c0', // was #556688 — 3.34:1 on #0e0e11; now 6.27:1 (WCAG AA)
     fontSize:        16,
     cursor:          'pointer',
     padding:         '2px 6px',
@@ -279,7 +279,7 @@ const styles = {
   disclosureBtn: {
     background:      'none',
     border:          'none',
-    color:           '#556688',
+    color:           '#7090c0', // was #556688 — 3.34:1 on #0e0e11; now 6.27:1 (WCAG AA)
     fontSize:        12,
     cursor:          'pointer',
     padding:         0,
@@ -290,7 +290,7 @@ const styles = {
   },
   disclosureArrow: {
     fontSize:        10,
-    color:           '#445577',
+    color:           '#7090c0', // was #445577 — insufficient contrast on #0e0e11
   },
   details: {
     background:      '#0a0a10',
@@ -309,7 +309,7 @@ const styles = {
   },
   detailKey: {
     fontSize:        11,
-    color:           '#445577',
+    color:           '#7090c0', // was #445577 — insufficient contrast on #0a0a10
     fontWeight:      600,
     textTransform:   'uppercase' as const,
     letterSpacing:   '0.05em',
@@ -352,7 +352,7 @@ const styles = {
     cursor:          'pointer',
   },
   saveBtn: {
-    background:      '#4a8fff',
+    background:      '#1a5fb4', // was #4a8fff — 3.15:1 with white; now 6.14:1 (WCAG AA)
     border:          'none',
     color:           '#fff',
     borderRadius:    6,

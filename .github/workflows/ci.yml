@@ -37,3 +37,9 @@ jobs:
 
       - name: Test with coverage
         run: pnpm test:coverage
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @score/gui exec playwright install --with-deps chromium
+
+      - name: E2e tests (Electron via Xvfb)
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" pnpm --filter @score/gui test:e2e

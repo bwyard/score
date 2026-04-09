@@ -10,9 +10,13 @@ const defaultProps = {
   type:     'kick',
   volume:   0.8,
   muted:    false,
+  soloed:   false,
+  pan:      0,
   level:    0.4,
   onVolume: vi.fn(),
   onMute:   vi.fn(),
+  onSolo:   vi.fn(),
+  onPan:    vi.fn(),
 }
 
 const setup = (overrides: Partial<typeof defaultProps> = {}) =>

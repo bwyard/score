@@ -316,6 +316,8 @@ export type InstrumentDescriptor = {
   readonly _chokeGroup?: string
   /** Initial mute state — set via `.mute()` in the chain API. `true` = muted at boot. */
   readonly _mute?: boolean
+  /** Initial solo state — set via `.solo()` in the chain API. When `true`, all other tracks are silenced. */
+  readonly _solo?: boolean
 }
 
 /**

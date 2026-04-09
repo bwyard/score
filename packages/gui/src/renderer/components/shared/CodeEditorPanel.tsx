@@ -414,6 +414,9 @@ const CodeEditorPanelInner = ({ value, onChange, onEval, decorations, stepBadges
       () => { onEval() },
     )
 
+    // Expose editor on window for e2e test access
+    ;(window as unknown as { __scoreEditor?: { getValue: () => string } }).__scoreEditor = editor
+
     // Focus editor on mount
     editor.focus()
 

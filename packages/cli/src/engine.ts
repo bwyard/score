@@ -153,6 +153,7 @@ const applyPitchTransforms = (
 // function patterns are passed through as-is and evaluated per-tick in the sequencer.
 
 const rotatePattern = (pattern: number[], phase: number): number[] => {
+  if (pattern.length === 0) return pattern
   const offset = ((Math.round(phase * pattern.length) % pattern.length) + pattern.length) % pattern.length
   return offset === 0 ? pattern : [...pattern.slice(offset), ...pattern.slice(0, offset)]
 }
@@ -241,6 +242,7 @@ export const partToInstrumentDescriptor = (
     ...(part._fadeOutBars !== undefined ? { _fadeOutBars: part._fadeOutBars } : {}),
     ...(part._chokeGroup  !== undefined ? { _chokeGroup:  part._chokeGroup  } : {}),
     ...(part._mute        !== undefined ? { _mute:        part._mute        } : {}),
+    ...(part._solo        !== undefined ? { _solo:        part._solo        } : {}),
     props: {
       ...normalizeVolumeField(part.instrumentType, part._volume),
       ...(resolvedPattern !== undefined ? { pattern:  resolvedPattern } : {}),
@@ -272,6 +274,9 @@ export const partToInstrumentDescriptor = (
       ...(part._stepProb !== undefined ? { stepProb: part._stepProb } : {}),
       ...(part._every    !== undefined ? { every: { n: part._every.n, transform: part._every.fn } } : {}),
       ...(part._stretch  !== undefined ? { stretch:  part._stretch  } : {}),
+      ...(part._stutter  !== undefined ? { stutter:  part._stutter  } : {}),
+      // Map _tone chain field → props.tone (Snare, Snare909 bandpass frequency)
+      ...(part._tone     !== undefined ? { tone:     part._tone     } : {}),
       ...part.props,
     },
   }
@@ -312,6 +317,7 @@ const seqPatternExtras = (props: CommonProps) => ({
   ...(props['stepProb'] !== undefined ? { stepProb: props['stepProb'] as ReadonlyArray<number> } : {}),
   ...(props['every']    !== undefined ? { every:    props['every']    as EveryTransform } : {}),
   ...(props['stretch']  !== undefined ? { stretch:  props['stretch']  as number } : {}),
+  ...(props['stutter']  !== undefined ? { stutter:  props['stutter']  as number } : {}),
 })
 
 // ── computeNoteDur — note duration for Model B' melodic voice instruments ──────
@@ -401,22 +407,47 @@ export const triggerSnare = (ctx: Context, time: number, props: SnareProps, dest
   }
 }
 
+// Bandpass bands matching createGenericHihat in @score/instruments.
+// Three resonant peaks + ±2% per-hit detune for machine-gun prevention.
+const HIHAT_BANDS = [
+  { frequency: 3500, Q: 1.5 },
+  { frequency: 6000, Q: 2.0 },
+  { frequency: 10000, Q: 1.5 },
+] as const
+const HIHAT_HPF       = 4000
+const HIHAT_DETUNE    = 0.02
+
 export const triggerHiHat = (ctx: Context, time: number, props: HiHatProps, dest: GainNode): void => {
   const gain = props.volume ?? 0.25
-  const dur  = props.open ? 0.3 : 0.06
-  const noise  = ctx.createNoise({ type: 'white' })
-  const filter = ctx.createFilter({ type: 'highpass', frequency: 8000 })
-  const vol    = ctx.createGain({ gain: 0 })
-  noise.connect(filter)
-  filter.connect(vol)
+  const dur  = props.open   ? 0.3 : 0.06
+
+  const noise   = ctx.createNoise({ type: 'white' })
+  const sumGain = ctx.createGain({ gain: 1 / HIHAT_BANDS.length })
+
+  const bands = HIHAT_BANDS.map(({ frequency, Q }) => {
+    const detunedFreq = frequency * (1 + (Math.random() * HIHAT_DETUNE * 2 - HIHAT_DETUNE))
+    const bp = ctx.createFilter({ type: 'bandpass', frequency: detunedFreq, Q })
+    noise.connect(bp)
+    bp.connect(sumGain)
+    return bp
+  })
+
+  const hpf = ctx.createFilter({ type: 'highpass', frequency: HIHAT_HPF })
+  const vol = ctx.createGain({ gain: 0 })
+
+  sumGain.connect(hpf)
+  hpf.connect(vol)
   vol.connect(dest)
+
   vol.scheduleEnvelope({ peak: gain, attack: 0.001, decay: dur - 0.001, sustain: 0, release: 0, startTime: time, duration: dur })
   noise.start(time)
   noise.stop(time + dur)
   noise.onended = () => {
-    try { noise.disconnect()  } catch { /* ok */ }
-    try { filter.disconnect() } catch { /* ok */ }
-    try { vol.disconnect()    } catch { /* ok */ }
+    try { noise.disconnect()   } catch { /* ok */ }
+    for (const bp of bands)  { try { bp.disconnect()     } catch { /* ok */ } }
+    try { sumGain.disconnect() } catch { /* ok */ }
+    try { hpf.disconnect()     } catch { /* ok */ }
+    try { vol.disconnect()     } catch { /* ok */ }
   }
 }
 
@@ -515,6 +546,7 @@ export type PatchProps = {
     readonly index: number
     readonly volume?: number
     readonly mute?: boolean
+    readonly solo?: boolean
   }>
 }
 
@@ -738,6 +770,11 @@ const dispatchArp = (
   const mode  = props.mode ?? 'up'
   const rate  = props.rate ?? 1
 
+  if (notes.length === 0) {
+    console.error('[score-engine] arp: notes array is empty — track skipped')
+    return
+  }
+
   // HARDWARE BOUNDARY: mutable step counter — sequential arpeggio state across callbacks
   const arpState = { noteIndex: 0, pingDir: 1 }
 
@@ -826,6 +863,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
       ...(channelPan !== undefined ? { pan: channelPan } : {}),
     })
     if (comp._mute) channel.setMute(true)
+    if (comp._solo) channel.setSolo(true)
     return channel.input as unknown as GainNode
   })
 
@@ -1023,6 +1061,7 @@ export const createScoreEngine = async (song: SongDefinition): Promise<ScoreEngi
           if (!channel) continue
           if (t.volume !== undefined) channel.setVolume(t.volume)
           if (t.mute   !== undefined) channel.setMute(t.mute)
+          if (t.solo   !== undefined) channel.setSolo(t.solo)
         }
       }
     },

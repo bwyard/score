@@ -35,6 +35,7 @@ import {
   createPluck,
   createBass303,
   createClap909,
+  createCowbell808,
   createKickHardstyle,
   createKickHardcore,
   createSupersaw,
@@ -120,9 +121,9 @@ export const INSTRUMENT_REGISTRY = Object.freeze({
   'hihatopen808': { factory: createHihatOpen808,      dispatchModel: 'A' as DispatchModel, volumeRouting: 'percussion' as VolumeRouting, defaultPattern: DEFAULT_HIHAT_PATTERN },
   'snare909':      { factory: createSnare909,       dispatchModel: 'A' as DispatchModel, volumeRouting: 'percussion' as VolumeRouting, defaultPattern: DEFAULT_SNARE_PATTERN },
   'clap909':       { factory: createClap909,        dispatchModel: 'A' as DispatchModel, volumeRouting: 'percussion' as VolumeRouting, defaultPattern: DEFAULT_SNARE_PATTERN },
+  'cowbell808':    { factory: createCowbell808,     dispatchModel: 'A' as DispatchModel, volumeRouting: 'percussion' as VolumeRouting, defaultPattern: DEFAULT_HIHAT_PATTERN },
   'kickHardstyle': { factory: createKickHardstyle,  dispatchModel: 'A' as DispatchModel, volumeRouting: 'percussion' as VolumeRouting, defaultPattern: DEFAULT_KICK_PATTERN  },
   'kickHardcore':  { factory: createKickHardcore,   dispatchModel: 'A' as DispatchModel, volumeRouting: 'percussion' as VolumeRouting, defaultPattern: DEFAULT_KICK_PATTERN  },
-  // PLANNED: 'cowbell808', 'rimshot'
 
   // ── Synth — Model B ──────────────────────────────────────────────────────────
   'synth':        { factory: createGenericSynth,     dispatchModel: 'B'         as DispatchModel, volumeRouting: 'melodic' as VolumeRouting },

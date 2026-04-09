@@ -1,12 +1,13 @@
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import path                                          from 'node:path'
-import { readFileSync, writeFileSync }               from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync }    from 'node:fs'
 import vm                                            from 'node:vm'
+import { registerShortcuts }                         from './shortcuts.js'
 import { createScoreEngine, isPartDescriptor, partToInstrumentDescriptor } from '@score/cli/engine'
 import type { PatchProps, ScoreEngine }              from '@score/cli/engine'
 import {
   Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp,
-  Kick808, Kick909, Snare909, Hihat808, HihatOpen808, Clap909, KickHardstyle, KickHardcore,
+  Kick808, Kick909, Snare909, Hihat808, HihatOpen808, Clap909, Cowbell808, KickHardstyle, KickHardcore,
   SubSynth, FMSynth,
   Bass303, Pad, Pluck, Stab, Rhodes, Wurlitzer, Hammond, Clavinet,
   DX7Lead, WavetableSynth, SuperSaw, WobbleBass, KarplusSynth, Guitar,
@@ -213,6 +214,9 @@ const panicStop = (): void => {
   stopAnalysis()
   pendingRef.value = null
   try { slot.engine.stop() } catch { /* ignore */ }
+  // Hard-cut all audio immediately — kills reverb/delay tails on panic stop.
+  // masterVolume is restored to 0.72 on next transport:play.
+  try { slot.engine.patch({ masterVolume: 0 }) } catch { /* ignore */ }
   slot.playing = false
   slot.bars    = 0
   pushState()
@@ -235,6 +239,10 @@ const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
   }
   teardown()
   slotRef.value = { engine, playing: false, bpm: song.bpm, bars: barOffset }
+
+  // In test mode (SCORE_TEST=1) mute master output — engine still runs, IPC still fires,
+  // but no audio comes out of the speakers.
+  if (process.env['SCORE_TEST'] === '1') engine.patch({ masterVolume: 0 })
   // Per-step cache write — fires at full audio tick rate.
   // Does NOT send IPC directly — writes to tickCache so the display tick loop
   // can send 'display:tick' at ~60fps without IPC at the full audio rate.
@@ -268,6 +276,7 @@ const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
           const next = slotRef.value
           if (next && !next.playing) {
             next.engine.start()
+            if (process.env['SCORE_TEST'] === '1') next.engine.patch({ masterVolume: 0 })
             next.playing = true
             pushState()
             startAnalysis()
@@ -285,11 +294,16 @@ const boot = async (song: SongDefinition, barOffset = 0): Promise<void> => {
 // ── Window factory ─────────────────────────────────────────────────────────────
 
 const createWindow = (): BrowserWindow => {
+  // In test mode (SCORE_TEST=1) suppress the visible window — Playwright still
+  // interacts via DevTools Protocol regardless of show state.
+  const isTest = process.env['SCORE_TEST'] === '1'
+
   const win = new BrowserWindow({
     width:  1280,
     height: 800,
     minWidth:  900,
     minHeight: 600,
+    show:            !isTest,
     backgroundColor: '#0c0c0e',
     titleBarStyle: 'hiddenInset',
     webPreferences: {
@@ -360,15 +374,8 @@ process.on('unhandledRejection', (reason: unknown) => {
 app.on('ready', () => {
   const win = createWindow()
   winRef.value = win
-  // F12 toggles devtools — off by default, no auto-open
-  globalShortcut.register('F12', () => {
-    const focused = BrowserWindow.getFocusedWindow()
-    if (focused) focused.webContents.toggleDevTools()
-  })
-  // t207 — panic key: Cmd/Ctrl+. = instant all-stop (no bar-boundary wait)
-  globalShortcut.register('CommandOrControl+.', () => {
-    panicStop()
-  })
+  const { unregister: unregisterShortcuts } = registerShortcuts({ panicStop })
+  app.on('will-quit', unregisterShortcuts)
   // t218 — send saved panel layout once renderer is ready
   win.webContents.once('did-finish-load', () => {
     const layout = readLayout()
@@ -413,6 +420,12 @@ ipcMain.on('mode:selected', (_event, payload: RendererToMain['mode:selected']) =
 ipcMain.on('transport:play', () => {
   const slot = slotRef.value
   if (!slot || slot.playing) return
+  // Restore master volume (may have been zeroed by panicStop to kill reverb tails)
+  if (process.env['SCORE_TEST'] === '1') {
+    slot.engine.patch({ masterVolume: 0 })
+  } else {
+    slot.engine.patch({ masterVolume: 0.72 })
+  }
   slot.engine.start()
   slot.playing = true
   pushState()
@@ -454,7 +467,7 @@ ipcMain.on('engine:eval', (_event, { code }: RendererToMain['engine:eval']) => {
   const contextObj: Record<string, unknown> = {
     // DSL — percussion + legacy instruments
     Song, Track, Kick, Snare, HiHat, Synth, Sample, Theremin, Sax, Arp, resolveFreq,
-    Kick808, Kick909, Snare909, Hihat808, HihatOpen808, Clap909, KickHardstyle, KickHardcore,
+    Kick808, Kick909, Snare909, Hihat808, HihatOpen808, Clap909, Cowbell808, KickHardstyle, KickHardcore,
     SubSynth, FMSynth,
     // DSL — chain API melodic factories
     Bass303, Pad, Pluck, Stab, Rhodes, Wurlitzer, Hammond, Clavinet,
@@ -570,6 +583,28 @@ ipcMain.on('file:save', (_event, { code }: RendererToMain['file:save']) => {
   }).catch((err: unknown) => {
     send('error:report', { message: `Save dialog failed: ${err instanceof Error ? err.message : String(err)}` })
   })
+})
+
+// BOUNDARY — IO: bug report — saves JSON to two locations:
+//   1. Fixed path Claude can always read: <repo>/debug/report.json (overwritten each time)
+//   2. Timestamped archive in Downloads for the user
+ipcMain.on('bug:report', (_event, payload: RendererToMain['bug:report']) => {
+  try {
+    const json        = JSON.stringify(payload, null, 2)
+    const timestamp   = new Date(payload.timestamp).toISOString().replace(/[:.]/g, '-')
+    const fileName    = `score-bug-report-${timestamp}.json`
+
+    // Fixed path — always the same location so Claude can read it directly
+    const repoRoot    = path.resolve(__dirname, '..', '..', '..', '..')
+    const debugDir    = path.join(repoRoot, 'debug')
+    mkdirSync(debugDir, { recursive: true })
+    writeFileSync(path.join(debugDir, 'report.json'), json, 'utf8')
+
+    // Timestamped archive in Downloads for the user
+    writeFileSync(path.join(app.getPath('downloads'), fileName), json, 'utf8')
+  } catch (err) {
+    send('error:report', { message: `Bug report save failed: ${err instanceof Error ? err.message : String(err)}` })
+  }
 })
 
 // BOUNDARY — IO: panel layout persistence (t218) — renderer sends positions on each panel move
