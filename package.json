@@ -28,18 +28,18 @@
     ]
   },
   "devDependencies": {
-    "@rollup/rollup-win32-x64-msvc": "^4.59.1",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
+    "@rollup/rollup-win32-x64-msvc": "^4.60.1",
+    "@typescript-eslint/eslint-plugin": "^8.58.1",
+    "@typescript-eslint/parser": "^8.58.1",
     "eslint": "^9.0.0",
     "eslint-plugin-tsdoc": "^0.5.2",
     "husky": "^9.0.0",
     "lint-staged": "^16.4.0",
-    "prettier": "^3.0.0",
-    "turbo": "^2.0.0",
-    "typedoc": "^0.28.17",
+    "prettier": "^3.8.2",
+    "turbo": "^2.9.6",
+    "typedoc": "^0.28.19",
     "typescript": "^5.5.0",
-    "typescript-eslint": "^8.57.0"
+    "typescript-eslint": "^8.58.1"
   },
   "packageManager": "pnpm@10.32.1"
 }

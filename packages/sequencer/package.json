@@ -22,7 +22,7 @@
     "@score/core": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.6.0",
     "@vitest/coverage-v8": "^2.0.0",
     "vitest": "^2.0.0"
   }
