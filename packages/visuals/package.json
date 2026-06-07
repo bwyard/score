@@ -23,7 +23,7 @@
     "@score/sequencer": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.9.2",
     "@vitest/coverage-v8": "^2.0.0",
     "vitest": "^2.0.0"
   }
