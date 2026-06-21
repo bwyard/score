@@ -39,7 +39,7 @@
     "@types/acorn": "^6.0.4",
     "@types/node": "^25.5.0",
     "@vitest/coverage-v8": "^2.0.0",
-    "acorn": "^8.14.0",
+    "acorn": "^8.17.0",
     "acorn-walk": "^8.3.4",
     "vitest": "^2.0.0"
   }
